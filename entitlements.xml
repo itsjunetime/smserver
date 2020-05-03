@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>application-identifier</key>
-    <string>[redacted].blog.wojciechregula.SandboxEscape</string>
+    <string>com.ianwelker.smserver</string>
 <!---><!-->
 <key>platform-application</key>
 <true/>
