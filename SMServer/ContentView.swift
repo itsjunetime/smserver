@@ -67,7 +67,7 @@ struct ContentView: View {
     }
     
     func loadHtmlFile() {
-        if let dir = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "html") {
+        if let dir = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html") {
             print(dir)
             do {
                 self.main_page = try String(contentsOf: dir, encoding: .utf8)
@@ -167,11 +167,11 @@ struct ContentView: View {
         }
         sqlString += ";"
         
-        if sqlString.contains("@") {
-            sqlString = sqlString.replacingOccurrences(of: "@", with: "\\@") /// Lolll guess I gotta escape my escape slash for the '@'
-        }
+        /*if sqlString.contains("@") {
+            sqlString = sqlString.replacingOccurrences(of: "@", with: "@") /// Lolll guess I gotta escape my escape slash for the '@'
+        }*/
         
-        //print("full sql query: " + sqlString)
+        print("full sql query: " + sqlString)
         
         var statement: OpaquePointer?
         
@@ -237,16 +237,11 @@ struct ContentView: View {
         if chat_id.contains("@") {
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
         } else {
-            //print("entered else in fetching display names")
             let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
             let chat_id_zero = new_chat_id[new_chat_id.startIndex]
-            //print("nci: " + new_chat_id)
             let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-            //print("nc1: " + chat_id_one)
             let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-            //print("nc2: " + chat_id_two)
             let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
-            //print("nc3: " + chat_id_three)
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
         }
         
@@ -260,7 +255,29 @@ struct ContentView: View {
         
         if display_name_array.count != 0 {
             let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
-            //print("full name: " + full_name)
+            return full_name
+        }
+        
+        return ""
+    }
+    
+    func getDisplayNameWithDb(db: OpaquePointer?, chat_id: String) -> String {
+        
+        var display_name_array = [[String:String]]()
+        
+        if chat_id.contains("@") {
+            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
+        } else {
+            let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+            let chat_id_zero = new_chat_id[new_chat_id.startIndex]
+            let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+            let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+            let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
+        }
+        
+        if display_name_array.count != 0 {
+            let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
             return full_name
         }
         
@@ -304,8 +321,21 @@ struct ContentView: View {
     
     func loadChats(num_to_load: Int = 0) -> [[String:String]] {
         var db = createConnection()
+        var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         
-        let chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat")
+        var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat")
+        
+        for i in 0..<chats_array.count {
+            if chats_array[i]["display_name"]!.count == 0 {
+                chats_array[i]["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: chats_array[i]["chat_identifier"]!)
+            }
+        }
+        
+        if sqlite3_close(contacts_db) != SQLITE_OK {
+            print("error closing database")
+        }
+
+        contacts_db = nil
         
         if sqlite3_close(db) != SQLITE_OK {
             print("error closing database")
