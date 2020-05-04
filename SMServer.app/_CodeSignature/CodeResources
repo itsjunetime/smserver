@@ -6,7 +6,7 @@
 	<dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
-		dwu6F99/17jPiVtJDTQi48Ep6SM=
+		azumC1CsHCFlDtgDProJ0FQIpy4=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
 		<data>
@@ -14,15 +14,39 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib</key>
 		<data>
-		m/8BH8ymprRZ7csbYRVb3qCN39o=
+		orVJ83mlrtkI3h0aigffuB0kqd0=
+		</data>
+		<key>Frameworks/Swifter.framework/Info.plist</key>
+		<data>
+		wUHjWZ3qa+bIOqBoLC281vm22Go=
+		</data>
+		<key>Frameworks/Swifter.framework/Swifter</key>
+		<data>
+		9Z6rrQAZpOWWmSrSqETkWPPSoVk=
+		</data>
+		<key>Frameworks/Swifter.framework/_CodeSignature/CodeResources</key>
+		<data>
+		I+Ek2OW6dI8FgIv+UjtccBGJ6Rw=
 		</data>
 		<key>Info.plist</key>
 		<data>
-		kqDWSQI+xHGnwrEPXgXukw9IO3Q=
+		+CIDRFSNAYICqOqFxX/I+7h6GOs=
 		</data>
 		<key>PkgInfo</key>
 		<data>
 		n57qDP4tZfLD1rCS43W0B4LQjzE=
+		</data>
+		<key>embedded.mobileprovision</key>
+		<data>
+		hJho2eyi1ZTNRtX8tEQdEMHrbj8=
+		</data>
+		<key>html/index.html</key>
+		<data>
+		rUQ/C7xBuJRRaVMTzErJTdJWW6w=
+		</data>
+		<key>html/test.json</key>
+		<data>
+		jVKJs8WbacRNV6869Y9+ZKFX+w4=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -31,7 +55,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			kcv1lU1b3Sf/0gQupLFykzt5xrF5RXFdoP5/njjrnu0=
+			GojQ0MyMPxIJUs0bGcczzkSq9swOo6z29Mu0UjsNUeg=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
@@ -45,7 +69,49 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			mjjhdomZf95pVqLiwqEwISfA10OwfRnT325oeKqOxTQ=
+			asT7L1o0MLQMcTckNQkqNAc9JGDs4coy/erqTxSOPIE=
+			</data>
+		</dict>
+		<key>Frameworks/Swifter.framework/Info.plist</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			IR5Bg58HsKyYTP23Uyx6R7JihxwJ99K1l5oPojf3nF8=
+			</data>
+		</dict>
+		<key>Frameworks/Swifter.framework/Swifter</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			lC+AvvfwMTubhj6QxzVipVQeaDUT7alQUWkkLDqHvNk=
+			</data>
+		</dict>
+		<key>Frameworks/Swifter.framework/_CodeSignature/CodeResources</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			6Ht+MDjUUWzeYc4+romS9kyonm6bgS8mow8tnewiFJg=
+			</data>
+		</dict>
+		<key>embedded.mobileprovision</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			IT+kUgXJ07CRnQQwuSX5iELjMB3eCy07ZAHbjNFew94=
+			</data>
+		</dict>
+		<key>html/index.html</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Y1uaQcrX6d4GULVd3SH/A5kmMXuZ+2nlC/uxYig9HpI=
+			</data>
+		</dict>
+		<key>html/test.json</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			9lqCIFLsaCE+NtQAisUOJu+hNxPko9muiDafqAwop30=
 			</data>
 		</dict>
 	</dict>
