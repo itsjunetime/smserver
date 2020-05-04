@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		33BA565DB94EEE3A1ED27A46 /* Pods_SMServerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 008D6F7B4AA3EB6AFB5692B3 /* Pods_SMServerTests.framework */; };
+		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E86245BCFE000EF24FE /* AppDelegate.swift */; };
 		3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E88245BCFE000EF24FE /* SceneDelegate.swift */; };
 		3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E8A245BCFE000EF24FE /* ContentView.swift */; };
@@ -41,6 +42,7 @@
 		008D6F7B4AA3EB6AFB5692B3 /* Pods_SMServerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		38FF86EDB3665EBBCAF147C3 /* Pods-SMServerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServerTests.debug.xcconfig"; path = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		394D89331824401241AEFBC1 /* Pods-SMServer-SMServerUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer-SMServerUITests.release.xcconfig"; path = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests.release.xcconfig"; sourceTree = "<group>"; };
+		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
 		3C760E83245BCFE000EF24FE /* SMServer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C760E86245BCFE000EF24FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3C760E88245BCFE000EF24FE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 		3C760E7A245BCFE000EF24FE = {
 			isa = PBXGroup;
 			children = (
+				3C562A37245FB4A000A4474B /* html */,
 				3C760E85245BCFE000EF24FE /* SMServer */,
 				3C760E9C245BCFE100EF24FE /* SMServerTests */,
 				3C760EA7245BCFE100EF24FE /* SMServerUITests */,
@@ -289,6 +292,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C562A38245FB4A100A4474B /* html in Resources */,
 				3C760E93245BCFE100EF24FE /* LaunchScreen.storyboard in Resources */,
 				3C760E90245BCFE100EF24FE /* Preview Assets.xcassets in Resources */,
 				3C760E8D245BCFE100EF24FE /* Assets.xcassets in Resources */,
@@ -518,7 +522,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -572,7 +576,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
