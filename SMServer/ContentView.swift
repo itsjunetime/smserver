@@ -39,7 +39,7 @@ struct ContentView: View {
     </html>
     """
     
-    func loadServer() {
+    func loadServer(port_num: UInt16 = 8080) {
         self.server["/"] = {request in
             return .ok(.text(self.main_page))
         }
@@ -59,7 +59,7 @@ struct ContentView: View {
             }
         }
         do {
-            try self.server.start(8080)
+            try self.server.start(port_num)
             print("Server is running!")
         } catch {
             print("Ran into an error with running the server :/")
@@ -353,7 +353,7 @@ struct ContentView: View {
             Text("We're workin' on it!")
             Spacer()
                 .frame(height: 20)
-            //TextField("***VERY IMPORTANT: DO NOT SCREW THIS UP** enter sql command here", text: $egnum)
+            TextField("Enter port number to run server on", text: $egnum)
             Button(action: {
                 self.test_messages = self.loadMessages()
             }) {
@@ -362,7 +362,8 @@ struct ContentView: View {
             Spacer()
                 .frame(height: 20)
             Button(action: {
-                self.loadServer()
+                self.stopServer()
+                self.loadServer(port_num: UInt16(self.egnum) ?? 8080)
                 print("Server has fully been loaded up")
             }) {
                 Text("Press me to start the server")
@@ -375,11 +376,19 @@ struct ContentView: View {
             }) {
                 Text("Press me to stop the server")
             }
-            if messages_have_been_loaded {
+            Spacer()
+                .frame(height: 20)
+            Button(action: {
+                self.loadHtmlFile()
+                print("HTML Loaded again")
+            }) {
+                Text("Reload HTML")
+            }
+            /*if messages_have_been_loaded {
                 List(test_messages, id: \.self) { text in
                     Text("\(text["text"] ?? ""), \(text["is_from_me"] ?? "")")
                 }
-            }
+            }*/
         }.onAppear() {
             self.loadServer()
             self.loadHtmlFile()
