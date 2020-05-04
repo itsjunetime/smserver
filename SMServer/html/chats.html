@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+    <head>
+        <title>
+            Messages
+        </title>
+        <script>
+            var items = "";
+            var shown_name = "";
+            const readJson = async () => {
+                const fetch_val = await fetch('/requests?c')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    this.items = (json.chats)
+                    return items
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
+            }
+    
+            const printItems = async () => {
+                var new_items = await readJson();
+                var doc = document.getElementsByClassName("chats")[0];
+                for(var i = 0; i < items.length; i++) {
+                    var a = document.createElement('a');
+                    console.log("c: " + items[i].chat_identifier + ", d: " + items[i].display_name)
+                    if (items[i].display_name.length === 0) {
+                        //fetchName(items[i].chat_identifier); ///So this is what is taking up the most time; we need to do it faster.
+                        /*if (items[i].di.length === 0) {
+                            shown_name = items[i].chat_identifier;
+                        }*/
+                        var linkText = document.createTextNode(items[i].chat_identifier); 
+                        a.appendChild(linkText);
+                    } else {
+                        var linkText = document.createTextNode(items[i].display_name);
+                        a.appendChild(linkText);
+                    }
+                    a.href = "/requests?p=" + items[i].chat_identifier;
+                    doc.appendChild(a);
+                    doc.appendChild(document.createElement("br"));
+                }
+            }
+    
+            const fetchName = async (name) => {
+                var url = '/requests?n=' + name
+                var return_name = ""
+                xmlhttp=new XMLHttpRequest();
+                xmlhttp.onreadystatechange=function() {
+                    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+                        return xmlhttp.responseText;
+                    }
+                }
+                xmlhttp.open("GET", url, false );
+                xmlhttp.send(); 
+                this.shown_name = xmlhttp.responseText;
+                return String(return_name)
+            }
+
+            printItems()
+            
+        </script>
+        <style>
+            p, h2, a {
+                color: white;
+                font-family: Ubuntu, Courier;
+                color: #dae3f0;
+                padding: 10px;
+                text-decoration: none;
+            }
+            p {
+                font-size: 20px;
+            }
+        </style>
+    </head>
+    <body style="background-color: #111">
+        <p>
+            This is the main page! Send your requests to /requests with your parameters included :)
+            <br>
+            I'll write more documentation about how to send requests later; I'm lazy rn.
+        </p>
+        <div class="chats">
+            <h1 style="font-family:Ubuntu, Calibri, sans-serif; color: #dae3f0; padding: 10px">These are my chats!</h1>
+        </div>
+    </body>
+</html>
