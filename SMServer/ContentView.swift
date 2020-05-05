@@ -14,7 +14,7 @@ struct ContentView: View {
     let server = HttpServer()
     @State var test_messages = [[String: String]]()
     @State var messages_have_been_loaded = false
-    @State var egnum = ""
+    @State var egnum = "8080"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
@@ -90,19 +90,30 @@ struct ContentView: View {
     func parseAndReturn(params: [(String, String)]) -> String {
         var person: String = ""
         var selectingPerson = false
+        var num_texts = 0
         var selectingChat = false
         var chat_id = ""
         var gettingName = false
+        var gettingImage = false
         switch params[0].0 {
         case "p":
             person = params[0].1
             selectingPerson = true
+            if params.count > 1 {
+                if params[1].0 == "n" {
+                    num_texts = Int(params[1].1)!
+                }
+            }
         case "c":
             selectingChat = true
         case "n":
             chat_id = params[0].1
             print("chat:" + chat_id)
             gettingName = true
+        case "i":
+            chat_id = params[0].1
+            print("image chat id: " + chat_id)
+            gettingImage = true;
         default:
             print("We haven't implemented any other functionality yet, sorry :/")
         }
@@ -111,7 +122,7 @@ struct ContentView: View {
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
             }
-            let texts_array = loadMessages(num: person)
+            let texts_array = loadMessages(num: person, num_items: num_texts)
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
         } else if selectingChat {
@@ -122,6 +133,10 @@ struct ContentView: View {
             let name = getDisplayName(chat_id: chat_id)
             print("name: " + name)
             return name
+        } else if gettingImage {
+            let image_string = returnImageBase64(chat_id: chat_id)
+            print("image 64: " + image_string)
+            return image_string
         }
         
         return ""
@@ -164,6 +179,9 @@ struct ContentView: View {
         sqlString += " from " + table
         if condition != "" {
             sqlString += " " + condition
+        }
+        if num_items != 0 {
+            sqlString += " LIMIT \(String(num_items))"
         }
         sqlString += ";"
         
@@ -238,11 +256,17 @@ struct ContentView: View {
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
         } else {
             let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-            let chat_id_zero = new_chat_id[new_chat_id.startIndex]
-            let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-            let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-            let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
+            if chat_id.count < 7 {
+                let chat_id_zero = new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
+            } else {
+                let chat_id_zero = new_chat_id[new_chat_id.startIndex]
+                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
+            }
         }
         
         if sqlite3_close(db) != SQLITE_OK {
@@ -269,11 +293,17 @@ struct ContentView: View {
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
         } else {
             let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-            let chat_id_zero = new_chat_id[new_chat_id.startIndex]
-            let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-            let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-            let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
+            if chat_id.count < 7 {
+                let chat_id_zero = new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
+            } else {
+                let chat_id_zero = new_chat_id[new_chat_id.startIndex]
+                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
+            }
         }
         
         if display_name_array.count != 0 {
@@ -291,7 +321,14 @@ struct ContentView: View {
         let chat_id_array = selectFromSql(db: db, columns: ["*"], table: "chat", condition: "WHERE chat_identifier = \"\(num)\"", num_items: 1)
         let chat_id = chat_id_array[0]["*"]! /// ! is necessary or else it prints as 'Optional('x')' instead of just 'x'. May cause issues when nothing is returned tho.
         
-        let chat_message_connection_array = selectFromSql(db: db, columns: ["message_id"], table: "chat_message_join", condition: "WHERE chat_id=\"\(String(describing: chat_id))\"")
+        var chat_message_connection_array = [[String:String]]()
+        
+        if num_items == 0 {
+            chat_message_connection_array = selectFromSql(db: db, columns: ["message_id"], table: "chat_message_join", condition: "WHERE chat_id=\"\(String(describing: chat_id))\"")
+        } else {
+            chat_message_connection_array = selectFromSql(db: db, columns: ["message_id"], table: "chat_message_join", condition: "WHERE chat_id=\"\(String(describing: chat_id))\" ORDER BY message_date DESC",  num_items: num_items)
+            chat_message_connection_array.reverse()
+        }
         var message_ids: [String] = []
         for i in chat_message_connection_array {
             message_ids.append(i["message_id"] ?? "")
@@ -323,7 +360,7 @@ struct ContentView: View {
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         
-        var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat")
+        var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC")
         
         for i in 0..<chats_array.count {
             if chats_array[i]["display_name"]!.count == 0 {
@@ -348,9 +385,100 @@ struct ContentView: View {
         return chats_array
     }
     
+    func returnImageBase64(chat_id: String) -> String {
+        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        
+        var docid = [[String:String]]()
+        
+        if chat_id.contains("@") {
+            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"", num_items: 1)
+        } else {
+            let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+            if new_chat_id.count == 0 {
+                return ""
+            }
+            if chat_id.count < 7 {
+                let chat_id_zero = new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
+            } else {
+                
+                let chat_id_zero = new_chat_id[new_chat_id.startIndex]
+                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
+            }
+        }
+        
+        var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
+        
+        var sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
+        
+        var image: String = "";
+        
+        var statement: OpaquePointer?
+        
+        print("opened statement")
+        
+        if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
+            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
+            print("error preparing select: \(errmsg)")
+        }
+        
+        if sqlite3_step(statement) == SQLITE_ROW {
+            if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
+                //tiny_return = tiny_return_cstring.load(as: Data.self)
+                //image = tiny_return.base64EncodedString()
+                let len: Int32 = sqlite3_column_bytes(statement, 0)
+                let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
+                
+                let image_w_dat = UIImage(data: Data(dat))
+                let pngdata = image_w_dat?.pngData()
+                image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+                
+            } else {
+                print("Nothing returned for tiny_return_cstring when num_items != 0")
+            }
+        }
+        
+        /*
+        int length = sqlite3_column_bytes(statement, 0);
+        NSData *imageData = [NSData dataWithBytes:sqlite3_column_blob(statement, 0 ) length:length];
+
+        image = [UIImage imageWithData:imageData];
+
+        */
+        
+        if sqlite3_finalize(statement) != SQLITE_OK {
+            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
+            print("error finalizing prepared statement: \(errmsg)")
+        }
+
+        statement = nil
+        
+        print("destroyed statement")
+        
+        if sqlite3_close(contact_db) != SQLITE_OK {
+            print("error closing database")
+        }
+
+        contact_db = nil
+        
+        if sqlite3_close(image_db) != SQLITE_OK {
+            print("error closing database")
+        }
+
+        image_db = nil
+        
+        print(image)
+        
+        return image; /// So uh it should be a base64 encoded string?
+    }
+    
     var body: some View {
         VStack {
-            Text("We're workin' on it!")
+            Text("Connect to port 8080 on your iPhone's private ip from a browser to view your messages")
             Spacer()
                 .frame(height: 20)
             TextField("Enter port number to run server on", text: $egnum)
