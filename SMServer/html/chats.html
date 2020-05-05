@@ -4,13 +4,13 @@
             Messages
         </title>
         <script>
-            var prefix = '' /// Just switch this from nothing to the ip when testing.
             var items = "";
             var shown_name = "";
             var texts = "";
             var image_string = "";
+            var default_image_url = "https://cdn3.iconfinder.com/data/icons/basic-ui-element-s94-3/64/Basic_UI_Icon_Pack_-_Glyph_user-512.png";
             const readJson = async () => {
-                let url = prefix + "/requests?c"
+                let url = "/requests?c"
                 console.log(url)
                 const fetch_val = await fetch(url)
                 .then(response => {
@@ -34,25 +34,34 @@
                 var doc = document.getElementsByClassName("chats")[0];
                 console.log(items.length + ", " + items[0])
                 for(var i = 0; i < items.length; i++) {
-                    console.log(items[i].chat_identifier)
-                    var b = document.createElement('button');
-                    console.log("c: " + items[i].chat_identifier + ", d: " + items[i].display_name)
-                    if (items[i].display_name.length === 0) {
-                        b.innerHTML = items[i].chat_identifier
+                    console.log(items[i].chat_identifier);
+                    
+                    var b = document.createElement('button'); 
+                    await getImage(items[i].chat_identifier);
+                    if (image_string.length !== 0) {
+                        b.innerHTML = "<img src=\"data:image/png;base64," + image_string + "\">";
                     } else {
-                        b.innerHTML = items[i].display_name
+                        b.innerHTML = "<img src=\"" + default_image_url + "\">";
                     }
-                    var get_texts_string = "getTexts(\"" + items[i].chat_identifier + "\", " + num_texts + ")"
-                    console.log("c id: " + items[i].chat_identifier)
-                    console.log(get_texts_string)
-                    b.setAttribute("onclick", get_texts_string)
+                    console.log("inner html: " + b.innerHTML)
+                    console.log("c: " + items[i].chat_identifier + ", d: " + items[i].display_name);
+
+                    if (items[i].display_name.length === 0) {
+                        b.innerHTML += "<p>" + items[i].chat_identifier + "</p>";
+                    } else {
+                        b.innerHTML += "<p>" + items[i].display_name + "</p>";
+                    }
+                    var get_texts_string = "getTexts(\"" + items[i].chat_identifier + "\", " + num_texts + ")";
+                    console.log("c id: " + items[i].chat_identifier);
+                    console.log(get_texts_string);
+                    b.setAttribute("onclick", get_texts_string);
+
                     doc.appendChild(b);
-                    doc.appendChild(document.createElement("br"));
                 }
             }
     
             const fetchName = async (name) => {
-                var url = prefix + '/requests?n=' + name
+                var url = '/requests?n=' + name
                 console.log("url: " + url)
                 var return_name = ""
                 xmlhttp=new XMLHttpRequest();
@@ -71,7 +80,7 @@
                 var myNode = document.getElementsByClassName("text-content")[0];
                 myNode.innerHTML = '';
 
-                let url = prefix + "/requests?p=" + chat_id + "&n=" + num_texts
+                let url = "/requests?p=" + chat_id + "&n=" + num_texts
                 console.log("text url: " + url)
                 const fetch_texts = await fetch(url)
                 .then(response => {
@@ -118,19 +127,23 @@
             }
 
             const getImage = async (chat_id) => {
-                var url = prefix + '/requests?i=' + chat_id
+                var url = '/requests?i=' + chat_id
                 console.log("url: " + url)
-                var return_name = ""
-                xmlhttp=new XMLHttpRequest();
-                xmlhttp.onreadystatechange=function() {
-                    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                        return xmlhttp.responseText;
+                const fetch_image = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
                     }
-                }
-                xmlhttp.open("GET", url, false );
-                xmlhttp.send(); 
-                this.image_string = xmlhttp.responseText;
-                return String(return_name)
+                    return response.text();
+                })
+                .then(text => {
+                    console.log("text: " + text)
+                    this.image_string = text
+                    return image_string
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
             }
 
             printItems()
@@ -154,7 +167,7 @@
                 padding: 0px;
             }
             p, h2, a, button {
-                font-family: Calibri, sans-serif, Verdana, Courier;
+                font-family: Ubuntu, Calibri, sans-serif, Verdana, Courier;
                 text-decoration: none;
             }
             p {
@@ -167,7 +180,7 @@
                 border-radius: 5px;
                 overflow: auto;
                 height: calc(100vh - 20px);
-                width: max-content;
+                width: 20vw;
                 overflow-x: hidden;
             }
             ::-webkit-scrollbar {
@@ -182,6 +195,7 @@
                 grid-template-areas: "title" "text-content" "textbox";
                 height: calc(100vh - 20px);
                 max-width: 80vw;
+                background-color: #111;
             }
             .messages .title {
                 grid-area: title;
@@ -199,26 +213,44 @@
             }
             .chats button {
                 border: none;
-                padding: 20px;
                 border-top: 1px solid #222;
                 border-bottom: 1px solid #222;
                 background-color: #111;
-                display: inline-block;
+                display: grid;
+                grid-template-columns: max-content 1fr;
+                grid-template-areas: "img text";
                 width: 20vw;
                 margin: 0px;
-                transition: all linear 0.14s;
+                transition: all linear 0.1s;
                 font-size: 20px;
                 color: #dae3f0;
-                align-content: flex-start;
+                text-align: start;
                 font-weight: 300;
             }
+            .chats img {
+                grid-area: img;
+                width: 3vw;
+                height: 3vw;
+                border-radius: 100%;
+                padding: 8px;
+            }
+            .chats p {
+                grid-area: text;
+                display: inline-block;
+                padding-left: 10px;
+                transition: all linear 0.1s;
+                
+            }
             .chats button:hover {
-                color: rgb(78, 150, 223);
                 background-color: #222;
-                transition: all linear 0.14s;
+                transition: all linear 0.1s;
+            }
+            .chats button:hover p {
+                color: rgb(78, 150, 223) !important;
+                transition: all linear 0.1s; 
             }
             .text {
-                font-family: Calibri, sans-serif, Verdana, Courier;
+                font-family: Ubuntu, Calibri, sans-serif, Verdana, Courier;
                 border-radius: 14px;
                 width: max-content;
                 max-width: 40vw;
@@ -229,12 +261,12 @@
             }
             .is_from_me {
                 float: right;
-                background-color: rgb(31, 90, 252);
+                background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
                 margin-left: calc(100% - 26vw);
             }
             .is_from_them {
                 float: left;
-                background-color: rgb(20, 177, 54);
+                background-image: linear-gradient(to right, rgb(32, 194, 67), rgb(17, 146, 62));
                 margin-right: calc(100% - 26vw);
             }
        </style>

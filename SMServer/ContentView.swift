@@ -68,7 +68,7 @@ struct ContentView: View {
     
     func loadHtmlFile() {
         if let dir = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html") {
-            print(dir)
+            //print(dir)
             do {
                 self.main_page = try String(contentsOf: dir, encoding: .utf8)
             }
@@ -108,11 +108,11 @@ struct ContentView: View {
             selectingChat = true
         case "n":
             chat_id = params[0].1
-            print("chat:" + chat_id)
+            //print("chat:" + chat_id)
             gettingName = true
         case "i":
             chat_id = params[0].1
-            print("image chat id: " + chat_id)
+            //print("image chat id: " + chat_id)
             gettingImage = true;
         default:
             print("We haven't implemented any other functionality yet, sorry :/")
@@ -126,16 +126,16 @@ struct ContentView: View {
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
         } else if selectingChat {
-            let chats_array = loadChats()
+            let chats_array = loadChats(num_to_load: 30)
             let chats = encodeToJson(object: chats_array, title: "chats")
             return chats
         } else if gettingName {
             let name = getDisplayName(chat_id: chat_id)
-            print("name: " + name)
+            //print("name: " + name)
             return name
         } else if gettingImage {
             let image_string = returnImageBase64(chat_id: chat_id)
-            print("image 64: " + image_string)
+            //print("image 64: " + image_string)
             return image_string
         }
         
@@ -162,12 +162,6 @@ struct ContentView: View {
     }
     
     func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = 0) -> [[String:String]] { /// Flawless.
-        """
-        columns is the ??? in 'SELECT ???'
-        table is the ??? in 'FROM ???'
-        condition is the (eg) 'WHERE ROW=1'
-        numToSelect is the number of items to return, do all of them if it's 0.
-        """
         
         var sqlString = "SELECT "
         for i in columns {
@@ -184,10 +178,6 @@ struct ContentView: View {
             sqlString += " LIMIT \(String(num_items))"
         }
         sqlString += ";"
-        
-        /*if sqlString.contains("@") {
-            sqlString = sqlString.replacingOccurrences(of: "@", with: "@") /// Lolll guess I gotta escape my escape slash for the '@'
-        }*/
         
         print("full sql query: " + sqlString)
         
@@ -261,10 +251,10 @@ struct ContentView: View {
                 let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
                 display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
             } else {
-                let chat_id_zero = new_chat_id[new_chat_id.startIndex]
-                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-                let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-                let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                let chat_id_zero = String(new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_one = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_two = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_three = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex])
                 display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
             }
         }
@@ -294,14 +284,14 @@ struct ContentView: View {
         } else {
             let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
             if chat_id.count < 7 {
-                let chat_id_zero = new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                let chat_id_zero = String(new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_one = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex])
                 display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
             } else {
-                let chat_id_zero = new_chat_id[new_chat_id.startIndex]
-                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-                let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-                let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                let chat_id_zero = String(new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_one = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_two = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_three = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex])
                 display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
             }
         }
@@ -360,13 +350,22 @@ struct ContentView: View {
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         
-        var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC")
+        //var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
+        
+        var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC", num_items: num_to_load)
         
         for i in 0..<chats_array.count {
             if chats_array[i]["display_name"]!.count == 0 {
                 chats_array[i]["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: chats_array[i]["chat_identifier"]!)
             }
+            //chats_array[i]["image_string"] = returnImageBase64(contact_db: contacts_db!, image_db: image_db!, chat_id: chats_array[i]["chat_identifier"]!)
         }
+        
+        /*if sqlite3_close(image_db) != SQLITE_OK {
+            print("error closing database")
+        }
+
+        image_db = nil*/
         
         if sqlite3_close(contacts_db) != SQLITE_OK {
             print("error closing database")
@@ -402,18 +401,21 @@ struct ContentView: View {
                 let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
                 docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
             } else {
-                
-                let chat_id_zero = new_chat_id[new_chat_id.startIndex]
-                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 1, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-                let chat_id_two = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 4, limitedBy: new_chat_id.endIndex) ??   new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
-                let chat_id_three = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 7, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                let chat_id_zero = String(new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_one = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_two = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_three = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex])
                 docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
             }
         }
         
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
-        var sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
+        if docid.count == 0 {
+            return ""
+        }
+        
+        let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
         
         var image: String = "";
         
@@ -428,8 +430,6 @@ struct ContentView: View {
         
         if sqlite3_step(statement) == SQLITE_ROW {
             if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
-                //tiny_return = tiny_return_cstring.load(as: Data.self)
-                //image = tiny_return.base64EncodedString()
                 let len: Int32 = sqlite3_column_bytes(statement, 0)
                 let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
                 
@@ -441,14 +441,6 @@ struct ContentView: View {
                 print("Nothing returned for tiny_return_cstring when num_items != 0")
             }
         }
-        
-        /*
-        int length = sqlite3_column_bytes(statement, 0);
-        NSData *imageData = [NSData dataWithBytes:sqlite3_column_blob(statement, 0 ) length:length];
-
-        image = [UIImage imageWithData:imageData];
-
-        */
         
         if sqlite3_finalize(statement) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(image_db)!)
@@ -471,7 +463,7 @@ struct ContentView: View {
 
         image_db = nil
         
-        print(image)
+        //print(image)
         
         return image; /// So uh it should be a base64 encoded string?
     }
