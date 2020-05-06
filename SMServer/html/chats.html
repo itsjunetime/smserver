@@ -8,7 +8,6 @@
             var shown_name = "";
             var texts = "";
             var image_string = "";
-            var default_image_url = "https://cdn3.iconfinder.com/data/icons/basic-ui-element-s94-3/64/Basic_UI_Icon_Pack_-_Glyph_user-512.png";
             const readJson = async () => {
                 let url = "/requests?c"
                 console.log(url)
@@ -36,13 +35,11 @@
                 for(var i = 0; i < items.length; i++) {
                     console.log(items[i].chat_identifier);
                     
-                    var b = document.createElement('button'); 
+                    var b = document.createElement('button');
+                    b.setAttribute("id", items[i].chat_identifier);
+
                     await getImage(items[i].chat_identifier);
-                    if (image_string.length !== 0) {
-                        b.innerHTML = "<img src=\"data:image/png;base64," + image_string + "\">";
-                    } else {
-                        b.innerHTML = "<img src=\"" + default_image_url + "\">";
-                    }
+                    b.innerHTML = "<img src=\"data:image/png;base64," + image_string + "\">";
                     console.log("inner html: " + b.innerHTML)
                     console.log("c: " + items[i].chat_identifier + ", d: " + items[i].display_name);
 
@@ -55,7 +52,7 @@
                     console.log("c id: " + items[i].chat_identifier);
                     console.log(get_texts_string);
                     b.setAttribute("onclick", get_texts_string);
-
+                    
                     doc.appendChild(b);
                 }
             }
@@ -98,11 +95,40 @@
                     this.dataError = true;
                 })
 
+                var new_display_name = "";
+
+                var d_url = '/requests?n=' + chat_id
+                console.log("url: " + d_url)
+                const fetch_name = await fetch(d_url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    console.log("name text: " + text)
+                    new_display_name = text
+                    return new_display_name
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
+
+                var _ = await fetch_name    
+
+                var title_doc = document.getElementsByClassName("title")[0]
+                title_doc.innerHTML = ''
+                var new_name = document.createElement("h2")
+                new_name.innerHTML = new_display_name
+                title_doc.appendChild(new_name);
+
                 var _ = await fetch_texts
 
                 for (var i = 0; i < texts.length; i++) {
                     var doc = document.getElementsByClassName("text-content")[0]
                     var t = document.createElement("p");
+
                     var classes = "text";
                     if (texts[i].is_from_me === "0") {
                         console.log("is from them");
@@ -115,6 +141,31 @@
                     }
                     console.log(texts[i].text);
                     t.innerHTML = texts[i].text;
+                    /// So uh do (date/384196335.3) == unix timestamp. About. The number is somewhere around there. 
+                    if (i != 0 && texts[i].date - texts[i - 1].date > 2800000000000) {
+                        var time = document.createElement("p");
+                        time.setAttribute("class", "time-display");
+
+                        let unix_timestamp = texts[i].date / 384196335.3 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
+
+                        function timeConverter(UNIX_timestamp){
+                            var a = new Date(UNIX_timestamp * 1000);
+                            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            var year = a.getFullYear();
+                            var month = months[a.getMonth()];
+                            var date = a.getDate();
+                            var hour = a.getHours();
+                            var min = a.getMinutes();
+                            var time = date + ' ' + month + ' ' + year + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (min < 10 ? '0' : '') + min;
+                            return time;
+                        }
+
+                        var formattedTime = timeConverter(unix_timestamp)
+                        
+                        time.innerHTML = formattedTime
+                        doc.appendChild(time)
+                    }
+                    
                     doc.appendChild(t);
                     doc.appendChild(document.createElement("br"));
                     if (texts[i].is_from_me != texts[i + 1].is_from_me) {
@@ -150,6 +201,10 @@
             
         </script>
         <style>
+            
+            :root {
+                --messages-title-height: 64px;
+            }
             body, html {
                 background-color: #050505;
                 height: calc(100vh - 20px);
@@ -169,6 +224,7 @@
             p, h2, a, button {
                 font-family: Ubuntu, Calibri, sans-serif, Verdana, Courier;
                 text-decoration: none;
+                font-weight: 300;
             }
             p {
                 color: #dae3f0;
@@ -178,9 +234,6 @@
                 grid-area: conversations;
                 border: 1px solid #222;
                 border-radius: 5px;
-                overflow: auto;
-                height: calc(100vh - 20px);
-                width: 20vw;
                 overflow-x: hidden;
             }
             ::-webkit-scrollbar {
@@ -190,33 +243,40 @@
                 border: 2px solid #161616;
                 grid-area: messages;
                 display: grid;
-                grid-template-rows: 8vh 1fr 6vh;
+                grid-template-rows: var(--messages-title-height) 1fr 40px;
                 grid-template-columns: 1fr;
-                grid-template-areas: "title" "text-content" "textbox";
-                height: calc(100vh - 20px);
-                max-width: 80vw;
+                width: 100%;
                 background-color: #111;
-            }
-            .messages .title {
-                grid-area: title;
-            }
-            .messages .text-content {
-                grid-area: text-content;
-                overflow: auto;
                 overflow-x: hidden;
             }
-            .messages .text-content::-webkit-scrollbar {
-                display: none;
-            } 
+            .messages .title {
+                grid-row: 1;
+                grid-column: 1;
+                backdrop-filter: blur(50px);
+                z-index: 1;
+            }
+            .title h2 {
+                color: #c9c9c9;
+                text-align: center;
+            }
+            .messages .text-content {
+                grid-row: 1/3;
+                grid-column: 1;
+                z-index: 0;
+                overflow-x: hidden;
+            }
             .messages .textbox {
-                grid-area: textbox;
+                grid-row: 3;
+                grid-column: 1;
+                z-index: 1;
+                backdrop-filter: blur(50px);
             }
             .chats button {
                 border: none;
                 border-top: 1px solid #222;
                 border-bottom: 1px solid #222;
                 background-color: #111;
-                display: grid;
+                display: flex; /*was grid*/
                 grid-template-columns: max-content 1fr;
                 grid-template-areas: "img text";
                 width: 20vw;
@@ -236,7 +296,7 @@
             }
             .chats p {
                 grid-area: text;
-                display: inline-block;
+                display: flex; /*was inline-block*/
                 padding-left: 10px;
                 transition: all linear 0.1s;
                 
@@ -262,12 +322,21 @@
             .is_from_me {
                 float: right;
                 background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
-                margin-left: calc(100% - 26vw);
+                position: relative;
+                margin-left: 100%;
             }
             .is_from_them {
                 float: left;
                 background-image: linear-gradient(to right, rgb(32, 194, 67), rgb(17, 146, 62));
-                margin-right: calc(100% - 26vw);
+                position: relative;
+                margin-right: 100%;
+            }
+            .is_from_me + .is_from_them,
+            .is_from_them + .is_from_me {
+                margin-top: 20px;
+            }
+            .time-display {
+                text-align: center;
             }
        </style>
     </head>

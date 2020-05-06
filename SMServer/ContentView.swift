@@ -27,16 +27,8 @@ struct ContentView: View {
         </body>
     </html>
     """
-    @State var main_page = """
-    <!DOCTYPE html>
-        <body style="background-color: #111">
-            <p style="font-family:Ubuntu, Courier; color: #dae3f0; font-size: 20px; padding: 10px">
-                This is the main page! Send your requests to /requests with your parameters included :)
-                <br>
-                I'll write more documentation about how to send requests later; I'm lazy rn.
-            </p>
-        </body>
-    </html>
+    @State var main_page =
+    """
     """
     
     func loadServer(port_num: UInt16 = 8080) {
@@ -328,7 +320,7 @@ struct ContentView: View {
         
         var j = 0
         for i in message_ids {
-            let m = selectFromSql(db: db, columns: ["text", "is_from_me"], table: "message", condition: "WHERE ROWID=\(i)", num_items: 1)
+            let m = selectFromSql(db: db, columns: ["text", "is_from_me", "date", "service"], table: "message", condition: "WHERE ROWID=\(i)", num_items: 1)
             messages.append(m[0]) /// Since it should be an array with just one element, which is a dictionary.
             j += 1
         }
@@ -350,22 +342,13 @@ struct ContentView: View {
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         
-        //var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
-        
         var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC", num_items: num_to_load)
         
         for i in 0..<chats_array.count {
             if chats_array[i]["display_name"]!.count == 0 {
                 chats_array[i]["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: chats_array[i]["chat_identifier"]!)
             }
-            //chats_array[i]["image_string"] = returnImageBase64(contact_db: contacts_db!, image_db: image_db!, chat_id: chats_array[i]["chat_identifier"]!)
         }
-        
-        /*if sqlite3_close(image_db) != SQLITE_OK {
-            print("error closing database")
-        }
-
-        image_db = nil*/
         
         if sqlite3_close(contacts_db) != SQLITE_OK {
             print("error closing database")
@@ -409,11 +392,22 @@ struct ContentView: View {
             }
         }
         
-        var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
-        
         if docid.count == 0 {
-            return ""
+            
+            if sqlite3_close(contact_db) != SQLITE_OK {
+                print("error closing database")
+            }
+
+            contact_db = nil
+            
+            let image_dat = UIImage(named: "profile")
+            let pngdata = image_dat?.pngData()
+            let image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+            
+            return image
         }
+        
+        var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
         let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
         
@@ -438,8 +432,15 @@ struct ContentView: View {
                 image = pngdata!.base64EncodedString(options: .lineLength64Characters)
                 
             } else {
-                print("Nothing returned for tiny_return_cstring when num_items != 0")
+                print("Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
+                let image_dat = UIImage(named: "profile")
+                let pngdata = image_dat?.pngData()
+                image = pngdata!.base64EncodedString(options: .lineLength64Characters)
             }
+        } else {
+            let image_dat = UIImage(named: "profile")
+            let pngdata = image_dat?.pngData()
+            image = pngdata!.base64EncodedString(options: .lineLength64Characters)
         }
         
         if sqlite3_finalize(statement) != SQLITE_OK {
@@ -473,7 +474,12 @@ struct ContentView: View {
             Text("Connect to port 8080 on your iPhone's private ip from a browser to view your messages")
             Spacer()
                 .frame(height: 20)
-            TextField("Enter port number to run server on", text: $egnum)
+            HStack {
+                Spacer()
+                TextField("Enter port number to run server on", text: $egnum)
+                    .frame(width: 250)
+                Spacer()
+            }
             Button(action: {
                 self.test_messages = self.loadMessages()
             }) {
@@ -504,11 +510,6 @@ struct ContentView: View {
             }) {
                 Text("Reload HTML")
             }
-            /*if messages_have_been_loaded {
-                List(test_messages, id: \.self) { text in
-                    Text("\(text["text"] ?? ""), \(text["is_from_me"] ?? "")")
-                }
-            }*/
         }.onAppear() {
             self.loadServer()
             self.loadHtmlFile()
