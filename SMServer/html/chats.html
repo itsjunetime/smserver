@@ -95,7 +95,7 @@
                     this.dataError = true;
                 })
 
-                var new_display_name = "";
+                /*var new_display_name = "";
 
                 var d_url = '/requests?n=' + chat_id
                 console.log("url: " + d_url)
@@ -121,7 +121,11 @@
                 title_doc.innerHTML = ''
                 var new_name = document.createElement("h2")
                 new_name.innerHTML = new_display_name
-                title_doc.appendChild(new_name);
+                title_doc.appendChild(new_name);*/
+
+                var chat_title = document.getElementById(chat_id)
+                var title_doc = document.getElementsByClassName("title")[0]
+                title_doc.innerHTML = chat_title.innerHTML
 
                 var _ = await fetch_texts
 
@@ -254,10 +258,22 @@
                 grid-column: 1;
                 backdrop-filter: blur(50px);
                 z-index: 1;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr;
+                align-content: center;
             }
-            .title h2 {
+            .title p {
                 color: #c9c9c9;
-                text-align: center;
+                text-align: start;
+                font-size: 30px;
+            }
+            .title img {
+                max-height: calc(var(--messages-title-height) * 0.8);
+                grid-column: 1;
+                margin-left: calc(100% - var(--messages-title-height));
+                align-self: center;
+                border-radius: 100%;
             }
             .messages .text-content {
                 grid-row: 1/3;
