@@ -341,6 +341,7 @@ struct ContentView: View {
     func loadChats(num_to_load: Int = 0) -> [[String:String]] {
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
         var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC", num_items: num_to_load)
         
@@ -348,7 +349,15 @@ struct ContentView: View {
             if chats_array[i]["display_name"]!.count == 0 {
                 chats_array[i]["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: chats_array[i]["chat_identifier"]!)
             }
+            
+            chats_array[i]["image_text"] = returnImageBase64DB(chat_id: chats_array[i]["chat_identifier"]!, contact_db: contacts_db!, image_db: image_db!)
         }
+        
+        if sqlite3_close(image_db) != SQLITE_OK {
+            print("error closing image db")
+        }
+        
+        image_db = nil
         
         if sqlite3_close(contacts_db) != SQLITE_OK {
             print("error closing database")
@@ -463,6 +472,108 @@ struct ContentView: View {
         }
 
         image_db = nil
+        
+        //print(image)
+        
+        return image; /// So uh it should be a base64 encoded string?
+    }
+    
+    func returnImageBase64DB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> String {
+        //var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        
+        var docid = [[String:String]]()
+        
+        if chat_id.contains("@") {
+            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"", num_items: 1)
+        } else {
+            let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+            if new_chat_id.count == 0 {
+                return ""
+            }
+            if chat_id.count < 7 {
+                let chat_id_zero = new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
+                let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
+                docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
+            } else {
+                let chat_id_zero = String(new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_one = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 10), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_two = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 7), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
+                let chat_id_three = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: (new_chat_id.count - 4), limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex])
+                docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id_zero)%\(chat_id_one)%\(chat_id_two)%\(chat_id_three)%\"", num_items: 1)
+            }
+        }
+        
+        if docid.count == 0 {
+            
+            /*if sqlite3_close(contact_db) != SQLITE_OK {
+                print("error closing database")
+            }
+
+            contact_db = nil*/
+            
+            let image_dat = UIImage(named: "profile")
+            let pngdata = image_dat?.pngData()
+            let image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+            
+            return image
+        }
+        
+        //var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
+        
+        let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
+        
+        var image: String = "";
+        
+        var statement: OpaquePointer?
+        
+        print("opened statement")
+        
+        if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
+            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
+            print("error preparing select: \(errmsg)")
+        }
+        
+        if sqlite3_step(statement) == SQLITE_ROW {
+            if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
+                let len: Int32 = sqlite3_column_bytes(statement, 0)
+                let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
+                
+                let image_w_dat = UIImage(data: Data(dat))
+                let pngdata = image_w_dat?.pngData()
+                image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+                
+            } else {
+                print("Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
+                let image_dat = UIImage(named: "profile")
+                let pngdata = image_dat?.pngData()
+                image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+            }
+        } else {
+            let image_dat = UIImage(named: "profile")
+            let pngdata = image_dat?.pngData()
+            image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+        }
+        
+        if sqlite3_finalize(statement) != SQLITE_OK {
+            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
+            print("error finalizing prepared statement: \(errmsg)")
+        }
+
+        statement = nil
+        
+        print("destroyed statement")
+        
+        /*if sqlite3_close(contact_db) != SQLITE_OK {
+            print("error closing database")
+        }
+
+        contact_db = nil*/
+        
+        /*if sqlite3_close(image_db) != SQLITE_OK {
+            print("error closing database")
+        }
+
+        image_db = nil*/
         
         //print(image)
         
