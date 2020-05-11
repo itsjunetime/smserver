@@ -14,10 +14,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "418"
-            endingLineNumber = "418"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "427"
+            endingLineNumber = "427"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -30,10 +30,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "440"
-            endingLineNumber = "440"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "449"
+            endingLineNumber = "449"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -46,10 +46,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "441"
-            endingLineNumber = "441"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "450"
+            endingLineNumber = "450"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -62,10 +62,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "434"
-            endingLineNumber = "434"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "443"
+            endingLineNumber = "443"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -78,10 +78,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "435"
-            endingLineNumber = "435"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "444"
+            endingLineNumber = "444"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -94,10 +94,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "425"
-            endingLineNumber = "425"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "434"
+            endingLineNumber = "434"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -110,10 +110,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "426"
-            endingLineNumber = "426"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "435"
+            endingLineNumber = "435"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -126,10 +126,10 @@
             filePath = "SMServer/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "427"
-            endingLineNumber = "427"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "436"
+            endingLineNumber = "436"
+            landmarkName = "returnImageBase64(chat_id:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
