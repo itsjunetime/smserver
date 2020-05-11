@@ -38,8 +38,9 @@
                     var b = document.createElement('button');
                     b.setAttribute("id", items[i].chat_identifier);
 
-                    await getImage(items[i].chat_identifier);
-                    b.innerHTML = "<img src=\"data:image/png;base64," + image_string + "\">";
+                    //await getImage(items[i].chat_identifier);
+                    //b.innerHTML = "<img src=\"data:image/png;base64," + image_string + "\">";
+                    b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
                     console.log("inner html: " + b.innerHTML)
                     console.log("c: " + items[i].chat_identifier + ", d: " + items[i].display_name);
 
