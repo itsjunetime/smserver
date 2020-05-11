@@ -30,7 +30,7 @@
             const printItems = async () => {
                 var new_items = await readJson();
                 const num_texts = 500;
-                var doc = document.getElementsByClassName("chats")[0];
+                var doc = document.getElementsByClassName("chatsList")[0];
                 console.log(items.length + ", " + items[0])
                 for(var i = 0; i < items.length; i++) {
                     console.log(items[i].chat_identifier);
@@ -208,6 +208,8 @@
             
             :root {
                 --messages-title-height: 64px;
+                --main-text-color: #dae3f0;
+                --main-font-family: Ubuntu, Calibri, sans-serif, Verdana, Courier; 
             }
             body, html {
                 background-color: #050505;
@@ -225,10 +227,11 @@
                 height: calc(100vh - 20px);
                 padding: 0px;
             }
-            p, h2, a, button {
-                font-family: Ubuntu, Calibri, sans-serif, Verdana, Courier;
+            p, h1, h2, h3, h4, h5, h6, a, button {
+                font-family: var(--main-font-family);
                 text-decoration: none;
                 font-weight: 300;
+                color: var(--main-text-color);
             }
             p {
                 color: #dae3f0;
@@ -239,6 +242,18 @@
                 border: 1px solid #222;
                 border-radius: 5px;
                 overflow-x: hidden;
+            }
+            .chats .chatsHeader {
+                font-size: larger;
+                font-weight: 500;
+                height: 70px;
+                padding: 10px;
+            }
+            .chats .chatsSearch {
+                height: 28px;
+                border-top: 2px solid black;
+                border-bottom: 2px solid black;
+                padding: 5px;
             }
             ::-webkit-scrollbar {
                 display: none;
@@ -359,6 +374,15 @@
     <body>
         <div class="everything">
             <div class="chats">
+                <div class="chatsHeader">
+                    <h1>Messages</h2>
+                </div>
+                <div class="chatsSearch">
+                    <h3>Search</h4>
+                </div>
+                <div class="chatsList">
+
+                </div>
             </div>
             <div class="messages">
                 <div class="title">
