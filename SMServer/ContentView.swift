@@ -12,8 +12,8 @@ import SQLite3
 
 struct ContentView: View {
     let server = HttpServer()
-    @State var test_messages = [[String: String]]()
-    @State var messages_have_been_loaded = false
+    //@State var test_messages = [[String: String]]()
+    //@State var messages_have_been_loaded = false
     @State var egnum = "8080"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
@@ -296,7 +296,7 @@ struct ContentView: View {
         return ""
     }
     
-    func loadMessages(num: String = "+15203106053", num_items: Int = 0) -> [[String:String]] { /// Ok so this function seems to work. cool.
+    func loadMessages(num: String/* = "+15203106053"*/, num_items: Int = 0) -> [[String:String]] { /// Ok so this function seems to work. cool.
         
         var db = createConnection()
         
@@ -334,7 +334,7 @@ struct ContentView: View {
         print("destroyed db")
         
         print("returning messages!")
-        messages_have_been_loaded = true
+        //messages_have_been_loaded = true
         return messages
     }
     
@@ -588,13 +588,9 @@ struct ContentView: View {
             HStack {
                 Spacer()
                 TextField("Enter port number to run server on", text: $egnum)
-                    .frame(width: 250)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .frame(width: 200)
                 Spacer()
-            }
-            Button(action: {
-                self.test_messages = self.loadMessages()
-            }) {
-                Text("Press me to load messages")
             }
             Spacer()
                 .frame(height: 20)
