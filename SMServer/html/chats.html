@@ -30,7 +30,7 @@
             const printItems = async () => {
                 var new_items = await readJson();
                 const num_texts = 500;
-                var doc = document.getElementsByClassName("chatsList")[0];
+                var doc = document.getElementsByClassName("chats-list")[0];
                 console.log(items.length + ", " + items[0])
                 for(var i = 0; i < items.length; i++) {
                     console.log(items[i].chat_identifier);
@@ -209,11 +209,16 @@
             
             :root {
                 --messages-title-height: 64px;
-                --main-text-color: #dae3f0;
-                --main-font-family: Ubuntu, Calibri, sans-serif, Verdana, Courier; 
+                --font-color: #dae3f0;
+                --main-font: Ubuntu, Calibri, sans-serif, Verdana, Courier;
+                --chats-border: #222;
+            }
+            * {
+                font-family: var(--main-font);
+                color: var(--font-color);
             }
             body, html {
-                background-color: #050505;
+                background-color: #000;
                 height: calc(100vh - 20px);
             }
             html {
@@ -228,33 +233,15 @@
                 height: calc(100vh - 20px);
                 padding: 0px;
             }
-            p, h1, h2, h3, h4, h5, h6, a, button {
-                font-family: var(--main-font-family);
+            p, h2, a, button {
+                font-family: var(--main-font);
                 text-decoration: none;
                 font-weight: 300;
                 color: var(--main-text-color);
             }
             p {
-                color: #dae3f0;
+                color: var(--font-color);
                 font-size: 20px;
-            }
-            .chats {
-                grid-area: conversations;
-                border: 1px solid #222;
-                border-radius: 5px;
-                overflow-x: hidden;
-            }
-            .chats .chatsHeader {
-                font-size: larger;
-                font-weight: 500;
-                height: 70px;
-                padding: 10px;
-            }
-            .chats .chatsSearch {
-                height: 28px;
-                border-top: 2px solid black;
-                border-bottom: 2px solid black;
-                padding: 5px;
             }
             ::-webkit-scrollbar {
                 display: none;
@@ -279,8 +266,14 @@
                 grid-template-rows: 1fr;
                 align-content: center;
             }
+            /*.messages .top-spacer {
+                height: var(--messages-title-height);
+                width: 100%;
+                display: inline-block;
+                color: transparent !important;
+            }*/
             .title p {
-                color: #c9c9c9;
+                color: var(--font-color);
                 text-align: start;
                 font-size: 30px;
             }
@@ -296,6 +289,7 @@
                 grid-column: 1;
                 z-index: 0;
                 overflow-x: hidden;
+                padding-top: var(--messages-title-height);
             }
             .messages .textbox {
                 grid-row: 3;
@@ -303,10 +297,39 @@
                 z-index: 1;
                 backdrop-filter: blur(50px);
             }
+            .chats {
+                grid-area: conversations;
+                border: 1px solid var(--chats-border);
+                border-radius: 5px;
+                overflow-x: hidden;
+                display: grid;
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 36px 1fr;
+            }
+            .chats-title {
+                color: var(--font-color);
+                grid-column: 1;
+                grid-row: 1;
+                font-size: xx-large;
+                padding: 16px 0px 0px 10px;
+                vertical-align: bottom;
+            }
+            .chats-search {
+                color: var(--font-color);
+                grid-column: 1;
+                grid-row: 2;
+                padding: 10px;
+                border-top: 1px solid var(--chats-border);
+            }
+            .chats-list {
+                color: var(--font-color);
+                grid-row: 3;
+                grid-column: 1;
+            }
             .chats button {
                 border: none;
-                border-top: 1px solid #222;
-                border-bottom: 1px solid #222;
+                border-top: 1px solid var(--chats-border);
+                border-bottom: 1px solid var(--chats-border);
                 background-color: #111;
                 display: flex; /*was grid*/
                 grid-template-columns: max-content 1fr;
@@ -342,7 +365,7 @@
                 transition: all linear 0.1s; 
             }
             .text {
-                font-family: Ubuntu, Calibri, sans-serif, Verdana, Courier;
+                font-family: var(--main-font);
                 border-radius: 14px;
                 width: max-content;
                 max-width: 40vw;
@@ -375,13 +398,9 @@
     <body>
         <div class="everything">
             <div class="chats">
-                <div class="chatsHeader">
-                    <h1>Messages</h2>
-                </div>
-                <div class="chatsSearch">
-                    <h3>Search</h4>
-                </div>
-                <div class="chatsList">
+                <div class="chats-title">Messages</div>
+                <div class="chats-search">Search</div>
+                <div class="chats-list">
 
                 </div>
             </div>
@@ -389,7 +408,8 @@
                 <div class="title">
                     <span class="title-name"></span>
                 </div>
-                <div class="text-content" id="text-content"></div>
+                <div class="text-content" id="text-content">
+                </div>
                 <div class="textbox"></div>
             </div>
         </div>
