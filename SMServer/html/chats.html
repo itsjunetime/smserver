@@ -209,6 +209,7 @@
             
             :root {
                 --messages-title-height: 64px;
+                --messages-send-height: 40px;
                 --font-color: #dae3f0;
                 --main-font: Ubuntu, Calibri, sans-serif, Verdana, Courier;
                 --chats-border: #222;
@@ -250,7 +251,7 @@
                 border: 2px solid #161616;
                 grid-area: messages;
                 display: grid;
-                grid-template-rows: var(--messages-title-height) 1fr 40px;
+                grid-template-rows: var(--messages-title-height) 1fr var(--messages-send-height);
                 grid-template-columns: 1fr;
                 width: 100%;
                 background-color: #111;
@@ -290,6 +291,7 @@
                 z-index: 0;
                 overflow-x: hidden;
                 padding-top: var(--messages-title-height);
+                padding-bottom: var(--messages-send-height);
             }
             .messages .textbox {
                 grid-row: 3;

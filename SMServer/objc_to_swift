@@ -1,0 +1,96 @@
+#!/bin/bash
+
+rt_objc=$(echo "$1" | cut -d "(" -f2 | cut -d ")" -f1)
+rt_swift=""
+get_return_type() {
+	return=""
+	case "$1" in
+		"void")
+			return="Void"
+			;;
+		"BOOL" | "bool")
+			return="Bool"
+			;;
+		"id")
+			return="Any"
+			;;
+		"int")
+			return="Int"
+			;;
+		"long")
+			return="Long"
+			;;
+		"long long")
+			return="CLongLong"
+			;;
+		"unsigned long long")
+			return="CUnsignedLongLong"
+			;;
+		"unsigned int")
+			return="CUnsignedInt"
+			;;
+		"unsigned short")
+			return="CUnsignedShort"
+			;;
+		"unsigned char")
+			return="CUnsignedChar"
+			;;
+		"double")
+			return="Double"
+			;;
+		*)
+			return="$1"
+			;;
+	esac
+	echo "$return"
+}
+
+# space_is_false() {
+	
+
+# get_return_type "$rt_objc"
+
+rt_swift=$( get_return_type "$rt_objc" )
+
+name=$(echo "$1" | cut -d")" -f2 | cut -d":" -f1 | tr -d ";")
+
+func=$(echo "func ${name}(")
+incrementer=1
+c=2
+while [[ ! -z $(echo "$1" | cut -d " " -f${c}) ]] ; do
+	arg=$(echo "$1" | cut -d " " -f${c})
+	
+	sec_arg=$(echo "$1" | cut -d " " -f$((c+1)))
+	if [[ "$sec_arg" != *":"* && "$sec_arg" == *")"* ]] ; then
+		# echo "Entered first if"
+		arg=$(echo "$1" | cut -d " " -f${c}-$((c+1)))
+		incrementer=2
+	elif [[ ! -z "$sec_arg" && "$sec_arg" != *":("* ]] ; then
+		# echo "Entered second if"
+		arg=$(echo "$1" | cut -d " " -f${c}-$((c+2)))
+		incrementer=3
+	fi
+
+	# echo $arg
+	if [[ "${arg:0:1}" == "(" ]] ; then 
+		arg=$(echo "$arg" | cut -d ":" -f2)
+		arg_name="_"
+		# c=$((c+1))
+		# continue 
+	else
+		arg_name=$(echo "$arg" | cut -d ":" -f1)
+	fi
+	arg_type=$(echo "$arg" | cut -d "(" -f2 | cut -d ")" -f1)
+	at_swift=$( get_return_type "$arg_type")
+	
+	func+="${arg_name}: ${at_swift}"
+
+	c=$((c+$incrementer))
+	if [[ ! -z $(echo "$1" | cut -d " " -f${c}) ]] ; then
+		func+=", "
+	fi
+	# echo $func
+	# echo $c
+done
+func+=") -> ${rt_swift}"
+echo $func

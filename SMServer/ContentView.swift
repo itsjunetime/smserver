@@ -580,6 +580,23 @@ struct ContentView: View {
         return image; /// So uh it should be a base64 encoded string?
     }
     
+    func sendText() {
+        /*var obj = IMDServiceSession()
+        obj.sendMessage("Hey, I hope you were expecting this message. If you weren't, just reply to let me know. Sorry about that :)", 25, "0");*/
+        //var o: UnsignedC
+    }
+    
+    func loadBundle() {
+        /*dlopen("/Developer/Library/PrivateFrameworks/IMDaemonCore.framework/IMDaemonCore".getFileSystemRepresentation, RTLD_LOCAL)
+
+        let serviceSession = unsafeBitCast(NSClassFromString("UIASyntheticEvents"), to: IMDServiceSession.Type.self)
+        
+        serviceSession.sendMessage("This is a test; let me know if you get it. Sorry if you weren't expecting to get it, I don't quite know who it will send to.", toChat: 25, style: CUnsignedChar(0))*/
+        var obj_c = obj_class()
+        obj_c.loadBundle()
+        
+    }
+    
     var body: some View {
         VStack {
             Text("Connect to port 8080 on your iPhone's private ip from a browser to view your messages")
@@ -617,9 +634,15 @@ struct ContentView: View {
             }) {
                 Text("Reload HTML")
             }
+            Button(action: {
+                self.sendText()
+            }) {
+                Text("Send Text (DOESNT WORK)")
+            }
         }.onAppear() {
             self.loadServer()
             self.loadHtmlFile()
+            self.loadBundle()
         }
     }
 }
