@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		33BA565DB94EEE3A1ED27A46 /* Pods_SMServerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 008D6F7B4AA3EB6AFB5692B3 /* Pods_SMServerTests.framework */; };
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
+		3C6713F824722635002EBBDF /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
+		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E86245BCFE000EF24FE /* AppDelegate.swift */; };
 		3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E88245BCFE000EF24FE /* SceneDelegate.swift */; };
 		3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E8A245BCFE000EF24FE /* ContentView.swift */; };
@@ -20,7 +22,6 @@
 		3C7CFF83246C7CDC0061749A /* IMDServiceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF82246C7CDB0061749A /* IMDServiceSession.swift */; };
 		3C7CFF85246C8F8D0061749A /* Obj.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF84246C8F8D0061749A /* Obj.m */; };
 		7D353C7473BC7E305EDD5324 /* Pods_SMServer_SMServerUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B05F51E06AAA421F9F1B488 /* Pods_SMServer_SMServerUITests.framework */; };
-		DA180E9625CAEB12B3F82FEE /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,6 +40,20 @@
 			remoteInfo = SMServer;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3C6713FA24722635002EBBDF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		008D6F7B4AA3EB6AFB5692B3 /* Pods_SMServerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -77,7 +92,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DA180E9625CAEB12B3F82FEE /* Pods_SMServer.framework in Frameworks */,
+				3C6713F824722635002EBBDF /* Pods_SMServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,6 +218,7 @@
 				3C760E80245BCFE000EF24FE /* Frameworks */,
 				3C760E81245BCFE000EF24FE /* Resources */,
 				F4E159CFD3BFFCC45ADDD893 /* [CP] Embed Pods Frameworks */,
+				3C6713FA24722635002EBBDF /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

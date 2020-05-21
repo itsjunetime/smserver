@@ -21,8 +21,8 @@ struct ContentView: View {
     var requests_page = """
     <!DOCTYPE html>
         <body style="background-color: #222;">
-            <p style="color: #DDD; font-family: Verdana; font-size: 24px;">
-                This is a niceness test!
+            <p style="color: #DDD; font-family: Verdana; font-size: 24px; padding: 20px;">
+                This is the requests page! Thanks for visiting :)
             </p>
         </body>
     </html>
@@ -32,7 +32,7 @@ struct ContentView: View {
     """
     
     func loadServer(port_num: UInt16 = 8080) {
-        self.server["/"] = {request in
+        self.server["/"] = { request in
             return .ok(.text(self.main_page))
         }
         self.server["/requests"] = { request in
