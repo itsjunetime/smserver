@@ -38,8 +38,6 @@
                     var b = document.createElement('button');
                     b.setAttribute("id", items[i].chat_identifier);
 
-                    //await getImage(items[i].chat_identifier);
-                    //b.innerHTML = "<img src=\"data:image/png;base64," + image_string + "\">";
                     b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
                     console.log("inner html: " + b.innerHTML)
                     console.log("c: " + items[i].chat_identifier + ", d: " + items[i].display_name);
@@ -96,37 +94,10 @@
                     this.dataError = true;
                 })
 
-                /*var new_display_name = "";
-
-                var d_url = '/requests?n=' + chat_id
-                console.log("url: " + d_url)
-                const fetch_name = await fetch(d_url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("HTTP error " + response.status);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    console.log("name text: " + text)
-                    new_display_name = text
-                    return new_display_name
-                })
-                .catch(function () {
-                    this.dataError = true;
-                })
-
-                var _ = await fetch_name    
-
-                var title_doc = document.getElementsByClassName("title")[0]
-                title_doc.innerHTML = ''
-                var new_name = document.createElement("h2")
-                new_name.innerHTML = new_display_name
-                title_doc.appendChild(new_name);*/
-
                 var chat_title = document.getElementById(chat_id)
                 var title_doc = document.getElementsByClassName("title")[0]
                 title_doc.innerHTML = chat_title.innerHTML
+                title_doc.setAttribute("id", chat_id);
 
                 var _ = await fetch_texts
 
@@ -201,7 +172,38 @@
                     this.dataError = true;
                 })
             }
-
+        
+            function sendText() {
+                body = document.getElementById("sendbox").value
+                recipient = document.getElementsByClassName("title")[0].id
+                
+                var url = '/requests?s=' + body + "&t=" + recipient
+                console.log("url: " + url)
+                const fetch_image = fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
+                
+                document.getElementById("sendbox").value = "";
+                
+                var doc = document.getElementsByClassName("text-content")[0];
+                var t = document.createElement("p");
+                t.setAttribute("class", "text is_from_me");
+                t.innerHTML = body;
+                
+                doc.appendChild(t);
+                doc.appendChild(document.createElement("br"));
+                
+                t.focus();
+                var elem = document.getElementById('text-content');
+                elem.scrollTop = elem.scrollHeight;
+            }
+            
             printItems()
             
         </script>
@@ -211,7 +213,7 @@
                 --messages-title-height: 64px;
                 --messages-send-height: 40px;
                 --font-color: #dae3f0;
-                --main-font: Ubuntu, Calibri, sans-serif, Verdana, Courier;
+                --main-font: Calibri, sans-serif, Verdana, Courier;
                 --chats-border: #222;
             }
             * {
@@ -267,12 +269,6 @@
                 grid-template-rows: 1fr;
                 align-content: center;
             }
-            /*.messages .top-spacer {
-                height: var(--messages-title-height);
-                width: 100%;
-                display: inline-block;
-                color: transparent !important;
-            }*/
             .title p {
                 color: var(--font-color);
                 text-align: start;
@@ -291,7 +287,7 @@
                 z-index: 0;
                 overflow-x: hidden;
                 padding-top: var(--messages-title-height);
-                padding-bottom: var(--messages-send-height);
+                padding-bottom: calc(var(--messages-send-height) * 2);
             }
             .messages .textbox {
                 grid-row: 3;
@@ -353,7 +349,7 @@
             }
             .chats p {
                 grid-area: text;
-                display: flex; /*was inline-block*/
+                display: flex;
                 padding-left: 10px;
                 transition: all linear 0.1s;
                 
@@ -366,9 +362,9 @@
                 color: rgb(78, 150, 223) !important;
                 transition: all linear 0.1s; 
             }
+            
             .text {
                 font-family: var(--main-font);
-                border-radius: 14px;
                 width: max-content;
                 max-width: 40vw;
                 padding: 5px 8px;
@@ -381,12 +377,14 @@
                 background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
                 position: relative;
                 margin-left: 100%;
+                border-radius: 14px 14px 3px 14px;
             }
             .is_from_them {
                 float: left;
-                background-image: linear-gradient(to right, rgb(32, 194, 67), rgb(17, 146, 62));
+                background-color: rgb(58, 58, 60);
                 position: relative;
                 margin-right: 100%;
+                border-radius: 14px 14px 14px 3px;
             }
             .is_from_me + .is_from_them,
             .is_from_them + .is_from_me {
@@ -395,7 +393,39 @@
             .time-display {
                 text-align: center;
             }
-       </style>
+            .textbox {
+                display: grid;
+                grid-template-columns: 1fr 15px 60px;
+                grid-template-rows: 1fr
+                grid-column-gap: 20px;
+                padding: 10px;
+                max-width: 100%;
+            }
+            #sendbutton {
+                grid-column: 3;
+                grid-row: 1;
+                width: 100%;
+                height: 140%;
+                background-color: rgb(0, 122, 255);
+                outline: none;
+                border: 1px solid #dddddda0;
+                border-radius: 5px;
+            }
+            #sendbox {
+                grid-column: 1;
+                grid-row: 1;
+                outline: none;
+                border-radius: 5px;
+                background-color: #282828;
+                min-width: 100%;
+                max-width: 100%;
+                min-height: 100%;
+                resize: none;
+                padding-left: 5px;
+                padding-top: 5px;
+                border: 1px solid #555;
+            }
+        </style>
     </head>
     <body>
         <div class="everything">
@@ -412,7 +442,10 @@
                 </div>
                 <div class="text-content" id="text-content">
                 </div>
-                <div class="textbox"></div>
+                <div class="textbox">
+                    <textarea id="sendbox"></textarea>
+                    <button onclick="sendText()" id="sendbutton"><span> >> </span></button>
+                </div>
             </div>
         </div>
     </body>

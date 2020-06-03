@@ -365,7 +365,30 @@ struct ContentView: View {
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
-        var chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC", num_items: num_to_load)
+        ///select * from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc; is what we need to get the chat ids
+        
+        /// This section will get get me an array of the chat ids in order of most recently sent/received text. first is most recent.
+        var chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc");
+        
+        var orig_chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC", num_items: num_to_load)
+        
+        var chats_array = [[String:String]]()
+        
+        /// Ok this section is kinda terrible and can definitely be optimized.
+        for i in 0..<chat_ids_ordered.count {
+            var ci = chat_ids_ordered[i]["chat_id"]
+            //print(ci ?? "val not found")
+            for l in 0..<orig_chats_array.count {
+                if orig_chats_array[l]["ROWID"] == ci {
+                    //print("matched. ri: \(orig_chats_array[l]["ROWID"]), ci: \(orig_chats_array[l]["chat_identifier"]), dn: \(orig_chats_array[l]["display_name"])")
+                    chats_array.append(orig_chats_array[l])
+                }
+            }
+        }
+
+        /// Just saving memory
+        chat_ids_ordered = [[String:String]]()
+        orig_chats_array = [[String:String]]()
         
         for i in 0..<chats_array.count {
             if chats_array[i]["display_name"]!.count == 0 {
