@@ -11,6 +11,10 @@
 <true/>
 <key>com.apple.private.security.storage.Messages</key>
 <true/>
+<key>com.apple.CommCenter.Messages-send</key>
+<true/>
+<key>com.apple.coretelephony.Identity.get</key>
+<true/>
 <!-- -->
 </dict>
 </plist>

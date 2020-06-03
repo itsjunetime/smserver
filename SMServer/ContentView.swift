@@ -9,12 +9,17 @@
 import SwiftUI
 import Swifter
 import SQLite3
+import MessageUI
 
 struct ContentView: View {
     let server = HttpServer()
-    //@State var test_messages = [[String: String]]()
-    //@State var messages_have_been_loaded = false
-    @State var egnum = "8080"
+    let bbheight: CGFloat? = 40
+    let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
+    
+    @State var egnum = "8741"
+    @State var password = ""
+    @State var main_url = ""
+    
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
@@ -30,9 +35,10 @@ struct ContentView: View {
     @State var main_page =
     """
     """
+    private let messageComposeDelegate = MessageComposerDelegate()
     
-    func loadServer(port_num: UInt16 = 8080) {
-        self.server["/"] = { request in
+    func loadServer(port_num: UInt16) {
+        self.server["/" + main_url] = { request in
             return .ok(.text(self.main_page))
         }
         self.server["/requests"] = { request in
@@ -60,7 +66,7 @@ struct ContentView: View {
     
     func loadHtmlFile() {
         if let dir = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html") {
-            //print(dir)
+            
             do {
                 self.main_page = try String(contentsOf: dir, encoding: .utf8)
             }
@@ -80,13 +86,21 @@ struct ContentView: View {
     }
     
     func parseAndReturn(params: [(String, String)]) -> String {
-        var person: String = ""
+        var person = ""
         var selectingPerson = false
         var num_texts = 0
+        
         var selectingChat = false
+        
         var chat_id = ""
         var gettingName = false
+        
         var gettingImage = false
+        
+        var sendingText = false
+        var sendBody = ""
+        var sendAddress = ""
+        
         switch params[0].0 {
         case "p":
             person = params[0].1
@@ -100,12 +114,14 @@ struct ContentView: View {
             selectingChat = true
         case "n":
             chat_id = params[0].1
-            //print("chat:" + chat_id)
             gettingName = true
         case "i":
             chat_id = params[0].1
-            //print("image chat id: " + chat_id)
-            gettingImage = true;
+            gettingImage = true
+        case "s":
+            sendingText = true
+            sendBody = params[0].1
+            sendAddress = params[1].1
         default:
             print("We haven't implemented any other functionality yet, sorry :/")
         }
@@ -123,12 +139,12 @@ struct ContentView: View {
             return chats
         } else if gettingName {
             let name = getDisplayName(chat_id: chat_id)
-            //print("name: " + name)
             return name
         } else if gettingImage {
             let image_string = returnImageBase64(chat_id: chat_id)
-            //print("image 64: " + image_string)
             return image_string
+        } else if sendingText {
+            sendText(body: sendBody, address: [sendAddress])
         }
         
         return ""
@@ -136,6 +152,12 @@ struct ContentView: View {
     
     func stopServer() {
         self.server.stop()
+    }
+    
+    func sendText(body: String, address: [String]) {
+        //var vc = MessagesViewController()
+        //vc.sendNewIMessage(self, bodyAndAddress: [body, address])
+        self.presentMessageCompose(body: body, address: address)
     }
     
     func createConnection(connection_string: String = "/private/var/mobile/Library/SMS/sms.db") -> OpaquePointer? {
@@ -296,7 +318,7 @@ struct ContentView: View {
         return ""
     }
     
-    func loadMessages(num: String/* = "+15203106053"*/, num_items: Int = 0) -> [[String:String]] { /// Ok so this function seems to work. cool.
+    func loadMessages(num: String, num_items: Int = 0) -> [[String:String]] { /// Ok so this function seems to work. cool.
         
         var db = createConnection()
         
@@ -420,7 +442,7 @@ struct ContentView: View {
         
         let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
         
-        var image: String = "";
+        var image: String = ""
         
         var statement: OpaquePointer?
         
@@ -475,7 +497,7 @@ struct ContentView: View {
         
         //print(image)
         
-        return image; /// So uh it should be a base64 encoded string?
+        return image /// So uh it should be a base64 encoded string?
     }
     
     func returnImageBase64DB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> String {
@@ -522,7 +544,7 @@ struct ContentView: View {
         
         let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
         
-        var image: String = "";
+        var image: String = ""
         
         var statement: OpaquePointer?
         
@@ -577,83 +599,175 @@ struct ContentView: View {
         
         //print(image)
         
-        return image; /// So uh it should be a base64 encoded string?
-    }
-    
-    func sendText() {
-        /*var obj = IMDServiceSession()
-        obj.sendMessage("Hey, I hope you were expecting this message. If you weren't, just reply to let me know. Sorry about that :)", 25, "0");*/
-        //var o: UnsignedC
+        return image /// So uh it should be a base64 encoded string?
     }
     
     func loadBundle() {
-        /*dlopen("/Developer/Library/PrivateFrameworks/IMDaemonCore.framework/IMDaemonCore".getFileSystemRepresentation, RTLD_LOCAL)
-
-        let serviceSession = unsafeBitCast(NSClassFromString("UIASyntheticEvents"), to: IMDServiceSession.Type.self)
         
-        serviceSession.sendMessage("This is a test; let me know if you get it. Sorry if you weren't expecting to get it, I don't quite know who it will send to.", toChat: 25, style: CUnsignedChar(0))*/
         var obj_c = obj_class()
         obj_c.loadBundle()
         
     }
     
+    func getWiFiAddress() -> String? {
+        var address : String?
+
+        // Get list of all interfaces on the local machine:
+        var ifaddr : UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0 else { return nil }
+        guard let firstAddr = ifaddr else { return nil }
+
+        // For each interface ...
+        for ifptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
+            let interface = ifptr.pointee
+
+            // Check for IPv4 or IPv6 interface:
+            let addrFamily = interface.ifa_addr.pointee.sa_family
+            if addrFamily == UInt8(AF_INET) || addrFamily == UInt8(AF_INET6) {
+
+                // Check interface name:
+                let name = String(cString: interface.ifa_name)
+                if  name == "en0" {
+
+                    // Convert interface address to a human readable string:
+                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                    getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
+                                &hostname, socklen_t(hostname.count),
+                                nil, socklen_t(0), NI_NUMERICHOST)
+                    address = String(cString: hostname)
+                }
+            }
+        }
+        freeifaddrs(ifaddr)
+
+        return address
+    }
+    
+    func displaySettings() {
+        
+    }
+    
     var body: some View {
-        VStack {
-            Text("Connect to port 8080 on your iPhone's private ip from a browser to view your messages")
-            Spacer()
-                .frame(height: 20)
-            HStack {
-                Spacer()
-                TextField("Enter port number to run server on", text: $egnum)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .frame(width: 200)
-                Spacer()
-            }
-            Spacer()
-                .frame(height: 20)
-            Button(action: {
-                self.stopServer()
-                self.loadServer(port_num: UInt16(self.egnum) ?? 8080)
-                print("Server has fully been loaded up")
-            }) {
-                Text("Press me to start the server")
-            }
-            Spacer()
-                .frame(height: 20)
-            Button(action: {
-                self.stopServer()
-                print("Server has fully been stopped")
-            }) {
-                Text("Press me to stop the server")
-            }
-            Spacer()
-                .frame(height: 20)
-            Button(action: {
-                self.loadHtmlFile()
-                print("HTML Loaded again")
-            }) {
-                Text("Reload HTML")
-            }
-            Button(action: {
-                self.sendText()
-            }) {
-                Text("Send Text (DOESNT WORK)")
-            }
-        }.onAppear() {
-            self.loadServer()
+        NavigationView {
+            //GeometryReader { geo in
+                VStack {
+                    Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(self.egnum) in your browser to view your messages")
+                        .font(Font.custom("small Title", size: 22))
+                        .padding()
+                
+                    Spacer().frame(height: 20)
+                    
+                    HStack {
+                        VStack {
+                            HStack {
+                                Text("Change default port").font(.subheadline)
+                                Spacer()
+                            }
+                            
+                            TextField("Change default server port", text: $egnum)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            
+                            Spacer().frame(height: 20)
+                            
+                            HStack {
+                                Text("Change requests password (ineffective right now)").font(.subheadline)
+                                Spacer()
+                            }
+                            
+                            TextField("Change requests password", text: $password)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                
+                            Spacer().frame(height: 20)
+                                
+                            HStack {
+                                Text("Change main chats url").font(.subheadline)
+                                Spacer()
+                            }
+                                
+                            TextField("Change main chats url", text: $main_url)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                        }
+                    }.padding()
+                    
+                    Spacer()
+                    
+                    HStack {
+                        
+                        HStack {
+                            
+                            Button(action: {
+                                self.stopServer()
+                            }) {
+                                Image(systemName: "stop.fill")
+                                    .scaleEffect(1.5)
+                            }
+                            
+                            Spacer().frame(width: 30)
+                            
+                            Button(action: {
+                                self.loadServer(port_num: UInt16(self.egnum)!)
+                            }) {
+                                Image(systemName: "play.fill")
+                                    .scaleEffect(1.5)
+                            }
+                            
+                        }
+                        .padding(10)
+                        
+                        Spacer()
+                        
+                        HStack {
+                            Button(action: {
+                                self.displaySettings()
+                            }) {
+                                Image(systemName: "gear")
+                                    .scaleEffect(1.5)
+                            }
+                        }.padding(10)
+                    }
+                    .padding()
+                    
+                }.navigationBarTitle(Text("SMServer").font(.largeTitle))
+            
+        }
+        .onAppear() {
+            self.loadServer(port_num: UInt16(self.egnum)!)
             self.loadHtmlFile()
-            self.loadBundle()
         }
     }
 }
 
+extension ContentView {
 
+    private class MessageComposerDelegate: NSObject, MFMessageComposeViewControllerDelegate {
+        func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
+            // Customize here
+            controller.dismiss(animated: true)
+        }
+    }
+    /// Present an message compose view controller modally in UIKit environment
+    private func presentMessageCompose(body: String, address: [String]) {
+        guard MFMessageComposeViewController.canSendText() else {
+            return
+        }
+        DispatchQueue.main.async {
+            let vc = UIApplication.shared.windows.filter {$0.isKeyWindow}.first?.rootViewController
+            let composeVC = MFMessageComposeViewController()
+            composeVC.body = body
+            composeVC.recipients = address
+            composeVC.messageComposeDelegate = self.messageComposeDelegate
+            vc?.present(composeVC, animated: true)
+        }
+    }
+}
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
     }
 }
+
+
 
 /// In case I still ever need these
 /*enum dbprop_types {
@@ -745,3 +859,9 @@ struct ContentView_Previews: PreviewProvider {
        }
        
    }*/
+
+/*struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
+    }
+}*/
