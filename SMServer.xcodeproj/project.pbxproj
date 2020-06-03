@@ -11,6 +11,7 @@
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C6713F824722635002EBBDF /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
 		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3C74EFBA2486B5BD00678F1A /* TextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C74EFB92486B5BD00678F1A /* TextView.swift */; };
 		3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E86245BCFE000EF24FE /* AppDelegate.swift */; };
 		3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E88245BCFE000EF24FE /* SceneDelegate.swift */; };
 		3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E8A245BCFE000EF24FE /* ContentView.swift */; };
@@ -19,7 +20,6 @@
 		3C760E93245BCFE100EF24FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */; };
 		3C760E9E245BCFE100EF24FE /* SMServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E9D245BCFE100EF24FE /* SMServerTests.swift */; };
 		3C760EA9245BCFE100EF24FE /* SMServerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760EA8245BCFE100EF24FE /* SMServerUITests.swift */; };
-		3C7CFF83246C7CDC0061749A /* IMDServiceSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF82246C7CDB0061749A /* IMDServiceSession.swift */; };
 		3C7CFF85246C8F8D0061749A /* Obj.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF84246C8F8D0061749A /* Obj.m */; };
 		7D353C7473BC7E305EDD5324 /* Pods_SMServer_SMServerUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B05F51E06AAA421F9F1B488 /* Pods_SMServer_SMServerUITests.framework */; };
 /* End PBXBuildFile section */
@@ -60,6 +60,7 @@
 		38FF86EDB3665EBBCAF147C3 /* Pods-SMServerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServerTests.debug.xcconfig"; path = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		394D89331824401241AEFBC1 /* Pods-SMServer-SMServerUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer-SMServerUITests.release.xcconfig"; path = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests.release.xcconfig"; sourceTree = "<group>"; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
+		3C74EFB92486B5BD00678F1A /* TextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextView.swift; sourceTree = "<group>"; };
 		3C760E83245BCFE000EF24FE /* SMServer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C760E86245BCFE000EF24FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3C760E88245BCFE000EF24FE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -75,10 +76,8 @@
 		3C760EA8245BCFE100EF24FE /* SMServerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMServerUITests.swift; sourceTree = "<group>"; };
 		3C760EAA245BCFE100EF24FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3C7CFF7D246BC6A80061749A /* SMServer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SMServer-Bridging-Header.h"; sourceTree = "<group>"; };
-		3C7CFF80246BC7060061749A /* send.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = send.h; path = /Users/ian/Documents/Coding/Personal/swift/SMServer/SMServer/send.h; sourceTree = "<absolute>"; };
-		3C7CFF81246BD2330061749A /* IMDServiceSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IMDServiceSession.h; sourceTree = "<group>"; };
-		3C7CFF82246C7CDB0061749A /* IMDServiceSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IMDServiceSession.swift; sourceTree = "<group>"; };
 		3C7CFF84246C8F8D0061749A /* Obj.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Obj.m; sourceTree = "<group>"; };
+		3CD012E3247CD42500973951 /* SMServer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SMServer.entitlements; sourceTree = "<group>"; };
 		4B05F51E06AAA421F9F1B488 /* Pods_SMServer_SMServerUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer_SMServerUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer.release.xcconfig"; path = "Target Support Files/Pods-SMServer/Pods-SMServer.release.xcconfig"; sourceTree = "<group>"; };
 		695E11A8D6758027462A7F3A /* Pods-SMServer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer.debug.xcconfig"; path = "Target Support Files/Pods-SMServer/Pods-SMServer.debug.xcconfig"; sourceTree = "<group>"; };
@@ -151,12 +150,11 @@
 		3C760E85245BCFE000EF24FE /* SMServer */ = {
 			isa = PBXGroup;
 			children = (
-				3C7CFF82246C7CDB0061749A /* IMDServiceSession.swift */,
-				3C7CFF81246BD2330061749A /* IMDServiceSession.h */,
-				3C7CFF80246BC7060061749A /* send.h */,
+				3CD012E3247CD42500973951 /* SMServer.entitlements */,
 				3C760E86245BCFE000EF24FE /* AppDelegate.swift */,
 				3C760E88245BCFE000EF24FE /* SceneDelegate.swift */,
 				3C760E8A245BCFE000EF24FE /* ContentView.swift */,
+				3C74EFB92486B5BD00678F1A /* TextView.swift */,
 				3C7CFF84246C8F8D0061749A /* Obj.m */,
 				3C760E8C245BCFE100EF24FE /* Assets.xcassets */,
 				3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */,
@@ -453,10 +451,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */,
-				3C7CFF83246C7CDC0061749A /* IMDServiceSession.swift in Sources */,
 				3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */,
 				3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */,
 				3C7CFF85246C8F8D0061749A /* Obj.m in Sources */,
+				3C74EFBA2486B5BD00678F1A /* TextView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -623,6 +621,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = SMServer/SMServer.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"SMServer/Preview Content\"";
@@ -650,6 +649,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = SMServer/SMServer.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"SMServer/Preview Content\"";

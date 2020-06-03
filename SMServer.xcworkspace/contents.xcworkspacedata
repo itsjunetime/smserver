@@ -2,9 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:/Users/ian/Documents/Coding/Personal/swift/SMServer/SMServer/send.h">
-   </FileRef>
-   <FileRef
       location = "group:SMServer.xcodeproj">
    </FileRef>
    <FileRef
