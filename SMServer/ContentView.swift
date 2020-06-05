@@ -16,6 +16,7 @@ struct ContentView: View {
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
     
+    @State var server_running = false
     @State var egnum = "8741"
     @State var password = ""
     @State var main_url = ""
@@ -23,6 +24,7 @@ struct ContentView: View {
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+    
     var requests_page = """
     <!DOCTYPE html>
         <body style="background-color: #222;">
@@ -35,6 +37,13 @@ struct ContentView: View {
     @State var main_page =
     """
     """
+    @State var main_page_style =
+    """
+    """
+    @State var main_page_script =
+    """
+    """
+    
     private let messageComposeDelegate = MessageComposerDelegate()
     
     func loadServer(port_num: UInt16) {
@@ -56,22 +65,32 @@ struct ContentView: View {
                 return .ok(.text(return_val))
             }
         }
+        self.server["/style.css"] = { request in
+            return .ok(.text(self.main_page_style))
+        }
+        self.server["/script.js"] = { request in
+            return .ok(.text(self.main_page_script))
+        }
         do {
             try self.server.start(port_num)
+            self.server_running = server.operating
             print("Server is running!")
         } catch {
             print("Ran into an error with running the server :/")
         }
     }
     
-    func loadHtmlFile() {
-        if let dir = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html") {
-            
+    func loadFiles() {
+        if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
+        let c = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
+        let j = Bundle.main.url(forResource: "script", withExtension: "js", subdirectory: "html") {
             do {
-                self.main_page = try String(contentsOf: dir, encoding: .utf8)
+                self.main_page = try String(contentsOf: h, encoding: .utf8)
+                self.main_page_style = try String(contentsOf: c, encoding: .utf8)
+                self.main_page_script = try String(contentsOf: j, encoding: .utf8)
             }
             catch {
-                print("ran into an error with loading the file, try again.")
+                print("ran into an error with loading the files, try again.")
             }
         }
     }
@@ -127,24 +146,34 @@ struct ContentView: View {
         }
         
         if selectingPerson {
+            
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
             }
             let texts_array = loadMessages(num: person, num_items: num_texts)
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
+            
         } else if selectingChat {
+            
             let chats_array = loadChats(num_to_load: 30)
             let chats = encodeToJson(object: chats_array, title: "chats")
             return chats
+            
         } else if gettingName {
+            
             let name = getDisplayName(chat_id: chat_id)
             return name
+            
         } else if gettingImage {
+            
             let image_string = returnImageBase64(chat_id: chat_id)
             return image_string
+            
         } else if sendingText {
+            
             sendText(body: sendBody, address: [sendAddress])
+            
         }
         
         return ""
@@ -152,11 +181,11 @@ struct ContentView: View {
     
     func stopServer() {
         self.server.stop()
+        print("Stopped server")
+        server_running = server.operating
     }
     
     func sendText(body: String, address: [String]) {
-        //var vc = MessagesViewController()
-        //vc.sendNewIMessage(self, bodyAndAddress: [body, address])
         self.presentMessageCompose(body: body, address: address)
     }
     
@@ -217,7 +246,6 @@ struct ContentView: View {
                     } else {
                         print("Nothing returned for tiny_return_cstring when num_items != 0")
                     }
-                    //minor_return.append(tiny_return)
                     minor_return[columns[j]] = tiny_return
                 }
                 main_return.append(minor_return)
@@ -376,7 +404,7 @@ struct ContentView: View {
         
         /// Ok this section is kinda terrible and can definitely be optimized.
         for i in 0..<chat_ids_ordered.count {
-            var ci = chat_ids_ordered[i]["chat_id"]
+            let ci = chat_ids_ordered[i]["chat_id"]
             //print(ci ?? "val not found")
             for l in 0..<orig_chats_array.count {
                 if orig_chats_array[l]["ROWID"] == ci {
@@ -627,8 +655,8 @@ struct ContentView: View {
     
     func loadBundle() {
         
-        var obj_c = obj_class()
-        obj_c.loadBundle()
+        /*var obj_c = obj_class()
+        obj_c.loadBundle()*/
         
     }
     
@@ -675,7 +703,7 @@ struct ContentView: View {
             //GeometryReader { geo in
                 VStack {
                     Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(self.egnum) in your browser to view your messages")
-                        .font(Font.custom("small Title", size: 22))
+                        .font(Font.custom("smallTitle", size: 22))
                         .padding()
                 
                     Spacer().frame(height: 20)
@@ -692,7 +720,7 @@ struct ContentView: View {
                             
                             Spacer().frame(height: 20)
                             
-                            HStack {
+                            /*HStack {
                                 Text("Change requests password (ineffective right now)").font(.subheadline)
                                 Spacer()
                             }
@@ -700,7 +728,7 @@ struct ContentView: View {
                             TextField("Change requests password", text: $password)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 
-                            Spacer().frame(height: 20)
+                            Spacer().frame(height: 20)*/
                                 
                             HStack {
                                 Text("Change main chats url").font(.subheadline)
@@ -719,10 +747,23 @@ struct ContentView: View {
                         HStack {
                             
                             Button(action: {
+                                self.loadFiles()
+                                /*self.stopServer()
+                                self.loadServer(port_num: UInt16(self.egnum)!)*/
+                            }) {
+                                Image(systemName: "goforward")
+                                    .scaleEffect(1.5)
+                                    .foregroundColor(Color.purple)
+                            }
+                            
+                            Spacer().frame(width: 30)
+                            
+                            Button(action: {
                                 self.stopServer()
                             }) {
                                 Image(systemName: "stop.fill")
                                     .scaleEffect(1.5)
+                                    .foregroundColor(self.server_running ? Color.red : Color.gray)
                             }
                             
                             Spacer().frame(width: 30)
@@ -732,6 +773,7 @@ struct ContentView: View {
                             }) {
                                 Image(systemName: "play.fill")
                                     .scaleEffect(1.5)
+                                    .foregroundColor(self.server_running ? Color.gray : Color.green)
                             }
                             
                         }
@@ -754,8 +796,8 @@ struct ContentView: View {
             
         }
         .onAppear() {
-            self.loadServer(port_num: UInt16(self.egnum)!)
-            self.loadHtmlFile()
+            //self.loadServer(port_num: UInt16(self.egnum)!)
+            self.loadFiles()
         }
     }
 }
@@ -789,8 +831,6 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
-
 
 /// In case I still ever need these
 /*enum dbprop_types {

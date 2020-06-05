@@ -11,7 +11,6 @@
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C6713F824722635002EBBDF /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
 		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		3C74EFBA2486B5BD00678F1A /* TextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C74EFB92486B5BD00678F1A /* TextView.swift */; };
 		3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E86245BCFE000EF24FE /* AppDelegate.swift */; };
 		3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E88245BCFE000EF24FE /* SceneDelegate.swift */; };
 		3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E8A245BCFE000EF24FE /* ContentView.swift */; };
@@ -20,7 +19,6 @@
 		3C760E93245BCFE100EF24FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */; };
 		3C760E9E245BCFE100EF24FE /* SMServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E9D245BCFE100EF24FE /* SMServerTests.swift */; };
 		3C760EA9245BCFE100EF24FE /* SMServerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760EA8245BCFE100EF24FE /* SMServerUITests.swift */; };
-		3C7CFF85246C8F8D0061749A /* Obj.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF84246C8F8D0061749A /* Obj.m */; };
 		7D353C7473BC7E305EDD5324 /* Pods_SMServer_SMServerUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B05F51E06AAA421F9F1B488 /* Pods_SMServer_SMServerUITests.framework */; };
 /* End PBXBuildFile section */
 
@@ -453,8 +451,6 @@
 				3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */,
 				3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */,
 				3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */,
-				3C7CFF85246C8F8D0061749A /* Obj.m in Sources */,
-				3C74EFBA2486B5BD00678F1A /* TextView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
