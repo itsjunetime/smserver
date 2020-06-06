@@ -1,6 +1,6 @@
 :root {
     --messages-title-height: 64px;
-    --messages-send-height: 40px;
+    --messages-send-height: 36px;
     --font-color: #dae3f0;
     --main-font: Calibri, sans-serif, Verdana, Courier;
     --chats-border: #222;
@@ -45,11 +45,11 @@ p {
     border: 2px solid #161616;
     grid-area: messages;
     display: grid;
-    grid-template-rows: var(--messages-title-height) 1fr min-content;
+    grid-template-rows: var(--messages-title-height) auto min-content;
     grid-template-columns: 1fr;
     width: 100%;
-    /*max-height: 100vh;
-    min-height: 100vh;*/
+    max-height: 100%;
+    /*min-height: 100vh;*/
     background-color: #111;
     overflow-x: hidden;
 }
@@ -155,6 +155,10 @@ p {
     color: rgb(78, 150, 223) !important;
     transition: all linear 0.1s; 
 }
+.selected {
+    color: rgb(78, 150, 223);
+    background-color: #444;
+}
 .text {
     font-family: var(--main-font);
     width: max-content;
@@ -228,5 +232,5 @@ p {
     padding: 5px calc(var(--send-button-size) + 10px) 0px 10px;
     border: none;
     /*! margin-right: 2000px; */
-    font-size: calc(var(--send-box-size) - 10px);
+    font-size: calc(var(--send-box-size) - 6px);
 }

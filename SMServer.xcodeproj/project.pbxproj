@@ -58,7 +58,6 @@
 		38FF86EDB3665EBBCAF147C3 /* Pods-SMServerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServerTests.debug.xcconfig"; path = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		394D89331824401241AEFBC1 /* Pods-SMServer-SMServerUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer-SMServerUITests.release.xcconfig"; path = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests.release.xcconfig"; sourceTree = "<group>"; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
-		3C74EFB92486B5BD00678F1A /* TextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextView.swift; sourceTree = "<group>"; };
 		3C760E83245BCFE000EF24FE /* SMServer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C760E86245BCFE000EF24FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3C760E88245BCFE000EF24FE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -152,7 +151,6 @@
 				3C760E86245BCFE000EF24FE /* AppDelegate.swift */,
 				3C760E88245BCFE000EF24FE /* SceneDelegate.swift */,
 				3C760E8A245BCFE000EF24FE /* ContentView.swift */,
-				3C74EFB92486B5BD00678F1A /* TextView.swift */,
 				3C7CFF84246C8F8D0061749A /* Obj.m */,
 				3C760E8C245BCFE100EF24FE /* Assets.xcassets */,
 				3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */,
