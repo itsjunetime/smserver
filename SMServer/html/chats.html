@@ -70,7 +70,15 @@
 
             const getTexts = async (chat_id, num_texts) => {
                 var myNode = document.getElementsByClassName("text-content")[0];
-                myNode.innerHTML = '';
+                //myNode.innerHTML = '';
+
+                var selected = document.getElementsByClassName("selected");
+                if (selected.length > 0) {
+                    selected[0].setAttribute("class", "");
+                }
+
+                var orig_btn = document.getElementById(chat_id);
+                orig_btn.setAttribute("class", "selected");
 
                 let url = "/requests?p=" + chat_id + "&n=" + num_texts
                 const fetch_texts = await fetch(url)
@@ -94,6 +102,8 @@
                 title_doc.setAttribute("id", chat_id);
 
                 var _ = await fetch_texts
+
+                myNode.innerHTML = '';
 
                 for (var i = 0; i < texts.length; i++) {
                     var doc = document.getElementsByClassName("text-content")[0]
@@ -198,11 +208,11 @@
             
             printItems()
 
-            $('#more_texts').scroll(function() {
+            /*$('#text-content').scroll(function() {
                 if ( $(this)[0].scrollHeight - $(this).scrollTop() <= $(this).outerHeight()) {
                     alert('yu[p scroll works')
                 }
-            })
+            })*/
 
 			function auto_grow(element) {
                 var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
@@ -210,7 +220,8 @@
                 element.style.height = (element.scrollHeight)+"px";
                 
                 var m = document.getElementsByClassName("messages")[0];
-                m.style.gridTemplateRows = "var(--messages-title-height) 1fr min-content";
+                m.style.gridTemplateRows = "var(--messages-title-height) auto min-content";
+                /*m.style.height = "100%";*/
 			}
         </script>
         <link rel="stylesheet" type="text/css" href="style.css">

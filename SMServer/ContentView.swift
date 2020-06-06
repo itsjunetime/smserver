@@ -48,6 +48,7 @@ struct ContentView: View {
     
     func loadServer(port_num: UInt16) {
         self.server["/" + main_url] = { request in
+            print("got a request at all")
             return .ok(.text(self.main_page))
         }
         self.server["/requests"] = { request in
@@ -82,12 +83,12 @@ struct ContentView: View {
     
     func loadFiles() {
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
-        let c = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
-        let j = Bundle.main.url(forResource: "script", withExtension: "js", subdirectory: "html") {
+        let c = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html") {
             do {
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
                 self.main_page_style = try String(contentsOf: c, encoding: .utf8)
-                self.main_page_script = try String(contentsOf: j, encoding: .utf8)
+                /*print("mainpage: ")
+                print(self.main_page)*/
             }
             catch {
                 print("ran into an error with loading the files, try again.")
@@ -694,13 +695,16 @@ struct ContentView: View {
         return address
     }
     
+    func sendAttachment() {
+        
+    }
+    
     func displaySettings() {
         
     }
     
     var body: some View {
         NavigationView {
-            //GeometryReader { geo in
                 VStack {
                     Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(self.egnum) in your browser to view your messages")
                         .font(Font.custom("smallTitle", size: 22))
@@ -759,7 +763,7 @@ struct ContentView: View {
                             Spacer().frame(width: 30)
                             
                             Button(action: {
-                                self.stopServer()
+                                self.server_running ? self.stopServer() : nil
                             }) {
                                 Image(systemName: "stop.fill")
                                     .scaleEffect(1.5)
@@ -769,7 +773,7 @@ struct ContentView: View {
                             Spacer().frame(width: 30)
                             
                             Button(action: {
-                                self.loadServer(port_num: UInt16(self.egnum)!)
+                                self.server_running ? nil : self.loadServer(port_num: UInt16(self.egnum)!)
                             }) {
                                 Image(systemName: "play.fill")
                                     .scaleEffect(1.5)
@@ -820,6 +824,7 @@ extension ContentView {
             let composeVC = MFMessageComposeViewController()
             composeVC.body = body
             composeVC.recipients = address
+            
             composeVC.messageComposeDelegate = self.messageComposeDelegate
             vc?.present(composeVC, animated: true)
         }
