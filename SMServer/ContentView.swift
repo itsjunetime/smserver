@@ -20,7 +20,9 @@ struct ContentView: View {
     @State var egnum = "8741"
     @State var password = ""
     @State var main_url = ""
+    @State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
     
+    let messagesString = "/private/var/mobile/Library/SMS/sms.db"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
@@ -47,31 +49,37 @@ struct ContentView: View {
     private let messageComposeDelegate = MessageComposerDelegate()
     
     func loadServer(port_num: UInt16) {
+        self.server["/"] = { request in
+            return .badRequest(.text(""))
+        }
         self.server["/" + main_url] = { request in
-            print("got a request at all")
             return .ok(.text(self.main_page))
         }
         self.server["/requests"] = { request in
-            /*print(request.body)
+            //print("body: ")
+            //print(request.body)
+            //print("address: ")
             print(request.address ?? "No address")
-            print(request.params)
-            print(request.headers)
-            print(request.method)*/
+            //print("params: ")
+            //print(request.params)
+            //print("headers: ")
+            //print(request.headers)
+            //print("method: " + request.method)
             print(request.queryParams)
             //print(request.self)
             if request.queryParams.count == 0 {
                 return .ok(.text(self.requests_page)) /// Ok so plain text is interpreted as html. We can totally do css & js.
             } else {
-                let return_val = self.parseAndReturn(params: request.queryParams)
+                let return_val = self.parseAndReturn(params: request.queryParams, address: request.address ?? "")
                 return .ok(.text(return_val))
             }
         }
         self.server["/style.css"] = { request in
             return .ok(.text(self.main_page_style))
         }
-        self.server["/script.js"] = { request in
+        /*self.server["/script.js"] = { request in
             return .ok(.text(self.main_page_script))
-        }
+        }*/
         do {
             try self.server.start(port_num)
             self.server_running = server.operating
@@ -105,7 +113,7 @@ struct ContentView: View {
         return data_string
     }
     
-    func parseAndReturn(params: [(String, String)]) -> String {
+    func parseAndReturn(params: [(String, String)], address: String = "") -> String {
         var person = ""
         var selectingPerson = false
         var num_texts = 0
@@ -120,6 +128,8 @@ struct ContentView: View {
         var sendingText = false
         var sendBody = ""
         var sendAddress = ""
+        
+        var checkingTexts = false
         
         switch params[0].0 {
         case "p":
@@ -142,6 +152,8 @@ struct ContentView: View {
             sendingText = true
             sendBody = params[0].1
             sendAddress = params[1].1
+        case "x":
+            checkingTexts = true
         default:
             print("We haven't implemented any other functionality yet, sorry :/")
         }
@@ -159,6 +171,9 @@ struct ContentView: View {
             
             let chats_array = loadChats(num_to_load: 30)
             let chats = encodeToJson(object: chats_array, title: "chats")
+            DispatchQueue.main.async {
+                self.setFirstTexts(address: address);
+            }
             return chats
             
         } else if gettingName {
@@ -174,6 +189,13 @@ struct ContentView: View {
         } else if sendingText {
             
             sendText(body: sendBody, address: [sendAddress])
+            
+        } else if checkingTexts {
+            
+            let lt = encodeToJson(object: checkLatestTexts(address: address), title: "chat_ids")
+            print("lt:")
+            print(lt)
+            return lt
             
         }
         
@@ -654,6 +676,77 @@ struct ContentView: View {
         return image /// So uh it should be a base64 encoded string?
     }
     
+    func setFirstTexts(address: String) {
+        past_latest_texts[address] = getLatestTexts();
+    }
+    
+    func checkLatestTexts(address: String) -> [String] {
+        print("Ran checkLatestTexts(\(address))")
+        var db = createConnection()
+        let latest_texts = getLatestTexts()
+        let ap_latest_texts = past_latest_texts[address]
+        if latest_texts == ap_latest_texts {
+            print("They're identical.")
+            return [] /// If they haven't received any new messages, just return nothing
+        }
+        
+        /*if ap_latest_texts == nil {
+            print("Haven't pinged before")
+            let string = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat")
+            var ret = [String]()
+            for i in 0..<string.count {
+                ret.append(string[i]["chat_identifier"] ?? "chat_identifier not found")
+            }
+            return ret
+        }*/
+        
+        var new_texts: [String] = [] /// Will just contain a list of all the chats that have new messages since they've last checked
+        for i in 0..<latest_texts.count {
+            print("checking between \(String(describing: ap_latest_texts?[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
+            if latest_texts[i] != ap_latest_texts?[i] {
+                /// Get chat_identifier of each chat where they have new messages
+                let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(String(describing: latest_texts[i]["ROWID"]))")
+                
+                new_texts.append(append_num[0]["chat_identifier"] ?? "")
+            }
+        }
+        
+        if sqlite3_close(db) != SQLITE_OK {
+            print("error closing database")
+        }
+        
+        db = nil
+        
+        print("new texts:")
+        print(new_texts)
+        
+        past_latest_texts[address] = latest_texts
+        
+        return new_texts;
+    }
+    
+    func getLatestTexts() -> [[String:String]] {
+        var db = createConnection()
+        
+        /// Don't know if we need date_read in this one. Let's keep experimenting.
+        let latest_texts = selectFromSql(db: db, columns: ["ROWID", "text", "date_read"], table: "message", condition: "where ROWID in (select message_id from chat_message_join group by chat_id)" )
+        
+        print("Latest texts:")
+        print(latest_texts)
+        
+        if sqlite3_close(db) != SQLITE_OK {
+            print("error closing database")
+        }
+        
+        db = nil
+        
+        return latest_texts
+    }
+    
+    func checkIfLatestTexts() -> [[String:String]] {
+        return [[String:String]]()
+    }
+    
     func loadBundle() {
         
         /*var obj_c = obj_class()
@@ -829,6 +922,8 @@ extension ContentView {
             vc?.present(composeVC, animated: true)
         }
     }
+    
+    
 }
 
 struct ContentView_Previews: PreviewProvider {
@@ -930,6 +1025,6 @@ struct ContentView_Previews: PreviewProvider {
 
 /*struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        /*@START_MENU_TOKEN@*/Text("Hello, World!")/*@END_MENU_TOKEN@*/
+        ContentView()
     }
 }*/
