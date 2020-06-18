@@ -132,27 +132,33 @@ struct ContentView: View {
         var checkingTexts = false
         
         switch params[0].0 {
-        case "p":
+        case "person":
             person = params[0].1
             selectingPerson = true
             if params.count > 1 {
-                if params[1].0 == "n" {
+                if params[1].0 == "num" {
                     num_texts = Int(params[1].1)!
                 }
             }
-        case "c":
+        case "chat":
             selectingChat = true
-        case "n":
+            num_texts = 30
+            if params.count > 1 {
+                if params[1].0 == "num" {
+                    num_texts = Int(params[1].1)!
+                }
+            }
+        case "name":
             chat_id = params[0].1
             gettingName = true
-        case "i":
+        case "image":
             chat_id = params[0].1
             gettingImage = true
-        case "s":
+        case "send":
             sendingText = true
             sendBody = params[0].1
             sendAddress = params[1].1
-        case "x":
+        case "check":
             checkingTexts = true
         default:
             print("We haven't implemented any other functionality yet, sorry :/")
@@ -169,7 +175,7 @@ struct ContentView: View {
             
         } else if selectingChat {
             
-            let chats_array = loadChats(num_to_load: 30)
+            let chats_array = loadChats(num_to_load: num_texts)
             let chats = encodeToJson(object: chats_array, title: "chats")
             DispatchQueue.main.async {
                 self.setFirstTexts(address: address);
@@ -690,7 +696,7 @@ struct ContentView: View {
             return [] /// If they haven't received any new messages, just return nothing
         }
         
-        /*if ap_latest_texts == nil {
+        if ap_latest_texts == nil {
             print("Haven't pinged before")
             let string = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat")
             var ret = [String]()
@@ -698,16 +704,18 @@ struct ContentView: View {
                 ret.append(string[i]["chat_identifier"] ?? "chat_identifier not found")
             }
             return ret
-        }*/
+        }
         
         var new_texts: [String] = [] /// Will just contain a list of all the chats that have new messages since they've last checked
         for i in 0..<latest_texts.count {
             print("checking between \(String(describing: ap_latest_texts?[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
             if latest_texts[i] != ap_latest_texts?[i] {
                 /// Get chat_identifier of each chat where they have new messages
-                let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(String(describing: latest_texts[i]["ROWID"]))")
-                
-                new_texts.append(append_num[0]["chat_identifier"] ?? "")
+                if let check_message_id = latest_texts[i]["ROWID"] {
+                    let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(check_message_id)")
+                    
+                    new_texts.append(append_num[0]["chat_identifier"] ?? "")
+                }
             }
         }
         

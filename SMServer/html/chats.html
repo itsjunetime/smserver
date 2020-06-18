@@ -3,7 +3,7 @@
         <title>
             Messages
         </title>
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>
+        <!--<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>-->
         <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/noframework.waypoints.min.js"></script>-->
         <!--<script src="sript.js" ></script>-->
         <script>
@@ -12,7 +12,7 @@
             var texts = "";
             var image_string = "";
             const readJson = async () => {
-                let url = "/requests?c"
+                let url = "/requests?chat=0&num=30"
                 const fetch_val = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -54,7 +54,7 @@
             }
     
             const fetchName = async (name) => {
-                var url = '/requests?n=' + name
+                var url = '/requests?name=' + name
                 var return_name = ""
                 xmlhttp=new XMLHttpRequest();
                 xmlhttp.onreadystatechange=function() {
@@ -80,7 +80,7 @@
                 var orig_btn = document.getElementById(chat_id);
                 orig_btn.setAttribute("class", "selected");
 
-                let url = "/requests?p=" + chat_id + "&n=" + num_texts
+                let url = "/requests?person=" + chat_id + "&num=" + num_texts
                 const fetch_texts = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -159,7 +159,7 @@
             }
 
             const getImage = async (chat_id) => {
-                var url = '/requests?i=' + chat_id
+                var url = '/requests?image=' + chat_id
                 const fetch_image = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -180,7 +180,7 @@
                 body = document.getElementById("sendbox").value
                 recipient = document.getElementsByClassName("title")[0].id
                 
-                var url = '/requests?s=' + body + "&t=" + recipient
+                var url = '/requests?send=' + body + "&to=" + recipient
                 const fetch_image = fetch(url)
                 .then(response => {
                     if (!response.ok) {
