@@ -290,6 +290,7 @@ struct ContentView: View {
     func stopServer() {
         self.server.stop()
         print("Stopped server")
+        self.authenticated_addresses = [String]()
         server_running = server.isRunning
     }
     
@@ -433,7 +434,7 @@ struct ContentView: View {
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
         } else {
             let new_chat_id = chat_id.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-            if chat_id.count < 7 {
+            if chat_id.count <= 7 {
                 let chat_id_zero = String(new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)])
                 let chat_id_one = String(new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex])
                 display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
@@ -506,25 +507,42 @@ struct ContentView: View {
         /// This section will get get me an array of the chat ids in order of most recently sent/received text. first is most recent.
         var chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc");
         
-        var orig_chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC", num_items: num_to_load)
+        //var orig_chats_array = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "ORDER BY last_read_message_timestamp DESC", num_items: num_to_load)
         
         var chats_array = [[String:String]]()
         
         /// Ok this section is kinda terrible and can definitely be optimized.
         for i in 0..<chat_ids_ordered.count {
-            let ci = chat_ids_ordered[i]["chat_id"]
+            let ci = chat_ids_ordered[i]["chat_id"]!
             //print(ci ?? "val not found")
-            for l in 0..<orig_chats_array.count {
+            /*for l in 0..<orig_chats_array.count {
                 if orig_chats_array[l]["ROWID"] == ci {
                     //print("matched. ri: \(orig_chats_array[l]["ROWID"]), ci: \(orig_chats_array[l]["chat_identifier"]), dn: \(orig_chats_array[l]["display_name"])")
                     chats_array.append(orig_chats_array[l])
+                }
+            }*/
+            
+            let new_chat = selectFromSql(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", condition: "WHERE ROWID is \(ci) LIMIT 1")
+            
+            if new_chat.count > 0 {
+                var add = true
+                
+                for i in chats_array {
+                    self.debug ? print("comparing " + i["chat_identifier"]! + " to " + new_chat[0]["chat_identifier"]!) : nil
+                    if i["chat_identifier"] == new_chat[0]["chat_identifier"] {
+                        add = false
+                        break
+                    }
+                }
+                if add {
+                    chats_array.append(new_chat[0])
                 }
             }
         }
 
         /// Just saving memory
         chat_ids_ordered = [[String:String]]()
-        orig_chats_array = [[String:String]]()
+        //orig_chats_array = [[String:String]]()
         
         for i in 0..<chats_array.count {
             if chats_array[i]["display_name"]!.count == 0 {
@@ -532,6 +550,15 @@ struct ContentView: View {
             }
             
             chats_array[i]["image_text"] = returnImageBase64DB(chat_id: chats_array[i]["chat_identifier"]!, contact_db: contacts_db!, image_db: image_db!)
+            let unread = selectFromSql(db: db, columns: ["is_read", "is_from_me", "text", "item_type", "is_empty"], table: "message", condition: "WHERE ROWID in (select message_id from chat_message_join where chat_id in (SELECT ROWID from chat where chat_identifier is \"\(chats_array[i]["chat_identifier"] ?? "")\")) ORDER BY ROWID DESC LIMIT 1")
+            chats_array[i]["has_unread"] = "false"
+            if unread.count != 0 {
+                if unread[0]["is_from_me"] == "0" && unread[0]["is_read"] == "1" && unread[0]["text"] != nil && unread[0]["is_empty"] != "0" && unread[0]["item_type"] == "0" {
+                    chats_array[i]["has_unread"] = "true"
+                }
+            }
+            
+            self.debug ? print((chats_array[i]["chat_identifier"] ?? "a chat") + " has unread: " + (chats_array[i]["has_unread"] ?? "maybe")) : nil
         }
         
         if sqlite3_close(image_db) != SQLITE_OK {
@@ -671,7 +698,7 @@ struct ContentView: View {
             if new_chat_id.count == 0 {
                 return ""
             }
-            if chat_id.count < 7 {
+            if chat_id.count <= 7 {
                 let chat_id_zero = new_chat_id[new_chat_id.startIndex ..< (new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex)]
                 let chat_id_one = new_chat_id[(new_chat_id.index(new_chat_id.startIndex, offsetBy: 3, limitedBy: new_chat_id.endIndex) ?? new_chat_id.endIndex) ..< new_chat_id.endIndex]
                 docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(new_chat_id)\" OR c16Phone LIKE \"\(chat_id_zero)_\(chat_id_one)\"", num_items: 1)
