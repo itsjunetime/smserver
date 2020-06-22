@@ -1,16 +1,22 @@
 PODS:
+  - GCDWebServer (3.5.4):
+    - GCDWebServer/Core (= 3.5.4)
+  - GCDWebServer/Core (3.5.4)
   - Swifter (1.4.7)
 
 DEPENDENCIES:
+  - GCDWebServer (~> 3.0)
   - Swifter (~> 1.4.7)
 
 SPEC REPOS:
   trunk:
+    - GCDWebServer
     - Swifter
 
 SPEC CHECKSUMS:
+  GCDWebServer: 2c156a56c8226e2d5c0c3f208a3621ccffbe3ce4
   Swifter: 2327ef5d872c638aebab79646ce494af508b0c8f
 
-PODFILE CHECKSUM: 68a661f3aae462e0dfb64e090d0bff9451ae532e
+PODFILE CHECKSUM: e84adcec9d23366e29749c01c9b4b296a994af2e
 
 COCOAPODS: 1.9.1

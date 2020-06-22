@@ -7,20 +7,24 @@
 //
 
 import SwiftUI
-import Swifter
+import GCDWebServer
 import SQLite3
 import MessageUI
 
 struct ContentView: View {
-    let server = HttpServer()
+    let server = GCDWebServer()
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
+    let debug = true
+    static let default_num_chats = 40
+    static let default_num_messages = 100
     
     @State var server_running = false
     @State var egnum = "8741"
-    @State var password = ""
+    @State var password = "toor"
     @State var main_url = ""
     @State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
+    @State var authenticated_addresses = [String]()
     
     let messagesString = "/private/var/mobile/Library/SMS/sms.db"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
@@ -45,61 +49,86 @@ struct ContentView: View {
     @State var main_page_script =
     """
     """
+    @State var gatekeeper_page =
+    """
+    """
     
     private let messageComposeDelegate = MessageComposerDelegate()
     
     func loadServer(port_num: UInt16) {
-        self.server["/"] = { request in
-            return .badRequest(.text(""))
-        }
-        self.server["/" + main_url] = { request in
-            return .ok(.text(self.main_page))
-        }
-        self.server["/requests"] = { request in
-            //print("body: ")
-            //print(request.body)
-            //print("address: ")
-            print(request.address ?? "No address")
-            //print("params: ")
-            //print(request.params)
-            //print("headers: ")
-            //print(request.headers)
-            //print("method: " + request.method)
-            print(request.queryParams)
-            //print(request.self)
-            if request.queryParams.count == 0 {
-                return .ok(.text(self.requests_page)) /// Ok so plain text is interpreted as html. We can totally do css & js.
-            } else {
-                let return_val = self.parseAndReturn(params: request.queryParams, address: request.address ?? "")
-                return .ok(.text(return_val))
+        
+        server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
+            self.debug ? print("entered default handler") : nil
+            
+            var authenticated = false;
+            
+            for i in self.authenticated_addresses {
+                if i == String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!)) {
+                    authenticated = true;
+                }
             }
-        }
-        self.server["/style.css"] = { request in
-            return .ok(.text(self.main_page_style))
-        }
-        /*self.server["/script.js"] = { request in
-            return .ok(.text(self.main_page_script))
-        }*/
-        do {
-            try self.server.start(port_num)
-            self.server_running = server.operating
-            print("Server is running!")
-        } catch {
-            print("Ran into an error with running the server :/")
-        }
+            
+            if authenticated {
+                return GCDWebServerDataResponse(html: self.main_page)
+            } else {
+                return GCDWebServerDataResponse(html: self.gatekeeper_page)
+            }
+        })
+        
+        server.addHandler(forMethod: "GET", path: "/requests", request: GCDWebServerRequest.self, processBlock: { request in
+            if self.debug {
+                print("headers:")
+                print(request.headers)
+                print("query:")
+                print(request.query)
+                print("url:")
+                print(request.url)
+                print("lad:")
+                print(request.localAddressData)
+                print(request.localAddressString)
+                print("ras:")
+                print(request.remoteAddressString)
+            }
+            
+            let query = request.query
+            
+            if query != nil && query?.count == 0 {
+                return GCDWebServerDataResponse(html: self.requests_page)
+            } else {
+                var address = ""
+                
+                do {
+                    address = try String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))
+                } catch {
+                    address = ""
+                }
+                
+                let response = self.parseAndReturn(params: query ?? [String:String](), address: address)
+                
+                return GCDWebServerDataResponse(text: response)
+            }
+        })
+        
+        server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
+            return GCDWebServerDataResponse(text: self.main_page_style)
+        })
+        
+        server.start(withPort: UInt(egnum) ?? UInt(8741), bonjourName: "GCD Web Server")
+        
+        self.server_running = server.isRunning
     }
     
     func loadFiles() {
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
-        let c = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html") {
+        let c = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
+        let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html") {
             do {
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
                 self.main_page_style = try String(contentsOf: c, encoding: .utf8)
-                /*print("mainpage: ")
-                print(self.main_page)*/
+                self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
             }
             catch {
-                print("ran into an error with loading the files, try again.")
+                print("WARNING: ran into an error with loading the files, try again.")
             }
         }
     }
@@ -113,7 +142,40 @@ struct ContentView: View {
         return data_string
     }
     
-    func parseAndReturn(params: [(String, String)], address: String = "") -> String {
+    func parseAndReturn(params: [String:String], address: String = "") -> String {
+        if self.debug {
+            print("parsing:")
+            print(params)
+        }
+        
+        if Array(params.keys)[0] == "password" {
+            self.debug ? print("comparing " + Array(params.values)[0] + " to " + self.password) : nil
+            if Array(params.values)[0] == password {
+                var already_in = false;
+                for i in authenticated_addresses {
+                    if i == address {
+                        already_in = true
+                    }
+                }
+                if !already_in {
+                    authenticated_addresses.append(address)
+                }
+                return "true"
+            } else {
+                return "false"
+            }
+        }
+        
+        var clear = false;
+        
+        for i in authenticated_addresses {
+            if i == address {
+                clear = true
+            }
+        }
+        
+        if clear == false { return "" }
+        
         var person = ""
         var selectingPerson = false
         var num_texts = 0
@@ -131,40 +193,49 @@ struct ContentView: View {
         
         var checkingTexts = false
         
-        switch params[0].0 {
-        case "person":
-            person = params[0].1
+        var gettingAttachment = false
+        var imagePath = ""
+        
+        let f = Array(params.keys)[0]
+        var s = ""
+        if params.count > 1 {
+            s = Array(params.keys)[1]
+        }
+        if f == "person" || f == "num" {
             selectingPerson = true
-            if params.count > 1 {
-                if params[1].0 == "num" {
-                    num_texts = Int(params[1].1)!
-                }
+            person = f == "person" ? Array(params.values)[0] : Array(params.values)[1]
+            num_texts = ContentView.default_num_chats
+            if f == "num" || s == "num" {
+                num_texts = (f == "num" ? Int(Array(params.values)[0]) : Int(Array(params.values)[1])) ?? ContentView.default_num_chats
             }
-        case "chat":
+        } else if f == "chat" || f == "num_chats" {
             selectingChat = true
-            num_texts = 30
-            if params.count > 1 {
-                if params[1].0 == "num" {
-                    num_texts = Int(params[1].1)!
-                }
+            num_texts = ContentView.default_num_chats
+            if f == "num_chats" || s == "num_chats" {
+                num_texts = (f == "num_chats" ? Int(Array(params.values)[0]) : Int(Array(params.values)[1])) ?? ContentView.default_num_chats
             }
-        case "name":
-            chat_id = params[0].1
+        } else if f == "name" {
             gettingName = true
-        case "image":
-            chat_id = params[0].1
-            gettingImage = true
-        case "send":
+            chat_id = Array(params.values)[0]
+        } else if f == "image" {
+            gettingImage = true;
+            chat_id = Array(params.values)[0]
+        } else if f == "send" || f == "to" {
             sendingText = true
-            sendBody = params[0].1
-            sendAddress = params[1].1
-        case "check":
+            sendBody = f == "send" ?  Array(params.values)[0] : Array(params.values)[1]
+            sendAddress = s == "to" ? Array(params.values)[1] : Array(params.values)[0]
+        } else if f == "check" {
             checkingTexts = true
-        default:
-            print("We haven't implemented any other functionality yet, sorry :/")
+        } else if f == "attachment" {
+            gettingAttachment = true
+            imagePath = Array(params.values)[0].replacingOccurrences(of: "._.", with: "/")
+        } else {
+            self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
         }
         
         if selectingPerson {
+            
+            self.debug ? print("selecting person: " + person + ", num: " + String(num_texts)) : nil
             
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
@@ -199,9 +270,17 @@ struct ContentView: View {
         } else if checkingTexts {
             
             let lt = encodeToJson(object: checkLatestTexts(address: address), title: "chat_ids")
-            print("lt:")
-            print(lt)
+            if self.debug  {
+                print("lt:")
+                print(lt)
+            }
             return lt
+            
+        } else if gettingAttachment {
+            
+            print("Have not implemented attachments yet")
+            
+            //return getAttachmentFromPath(path: imagePath)
             
         }
         
@@ -211,7 +290,7 @@ struct ContentView: View {
     func stopServer() {
         self.server.stop()
         print("Stopped server")
-        server_running = server.operating
+        server_running = server.isRunning
     }
     
     func sendText(body: String, address: [String]) {

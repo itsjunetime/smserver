@@ -6,7 +6,7 @@ target 'SMServer' do
   use_frameworks!
 
   # Pods for SMServer
-  pod 'Swifter', '~> 1.4.7'
+  pod "GCDWebServer", "~> 3.0"
 
   target 'SMServerTests' do
     inherit! :search_paths
