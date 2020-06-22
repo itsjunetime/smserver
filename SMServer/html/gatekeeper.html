@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <style>
+            :root {
+                --main-box-height: 80px;
+            }
+            body {
+                background-color: #171717;
+                height: 100%;
+            }
+            .container {
+                display: grid;
+                height: 100%;
+            }
+            .centered_box {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: #323232;
+                border-radius: 10px;
+                padding: 1px 20px 20px 20px;
+                box-shadow: 10px 10px 5px #080808;
+            }
+            .pass_box {
+                margin-bottom: 20px;
+                width: 300px;
+                border-radius: 5px;
+                outline: none;
+                border: none;
+                padding: 4px;
+            }
+            h1 {
+                color: #fff;
+                font-family: Calibri, 'Gill Sans', 'Gill Sans MT', 'Trebuchet MS', sans-serif;
+                font-weight: 300;
+            }
+            button {
+                background-color: white;
+                border: none;
+                outline: none;
+                border-radius: 2px;
+                height: 20px;
+                width: 70px;
+                transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                font-size: 16px;
+            }
+            button:hover {
+                background-color: lightskyblue;
+                transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            }
+        </style>
+        <script>
+            var response = "";
+
+            const submitPassword = async () => {
+                var input = document.getElementById("input").value
+
+                var url = '/requests?password=' + input
+                const check_pass = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    this.response = text
+                    return attachment_string
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
+
+                var _ = await check_pass
+
+                console.log("response:" + response + "end")
+
+                if (response !== "true") {
+                    document.getElementById("input").style.backgroundColor = "crimson";
+                    document.getElementById("input").value = "";
+                } else {
+                    window.location.reload(true)
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="centered_box">
+                <h1>SMServer</h1>
+                <input class="pass_box" placeholder="Password here" id="input"><br>
+                <button onclick="submitPassword()">⇢</button>
+            </div>
+        </div>
+    </body>
+</html>
