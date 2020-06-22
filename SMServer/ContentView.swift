@@ -616,6 +616,7 @@ struct ContentView: View {
             
             var new_chat = chats[i["chat_id"]!]
             
+            new_chat!["has_unread"] = "false"
             if messages[i["message_id"]!]!["is_from_me"] == "0" && messages[i["message_id"]!]!["is_read"] == "1" && messages[i["message_id"]!]!["text"] != nil && messages[i["message_id"]!]!["is_empty"] != "0" && messages[i["message_id"]!]!["item_type"] == "0" {
                 new_chat!["has_unread"] = "true"
             }
