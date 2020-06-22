@@ -1,2 +1,3 @@
 ${PODS_ROOT}/Target Support Files/Pods-SMServer/Pods-SMServer-frameworks.sh
+${BUILT_PRODUCTS_DIR}/GCDWebServer/GCDWebServer.framework
 ${BUILT_PRODUCTS_DIR}/Swifter/Swifter.framework
