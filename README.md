@@ -28,4 +28,4 @@ This is definitely still in Alpha stages; there are still countless issues and f
 If there are any issues or feature requests at all, don't hesitate to create an issue or pull request here. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ## Companion App
-This is least priority. There has been no progress at all in this area, and it may never exist. Just use the browser version for now. 
+Currently, there is a python companion app in the works; it is compatible with this and the mac version of this app but I'm not releasing it yet for reasons I am not quite sure of. Wait a bit and it'll be out soon.
