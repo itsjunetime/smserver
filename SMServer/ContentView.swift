@@ -123,6 +123,23 @@ struct ContentView: View {
             }
         })
         
+        /*server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
+            var clear = false
+            
+            let address = String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))
+            for i in self.authenticated_addresses {
+                if i == address {
+                    clear = true
+                }
+            }
+            
+            if !clear {
+                return GCDWebServerDataResponse(text: "")
+            }
+            
+            return GCDWebServerDataResponse(data: self.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
+        })*/
+        
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
             return GCDWebServerDataResponse(text: self.main_page_style)
         })
