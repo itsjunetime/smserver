@@ -7,11 +7,11 @@ Hopefully this will soon be a SwiftUI app which can host a local webserver and s
 - [x] View texts in browser
 - [x] Send texts (mostly) from browser
 - [ ] Send texts without on-device interaction
-- [ ] View images in browser
+- [x] View images in browser
 - [ ] Send images from browser
 - [ ] Send attachments from browser
 - [ ] Display new messages when they arrive
-- [ ] Display notifier for which conversations have unread messages
+- [x] Display notifier for which conversations have unread messages
 - [ ] Search through messages from browser
 
 ## To Install
