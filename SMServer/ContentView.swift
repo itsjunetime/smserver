@@ -205,74 +205,49 @@ struct ContentView: View {
         }
         
         var person = ""
-        var selectingPerson = false
         var num_texts = 0
-        
-        var selectingChat = false
+        var offset = 0
         
         var chat_id = ""
-        var gettingName = false
         
-        var gettingImage = false
-        
-        var sendingText = false
         var sendBody = ""
         var sendAddress = ""
-        
-        var checkingTexts = false
-        
-        var gettingAttachment = false
-        var imagePath = ""
         
         let f = Array(params.keys)[0]
         var s = ""
         if params.count > 1 {
             s = Array(params.keys)[1]
         }
-        if f == "person" || f == "num" {
-            selectingPerson = true
-            person = f == "person" ? Array(params.values)[0] : Array(params.values)[1]
-            num_texts = ContentView.default_num_chats
-            if f == "num" || s == "num" {
-                num_texts = (f == "num" ? Int(Array(params.values)[0]) : Int(Array(params.values)[1])) ?? ContentView.default_num_chats
-            }
-        } else if f == "chat" || f == "num_chats" {
-            selectingChat = true
-            num_texts = ContentView.default_num_chats
-            if f == "num_chats" || s == "num_chats" {
-                num_texts = (f == "num_chats" ? Int(Array(params.values)[0]) : Int(Array(params.values)[1])) ?? ContentView.default_num_chats
-            }
-        } else if f == "name" {
-            gettingName = true
-            chat_id = Array(params.values)[0]
-        } else if f == "image" {
-            gettingImage = true;
-            chat_id = Array(params.values)[0]
-        } else if f == "send" || f == "to" {
-            sendingText = true
-            sendBody = f == "send" ?  Array(params.values)[0] : Array(params.values)[1]
-            sendAddress = s == "to" ? Array(params.values)[1] : Array(params.values)[0]
-        } else if f == "check" {
-            checkingTexts = true
-        } else if f == "attachment" {
-            gettingAttachment = true
-            imagePath = Array(params.values)[0].replacingOccurrences(of: "._.", with: "/")
-        } else {
-            self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
+        var t = ""
+        if params.count > 2 {
+            t = Array(params.keys)[2]
         }
-        
-        if selectingPerson {
+        if f == "person" || f == "num" || f == "offset" {
+            
+            person = f == "person" ? Array(params.values)[0] : (s == "person" ? Array(params.values)[1] : Array(params.values)[2])
+            num_texts = ContentView.default_num_chats
+            if f == "num" || s == "num" || t == "num" {
+                num_texts = (f == "num" ? Int(Array(params.values)[0]) : (s == "num" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? ContentView.default_num_chats
+            }
+            if f == "offset" || s == "offset" || t == "offset" {
+                offset = (f == "offset" ? Int(Array(params.values)[0]) : (s == "offset" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? 0
+            }
             
             self.debug ? print("selecting person: " + person + ", num: " + String(num_texts)) : nil
             
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
             }
-            let texts_array = loadMessages(num: person, num_items: num_texts)
+            let texts_array = loadMessages(num: person, num_items: num_texts, offset: offset)
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
             
-        } else if selectingChat {
+        } else if f == "chat" || f == "num_chats" {
+            
+            num_texts = ContentView.default_num_chats
+            if f == "num_chats" || s == "num_chats" {
+                num_texts = (f == "num_chats" ? Int(Array(params.values)[0]) : Int(Array(params.values)[1])) ?? ContentView.default_num_chats
+            }
             
             let chats_array = loadChats(num_to_load: num_texts)
             let chats = encodeToJson(object: chats_array, title: "chats")
@@ -281,21 +256,26 @@ struct ContentView: View {
             }
             return chats
             
-        } else if gettingName {
+        } else if f == "name" {
+            
+            chat_id = Array(params.values)[0]
             
             let name = getDisplayName(chat_id: chat_id)
             return name
             
-        } else if gettingImage {
+        } else if f == "image" {
             
+            chat_id = Array(params.values)[0]
             let image_string = returnImageBase64(chat_id: chat_id)
             return image_string
             
-        } else if sendingText {
+        } else if f == "send" || f == "to" {
             
+            sendBody = f == "send" ?  Array(params.values)[0] : Array(params.values)[1]
+            sendAddress = s == "to" ? Array(params.values)[1] : Array(params.values)[0]
             sendText(body: sendBody, address: [sendAddress])
             
-        } else if checkingTexts {
+        } else if f == "check" {
             
             let lt = encodeToJson(object: checkLatestTexts(address: address), title: "chat_ids")
             if self.debug  {
@@ -304,10 +284,8 @@ struct ContentView: View {
             }
             return lt
             
-        } else if gettingAttachment {
-            
-            self.debug ? print("Have not implemented attachments yet") : nil
-            
+        } else {
+            self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
         }
         
         return ""
@@ -339,7 +317,7 @@ struct ContentView: View {
         return db
     }
     
-    func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = 0) -> [[String:String]] { /// Flawless.
+    func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = 0, offset: Int = 0) -> [[String:String]] { /// Flawless.
         
         var sqlString = "SELECT "
         for i in columns {
@@ -353,7 +331,7 @@ struct ContentView: View {
             sqlString += " " + condition
         }
         if num_items != 0 {
-            sqlString += " LIMIT \(String(num_items))"
+            sqlString += " LIMIT \(offset), \(String(num_items))"
         }
         sqlString += ";"
         
@@ -565,10 +543,10 @@ struct ContentView: View {
         return ""
     }
     
-    func loadMessages(num: String, num_items: Int = default_num_messages) -> [[String:String]] {
+    func loadMessages(num: String, num_items: Int = default_num_messages, offset: Int = 0) -> [[String:String]] {
         var db = createConnection()
         
-        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items)
+        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
         
         messages = messages.reversed()
         
