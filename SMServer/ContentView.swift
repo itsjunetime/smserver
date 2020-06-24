@@ -28,6 +28,8 @@ struct ContentView: View {
     
     let messagesString = "/private/var/mobile/Library/SMS/sms.db"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
+    static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
+    static let userHomeString = "/private/var/mobile/"
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     
@@ -74,15 +76,7 @@ struct ContentView: View {
             
             self.debug ? print("entered default handler") : nil
             
-            var authenticated = false;
-            
-            for i in self.authenticated_addresses {
-                if i == String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!)) {
-                    authenticated = true;
-                }
-            }
-            
-            if authenticated {
+            if self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
                 return GCDWebServerDataResponse(html: self.main_page)
             } else {
                 return GCDWebServerDataResponse(html: self.gatekeeper_page)
@@ -123,24 +117,21 @@ struct ContentView: View {
             }
         })
         
-        /*server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
-            var clear = false
+        server.addHandler(forMethod: "GET", path: "/attachments", request: GCDWebServerRequest.self, processBlock: { request in
             
-            let address = String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))
-            for i in self.authenticated_addresses {
-                if i == address {
-                    clear = true
-                }
-            }
-            
-            if !clear {
+            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
                 return GCDWebServerDataResponse(text: "")
             }
             
-            return GCDWebServerDataResponse(data: self.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
-        })*/
+            return GCDWebServerDataResponse(data: self.getAttachmentDataFromPath(path: request.query?["path"] ?? ""), contentType: "image/jpeg")
+        })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
+            
+            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+                return GCDWebServerDataResponse(text: "")
+            }
+            
             return GCDWebServerDataResponse(text: self.main_page_style)
         })
         
@@ -162,6 +153,18 @@ struct ContentView: View {
                 print("WARNING: ran into an error with loading the files, try again.")
             }
         }
+    }
+    
+    func checkIfAuthenticated(ras: String) -> Bool {
+        var clear = false
+        
+        for i in self.authenticated_addresses {
+            if i == ras {
+                clear = true
+            }
+        }
+        
+        return clear
     }
     
     func encodeToJson(object: Any, title: String) -> String {
@@ -197,15 +200,9 @@ struct ContentView: View {
             }
         }
         
-        var clear = false;
-        
-        for i in authenticated_addresses {
-            if i == address {
-                clear = true
-            }
+        if !self.checkIfAuthenticated(ras: address) {
+            return ""
         }
-        
-        if clear == false { return "" }
         
         var person = ""
         var selectingPerson = false
@@ -465,7 +462,6 @@ struct ContentView: View {
                         minor_identifier = tiny_return
                     }
                 }
-                //main_return.append(minor_return)
                 main_return[minor_identifier] = minor_return
                 i += 1
             }
@@ -485,7 +481,6 @@ struct ContentView: View {
                         minor_identifier = tiny_return
                     }
                 }
-                //main_return.append(minor_return)
                 main_return[minor_identifier] = minor_return
             }
         }
@@ -570,33 +565,25 @@ struct ContentView: View {
         return ""
     }
     
-    func loadMessages(num: String, num_items: Int = 0) -> [[String:String]] { /// Ok so this function seems to work. cool.
-        
+    func loadMessages(num: String, num_items: Int = default_num_messages) -> [[String:String]] {
         var db = createConnection()
         
-        let chat_id_array = selectFromSql(db: db, columns: ["*"], table: "chat", condition: "WHERE chat_identifier = \"\(num)\"", num_items: 1)
-        let chat_id = chat_id_array[0]["*"]! /// ! is necessary or else it prints as 'Optional('x')' instead of just 'x'. May cause issues when nothing is returned tho.
+        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items)
         
-        var chat_message_connection_array = [[String:String]]()
+        messages = messages.reversed()
         
-        if num_items == 0 {
-            chat_message_connection_array = selectFromSql(db: db, columns: ["message_id"], table: "chat_message_join", condition: "WHERE chat_id=\"\(String(describing: chat_id))\"")
-        } else {
-            chat_message_connection_array = selectFromSql(db: db, columns: ["message_id"], table: "chat_message_join", condition: "WHERE chat_id=\"\(String(describing: chat_id))\" ORDER BY message_date DESC",  num_items: num_items)
-            chat_message_connection_array.reverse()
-        }
-        var message_ids: [String] = []
-        for i in chat_message_connection_array {
-            message_ids.append(i["message_id"] ?? "")
-        }
-        
-        var messages = [[String:String]]()
-        
-        var j = 0
-        for i in message_ids {
-            let m = selectFromSql(db: db, columns: ["text", "is_from_me", "date", "service"], table: "message", condition: "WHERE ROWID=\(i)", num_items: 1)
-            messages.append(m[0]) /// Since it should be an array with just one element, which is a dictionary.
-            j += 1
+        for i in 0..<messages.count {
+            if messages[i]["cache_has_attachments"] == "1" {
+                let a = getAttachmentFromMessage(mid: messages[i]["ROWID"]!)
+                var file_string = ""
+                var type_string = ""
+                for i in a {
+                    file_string += i[0] + ":" /// Cause ':' can't exist in files in MacOS (I'm fairly certain?)
+                    type_string += i[1] + ":"
+                }
+                messages[i]["attachment_file"] = file_string
+                messages[i]["attachment_type"] = type_string
+            }
         }
         
         if sqlite3_close(db) != SQLITE_OK {
@@ -605,10 +592,9 @@ struct ContentView: View {
 
         db = nil
         
-        print("destroyed db")
+        self.debug ? print("destroyed db") : nil
         
-        print("returning messages!")
-        //messages_have_been_loaded = true
+        self.debug ? print("returning messages!") : nil
         return messages
     }
     
@@ -619,10 +605,10 @@ struct ContentView: View {
         
         let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "is_empty"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
         let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc LIMIT \(num_to_load)");
-        
-        let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc) group by chat_identifier")
+        let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id))")
         
         var chats_array = [[String:String]]()
+        var already_selected = [String:Int]() /// Just making it a dictionary so I have O(1) access instead of iterating through, as with an array
         
         for i in chat_ids_ordered {
             if chats[i["chat_id"] ?? ""] == nil {
@@ -630,6 +616,10 @@ struct ContentView: View {
             }
             
             let ci = chats[i["chat_id"]!]!["chat_identifier"]
+            
+            if already_selected[ci!] != nil {
+                continue;
+            }
             
             var new_chat = chats[i["chat_id"]!]
             
@@ -645,6 +635,7 @@ struct ContentView: View {
             new_chat?["image_text"] = returnImageBase64DB(chat_id: ci ?? "", contact_db: contacts_db!, image_db: image_db!)
             
             chats_array.append(new_chat!)
+            already_selected[ci!] = 0
         }
         
         if sqlite3_close(image_db) != SQLITE_OK {
@@ -828,6 +819,37 @@ struct ContentView: View {
         db = nil
         
         return latest_texts
+    }
+    
+    func getAttachmentFromMessage(mid: String) -> [[String]] { /// So this will just return the partial file name/path & mime_type
+        let db = createConnection()
+        let file = selectFromSql(db: db, columns: ["filename", "mime_type", "hide_attachment"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
+        
+        var return_val = [[String]]()
+        
+        if file.count > 0 {
+            for i in file {
+                //var suffixed = String(i["filename"]?.dropFirst(imageStoragePrefix.count - FileManager.default.homeDirectoryForCurrentUser.path.count + 1) ?? "")
+                var suffixed = String(i["filename"]?.dropFirst(ContentView.imageStoragePrefix.count - ContentView.userHomeString.count + 2) ?? "")
+                suffixed = suffixed.replacingOccurrences(of: "/", with: "._.")
+                let type = i["mime_type"] ?? ""
+                return_val.append([suffixed, type])
+            }
+        }
+        
+        return return_val
+    }
+    
+    func getAttachmentDataFromPath(path: String) -> Data {
+        let parsed_path = path.replacingOccurrences(of: "._.", with: "/")
+        
+        do {
+            let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ContentView.imageStoragePrefix + parsed_path))
+            return attachment_data
+        } catch {
+            print("WARNING: failed to load image for path \(ContentView.imageStoragePrefix + path)")
+            return Data.init(capacity: 0)
+        }
     }
     
     func checkIfLatestTexts() -> [[String:String]] {
