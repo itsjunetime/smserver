@@ -38,12 +38,11 @@
                     b.setAttribute("id", items[i].chat_identifier);
 
                     b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
-
-                    if (items[i].display_name.length === 0) {
-                        b.innerHTML += "<p>" + items[i].chat_identifier + "</p>";
-                    } else {
-                        b.innerHTML += "<p>" + items[i].display_name + "</p>";
-                    }
+                    
+                    b.innerHTML += "<p>" + (items[i].display_name.length === 0 ? items[i].chat_identifier : items[i].display_name) + "</p>"
+                    
+                    if (items[i].has_unread === "true") { b.setAttribute("class", "unread") }
+                    
                     var get_texts_string = "getTexts(\"" + items[i].chat_identifier + "\", " + num_texts + ")";
                     b.setAttribute("onclick", get_texts_string);
                     
@@ -70,7 +69,6 @@
 
             const getTexts = async (chat_id, num_texts) => {
                 var myNode = document.getElementsByClassName("text-content")[0];
-                //myNode.innerHTML = '';
 
                 var selected = document.getElementsByClassName("selected");
                 if (selected.length > 0) {
@@ -122,7 +120,28 @@
                         classes += " is_from_me";
                         t.setAttribute("class", classes);
                     }
-                    t.innerHTML = texts[i].text;
+                    
+                    t.innerHTML = ''
+                    
+                    if (texts[i].hasOwnProperty('attachment_file') && texts[i].attachment_file.length != 0) {
+                        
+                        var files = texts[i].attachment_file.split(":")
+                        var types = texts[i].attachment_type.split(":")
+                        
+                        for (var l = 0; l < files.length; ++l) {
+                            console.log("files at " + l + ": " + files[l] + ", type: " + types[l])
+                            if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
+                                t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                            } else if (files[l].length != 0) {
+                                t.innerHTML += "<h3>This attachment type is not available :(</h3>"
+                            }
+                        }
+                        
+                        t.innerHTML += texts[i].text.substring(files.length - 1, texts[i].text.length)
+                    } else {
+                        t.innerHTML += texts[i].text;
+                    }
+                    
                     /// So uh do (date/384196335.3) == unix timestamp. About. The number is somewhere around there. 
                     if (i != 0 && texts[i].date - texts[i - 1].date > 2800000000000) {
                         var time = document.createElement("p");
@@ -212,12 +231,6 @@
             
             printItems()
 
-            /*$('#text-content').scroll(function() {
-                if ( $(this)[0].scrollHeight - $(this).scrollTop() <= $(this).outerHeight()) {
-                    alert('yu[p scroll works')
-                }
-            })*/
-
 			function auto_grow(element) {
                 var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
 				element.style.height = sh;
@@ -225,7 +238,6 @@
                 
                 var m = document.getElementsByClassName("messages")[0];
                 m.style.gridTemplateRows = "var(--messages-title-height) auto min-content";
-                /*m.style.height = "100%";*/
 			}
         </script>
         <link rel="stylesheet" type="text/css" href="style.css">
