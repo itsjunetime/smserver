@@ -5,6 +5,9 @@
         </title>
         <!--<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>-->
         <script>
+            var printed_texts = 0
+            const num_texts_to_load = 200
+            
             var items = "";
             var shown_name = "";
             var texts = "";
@@ -29,7 +32,7 @@
     
             const printItems = async () => {
                 var new_items = await readJson();
-                const num_texts = 500;
+                const num_texts = num_texts_to_load;
                 var doc = document.getElementsByClassName("chats-list")[0];
 
                 for(var i = 0; i < items.length; i++) {
@@ -95,14 +98,119 @@
                     this.dataError = true;
                 })
 
-                var chat_title = document.getElementById(chat_id)
-                var title_doc = document.getElementsByClassName("title")[0]
+                var chat_title = document.getElementById(chat_id);
+                var title_doc = document.getElementsByClassName("title")[0];
                 title_doc.innerHTML = chat_title.innerHTML
                 title_doc.setAttribute("id", chat_id);
 
                 var _ = await fetch_texts
 
                 myNode.innerHTML = '';
+                printed_texts = texts.length
+                texts = texts.reverse()
+
+                for (var i = 0; i < texts.length; i++) {
+                    var doc = document.getElementsByClassName("text-content")[0];
+                    var t = document.createElement("p");
+
+                    if (i == 0) {
+                        t.setAttribute("id", "more_texts");
+                    }
+                    
+                    var classes = "text";
+                    if (texts[i].is_from_me === "0") {
+                        classes += " is_from_them";
+                        t.setAttribute("class", classes);
+                    } else {
+                        classes += " is_from_me";
+                        t.setAttribute("class", classes);
+                    }
+                    
+                    t.innerHTML = ''
+                    
+                    if (texts[i].hasOwnProperty('attachment_file') && texts[i].attachment_file.length != 0) {
+                        
+                        var files = texts[i].attachment_file.split(":");
+                        var types = texts[i].attachment_type.split(":");
+                        
+                        for (var l = 0; l < files.length; ++l) {
+                            console.log("files at " + l + ": " + files[l] + ", type: " + types[l])
+                            if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
+                                t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                            } else if (files[l].length != 0) {
+                                t.innerHTML += "<h3>This attachment type is not available :(</h3>"
+                            }
+                        }
+                        
+                        t.innerHTML += texts[i].text.substring(files.length - 1, texts[i].text.length)
+                    } else {
+                        t.innerHTML += texts[i].text;
+                    }
+                    
+                    /// So uh do (date/384196335.3) == unix timestamp. About. The number is somewhere around there. 
+                    /*if (i != 0 && texts[i].date - texts[i - 1].date > 2800000000000) {
+                        var time = document.createElement("p");
+                        time.setAttribute("class", "time-display");
+
+                        let unix_timestamp = texts[i].date / 384196335.3 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
+
+                        function timeConverter(UNIX_timestamp){
+                            var a = new Date(UNIX_timestamp * 1000);
+                            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            var year = a.getFullYear();
+                            var month = months[a.getMonth()];
+                            var date = a.getDate();
+                            var hour = a.getHours();
+                            var min = a.getMinutes();
+                            var time = date + ' ' + month + ' ' + year + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (min < 10 ? '0' : '') + min;
+                            return time;
+                        }
+
+                        var formattedTime = timeConverter(unix_timestamp)
+                        
+                        time.innerHTML = formattedTime
+                        //doc.appendChild(time)
+                        doc.insertBefore(time, doc.firstChild)
+                    }*/
+                    
+                    doc.insertBefore(t, doc.firstChild)
+                    doc.insertBefore(document.createElement("br"), doc.firstChild)
+                    if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
+                        doc.insertBefore(document.createElement("br"), doc.firstChild);
+                    }
+                    
+                    doc.lastChild.scrollIntoView(true)
+                } ///Right now this scrolls to right before the very end of the document; Gotta fix that.
+            }
+        
+            const getMoreTexts = async (num_texts = num_texts_to_load) => {
+                var chat_id = document.getElementsByClassName("title")[0].id
+                
+                var new_chat_id = chat_id.replace("+", "%2B");
+                let url = "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts;
+                console.log("url: " + url)
+                const fetch_texts = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    this.texts = (json.texts)
+                    return texts
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
+
+                var _ = await fetch_texts
+
+                printed_texts += texts.length
+                
+                texts = texts.reverse()
+                var last_item = document.createElement("br")
+                var first_item = document.getElementsByClassName("text-content")[0]
 
                 for (var i = 0; i < texts.length; i++) {
                     var doc = document.getElementsByClassName("text-content")[0]
@@ -142,8 +250,8 @@
                         t.innerHTML += texts[i].text;
                     }
                     
-                    /// So uh do (date/384196335.3) == unix timestamp. About. The number is somewhere around there. 
-                    if (i != 0 && texts[i].date - texts[i - 1].date > 2800000000000) {
+                    /// So uh do (date/384196335.3) == unix timestamp. About. The number is somewhere around there.
+                    /*if (i != 0 && texts[i].date - texts[i - 1].date > 2800000000000) {
                         var time = document.createElement("p");
                         time.setAttribute("class", "time-display");
 
@@ -165,17 +273,14 @@
                         
                         time.innerHTML = formattedTime
                         doc.appendChild(time)
-                    }
+                    }*/
                     
-                    doc.appendChild(t);
-                    doc.appendChild(document.createElement("br"));
-                    if (texts[i].is_from_me != texts[i + 1].is_from_me) {
-                        doc.appendChild(document.createElement("br")); 
+                    doc.insertBefore(t, doc.firstChild)
+                    doc.insertBefore(document.createElement("br"), doc.firstChild)
+                    if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
+                        doc.insertBefore(document.createElement("br"), doc.firstChild);
                     }
-                    t.focus();
-                    var elem = document.getElementById('text-content');
-                    elem.scrollTop = elem.scrollHeight;
-                } ///Right now this scrolls to right before the very end of the document; Gotta fix that.
+                }
             }
 
             const getImage = async (chat_id) => {
@@ -256,6 +361,7 @@
                 <div class="text-content" id="text-content">
                 </div>
                 <div class="textbox">
+                    <button onclick="getMoreTexts()" id="morebutton"><span></span></button>
                     <textarea id="sendbox" oninput="auto_grow(this)"></textarea>
                     <button onclick="sendText()" id="sendbutton"><span></span></button>
                 </div>
