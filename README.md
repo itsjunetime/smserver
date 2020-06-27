@@ -58,5 +58,5 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 - Sometimes, windows browsers can't connect to server (or maybe my computer is just messed up. This issue needs confirmation.)
 
 ## Companion App
-Currently, there is a python companion app in the works; it is compatible with this and the mac version of this app but I'm not releasing it yet for reasons I am not quite sure of. Wait a bit and it'll be out soon.
+Currently, there is a python companion app in the works; it is compatible with this and the mac version of this app but I'm not releasing it yet since it doesn't have all the features necessary to work correctly. Wait a bit and it'll be out soon.
 
