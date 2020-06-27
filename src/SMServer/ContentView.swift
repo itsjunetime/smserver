@@ -123,7 +123,9 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: "")
             }
             
-            return GCDWebServerDataResponse(data: self.getAttachmentDataFromPath(path: request.query?["path"] ?? ""), contentType: "image/jpeg")
+            let dataResponse = self.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
+            
+            return GCDWebServerDataResponse(data: dataResponse, contentType: "image/jpeg") /// the contenttype will hopefully be dynamic soon
         })
         
         server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
@@ -649,93 +651,6 @@ struct ContentView: View {
         return chats_array
     }
     
-    /*func returnImageBase64(chat_id: String) -> String {
-        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
-        var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
-        
-        var return_val = returnImageBase64DB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!)
-        
-        if sqlite3_close(contact_db) != SQLITE_OK {
-            print("WARNING: error closing database")
-        }
-
-        contact_db = nil
-        
-        if sqlite3_close(image_db) != SQLITE_OK {
-            print("WARNING: error closing database")
-        }
-
-        image_db = nil
-        
-        return return_val /// So uh it should be a base64 encoded string?
-    }
-    
-    func returnImageBase64DB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> String {
-        
-        var docid = [[String:String]]()
-        
-        if chat_id.contains("@") {
-            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"", num_items: 1)
-        } else {
-            let parsed_num = parsePhoneNum(num: chat_id)
-            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(parsed_num)\"", num_items: 1)
-        }
-        
-        if docid.count == 0 {
-            
-            let image_dat = UIImage(named: "profile")
-            let pngdata = image_dat?.pngData()
-            let image = pngdata!.base64EncodedString(options: .lineLength64Characters)
-            
-            return image
-        }
-            
-        let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
-        
-        var image: String = ""
-        
-        var statement: OpaquePointer?
-        
-        self.debug ? print("opened statement") : nil
-        
-        if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
-            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-            print("WARNING: error preparing select: \(errmsg)")
-        }
-        
-        if sqlite3_step(statement) == SQLITE_ROW {
-            if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
-                let len: Int32 = sqlite3_column_bytes(statement, 0)
-                let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
-                
-                let image_w_dat = UIImage(data: Data(dat))
-                let pngdata = image_w_dat?.pngData()
-                image = pngdata!.base64EncodedString(options: .lineLength64Characters)
-                
-            } else {
-                print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
-                let image_dat = UIImage(named: "profile")
-                let pngdata = image_dat?.pngData()
-                image = pngdata!.base64EncodedString(options: .lineLength64Characters)
-            }
-        } else {
-            let image_dat = UIImage(named: "profile")
-            let pngdata = image_dat?.pngData()
-            image = pngdata!.base64EncodedString(options: .lineLength64Characters)
-        }
-        
-        if sqlite3_finalize(statement) != SQLITE_OK {
-            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-            print("WARNING: error finalizing prepared statement: \(errmsg)")
-        }
-
-        statement = nil
-        
-        self.debug ? print("destroyed statement") : nil
-        
-        return image /// So uh it should be a base64 encoded string?
-    }*/
-    
     func returnImageData(chat_id: String) -> Data {
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
@@ -907,7 +822,6 @@ struct ContentView: View {
         
         if file.count > 0 {
             for i in file {
-                //var suffixed = String(i["filename"]?.dropFirst(imageStoragePrefix.count - FileManager.default.homeDirectoryForCurrentUser.path.count + 1) ?? "")
                 var suffixed = String(i["filename"]?.dropFirst(ContentView.imageStoragePrefix.count - ContentView.userHomeString.count + 2) ?? "")
                 suffixed = suffixed.replacingOccurrences(of: "/", with: "._.")
                 let type = i["mime_type"] ?? ""
@@ -1112,100 +1026,3 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
-/// In case I still ever need these
-/*enum dbprop_types {
-       case int
-       case text
-       case null
-       case blob
-   }
-   
-   class dbprop {
-       init(data: String, type: dbprop_types, num: Int) {
-           self.data = data
-           self.type = type
-           self.num = num
-       }
-       var data: String
-       var type: dbprop_types //will be an enum
-       var num: Int
-   }
-   
-   class chat_dbprops {
-       var ROWID = dbprop(data: "ROWID", type: dbprop_types.int, num: 0)
-       var guid = dbprop(data: "guid", type: dbprop_types.text, num: 1)
-       var style = dbprop(data: "style", type: dbprop_types.int, num: 2)
-       var state = dbprop(data: "state", type: dbprop_types.int, num: 3)
-       var account_id = dbprop(data: "account_id", type: dbprop_types.text, num: 4)
-       var properties = dbprop(data: "properties", type: dbprop_types.blob, num: 5)
-       var chat_identifier = dbprop(data: "chat_identifier", type: dbprop_types.text, num: 6)
-       var service_name = dbprop(data: "service_name", type: dbprop_types.text, num: 7)
-       var room_name = dbprop(data: "room_name", type: dbprop_types.text, num: 8)
-       var account_login = dbprop(data: "account_login", type: dbprop_types.text, num: 9)
-       var is_archived = dbprop(data: "is_archived", type: dbprop_types.int, num: 10)
-       var last_addressed_handle = dbprop(data: "last_addressed_handle", type: dbprop_types.text, num: 11)
-       var display_name = dbprop(data: "display_name", type: dbprop_types.text, num: 12)
-       var group_id = dbprop(data: "group_id", type: dbprop_types.text, num: 13)
-       var is_filtered = dbprop(data: "is_filtered", type: dbprop_types.int, num: 14)
-       var successful_query = dbprop(data: "successful_query", type: dbprop_types.int, num: 15)
-       var engram_id = dbprop(data: "engram_id", type: dbprop_types.null, num: 16)
-       var server_change_token = dbprop(data: "server_change_token", type: dbprop_types.text, num: 17)
-       var ck_sync_state = dbprop(data: "ck_sync_state", type: dbprop_types.int, num: 18)
-       var last_read_message_timestamp = dbprop(data: "last_read_message_timestamp", type: dbprop_types.int, num: 19)
-       var ck_record_system_property_blob = dbprop(data: "ck_record_system_property_blob", type: dbprop_types.null, num: 20)
-       var original_group_id = dbprop(data: "original_group_id", type: dbprop_types.text, num: 21)
-       var sr_server_change_token = dbprop(data: "sr_server_change_token", type: dbprop_types.null, num: 22)
-       var sr_ck_sync_state = dbprop(data: "sr_ck_sync_state", type: dbprop_types.int, num: 23)
-       var sr_ck_record_system_property_blob = dbprop(data: "sr_ck_record_system_property", type: dbprop_types.null, num: 24)
-       var cloudkit_record_id = dbprop(data: "cloudkit_record_id", type: dbprop_types.text, num: 25)
-       var sr_cloudkit_record_id = dbprop(data: "sr_cloudkit_record_id", type: dbprop_types.null, num: 26)
-       var last_addressed_sim_id = dbprop(data: "last_addressed_sim_id", type: dbprop_types.text, num: 27)
-       var is_blackholed = dbprop(data: "is_blackholed", type: dbprop_types.int, num: 28)
-       var num_items = 29
-       subscript(index: Int) -> dbprop {
-           let items = [ROWID, guid, style, state, account_id, properties, chat_identifier, service_name, room_name, account_login, is_archived, last_addressed_handle, display_name, group_id, is_filtered, successful_query, engram_id, server_change_token, ck_sync_state, last_read_message_timestamp, ck_record_system_property_blob, original_group_id, sr_server_change_token, sr_ck_sync_state, sr_ck_record_system_property_blob, cloudkit_record_id, sr_cloudkit_record_id, last_addressed_sim_id, is_blackholed]
-           return items[index]
-       }
-   }
-   
-   class message_dbprops {
-       var ROWID = dbprop(data: "ROWID", type: dbprop_types.int, num: 0)
-       var guid = dbprop(data: "guid", type: dbprop_types.text, num: 1)
-       var text = dbprop(data: "text", type: dbprop_types.text, num: 2)
-       var replace = dbprop(data: "replace", type: dbprop_types.int, num: 3)
-       var service_center = dbprop(data: "service_center", type: dbprop_types.null, num: 4)
-       var handle_id = dbprop(data: "handle_id", type: dbprop_types.int, num: 5)
-       var subject = dbprop(data: "subject", type: dbprop_types.text, num: 6)
-       var country = dbprop(data: "country", type: dbprop_types.null, num: 7)
-       var attributedBody = dbprop(data: "attributedBody", type: dbprop_types.blob, num: 8)
-       var version = dbprop(data: "version", type: dbprop_types.int, num: 9)
-       var type = dbprop(data: "type", type: dbprop_types.int, num: 10)
-       var service = dbprop(data: "service", type: dbprop_types.text, num: 11)
-       var account = dbprop(data: "account", type: dbprop_types.text, num: 12)
-       var account_guid = dbprop(data: "account_guid", type: dbprop_types.text, num: 13)
-       var error = dbprop(data: "error", type: dbprop_types.int, num: 14)
-       var date = dbprop(data: "date", type: dbprop_types.text, num: 15)
-       var date_read = dbprop(data: "date_read", type: dbprop_types.text, num: 16)
-       var date_delivered = dbprop(data: "date_delivered", type: dbprop_types.text, num: 17)
-       var is_delivered = dbprop(data: "is_delivered", type: dbprop_types.int, num: 18)
-       var is_from_me = dbprop(data: "is_from_me", type: dbprop_types.int, num: 21)
-       var cache_roomnames = dbprop(data: "cache_roomnames", type: dbprop_types.text, num: 35)
-       var is_audio_message = dbprop(data: "is_audio_message", type: dbprop_types.int, num: 38)
-       var is_played = dbprop(data: "is_played", type: dbprop_types.int, num: 39) // Only applies to audio messages
-       var group_title = dbprop(data: "group_title", type: dbprop_types.text, num: 43)
-       var associated_message_guid = dbprop(data: "associated_message_guid", type: dbprop_types.text, num: 51)
-       var destination_caller_id = dbprop(data: "destination_caller_id", type: dbprop_types.text, num: 63)
-       var num_items: Int = 26 //Just how many other dbprop items are here
-       subscript(index: Int) -> dbprop {
-           let total_items = [ROWID, guid, text, replace, service_center, handle_id, subject, country, attributedBody, version, type, service, account, account_guid, error, date, date_read, date_delivered, is_delivered, is_from_me, cache_roomnames, is_audio_message, is_played, group_title, associated_message_guid, destination_caller_id]
-           return total_items[index]
-       }
-       
-   }*/
-
-/*struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}*/
