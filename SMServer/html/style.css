@@ -118,18 +118,12 @@ p {
     border-bottom: 1px solid var(--chats-border);
     background-color: #111;
     display: flex; /*was grid*/
-    grid-template-columns: max-content 1fr;
-    grid-template-areas: "img text";
     width: var(--chats-width);
-    margin: 0px;
     transition: all linear 0.1s;
-    font-size: 20px;
     color: #dae3f0;
-    text-align: start;
-    font-weight: 300;
+    align-items: center;
 }
 .chats img {
-    grid-area: img;
     width: 3vw;
     height: 3vw;
     border-radius: 100%;
@@ -141,8 +135,6 @@ p {
     padding-bottom: 5px;
 }
 .chats p {
-    grid-area: text;
-    display: flex;
     padding-left: 10px;
     transition: all linear 0.1s;
 }

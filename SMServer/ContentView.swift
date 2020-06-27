@@ -23,7 +23,7 @@ struct ContentView: View {
     @State var egnum = "8741"
     @State var password = "toor"
     @State var main_url = ""
-    @State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
+    @State var past_latest_texts = [String:[String:[String:String]]]() /// Should be in the format of [address: [Chats]]
     @State var authenticated_addresses = [String]()
     
     let messagesString = "/private/var/mobile/Library/SMS/sms.db"
@@ -124,6 +124,16 @@ struct ContentView: View {
             }
             
             return GCDWebServerDataResponse(data: self.getAttachmentDataFromPath(path: request.query?["path"] ?? ""), contentType: "image/jpeg")
+        })
+        
+        server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
+            
+            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+                return GCDWebServerDataResponse(text: "")
+            }
+            
+            //return GCDWebServerDataResponse(data: self.getAttachmentDataFromPath(path: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
+            return GCDWebServerDataResponse(data: self.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
@@ -263,13 +273,13 @@ struct ContentView: View {
             let name = getDisplayName(chat_id: chat_id)
             return name
             
-        } else if f == "image" {
+        } /*else if f == "image" {
             
             chat_id = Array(params.values)[0]
             let image_string = returnImageBase64(chat_id: chat_id)
             return image_string
             
-        } else if f == "send" || f == "to" {
+        } */else if f == "send" || f == "to" {
             
             sendBody = f == "send" ?  Array(params.values)[0] : Array(params.values)[1]
             sendAddress = s == "to" ? Array(params.values)[1] : Array(params.values)[0]
@@ -610,7 +620,7 @@ struct ContentView: View {
                 new_chat?["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: ci ?? "")
             }
             
-            new_chat?["image_text"] = returnImageBase64DB(chat_id: ci ?? "", contact_db: contacts_db!, image_db: image_db!)
+            //new_chat?["image_text"] = returnImageBase64DB(chat_id: ci ?? "", contact_db: contacts_db!, image_db: image_db!)
             
             chats_array.append(new_chat!)
             already_selected[ci!] = 0
@@ -639,7 +649,7 @@ struct ContentView: View {
         return chats_array
     }
     
-    func returnImageBase64(chat_id: String) -> String {
+    /*func returnImageBase64(chat_id: String) -> String {
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
@@ -724,6 +734,97 @@ struct ContentView: View {
         self.debug ? print("destroyed statement") : nil
         
         return image /// So uh it should be a base64 encoded string?
+    }*/
+    
+    func returnImageData(chat_id: String) -> Data {
+        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
+        
+        let return_val = returnImageDataDB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!)
+        
+        if sqlite3_close(contact_db) != SQLITE_OK {
+            print("WARNING: error closing database")
+        }
+
+        contact_db = nil
+        
+        if sqlite3_close(image_db) != SQLITE_OK {
+            print("WARNING: error closing database")
+        }
+
+        image_db = nil
+        
+        return return_val /// So uh it should be a base64 encoded string?
+    }
+    
+    func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
+        
+        var docid = [[String:String]]()
+        
+        if chat_id.contains("@") {
+            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"", num_items: 1)
+        } else {
+            let parsed_num = parsePhoneNum(num: chat_id)
+            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(parsed_num)\"", num_items: 1)
+        }
+        
+        if docid.count == 0 {
+            
+            let image_dat = UIImage(named: "profile")
+            let pngdata = (image_dat?.pngData())!
+            //let image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+            
+            //return image
+            return pngdata
+        }
+            
+        let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
+        
+        //var image: String = ""
+        
+        var statement: OpaquePointer?
+        
+        self.debug ? print("opened statement") : nil
+        
+        if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
+            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
+            print("WARNING: error preparing select: \(errmsg)")
+        }
+        
+        var pngdata: Data;
+        
+        if sqlite3_step(statement) == SQLITE_ROW {
+            if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
+                let len: Int32 = sqlite3_column_bytes(statement, 0)
+                let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
+                
+                let image_w_dat = UIImage(data: Data(dat))
+                pngdata = (image_w_dat?.pngData())!
+                //image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+                
+            } else {
+                print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
+                let image_dat = UIImage(named: "profile")
+                pngdata = (image_dat?.pngData())!
+                //image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+            }
+        } else {
+            let image_dat = UIImage(named: "profile")
+            pngdata = (image_dat?.pngData())!
+            //image = pngdata!.base64EncodedString(options: .lineLength64Characters)
+        }
+        
+        if sqlite3_finalize(statement) != SQLITE_OK {
+            let errmsg = String(cString: sqlite3_errmsg(image_db)!)
+            print("WARNING: error finalizing prepared statement: \(errmsg)")
+        }
+
+        statement = nil
+        
+        self.debug ? print("destroyed statement") : nil
+        
+        //return image /// So uh it should be a base64 encoded string?
+        return pngdata
     }
     
     func setFirstTexts(address: String) {
@@ -751,12 +852,12 @@ struct ContentView: View {
         }
         
         var new_texts: [String] = [] /// Will just contain a list of all the chats that have new messages since they've last checked
-        for i in 0..<latest_texts.count {
-            self.debug ? print("checking between \(String(describing: ap_latest_texts?[i]["text"])) and \(String(describing: latest_texts[i]["text"]))") : nil
+        
+        for i in Array(latest_texts.keys) {
+            self.debug ? print("checking between \(String(describing: ap_latest_texts?[i]?["text"])) and \(String(describing: latest_texts[i]?["text"]))") : nil
             if latest_texts[i] != ap_latest_texts?[i] {
-                /// Get chat_identifier of each chat where they have new messages
-                if let check_message_id = latest_texts[i]["ROWID"] {
-                    let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(check_message_id)")
+                if let check_message_id = latest_texts[i]?["ROWID"] {
+                    let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(check_message_id))")
                     
                     new_texts.append(append_num[0]["chat_identifier"] ?? "")
                 }
@@ -779,11 +880,10 @@ struct ContentView: View {
         return new_texts;
     }
     
-    func getLatestTexts() -> [[String:String]] {
+    func getLatestTexts() -> [String: [String:String]] {
         var db = createConnection()
         
-        /// Don't know if we need date_read in this one. Let's keep experimenting.
-        let latest_texts = selectFromSql(db: db, columns: ["ROWID", "text", "date_read"], table: "message", condition: "where ROWID in (select message_id from chat_message_join group by chat_id)" )
+        let latest_texts = selectFromSqlWithId(db: db, columns: ["ROWID", "text", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
         
         if self.debug {
             print("Latest texts:")

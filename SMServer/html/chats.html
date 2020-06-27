@@ -5,9 +5,47 @@
         </title>
         <!--<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>-->
         <script>
-            var printed_texts = 0
-            const num_texts_to_load = 200
+            var timeout = 60000; /// 60 seconds
+            var new_chats = "";
+            const num_texts_to_load = 200;
+            var printed_texts = 0;
             
+            const checkNewTexts = async () => {
+                //alert("Checking new texts")
+                
+                let url = "/requests?check=0"
+                const fetch_new_chats = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    this.new_chats = (json.chat_ids)
+                    return new_chats
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
+
+                var _ = await fetch_new_chats
+
+                //console.log(new_chats);
+                
+                if (new_chats.length > 0) {
+                    printItems()
+                    var selected_id = document.getElementsByClassName("title")[0].id;
+                    for (var i = 0; i < new_chats.length; ++i) {
+                        if (new_chats[i] === selected_id) {
+                            getTexts(selected_id, num_texts_to_load)
+                        }
+                    }
+                }
+            }
+        
+            const interval = setInterval(checkNewTexts, timeout);
+
             var items = "";
             var shown_name = "";
             var texts = "";
@@ -40,7 +78,8 @@
                     var b = document.createElement('button');
                     b.setAttribute("id", items[i].chat_identifier);
 
-                    b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
+                    //b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
+                    b.innerHTML = "<img src=\"/profile?chat_id=" + items[i].chat_identifier.replace("+", "%2B") + "\">";
                     
                     b.innerHTML += "<p>" + (items[i].display_name.length === 0 ? items[i].chat_identifier : items[i].display_name) + "</p>"
                     
@@ -147,12 +186,12 @@
                         t.innerHTML += texts[i].text;
                     }
                     
-                    /// So uh do (date/384196335.3) == unix timestamp. About. The number is somewhere around there. 
-                    /*if (i != 0 && texts[i].date - texts[i - 1].date > 2800000000000) {
+                    /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
+                    if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
                         var time = document.createElement("p");
                         time.setAttribute("class", "time-display");
 
-                        let unix_timestamp = texts[i].date / 384196335.3 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
+                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
 
                         function timeConverter(UNIX_timestamp){
                             var a = new Date(UNIX_timestamp * 1000);
@@ -171,7 +210,7 @@
                         time.innerHTML = formattedTime
                         //doc.appendChild(time)
                         doc.insertBefore(time, doc.firstChild)
-                    }*/
+                    }
                     
                     doc.insertBefore(t, doc.firstChild)
                     doc.insertBefore(document.createElement("br"), doc.firstChild)
@@ -250,12 +289,12 @@
                         t.innerHTML += texts[i].text;
                     }
                     
-                    /// So uh do (date/384196335.3) == unix timestamp. About. The number is somewhere around there.
-                    /*if (i != 0 && texts[i].date - texts[i - 1].date > 2800000000000) {
+                    /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
+                    if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
                         var time = document.createElement("p");
                         time.setAttribute("class", "time-display");
 
-                        let unix_timestamp = texts[i].date / 384196335.3 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
+                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
 
                         function timeConverter(UNIX_timestamp){
                             var a = new Date(UNIX_timestamp * 1000);
@@ -273,7 +312,7 @@
                         
                         time.innerHTML = formattedTime
                         doc.appendChild(time)
-                    }*/
+                    }
                     
                     doc.insertBefore(t, doc.firstChild)
                     doc.insertBefore(document.createElement("br"), doc.firstChild)
@@ -333,17 +372,19 @@
                 var elem = document.getElementById('text-content');
                 elem.scrollTop = elem.scrollHeight;
             }
-            
-            printItems()
-
-			function auto_grow(element) {
+        
+            function auto_grow(element) {
                 var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
-				element.style.height = sh;
+                element.style.height = sh;
                 element.style.height = (element.scrollHeight)+"px";
-                
+            
                 var m = document.getElementsByClassName("messages")[0];
                 m.style.gridTemplateRows = "var(--messages-title-height) auto min-content";
-			}
+            }
+            
+            printItems()
+            
+            interval;
         </script>
         <link rel="stylesheet" type="text/css" href="style.css">
     </head>
