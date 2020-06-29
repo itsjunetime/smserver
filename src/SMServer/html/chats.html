@@ -8,7 +8,9 @@
             var timeout = 60000; /// 60 seconds
             var new_chats = "";
             const num_texts_to_load = 200;
+            const num_chats_to_load = 40;
             var printed_texts = 0;
+            var printed_chats = 0
             
             const checkNewTexts = async () => {
                 //alert("Checking new texts")
@@ -47,11 +49,12 @@
             const interval = setInterval(checkNewTexts, timeout);
 
             var items = "";
+            var new_items = "";
             var shown_name = "";
             var texts = "";
             var image_string = "";
-            const readJson = async () => {
-                let url = "/requests?chat=0"
+            const readJson = async (offset = 0) => {
+                let url = "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
                 const fetch_val = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -73,6 +76,8 @@
                 const num_texts = num_texts_to_load;
                 var doc = document.getElementsByClassName("chats-list")[0];
 
+                printed_chats = items.length
+                
                 for(var i = 0; i < items.length; i++) {
                     
                     var b = document.createElement('button');
@@ -86,6 +91,48 @@
                     if (items[i].has_unread === "true") { b.setAttribute("class", "unread") }
                     
                     var get_texts_string = "getTexts(\"" + items[i].chat_identifier + "\", " + num_texts + ")";
+                    b.setAttribute("onclick", get_texts_string);
+                    
+                    doc.appendChild(b);
+                }
+            }
+        
+            const moreJsonChats = async (offset = 0) => {
+                let url = "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
+                const fetch_val = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    this.new_items = (json.chats)
+                    return new_items
+                })
+                .catch(function () {
+                    this.dataError = true;
+                })
+            }
+        
+            const getMoreChats = async () => {
+                var _ = await moreJsonChats(printed_chats);
+                printed_chats += new_items.length;
+                var doc = document.getElementsByClassName("chats-list")[0];
+                
+                for(var i = 0; i < new_items.length; i++) {
+                    
+                    var b = document.createElement('button');
+                    b.setAttribute("id", new_items[i].chat_identifier);
+
+                    //b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
+                    b.innerHTML = "<img src=\"/profile?chat_id=" + new_items[i].chat_identifier.replace("+", "%2B") + "\">";
+                    
+                    b.innerHTML += "<p>" + (new_items[i].display_name.length === 0 ? new_items[i].chat_identifier : new_items[i].display_name) + "</p>"
+                    
+                    if (new_items[i].has_unread === "true") { b.setAttribute("class", "unread") }
+                    
+                    var get_texts_string = "getTexts(\"" + new_items[i].chat_identifier + "\", " + num_texts_to_load + ")";
                     b.setAttribute("onclick", get_texts_string);
                     
                     doc.appendChild(b);
@@ -311,7 +358,7 @@
                         var formattedTime = timeConverter(unix_timestamp)
                         
                         time.innerHTML = formattedTime
-                        doc.appendChild(time)
+                        doc.insertBefore(time, doc.firstChild)
                     }
                     
                     doc.insertBefore(t, doc.firstChild)
@@ -391,7 +438,10 @@
     <body>
         <div class="everything">
             <div class="chats">
-                <div class="chats-title">Messages</div>
+                <div class="chats-title">
+                    <h1>Messages</h1>
+                    <button onclick="getMoreChats()" id="chatsmorebutton"><span></span></button>
+                </div>
                 <div class="chats-search">Search</div>
                 <div class="chats-list"></div>
             </div>
