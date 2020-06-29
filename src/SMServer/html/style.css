@@ -33,7 +33,7 @@ p, h2, a, button {
     text-decoration: none;
     font-weight: 300;
     color: var(--main-text-color);
-} 
+}
 p {
     color: var(--font-color);
     font-size: 20px;
@@ -51,6 +51,7 @@ p {
     max-height: 100%;
     background-color: #111;
     overflow-x: hidden;
+    border-radius: 5px;
 }
 .messages .title {
     grid-row: 1;
@@ -96,9 +97,17 @@ p {
     color: var(--font-color);
     grid-column: 1;
     grid-row: 1;
-    font-size: xx-large;
     padding: 16px 0px 0px 10px;
     vertical-align: bottom;
+    display: grid;
+    grid-template-columns: 1fr 60px;
+    grid-template-rows: 1fr;
+}
+.chats-title h1 {
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: 6px;
+    font-weight: 300;
 }
 .chats-search {
     color: var(--font-color);
@@ -111,6 +120,8 @@ p {
     color: var(--font-color);
     grid-row: 3;
     grid-column: 1;
+    overflow: auto;
+    overflow-x: hidden;
 }
 .chats button {
     border: none;
@@ -144,7 +155,7 @@ p {
 }
 .chats button:hover p {
     color: rgb(78, 150, 223) !important;
-    transition: all linear 0.1s; 
+    transition: all linear 0.1s;
 }
 .selected {
     color: rgb(78, 150, 223);
@@ -229,4 +240,16 @@ p {
     border: none;
     font-size: calc(var(--send-box-size) - 6px);
     margin-left: 6px;
+}
+#chatsmorebutton {
+    float: right;
+    grid-row: 1;
+    grid-column: 2;
+    background-color: dodgerblue;
+    height: 30px;
+    width: 30px;
+    border-radius: 8px;
+    margin-right: 40px;
+    outline: none;
+    border: none;
 }
