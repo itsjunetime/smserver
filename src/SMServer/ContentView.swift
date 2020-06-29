@@ -254,14 +254,23 @@ struct ContentView: View {
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
             
-        } else if f == "chat" || f == "num_chats" {
+        } else if f == "chat" || f == "num_chats"  || f == "chats_offset" {
             
             num_texts = ContentView.default_num_chats
-            if f == "num_chats" || s == "num_chats" {
-                num_texts = (f == "num_chats" ? Int(Array(params.values)[0]) : Int(Array(params.values)[1])) ?? ContentView.default_num_chats
+            var chats_offset = 0
+            if f == "num_chats" || s == "num_chats" || t == "num_chats" {
+                num_texts = (f == "num_chats" ? Int(Array(params.values)[0]) : (s == "num_chats" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? ContentView.default_num_chats
+            }
+            if f == "chats_offset" || s == "chats_offset" || t == "chats_offset" {
+                chats_offset = (f == "chats_offset" ? Int(Array(params.values)[0]) : (s == "chats_offset" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? 0
             }
             
-            let chats_array = loadChats(num_to_load: num_texts)
+            if self.debug {
+                print("num chats: \(num_texts)")
+                print("chats offset: \(chats_offset)")
+            }
+            
+            let chats_array = loadChats(num_to_load: num_texts, offset: chats_offset)
             let chats = encodeToJson(object: chats_array, title: "chats")
             DispatchQueue.main.async {
                 self.setFirstTexts(address: address);
@@ -588,13 +597,13 @@ struct ContentView: View {
         return messages
     }
     
-    func loadChats(num_to_load: Int = 0) -> [[String:String]] {
+    func loadChats(num_to_load: Int = 0, offset: Int = 0) -> [[String:String]] {
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
         let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "is_empty"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
-        let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc LIMIT \(num_to_load)");
+        let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc LIMIT \(offset > 0 ? String(offset) : "-1"), \(num_to_load > 0 ? String(num_to_load) : "-1")");
         let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id))")
         
         var chats_array = [[String:String]]()
@@ -800,10 +809,10 @@ struct ContentView: View {
         
         let latest_texts = selectFromSqlWithId(db: db, columns: ["ROWID", "text", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
         
-        if self.debug {
+        /*if self.debug {
             print("Latest texts:")
             print(latest_texts)
-        }
+        }*/
         
         if sqlite3_close(db) != SQLITE_OK {
             print("WARNING: error closing database")
@@ -925,13 +934,13 @@ struct ContentView: View {
                                 
                             Spacer().frame(height: 20)
                                 
-                            HStack {
+                            /*HStack {
                                 Text("Change main chats url").font(.subheadline)
                                 Spacer()
                             }
                                 
                             TextField("Change main chats url", text: $main_url)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .textFieldStyle(RoundedBorderTextFieldStyle())*/
                         }
                     }.padding()
                     
