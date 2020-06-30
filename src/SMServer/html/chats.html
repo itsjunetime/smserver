@@ -13,7 +13,6 @@
             var printed_chats = 0
             
             const checkNewTexts = async () => {
-                //alert("Checking new texts")
                 
                 let url = "/requests?check=0"
                 const fetch_new_chats = await fetch(url)
@@ -28,12 +27,11 @@
                     return new_chats
                 })
                 .catch(function () {
+                    alert('The server restarted, you need to reload and re-authenticate.')
                     this.dataError = true;
                 })
 
                 var _ = await fetch_new_chats
-
-                //console.log(new_chats);
                 
                 if (new_chats.length > 0) {
                     printItems()
@@ -67,6 +65,7 @@
                     return items
                 })
                 .catch(function () {
+                    alert('The server restarted, you need to reload and re-authenticate.')
                     this.dataError = true;
                 })
             }
@@ -82,8 +81,7 @@
                     
                     var b = document.createElement('button');
                     b.setAttribute("id", items[i].chat_identifier);
-
-                    //b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
+                    
                     b.innerHTML = "<img src=\"/profile?chat_id=" + items[i].chat_identifier.replace("+", "%2B") + "\">";
                     
                     b.innerHTML += "<p>" + (items[i].display_name.length === 0 ? items[i].chat_identifier : items[i].display_name) + "</p>"
@@ -111,6 +109,7 @@
                     return new_items
                 })
                 .catch(function () {
+                    alert('The server restarted, you need to reload and re-authenticate.')
                     this.dataError = true;
                 })
             }
@@ -124,8 +123,7 @@
                     
                     var b = document.createElement('button');
                     b.setAttribute("id", new_items[i].chat_identifier);
-
-                    //b.innerHTML = "<img src=\"data:image/png;base64," + items[i].image_text + "\">";
+                    
                     b.innerHTML = "<img src=\"/profile?chat_id=" + new_items[i].chat_identifier.replace("+", "%2B") + "\">";
                     
                     b.innerHTML += "<p>" + (new_items[i].display_name.length === 0 ? new_items[i].chat_identifier : new_items[i].display_name) + "</p>"
@@ -181,6 +179,7 @@
                     return texts
                 })
                 .catch(function () {
+                    alert('The server restarted, you need to reload and re-authenticate.')
                     this.dataError = true;
                 })
 
@@ -193,7 +192,6 @@
 
                 myNode.innerHTML = '';
                 printed_texts = texts.length
-                texts = texts.reverse()
 
                 for (var i = 0; i < texts.length; i++) {
                     var doc = document.getElementsByClassName("text-content")[0];
@@ -255,7 +253,6 @@
                         var formattedTime = timeConverter(unix_timestamp)
                         
                         time.innerHTML = formattedTime
-                        //doc.appendChild(time)
                         doc.insertBefore(time, doc.firstChild)
                     }
                     
@@ -265,8 +262,9 @@
                         doc.insertBefore(document.createElement("br"), doc.firstChild);
                     }
                     
-                    doc.lastChild.scrollIntoView(true)
+                    doc.lastChild.scrollIntoView(false) /// Does not work. woohoo.
                 } ///Right now this scrolls to right before the very end of the document; Gotta fix that.
+                doc.lastChild.scrollIntoView(false) /// Does not work. woohoo.
             }
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
@@ -287,6 +285,7 @@
                     return texts
                 })
                 .catch(function () {
+                    alert('The server restarted, you need to reload and re-authenticate.')
                     this.dataError = true;
                 })
 
@@ -294,7 +293,7 @@
 
                 printed_texts += texts.length
                 
-                texts = texts.reverse()
+                
                 var last_item = document.createElement("br")
                 var first_item = document.getElementsByClassName("text-content")[0]
 
@@ -384,6 +383,7 @@
                     return image_string
                 })
                 .catch(function () {
+                    alert('The server restarted, you need to reload and re-authenticate.')
                     this.dataError = true;
                 })
             }
@@ -402,6 +402,7 @@
                     }
                 })
                 .catch(function () {
+                    alert('The server restarted, you need to reload and re-authenticate.')
                     this.dataError = true;
                 })
                 
