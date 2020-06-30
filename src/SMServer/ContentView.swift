@@ -26,6 +26,8 @@ struct ContentView: View {
     @State var past_latest_texts = [String:[String:[String:String]]]() /// Should be in the format of [address: [Chats]]
     @State var authenticated_addresses = [String]()
     
+    @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+    
     let messagesString = "/private/var/mobile/Library/SMS/sms.db"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
     static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
@@ -150,10 +152,31 @@ struct ContentView: View {
             return GCDWebServerDataResponse(text: self.main_page_style)
         })
         
-        server.start(withPort: UInt(egnum) ?? UInt(8741), bonjourName: "GCD Web Server")
-        
+        do {
+            try server.start(options: ["Port": UInt(egnum) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
+        } catch {
+            print("failed to start server. fat rip right there.")
+        }
         self.server_running = server.isRunning
+        
+        self.startBackgroundTask()
     }
+    
+    func startBackgroundTask() {
+        backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+            self.stopServer()
+            UIApplication.shared.endBackgroundTask(backgroundTask)
+            backgroundTask = .invalid
+        })
+        
+        assert(backgroundTask != .invalid)
+    }
+    
+    /*@objc func reinstateBackgroundTask() {
+        if self.server_running && backgroundTask == .invalid {
+            startBackgroundTask()
+        }
+    }*/
     
     func loadFiles() {
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
@@ -566,7 +589,7 @@ struct ContentView: View {
         
         var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
         
-        messages = messages.reversed() /// why did i write this?
+        //messages = messages.reversed() /// why did i write this?
         
         for i in 0..<messages.count {
             if messages[i]["cache_has_attachments"] == "1" {
