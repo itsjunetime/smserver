@@ -61,8 +61,6 @@ struct ContentView: View {
     
     func loadServer(port_num: UInt16) {
         
-        self.server
-        
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
             if self.debug {
                 print("headers:")
@@ -171,12 +169,6 @@ struct ContentView: View {
         
         assert(backgroundTask != .invalid)
     }
-    
-    /*@objc func reinstateBackgroundTask() {
-        if self.server_running && backgroundTask == .invalid {
-            startBackgroundTask()
-        }
-    }*/
     
     func loadFiles() {
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
@@ -589,8 +581,6 @@ struct ContentView: View {
         
         var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
         
-        //messages = messages.reversed() /// why did i write this?
-        
         for i in 0..<messages.count {
             if messages[i]["cache_has_attachments"] == "1" {
                 let a = getAttachmentFromMessage(mid: messages[i]["ROWID"]!)
@@ -623,7 +613,7 @@ struct ContentView: View {
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
-        let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "is_empty"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
+        let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
         let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc LIMIT \(offset > 0 ? String(offset) : "-1"), \(num_to_load > 0 ? String(num_to_load) : "-1")");
         let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id))")
         
@@ -644,13 +634,16 @@ struct ContentView: View {
             var new_chat = chats[i["chat_id"]!]
             
             new_chat!["has_unread"] = "false"
-            if messages[i["message_id"]!]!["is_from_me"] == "0" && messages[i["message_id"]!]!["is_read"] == "1" && messages[i["message_id"]!]!["text"] != nil && messages[i["message_id"]!]!["is_empty"] != "0" && messages[i["message_id"]!]!["item_type"] == "0" {
+            if messages[i["message_id"]!]!["is_from_me"] == "0" && messages[i["message_id"]!]!["date_read"] == "0" && messages[i["message_id"]!]!["text"] != nil && messages[i["message_id"]!]!["is_read"] == "0" && messages[i["message_id"]!]!["item_type"] == "0" {
+                self.debug ? print(messages[i["message_id"]!]) : nil
                 new_chat!["has_unread"] = "true"
             }
             
             if new_chat?["display_name"]!.count == 0 {
                 new_chat?["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: ci ?? "")
             }
+            
+            self.debug ? print(new_chat!) : nil
             
             chats_array.append(new_chat!)
             already_selected[ci!] = 0
