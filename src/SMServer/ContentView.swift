@@ -59,6 +59,8 @@ struct ContentView: View {
     
     func loadServer(port_num: UInt16) {
         
+        self.server
+        
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
             if self.debug {
                 print("headers:")
