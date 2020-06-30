@@ -1,4 +1,4 @@
-# Jailed Messages
+# SMServer
 
 **An iPhone app, written in SwiftUI, which allows for one to send and receive text messages (and iMessages) from their Web browser**
 
@@ -26,7 +26,7 @@ When you run this app and click the green 'play' button in the bottom left corne
 - [x] Send texts (mostly) from browser
 - [ ] Send texts without on-device interaction
 - [x] View images in browser
-- [ ] View all attachments in browser
+- [x] View all attachments in browser
 - [ ] Send images/attachments from browser
 - [ ] Display new messages when they arrive
 - [x] Automatic checking for new messages
