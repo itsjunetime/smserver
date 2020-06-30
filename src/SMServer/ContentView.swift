@@ -124,8 +124,9 @@ struct ContentView: View {
             }
             
             let dataResponse = self.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
+            let type = self.getAttachmentType(path: request.query?["path"] ?? "")
             
-            return GCDWebServerDataResponse(data: dataResponse, contentType: "image/jpeg") /// the contenttype will hopefully be dynamic soon
+            return GCDWebServerDataResponse(data: dataResponse, contentType: type) /// the contenttype will hopefully be dynamic soon
         })
         
         server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
@@ -284,13 +285,7 @@ struct ContentView: View {
             let name = getDisplayName(chat_id: chat_id)
             return name
             
-        } /*else if f == "image" {
-            
-            chat_id = Array(params.values)[0]
-            let image_string = returnImageBase64(chat_id: chat_id)
-            return image_string
-            
-        } */else if f == "send" || f == "to" {
+        } else if f == "send" || f == "to" {
             
             sendBody = f == "send" ?  Array(params.values)[0] : Array(params.values)[1]
             sendAddress = s == "to" ? Array(params.values)[1] : Array(params.values)[0]
@@ -569,7 +564,7 @@ struct ContentView: View {
         
         var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
         
-        messages = messages.reversed()
+        messages = messages.reversed() /// why did i write this?
         
         for i in 0..<messages.count {
             if messages[i]["cache_has_attachments"] == "1" {
@@ -577,7 +572,8 @@ struct ContentView: View {
                 var file_string = ""
                 var type_string = ""
                 for i in a {
-                    file_string += i[0] + ":" /// Cause ':' can't exist in files in MacOS (I'm fairly certain?)
+                    /// Cause ':' can't exist in files in MacOS (I'm fairly certain?)
+                    file_string += i[0] + ":"
                     type_string += i[1] + ":"
                 }
                 messages[i]["attachment_file"] = file_string
@@ -631,8 +627,6 @@ struct ContentView: View {
                 new_chat?["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: ci ?? "")
             }
             
-            //new_chat?["image_text"] = returnImageBase64DB(chat_id: ci ?? "", contact_db: contacts_db!, image_db: image_db!)
-            
             chats_array.append(new_chat!)
             already_selected[ci!] = 0
         }
@@ -678,7 +672,7 @@ struct ContentView: View {
 
         image_db = nil
         
-        return return_val /// So uh it should be a base64 encoded string?
+        return return_val
     }
     
     func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
@@ -696,15 +690,11 @@ struct ContentView: View {
             
             let image_dat = UIImage(named: "profile")
             let pngdata = (image_dat?.pngData())!
-            //let image = pngdata!.base64EncodedString(options: .lineLength64Characters)
             
-            //return image
             return pngdata
         }
             
         let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
-        
-        //var image: String = ""
         
         var statement: OpaquePointer?
         
@@ -724,18 +714,15 @@ struct ContentView: View {
                 
                 let image_w_dat = UIImage(data: Data(dat))
                 pngdata = (image_w_dat?.pngData())!
-                //image = pngdata!.base64EncodedString(options: .lineLength64Characters)
                 
             } else {
                 print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
                 let image_dat = UIImage(named: "profile")
                 pngdata = (image_dat?.pngData())!
-                //image = pngdata!.base64EncodedString(options: .lineLength64Characters)
             }
         } else {
             let image_dat = UIImage(named: "profile")
             pngdata = (image_dat?.pngData())!
-            //image = pngdata!.base64EncodedString(options: .lineLength64Characters)
         }
         
         if sqlite3_finalize(statement) != SQLITE_OK {
@@ -809,11 +796,6 @@ struct ContentView: View {
         
         let latest_texts = selectFromSqlWithId(db: db, columns: ["ROWID", "text", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
         
-        /*if self.debug {
-            print("Latest texts:")
-            print(latest_texts)
-        }*/
-        
         if sqlite3_close(db) != SQLITE_OK {
             print("WARNING: error closing database")
         }
@@ -836,6 +818,20 @@ struct ContentView: View {
                 let type = i["mime_type"] ?? ""
                 return_val.append([suffixed, type])
             }
+        }
+        
+        return return_val
+    }
+    
+    func getAttachmentType(path: String) -> String {
+        let new_path = path.replacingOccurrences(of: "._.", with: "/")
+        
+        let db = createConnection()
+        let file_type_array = selectFromSql(db: db, columns: ["mime_type"], table: "attachment", condition: "WHERE filename like \"%\(new_path)%\"", num_items: 1)
+        var return_val = "image/jpeg" /// Most likely thing
+        
+        if file_type_array.count > 0 {
+            return_val = file_type_array[0]["mime_type"]!
         }
         
         return return_val
@@ -931,16 +927,6 @@ struct ContentView: View {
                             
                             TextField("Change requests password", text: $password)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                                
-                            Spacer().frame(height: 20)
-                                
-                            /*HStack {
-                                Text("Change main chats url").font(.subheadline)
-                                Spacer()
-                            }
-                                
-                            TextField("Change main chats url", text: $main_url)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())*/
                         }
                     }.padding()
                     
