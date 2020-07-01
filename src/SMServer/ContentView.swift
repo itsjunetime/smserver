@@ -15,10 +15,10 @@ struct ContentView: View {
     let server = GCDWebServer()
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
-    let debug = true
     static let default_num_chats = 40
     static let default_num_messages = 100
     
+    @State var debug = false
     @State var server_running = false
     @State var egnum = "8741"
     @State var password = "toor"
@@ -69,9 +69,6 @@ struct ContentView: View {
                 print(request.query)
                 print("url:")
                 print(request.url)
-                print("lad:")
-                print(request.localAddressData)
-                print(request.localAddressString)
                 print("ras:")
                 print(request.remoteAddressString)
             }
@@ -93,9 +90,6 @@ struct ContentView: View {
                 print(request.query)
                 print("url:")
                 print(request.url)
-                print("lad:")
-                print(request.localAddressData)
-                print(request.localAddressString)
                 print("ras:")
                 print(request.remoteAddressString)
             }
@@ -350,7 +344,7 @@ struct ContentView: View {
         return db
     }
     
-    func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = 0, offset: Int = 0) -> [[String:String]] { /// Flawless.
+    func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0) -> [[String:String]] { /// Flawless.
         
         var sqlString = "SELECT "
         for i in columns {
@@ -363,7 +357,7 @@ struct ContentView: View {
         if condition != "" {
             sqlString += " " + condition
         }
-        if num_items != 0 {
+        if num_items != -1 || offset != 0 {
             sqlString += " LIMIT \(offset), \(String(num_items))"
         }
         sqlString += ";"
@@ -381,7 +375,7 @@ struct ContentView: View {
         
         var main_return = [[String:String]]()
         
-        if num_items != 0 {
+        if num_items > 0 {
             var i = 0
             while sqlite3_step(statement) == SQLITE_ROW && i < num_items {
                 var minor_return = [String:String]()
@@ -392,8 +386,10 @@ struct ContentView: View {
                     } else {
                         print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
+                    self.debug ? print("tiny return: \(tiny_return)") : nil
                     minor_return[columns[j]] = tiny_return
                 }
+                self.debug ? print(minor_return) : nil
                 main_return.append(minor_return)
                 i += 1
             }
@@ -407,8 +403,10 @@ struct ContentView: View {
                     } else {
                         print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
+                    self.debug ? print("tiny return: \(tiny_return)") : nil
                     minor_return[columns[j]] = tiny_return
                 }
+                self.debug ? print(minor_return) : nil
                 main_return.append(minor_return)
             }
         }
@@ -586,10 +584,12 @@ struct ContentView: View {
                 let a = getAttachmentFromMessage(mid: messages[i]["ROWID"]!)
                 var file_string = ""
                 var type_string = ""
-                for i in a {
-                    /// Cause ':' can't exist in files in MacOS (I'm fairly certain?)
-                    file_string += i[0] + ":"
-                    type_string += i[1] + ":"
+                self.debug ? print(a) : nil
+                for i in 0..<a.count {
+                    file_string += a[i][0]
+                    file_string += i != a.count ? ":" : ""
+                    type_string += a[i][1]
+                    type_string += i != a.count ? ":" : ""
                 }
                 messages[i]["attachment_file"] = file_string
                 messages[i]["attachment_type"] = type_string
@@ -605,16 +605,21 @@ struct ContentView: View {
         self.debug ? print("destroyed db") : nil
         
         self.debug ? print("returning messages!") : nil
+        
+        if self.debug {
+            for i in messages { print(i) }
+        }
+        
         return messages
     }
     
-    func loadChats(num_to_load: Int = 0, offset: Int = 0) -> [[String:String]] {
+    func loadChats(num_to_load: Int = default_num_chats, offset: Int = 0) -> [[String:String]] {
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
         let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
-        let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc LIMIT \(offset > 0 ? String(offset) : "-1"), \(num_to_load > 0 ? String(num_to_load) : "-1")");
+        let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc", num_items: num_to_load, offset: offset)
         let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id))")
         
         var chats_array = [[String:String]]()
@@ -752,7 +757,6 @@ struct ContentView: View {
         
         self.debug ? print("destroyed statement") : nil
         
-        //return image /// So uh it should be a base64 encoded string?
         return pngdata
     }
     
@@ -828,6 +832,9 @@ struct ContentView: View {
         let file = selectFromSql(db: db, columns: ["filename", "mime_type", "hide_attachment"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
         
         var return_val = [[String]]()
+        
+        self.debug ? print("attachment file:") : nil
+        self.debug ? print(file) : nil
         
         if file.count > 0 {
             for i in file {
@@ -945,6 +952,10 @@ struct ContentView: View {
                             
                             TextField("Change requests password", text: $password)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                            
+                            Spacer().frame(height: 20)
+                            
+                            Toggle("Toggle debug", isOn: $debug)
                         }
                     }.padding()
                     
