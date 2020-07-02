@@ -165,10 +165,13 @@ p {
     font-family: var(--main-font);
     width: max-content;
     max-width: 40vw;
-    padding: 5px 8px;
+    padding: 5px 10px 2px 8px;
     margin: 5px 10px;
     font-weight: 300;
     font-size: 18px;
+}
+.text a {
+    color: dodgerblue;
 }
 .is_from_me {
     float: right;
