@@ -156,8 +156,8 @@ struct ContentView: View {
     func startBackgroundTask() {
         backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
             self.stopServer()
-            UIApplication.shared.endBackgroundTask(backgroundTask)
-            backgroundTask = .invalid
+            UIApplication.shared.endBackgroundTask(self.backgroundTask)
+            self.backgroundTask = .invalid
         })
         
         assert(backgroundTask != .invalid)
@@ -922,23 +922,23 @@ struct ContentView: View {
     var body: some View {
         
         let debug_binding = Binding<Bool>(get: {
-            debug
+            self.debug
         }, set: {
-            debug = $0
+            self.debug = $0
             UserDefaults.standard.setValue($0, forKey: "debug")
         })
         
         let pass_binding = Binding<String>(get: {
-            password
+            self.password
         }, set: {
-            password = $0
+            self.password = $0
             UserDefaults.standard.setValue($0, forKey: "password")
         })
         
         let port_binding = Binding<String>(get: {
-            port
+            self.port
         }, set: {
-            port = $0
+            self.port = $0
             UserDefaults.standard.setValue($0, forKey: "port")
         })
         
