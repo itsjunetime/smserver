@@ -222,7 +222,8 @@
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
                                 t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
-                                t.innerHTML += "<h3>This attachment type is not available :(</h3>"
+                                //t.innerHTML += "<h3>This attachment type is not available :(</h3>"
+                                t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
                         
@@ -326,7 +327,8 @@
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
                                 t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
-                                t.innerHTML += "<h3>This attachment type is not available :(</h3>"
+                                //t.innerHTML += "<h3>This attachment type is not available :(</h3>"
+                                t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
                         
