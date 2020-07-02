@@ -18,11 +18,10 @@ struct ContentView: View {
     static let default_num_chats = 40
     static let default_num_messages = 100
     
-    @State var debug = false
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") == nil ? false : UserDefaults.standard.object(forKey: "debug") as! Bool
     @State var server_running = false
-    @State var egnum = "8741"
-    @State var password = "toor"
-    @State var main_url = ""
+    @State var port: String = UserDefaults.standard.object(forKey: "port") == nil ? "8741" : UserDefaults.standard.object(forKey: "port") as! String
+    @State var password: String = UserDefaults.standard.object(forKey: "password") == nil ? "toor" : UserDefaults.standard.object(forKey: "password") as! String
     @State var past_latest_texts = [String:[String:[String:String]]]() /// Should be in the format of [address: [Chats]]
     @State var authenticated_addresses = [String]()
     
@@ -145,7 +144,7 @@ struct ContentView: View {
         })
         
         do {
-            try server.start(options: ["Port": UInt(egnum) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
+            try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
         } catch {
             print("failed to start server. fat rip right there.")
         }
@@ -878,10 +877,6 @@ struct ContentView: View {
         return [[String:String]]()
     }
     
-    func loadBundle() {
-        
-    }
-    
     func getWiFiAddress() -> String? {
         var address : String?
 
@@ -925,9 +920,31 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationView {
+        
+        let debug_binding = Binding<Bool>(get: {
+            debug
+        }, set: {
+            debug = $0
+            UserDefaults.standard.setValue($0, forKey: "debug")
+        })
+        
+        let pass_binding = Binding<String>(get: {
+            password
+        }, set: {
+            password = $0
+            UserDefaults.standard.setValue($0, forKey: "password")
+        })
+        
+        let port_binding = Binding<String>(get: {
+            port
+        }, set: {
+            port = $0
+            UserDefaults.standard.setValue($0, forKey: "port")
+        })
+        
+        return NavigationView {
                 VStack {
-                    Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(self.egnum) in your browser to view your messages")
+                    Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(self.port) in your browser to view your messages")
                         .font(Font.custom("smallTitle", size: 22))
                         .padding()
                 
@@ -940,7 +957,7 @@ struct ContentView: View {
                                 Spacer()
                             }
                             
-                            TextField("Change default server port", text: $egnum)
+                            TextField("Change default server port", text: port_binding)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                             
                             Spacer().frame(height: 20)
@@ -950,12 +967,12 @@ struct ContentView: View {
                                 Spacer()
                             }
                             
-                            TextField("Change requests password", text: $password)
+                            TextField("Change requests password", text: pass_binding)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                             
                             Spacer().frame(height: 20)
                             
-                            Toggle("Toggle debug", isOn: $debug)
+                            Toggle("Toggle debug", isOn: debug_binding)
                         }
                     }.padding()
                     
@@ -986,7 +1003,7 @@ struct ContentView: View {
                             Spacer().frame(width: 30)
                             
                             Button(action: {
-                                self.server_running ? nil : self.loadServer(port_num: UInt16(self.egnum)!)
+                                self.server_running ? nil : self.loadServer(port_num: UInt16(self.port)!)
                             }) {
                                 Image(systemName: "play.fill")
                                     .scaleEffect(1.5)
