@@ -622,7 +622,7 @@
 				DEVELOPMENT_TEAM = X543N5D24H;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = SMServer/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -650,7 +650,7 @@
 				DEVELOPMENT_TEAM = X543N5D24H;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = SMServer/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
