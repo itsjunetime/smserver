@@ -54,8 +54,6 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 
 ### Acknowledged current issues:
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
-- Conversations with unread messages aren't always displayed as such in web interface
-- Users have to authenticate twice if connecting to web server over USB as opposed to WLAN
 
 ## Companion App
 There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, much more customizable, and authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
