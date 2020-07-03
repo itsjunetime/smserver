@@ -56,7 +56,6 @@ p {
 .messages .title {
     grid-row: 1;
     grid-column: 1;
-    backdrop-filter: blur(50px);
     -webkit-backdrop-filter: blur(50px);
     z-index: 1;
     display: grid;
@@ -64,6 +63,19 @@ p {
     grid-template-rows: 1fr;
     align-content: center;
 }
+
+@supports (backdrop-filter: blur(50px)) {
+    .messages .title {
+        backdrop-filter: blur(50px);
+    }
+}
+
+@supports not (backdrop-filter: blur(50px)) {
+    .messages .title {
+        background-color: #1a191b;
+    }
+}
+
 .title p {
     color: var(--font-color);
     text-align: start;
@@ -181,14 +193,14 @@ p {
     background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
     position: relative;
     margin-left: 100%;
-    border-radius: 14px 14px 3px 14px;
+    border-radius: 10px 10px 2px 10px;
 }
 .is_from_them {
     float: left;
     background-color: rgb(58, 58, 60);
     position: relative;
     margin-right: 100%;
-    border-radius: 14px 14px 14px 3px;
+    border-radius: 10px 10px 10px 2px;
 }
 .is_from_me + .is_from_them,
 .is_from_them + .is_from_me {
