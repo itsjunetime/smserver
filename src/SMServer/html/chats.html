@@ -239,7 +239,7 @@
                     
                     /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
                     if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
-                        var time = document.createElement("p");
+                        var time = document.createElement("div");
                         time.setAttribute("class", "time-display");
 
                         let unix_timestamp = (texts[i].date / 1000000000) + 978307200
@@ -257,16 +257,21 @@
                         }
 
                         var formattedTime = timeConverter(unix_timestamp)
-                        
-                        time.innerHTML = formattedTime
+                                              
+                        time.innerHTML = "<p>" + formattedTime + "</p>"
+                        //doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
                     }
-                    
-                    doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
-                    doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
-                    if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
+                                              
+                    /*if (i != 0 && texts[i].is_from_me != texts[i - 1].is_from_me) {
                             doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
-                    }
+                    }*/
+                                              
+                    //doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
+                    doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
+                    /*if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
+                            doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
+                    }*/
                     
                     doc.lastChild.scrollIntoView(false)
                 }
@@ -343,7 +348,7 @@
                     
                     /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
                     if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
-                        var time = document.createElement("p");
+                        var time = document.createElement("div");
                         time.setAttribute("class", "time-display");
 
                         let unix_timestamp = (texts[i].date / 1000000000) + 978307200
@@ -362,15 +367,11 @@
 
                         var formattedTime = timeConverter(unix_timestamp)
                         
-                        time.innerHTML = formattedTime
+                        time.innerHTML = "<p>" + formattedTime + "</p>"
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
                     }
                                               
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
-                    doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
-                    if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
-                        doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
-                    }
                 }
             }
 
