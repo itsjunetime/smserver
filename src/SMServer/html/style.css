@@ -181,9 +181,12 @@ p {
     width: max-content;
     max-width: 40vw;
     padding: 5px 10px 2px 8px;
-    margin: 5px 10px;
+    margin: 0px 10px 20px 10px;
     font-weight: 300;
     font-size: 18px;
+}
+.text + .text {
+    margin-top: -12px;
 }
 .text a {
     color: dodgerblue;
@@ -204,7 +207,7 @@ p {
 }
 .is_from_me + .is_from_them,
 .is_from_them + .is_from_me {
-    margin-top: 20px;
+    margin-top: -6px;
 }
 .time-display {
     text-align: center;
