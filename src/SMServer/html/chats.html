@@ -90,7 +90,6 @@
                     var get_texts_string = "getTexts(\"" + items[i].chat_identifier + "\", " + num_texts + ")";
                     b.setAttribute("onclick", get_texts_string);
                     
-                    //doc.appendChild(b);
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
                 }
             }
@@ -133,7 +132,6 @@
                     var get_texts_string = "getTexts(\"" + new_items[i].chat_identifier + "\", " + num_texts_to_load + ")";
                     b.setAttribute("onclick", get_texts_string);
                     
-                    //doc.appendChild(b);
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
                 }
             }
@@ -230,7 +228,6 @@
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
                                 t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
-                                //t.innerHTML += "<h3>This attachment type is not available :(</h3>"
                                 t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
@@ -245,7 +242,7 @@
                         var time = document.createElement("p");
                         time.setAttribute("class", "time-display");
 
-                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
+                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200
 
                         function timeConverter(UNIX_timestamp){
                             var a = new Date(UNIX_timestamp * 1000);
@@ -262,22 +259,18 @@
                         var formattedTime = timeConverter(unix_timestamp)
                         
                         time.innerHTML = formattedTime
-                        //doc.insertBefore(time, doc.firstChild)
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
                     }
                     
-                    //doc.insertBefore(t, doc.firstChild)
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
-                    //doc.insertBefore(document.createElement("br"), doc.firstChild)
                     doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
                     if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
-                            //doc.insertBefore(document.createElement("br"), doc.firstChild);
                             doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
                     }
                     
-                    doc.lastChild.scrollIntoView(false) /// Does not work. woohoo.
-                } ///Right now this scrolls to right before the very end of the document; Gotta fix that.
-                doc.lastChild.scrollIntoView(false) /// Does not work. woohoo.
+                    doc.lastChild.scrollIntoView(false)
+                }
+                doc.lastChild.scrollIntoView(false)
             }
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
@@ -339,7 +332,6 @@
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
                                 t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
-                                //t.innerHTML += "<h3>This attachment type is not available :(</h3>"
                                 t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
@@ -354,7 +346,7 @@
                         var time = document.createElement("p");
                         time.setAttribute("class", "time-display");
 
-                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200 ///This is just what the number seems to be, for the apple text database? It's not exact and is in fact very wrong
+                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200
 
                         function timeConverter(UNIX_timestamp){
                             var a = new Date(UNIX_timestamp * 1000);
@@ -371,17 +363,12 @@
                         var formattedTime = timeConverter(unix_timestamp)
                         
                         time.innerHTML = formattedTime
-                        //doc.insertBefore(time, doc.firstChild)
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
                     }
-                    
                                               
-                    //doc.insertBefore(t, doc.firstChild)
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
-                    //doc.insertBefore(document.createElement("br"), doc.firstChild)
                     doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
                     if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
-                        //doc.insertBefore(document.createElement("br"), doc.firstChild);
                         doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
                     }
                 }
@@ -460,7 +447,6 @@
             <div class="chats">
                 <div class="chats-title">
                     <h1>Messages</h1>
-                    <!--<button onclick="getMoreChats()" id="chatsmorebutton"><span></span></button>-->
                 </div>
                 <div class="chats-search">Search</div>
                 <div class="chats-list">
@@ -472,7 +458,6 @@
                     <span class="title-name"></span>
                 </div>
                 <div class="text-content" id="text-content">
-                    <!--<button onclick="getMoreTexts()" id="moretextsbutton"><p>+ More Texts</p></button>-->
                     <br> <!--So that the first element doesn't fail to insert-->
                 </div>
                 <div class="textbox">
