@@ -41,7 +41,7 @@ When you run this app and click the green 'play' button in the bottom left corne
 This is definitely still in Beta stages; there are still issues and many features that need to be implemented. However, if you do want to test it or use it for the time being, the steps are pretty simple:
 
 1. Clone this repository
-2. CD into the directory where the podfile is installed
+2. cd into the directory where the podfile is installed
 3. If cocoapods are not installed, run 'sudo gem install cocoapods'
 4. Run 'pod intall'
 5. Open the .xcworkspace file in Xcode
