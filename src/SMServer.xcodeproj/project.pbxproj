@@ -19,6 +19,8 @@
 		3C760E93245BCFE100EF24FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */; };
 		3C760E9E245BCFE100EF24FE /* SMServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E9D245BCFE100EF24FE /* SMServerTests.swift */; };
 		3C760EA9245BCFE100EF24FE /* SMServerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760EA8245BCFE100EF24FE /* SMServerUITests.swift */; };
+		3CC4185024B1327400A98288 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CC4184F24B1327400A98288 /* SettingsView.swift */; };
+		3CC4185424B135B500A98288 /* ChatDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CC4185324B135B500A98288 /* ChatDelegate.swift */; };
 		7D353C7473BC7E305EDD5324 /* Pods_SMServer_SMServerUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B05F51E06AAA421F9F1B488 /* Pods_SMServer_SMServerUITests.framework */; };
 /* End PBXBuildFile section */
 
@@ -74,6 +76,8 @@
 		3C760EAA245BCFE100EF24FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3C7CFF7D246BC6A80061749A /* SMServer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SMServer-Bridging-Header.h"; sourceTree = "<group>"; };
 		3C7CFF84246C8F8D0061749A /* Obj.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Obj.m; sourceTree = "<group>"; };
+		3CC4184F24B1327400A98288 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3CC4185324B135B500A98288 /* ChatDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDelegate.swift; sourceTree = "<group>"; };
 		3CD012E3247CD42500973951 /* SMServer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SMServer.entitlements; sourceTree = "<group>"; };
 		4B05F51E06AAA421F9F1B488 /* Pods_SMServer_SMServerUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer_SMServerUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer.release.xcconfig"; path = "Target Support Files/Pods-SMServer/Pods-SMServer.release.xcconfig"; sourceTree = "<group>"; };
@@ -151,6 +155,8 @@
 				3C760E86245BCFE000EF24FE /* AppDelegate.swift */,
 				3C760E88245BCFE000EF24FE /* SceneDelegate.swift */,
 				3C760E8A245BCFE000EF24FE /* ContentView.swift */,
+				3CC4184F24B1327400A98288 /* SettingsView.swift */,
+				3CC4185324B135B500A98288 /* ChatDelegate.swift */,
 				3C7CFF84246C8F8D0061749A /* Obj.m */,
 				3C760E8C245BCFE100EF24FE /* Assets.xcassets */,
 				3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */,
@@ -447,8 +453,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */,
+				3CC4185024B1327400A98288 /* SettingsView.swift in Sources */,
 				3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */,
 				3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */,
+				3CC4185424B135B500A98288 /* ChatDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
