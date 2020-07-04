@@ -7,8 +7,9 @@
         <script>
             var timeout = 60000; /// 60 seconds
             var new_chats = "";
-            const num_texts_to_load = 200;
-            const num_chats_to_load = 40;
+            /// These next two lines need to remain without value, since they will be changed when swift parses the file.
+            const num_texts_to_load;
+            const num_chats_to_load;
             var printed_texts = 0;
             var printed_chats = 0
             
@@ -259,20 +260,10 @@
                         var formattedTime = timeConverter(unix_timestamp)
                                               
                         time.innerHTML = "<p>" + formattedTime + "</p>"
-                        //doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
                     }
                                               
-                    /*if (i != 0 && texts[i].is_from_me != texts[i - 1].is_from_me) {
-                            doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
-                    }*/
-                                              
-                    //doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
-                    /*if (i != texts.length - 1 && texts[i].is_from_me != texts[i + 1].is_from_me) {
-                            doc.insertBefore(document.createElement("br"), document.getElementById("moretextsbutton").nextSibling)
-                    }*/
-                    
                     doc.lastChild.scrollIntoView(false)
                 }
                 doc.lastChild.scrollIntoView(false)
