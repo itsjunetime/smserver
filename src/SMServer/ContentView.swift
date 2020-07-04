@@ -377,7 +377,30 @@ struct ContentView: View {
                         .font(Font.custom("smallTitle", size: 22))
                         .padding()
                     
+                    Spacer().frame(height: 20)
+                    
+                    HStack {
+                        Text("To learn more, visit")
+                            .font(.headline)
+                        Text("the github repo")
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                            .onTapGesture {
+                                let url = URL.init(string: "https://github.com/iandwelker/smserver.git")
+                                guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
+                                UIApplication.shared.open(github_url)
+                            }
+                    }
+                    
                     Spacer()
+                    
+                    if UserDefaults.standard.object(forKey: "has_run") == nil {
+                        HStack {
+                            Text("Tap the arrow to start!")
+                                .font(.callout)
+                            Spacer()
+                        }.padding(.leading)
+                    }
                     
                     HStack {
                         HStack {
@@ -403,6 +426,7 @@ struct ContentView: View {
                             
                             Button(action: {
                                 self.server_running ? nil : self.loadServer(port_num: UInt16(self.port)!)
+                                UserDefaults.standard.setValue(true, forKey: "has_run")
                             }) {
                                 Image(systemName: "play.fill")
                                     .scaleEffect(1.5)
