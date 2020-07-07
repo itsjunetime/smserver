@@ -11,8 +11,8 @@
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C6713F824722635002EBBDF /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
 		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		3C6A5FB324B3EB5000102AE2 /* Obj.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF84246C8F8D0061749A /* Obj.m */; };
 		3C6A5FB524B3EBBF00102AE2 /* libmryipc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; };
+		3C6A5FB624B3F99200102AE2 /* Obj.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF84246C8F8D0061749A /* Obj.m */; };
 		3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E86245BCFE000EF24FE /* AppDelegate.swift */; };
 		3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E88245BCFE000EF24FE /* SceneDelegate.swift */; };
 		3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E8A245BCFE000EF24FE /* ContentView.swift */; };
@@ -461,7 +461,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C6A5FB324B3EB5000102AE2 /* Obj.m in Sources */,
+				3C6A5FB624B3F99200102AE2 /* Obj.m in Sources */,
 				3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */,
 				3CC4185024B1327400A98288 /* SettingsView.swift in Sources */,
 				3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */,
