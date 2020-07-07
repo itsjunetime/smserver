@@ -61,8 +61,6 @@ struct ContentView: View {
     """
     """
     
-    private let messageComposeDelegate = MessageComposerDelegate()
-    
     func loadServer(port_num: UInt16) {
         
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
@@ -254,7 +252,7 @@ struct ContentView: View {
         if f == "person" || f == "num" || f == "offset" {
             
             person = f == "person" ? Array(params.values)[0] : (s == "person" ? Array(params.values)[1] : Array(params.values)[2])
-            //num_texts = ContentView.default_num_chats
+            
             num_texts = default_num_chats
             if f == "num" || s == "num" || t == "num" {
                 num_texts = (f == "num" ? Int(Array(params.values)[0]) : (s == "num" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? default_num_chats
@@ -274,7 +272,6 @@ struct ContentView: View {
             
         } else if f == "chat" || f == "num_chats"  || f == "chats_offset" {
             
-            //num_texts = ContentView.default_num_chats
             num_texts = default_num_chats
             var chats_offset = 0
             if f == "num_chats" || s == "num_chats" || t == "num_chats" {
@@ -459,37 +456,9 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             self.start_on_load ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
+            //s.launchMobileSMS()
         }
     }
-}
-
-extension ContentView {
-
-    private class MessageComposerDelegate: NSObject, MFMessageComposeViewControllerDelegate {
-        func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
-            // Customize here
-            controller.dismiss(animated: true)
-        }
-    }
-    /// Present an message compose view controller modally in UIKit environment
-    private func presentMessageCompose(body: String, address: [String]) {
-        guard MFMessageComposeViewController.canSendText() else {
-            return
-        }
-        DispatchQueue.main.async {
-            self.debug ? print(address) : nil
-            
-            let vc = UIApplication.shared.windows.filter {$0.isKeyWindow}.first?.rootViewController
-            let composeVC = MFMessageComposeViewController()
-            composeVC.body = body
-            composeVC.recipients = address
-            
-            composeVC.messageComposeDelegate = self.messageComposeDelegate
-            vc?.present(composeVC, animated: true)
-        }
-    }
-    
-    
 }
 
 struct ContentView_Previews: PreviewProvider {
