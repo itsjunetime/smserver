@@ -30,6 +30,7 @@ struct ContentView: View {
     @State var view_settings = false
     
     let chat_delegate = ChatDelegate()
+    let s = sender()
     
     let messagesString = "/private/var/mobile/Library/SMS/sms.db"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
@@ -158,7 +159,7 @@ struct ContentView: View {
     
     func startBackgroundTask() {
         backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-            self.stopServer()
+            //self.stopServer()
             UIApplication.shared.endBackgroundTask(self.backgroundTask)
             self.backgroundTask = .invalid
         })
@@ -332,7 +333,9 @@ struct ContentView: View {
     }
     
     func sendText(body: String, address: [String]) {
-        self.presentMessageCompose(body: body, address: address)
+        self.debug ? print("body: \(body), address[0]: \(address[0])") : nil
+        
+        s.sendIPCText(body, toAddress: address[0])
     }
     
     func getWiFiAddress() -> String? {
@@ -474,6 +477,8 @@ extension ContentView {
             return
         }
         DispatchQueue.main.async {
+            self.debug ? print(address) : nil
+            
             let vc = UIApplication.shared.windows.filter {$0.isKeyWindow}.first?.rootViewController
             let composeVC = MFMessageComposeViewController()
             composeVC.body = body
