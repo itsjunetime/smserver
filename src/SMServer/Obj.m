@@ -14,7 +14,10 @@
 @implementation sender
 
 /*-(void)launchMobileSMS {
-    [[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.apple.MobileSMS" suspended:YES];
+    //[[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.apple.MobileSMS" suspended:YES];
+    
+    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverlaunch"];
+    [center callExternalMethod:@selector(launchSMS) withArguments:nil];
 }*/
 
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address {
