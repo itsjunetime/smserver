@@ -71,7 +71,7 @@ struct ContentView: View {
                 print("headers:")
                 print(request.headers)
                 print("query:")
-                print(request.query)
+                print(request.query as Any)
                 print("url:")
                 print(request.url)
                 print("ras:")
@@ -92,7 +92,7 @@ struct ContentView: View {
                 print("headers:")
                 print(request.headers)
                 print("query:")
-                print(request.query)
+                print(request.query as Any)
                 print("url:")
                 print(request.url)
                 print("ras:")
@@ -104,13 +104,8 @@ struct ContentView: View {
             if query != nil && query?.count == 0 {
                 return GCDWebServerDataResponse(html: self.requests_page)
             } else {
-                var address = ""
                 
-                do {
-                    address = try String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))
-                } catch {
-                    address = ""
-                }
+                let address = String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))
                 
                 let response = self.parseAndReturn(params: query ?? [String:String](), address: address)
                 
@@ -127,7 +122,7 @@ struct ContentView: View {
             let dataResponse = chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
             let type = chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
             
-            return GCDWebServerDataResponse(data: dataResponse, contentType: type) /// the contenttype will hopefully be dynamic soon
+            return GCDWebServerDataResponse(data: dataResponse, contentType: type)
         })
         
         server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
