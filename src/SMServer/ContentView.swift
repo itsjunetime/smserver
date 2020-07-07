@@ -15,19 +15,22 @@ struct ContentView: View {
     let server = GCDWebServer()
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
-    @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") == nil ? 40 : UserDefaults.standard.object(forKey: "num_chats") as! Int
-    @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") == nil ? 100 : UserDefaults.standard.object(forKey: "num_messages") as! Int
+    @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
+    @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
+    @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
     
-    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") == nil ? false : UserDefaults.standard.object(forKey: "debug") as! Bool
-    @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") == nil ? false : UserDefaults.standard.object(forKey: "start_on_load") as! Bool
-    @State var server_running = false
-    @State var port: String = UserDefaults.standard.object(forKey: "port") == nil ? "8741" : UserDefaults.standard.object(forKey: "port") as! String
-    @State var password: String = UserDefaults.standard.object(forKey: "password") == nil ? "toor" : UserDefaults.standard.object(forKey: "password") as! String
-    @State var authenticated_addresses = [String]()
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+    @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
+    
+    @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
+    @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
+    @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
     @State var view_settings = false
+    @State var server_running = false
+    @State var authenticated_addresses = [String]()
     
     let chat_delegate = ChatDelegate()
     let s = sender()
@@ -183,6 +186,10 @@ struct ContentView: View {
     }
     
     func checkIfAuthenticated(ras: String) -> Bool {
+        require_authentication = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
+        
+        if !require_authentication { return true }
+        
         var clear = false
         
         for i in self.authenticated_addresses {
