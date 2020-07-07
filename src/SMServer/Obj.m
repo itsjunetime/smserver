@@ -7,32 +7,25 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "MRYIPCCenter.h"
 
-@interface obj_class : NSObject
+#import "Obj.h"
 
--(void) loadBundle;
+@implementation sender
 
-@end
-
-@interface CTMessageCenter
-
-+(id)sharedMessageCenter;
--(BOOL)sendSMSWithText:(id)arg1 serviceCenter:(id)arg2 toAddress:(id)arg3;
--(BOOL)sendSMSWithText:(id)arg1 serviceCenter:(id)arg2 toAddress:(id)arg3 withMoreToFollow:(bool)arg4 withID:(unsigned int)arg5;
-
-@end
-
-@implementation obj_class
-
--(void) loadBundle {
-    NSBundle *ctm = [NSBundle bundleWithPath:@"/System/Library/Frameworks/CoreTelephony.framework"];
-    [ctm load];
+- (void)sendText:(NSString *)body toAddress:(NSString *)address {
     
-    Class CTMC = NSClassFromString(@"CTMessageCenter");
+    NSDictionary *dict = [[NSDictionary alloc] initWithObjectsAndKeys:body, @"body", address, @"address", nil];
     
-    [[CTMC sharedMessageCenter] sendSMSWithText:@"Hey! This is a test. If you got it and didn't expect to, just let me know. Thank you :)" serviceCenter:nil toAddress:@"+15203106053"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"smserver" object:nil userInfo:dict];
     
 }
 
+- (void)sendIPCText:(NSString *)body toAddress:(NSString *)address {
+
+    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
+    
+    [center callExternalMethod:@selector(handleText:) withArguments:@{@"body": body, @"address": address}];
+}
 
 @end
