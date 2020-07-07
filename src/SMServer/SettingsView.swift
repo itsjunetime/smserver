@@ -9,14 +9,16 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") == nil ? 40 : UserDefaults.standard.object(forKey: "num_chats") as! Int
-    @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") == nil ? 100 : UserDefaults.standard.object(forKey: "num_messages") as! Int
+    @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
+    @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
+    @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
     
-    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") == nil ? false : UserDefaults.standard.object(forKey: "debug") as! Bool
-    @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") == nil ? false : UserDefaults.standard.object(forKey: "start_on_load") as! Bool
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+    @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
     
-    @State var port: String = UserDefaults.standard.object(forKey: "port") == nil ? "8741" : UserDefaults.standard.object(forKey: "port") as! String
-    @State var password: String = UserDefaults.standard.object(forKey: "password") == nil ? "toor" : UserDefaults.standard.object(forKey: "password") as! String
+    @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
+    @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
+    @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     
     var body: some View {
         let debug_binding = Binding<Bool>(get: {
@@ -61,6 +63,20 @@ struct SettingsView: View {
             UserDefaults.standard.setValue($0, forKey: "num_messages")
         })
         
+        let auth_binding = Binding<Bool>(get: {
+            self.require_authentication
+        }, set: {
+            self.require_authentication = $0
+            UserDefaults.standard.setValue($0, forKey: "require_auth")
+        })
+        
+        let ping_binding = Binding<Int>(get: {
+            self.server_ping
+        }, set: {
+            self.server_ping = $0
+            UserDefaults.standard.setValue($0, forKey: "server_ping")
+        })
+        
         return VStack(spacing: 20) {
             HStack {
                 Text("Settings").font(.title)
@@ -102,11 +118,25 @@ struct SettingsView: View {
                     .frame(width: 60)
             }
             
-            Toggle("Toggle debug", isOn: debug_binding)
+            HStack {
+                Text("Interval for website to ping app (seconds)")
+                Spacer()
+                TextField("Ping", value: ping_binding, formatter: NumberFormatter())
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .keyboardType(.numberPad)
+                    .frame(width: 60)
+            }
             
-            Toggle("Start server on load", isOn: start_binding)
+            Group {
             
-            Spacer()
+                Toggle("Toggle debug", isOn: debug_binding)
+            
+                Toggle("Start server on load", isOn: start_binding)
+            
+                Toggle("Require Authentication to view messages", isOn: auth_binding)
+            
+                Spacer()
+            }
         }.padding()
     }
 }
