@@ -11,9 +11,14 @@
 
 @interface sender : NSObject
 
-- (void)sendText:(NSString *)body toAddress:(NSString *)address;
+//- (void)launchMobileSMS;
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address;
 
 @end
+
+/*@interface UIApplication
+- (_Bool)launchApplicationWithIdentifier:(id)arg1 suspended:(_Bool)arg2;
++ (id)sharedApplication;
+@end*/
 
 #endif /* Obj_h */

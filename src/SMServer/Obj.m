@@ -13,13 +13,9 @@
 
 @implementation sender
 
-- (void)sendText:(NSString *)body toAddress:(NSString *)address {
-    
-    NSDictionary *dict = [[NSDictionary alloc] initWithObjectsAndKeys:body, @"body", address, @"address", nil];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"smserver" object:nil userInfo:dict];
-    
-}
+/*-(void)launchMobileSMS {
+    [[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.apple.MobileSMS" suspended:YES];
+}*/
 
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address {
 
