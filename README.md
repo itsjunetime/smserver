@@ -15,7 +15,6 @@ When you run this app and click the green 'play' button in the bottom left corne
 
 ### Caveats
 - One must run this on a jailbroken iPhone or one that has escaped the sandbox (for example, a device running iOS 13.4.1 or lower and using Siguza's psychic paper exploit)
-- Sending a text requires on-device confirmation before the text is dispatched. This is ~~because I couldn't figure out how do make a tweak to programatically send a text~~ so that the app is compatible with non-jailbroken devices.
 - The app only has limited background time (about 1 - 3 minutes), so after that much time of the app not being in the foreground, the server will be killed & you'll need to re-enter the app and restart it.
 
 ## TODO
@@ -23,8 +22,7 @@ When you run this app and click the green 'play' button in the bottom left corne
 - [x] View conversations in browser
 - [x] View texts in browser
 - [x] Dynamic loading of texts
-- [x] Send texts (mostly) from browser
-- [ ] Send texts without on-device interaction
+- [x] Send texts from browser without on-device interaction
 - [x] View all attachments in browser
 - [ ] Send images/attachments from browser
 - [ ] Display new messages when they arrive
@@ -37,10 +35,14 @@ When you run this app and click the green 'play' button in the bottom left corne
 - [ ] Allow the server to run in the background - This has somewhat been implemented. 
 - [ ] Search through messages from browser
 
+### Dependencies
+- libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
+
 ## To Install
 This is definitely still in Beta stages; there are still issues and many features that need to be implemented. However, if you do want to test it or use it for the time being, the steps are pretty simple:
 
 1. Clone this repository
+2. Get [libsmserver](http://github.com/iandwelker/libsmserver), install the deb under `packages` or build it yourself.
 2. cd into the directory where the podfile is installed
 3. If cocoapods are not installed, run 'sudo gem install cocoapods'
 4. Run 'pod intall'
