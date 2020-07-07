@@ -328,7 +328,7 @@ class ChatDelegate {
             
             new_chat!["has_unread"] = "false"
             if messages[i["message_id"]!]!["is_from_me"] == "0" && messages[i["message_id"]!]!["date_read"] == "0" && messages[i["message_id"]!]!["text"] != nil && messages[i["message_id"]!]!["is_read"] == "0" && messages[i["message_id"]!]!["item_type"] == "0" {
-                self.debug ? print(messages[i["message_id"]!]) : nil
+                self.debug ? print(messages[i["message_id"]!] as Any) : nil
                 new_chat!["has_unread"] = "true"
             }
             
