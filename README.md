@@ -16,6 +16,7 @@ When you run this app and click the green 'play' button in the bottom left corne
 ### Caveats
 - One must run this on a jailbroken iPhone or one that has escaped the sandbox (for example, a device running iOS 13.4.1 or lower and using Siguza's psychic paper exploit)
 - The app only has limited background time (about 1 - 3 minutes), so after that much time of the app not being in the foreground, the server will be killed & you'll need to re-enter the app and restart it.
+- Before you run the app, you have to open the Messages app and leave it running in the background; this is temporary, and you won't have to do this soon.
 
 ## TODO
 
