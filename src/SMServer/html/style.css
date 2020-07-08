@@ -56,23 +56,29 @@ p {
 .messages .title {
     grid-row: 1;
     grid-column: 1;
-    -webkit-backdrop-filter: blur(50px);
     z-index: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr;
     align-content: center;
+    background-color: #1a191b;
 }
 
-@supports (backdrop-filter: blur(50px)) {
-    .messages .title {
+.textbox {
+    display: grid;
+    grid-template-columns: var(--send-button-size) 1fr var(--send-button-size);
+    grid-template-rows: 1fr;
+    padding: 5px 5px;
+    max-width: 100%;
+    height: var(--messages-send-height);
+    resize: vertical;
+}
+
+@supports (backdrop-filter: blur(50px)) or (-webkit-backdrop-filter: blur(50px)) {
+    .messages .title, .textbox {
         backdrop-filter: blur(50px);
-    }
-}
-
-@supports not (backdrop-filter: blur(50px)) {
-    .messages .title {
-        background-color: #1a191b;
+        -webkit-backdrop-filter: blur(50px);
+        background-color: transparent !important;
     }
 }
 
@@ -94,7 +100,6 @@ p {
     z-index: 0;
     overflow-x: hidden;
     padding-top: var(--messages-title-height);
-    padding-bottom: calc(var(--messages-send-height) * 2);
 }
 .chats {
     grid-area: conversations;
@@ -211,15 +216,6 @@ p {
 }
 .time-display {
     text-align: center;
-}
-.textbox {
-    display: grid;
-    grid-template-columns: var(--send-button-size) 1fr var(--send-button-size);
-    grid-template-rows: 1fr;
-    padding: 5px 5px;
-    max-width: 100%;
-    height: var(--messages-send-height);
-    resize: vertical;
 }
 #moretextsbutton {
     margin-left: 42%;

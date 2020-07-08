@@ -5,11 +5,12 @@
         </title>
         <!--<script src="https://code.jquery.com/jquery-3.5.1.slim.js" integrity="sha256-DrT5NfxfbHvMHux31Lkhxg42LY6of8TaYyK50jnxRnM=" crossorigin="anonymous"></script>-->
         <script>
-            var timeout = 60000; /// 60 seconds
             var new_chats = "";
-            /// These next two lines need to remain without value, since they will be changed when swift parses the file.
+            /// These next three lines need to remain without value, since they will be changed when swift parses the file.
             const num_texts_to_load;
             const num_chats_to_load;
+            const timeout;
+            
             var printed_texts = 0;
             var printed_chats = 0
             
@@ -34,6 +35,8 @@
                 var _ = await fetch_new_chats
                 
                 if (new_chats.length > 0) {
+                    console.log(new_chats)
+                    
                     printItems()
                     var selected_id = document.getElementsByClassName("title")[0].id;
                     for (var i = 0; i < new_chats.length; ++i) {
@@ -41,6 +44,8 @@
                             getTexts(selected_id, num_texts_to_load)
                         }
                     }
+                } else {
+                    console.log("")
                 }
             }
         
@@ -65,7 +70,7 @@
                     return items
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate.')
+                    alert('The server restarted, you need to reload and re-authenticate. (readJson func)')
                     this.dataError = true;
                 })
             }
@@ -88,7 +93,7 @@
                     
                     if (items[i].has_unread === "true") { b.setAttribute("class", "unread") }
                     
-                    var get_texts_string = "getTexts(\"" + items[i].chat_identifier + "\", " + num_texts + ")";
+                    var get_texts_string = "getTexts(\"" + items[i].chat_identifier + "\", " + num_texts + ");";
                     b.setAttribute("onclick", get_texts_string);
                     
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
@@ -109,7 +114,7 @@
                     return new_items
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate.')
+                    alert('The server restarted, you need to reload and re-authenticate. (moreJsonChats func)')
                     this.dataError = true;
                 })
             }
@@ -130,7 +135,7 @@
                     
                     if (new_items[i].has_unread === "true") { b.setAttribute("class", "unread") }
                     
-                    var get_texts_string = "getTexts(\"" + new_items[i].chat_identifier + "\", " + num_texts_to_load + ")";
+                    var get_texts_string = "await getTexts(\"" + new_items[i].chat_identifier + "\", " + num_texts_to_load + ");";
                     b.setAttribute("onclick", get_texts_string);
                     
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
@@ -179,7 +184,7 @@
                     return texts
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate.')
+                    alert('The server restarted, you need to reload and re-authenticate. (fetch_texts func)')
                     this.dataError = true;
                 })
 
@@ -200,10 +205,10 @@
                 
                 printed_texts = texts.length
 
+                
                 for (var i = 0; i < texts.length; i++) {
                     var doc = document.getElementsByClassName("text-content")[0];
-                    var t = document.createElement("p");
-
+                    var t = document.createElement("p")
                     if (i == 0) {
                         t.setAttribute("id", "more_texts");
                     }
@@ -225,7 +230,7 @@
                         var types = texts[i].attachment_type.split(":");
                         
                         for (var l = 0; l < files.length; ++l) {
-                            console.log("files at " + l + ": " + files[l] + ", type: " + types[l])
+                            //console.log("files at " + l + ": " + files[l] + ", type: " + types[l])
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
                                 t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
@@ -244,7 +249,6 @@
                         time.setAttribute("class", "time-display");
 
                         let unix_timestamp = (texts[i].date / 1000000000) + 978307200
-
                         function timeConverter(UNIX_timestamp){
                             var a = new Date(UNIX_timestamp * 1000);
                             var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -256,17 +260,18 @@
                             var time = date + ' ' + month + ' ' + year + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (min < 10 ? '0' : '') + min;
                             return time;
                         }
-
+                        
                         var formattedTime = timeConverter(unix_timestamp)
-                                              
+                                                
                         time.innerHTML = "<p>" + formattedTime + "</p>"
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
                     }
-                                              
+                                                
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
-                    doc.lastChild.scrollIntoView(false)
                 }
-                doc.lastChild.scrollIntoView(false)
+                                                  
+                var scrollDoc = document.getElementById("text-content").lastChild
+                document.getElementById("text-content").scrollTop = scrollDoc.offsetTop
             }
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
@@ -287,14 +292,13 @@
                     return texts
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate.')
+                    alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
                     this.dataError = true;
                 })
 
                 var _ = await fetch_texts
 
                 printed_texts += texts.length
-                
                 
                 var last_item = document.createElement("br")
                 var first_item = document.getElementsByClassName("text-content")[0]
@@ -324,7 +328,6 @@
                         var types = texts[i].attachment_type.split(":")
                         
                         for (var l = 0; l < files.length; ++l) {
-                            console.log("files at " + l + ": " + files[l] + ", type: " + types[l])
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
                                 t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
@@ -381,7 +384,7 @@
                     return image_string
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate.')
+                    alert('The server restarted, you need to reload and re-authenticate. (fetch_image func)')
                     this.dataError = true;
                 })
             }
@@ -400,7 +403,7 @@
                     }
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate.')
+                    alert('The server restarted, you need to reload and re-authenticate. (sendText func)')
                     this.dataError = true;
                 })
                 
