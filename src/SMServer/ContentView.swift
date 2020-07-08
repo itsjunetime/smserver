@@ -437,7 +437,7 @@ struct ContentView: View {
                         HStack {
                             Button(action: {
                                 self.loadFiles()
-                                //s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG")
+                                //s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
                             }) {
                                 Image(systemName: "goforward")
                                     .scaleEffect(1.5)

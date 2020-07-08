@@ -456,7 +456,7 @@
                     <br> <!--So that the first element doesn't fail to insert-->
                 </div>
                 <div class="textbox">
-                    <textarea id="sendbox" oninput="auto_grow(this)"></textarea>
+                    <textarea id="sendbox" oninput="auto_grow(this)" onKeyDown="if(event.keyCode==13) sendText();"></textarea>
                     <button onclick="sendText()" id="sendbutton"><span></span></button>
                 </div>
             </div>
