@@ -13,6 +13,7 @@
 
 - (void)launchMobileSMS;
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address;
+//- (void)sendIPCAttachment:(NSString *)body toAddress:(NSString *)address withAttachment:(NSString *)path;
 
 @end
 
