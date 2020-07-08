@@ -11,7 +11,7 @@
 
 @interface sender : NSObject
 
-//- (void)launchMobileSMS;
+- (void)launchMobileSMS;
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address;
 
 @end
