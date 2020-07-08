@@ -27,4 +27,12 @@
     [center callExternalMethod:@selector(handleText:) withArguments:@{@"body": body, @"address": address}];
 }
 
+/*- (void)sendIPCAttachment:(NSString *)body toAddress:(NSString *)address withAttachment:(NSString *)path {
+    
+    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
+    
+    [center callExternalMethod:@selector(sendAttachment:) withArguments:@{@"body": body, @"address": address, @"attachment": path}];
+    
+}*/
+
 @end
