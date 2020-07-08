@@ -89,7 +89,7 @@
         <div class="container">
             <div class="centered_box">
                 <h1>SMServer</h1>
-                <input class="pass_box" placeholder="Password here" id="input" autofocus><br>
+                <input class="pass_box" placeholder="Password here" id="input" onKeyDown="if(event.keyCode==13) submitPassword();" autofocus><br>
                 <button onclick="submitPassword()">⇢</button>
             </div>
         </div>
