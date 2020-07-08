@@ -1,19 +1,18 @@
 # API
 
-All non-image requests and profile image requests are made to \<ip>:\<port>/requests. Requests for attachment images are made to /attachments.
+All non-image requests and profile image requests are made to \<ip>:\<port>/requests. Requests for attachments are made to /attachments, and requests for profile images are made to /profile.
 
 All request parameters require a value, but only some of the values are consequential. However, the app will not interpret a parameter as a parameter unless it has an accompanying value -- For example, to retrieve the list of conversations, one must make a request to /requests with a parameter of 'chat', but 'GET /requests?chat' will return nothing. Something like 'GET /requests?chat=0' will return the correct information.
 
-# /requests requests:
+# `/requests` requests:
 
-All requests to /requests (besides 'image') return JSON information. Image returns a base64-encoded image string.
+All requests to `/requests` besides 'image') return JSON information.
 
-### person, num, offset
+### `person`, `num`, `offset`
 
 Retrieves the most recent $num messages to or from $person, offset by $offset.
 
-- person: parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_id will be the email address or phone number of an individual, or 'chat' + $arbitrary_number for a group chat. chat_identifiers for group chats and email addresses must be exact, and phone numbers must be in the form of '+\<country code>
-\<area code>\<number>'. e.g. "+16378269173". Using parantheses or dashes will mess it up and return nothing.
+- person: parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_identifier will be the email address or phone number of an individual, or 'chat' + $arbitrary_number for a group chat. chat_identifiers for group chats and email addresses must be exact, and phone numbers must be in the form of '+\<country code>\<area code>\<number>'. e.g. "+16378269173". Using parantheses or dashes will mess it up and return nothing.
 
 - num: Parameter is not necessary, but value is consequential. The value of this parameter must be an integer, and will be the number of most recent messages that are returned from the app. If it is 0, it will return all the messages to or from this person, and if it is not specified, it will use the default number of messages on the app, which is currently 100 at the time of writing this.
 
@@ -25,7 +24,7 @@ Example queries:
 - /requests?person=email@icloud.com&num=50&offset=100
 - /requests?person=person@gmail.com&offset=200
 
-### chat, num_chats
+### `chat`, `num_chats`
 
 Retrieves the latest $num_chats conversations
 
@@ -37,7 +36,7 @@ Example queries:
 - /requests?chat=0
 - /requests?chat=0&num_chats=80
 
-## name
+## `name`
 
 Retrieves the contact name that accompanies chat_identifier $name
 
@@ -47,17 +46,7 @@ Example queries:
 - /requests?name=email@icloud.com
 - /requests?name=+12761938272
 
-## image
-
-Retrieves the profile image that accompanies chat_identifier $image as a base64-encoded string. Soon, this will be shifted to a non-/requests URL, so that it can return pure image data, as opposed to encoded text (image data is parsed much quicker)
-
-- image: Parameter is necessary, and value is consequential. Value must be the chat_identifier for the contact whose image you want. Referense the 'name' field above on how to request it. 
-  
-Example queries:
-- /requests?image=email@icloud.com
-- /requests?image=+12761938272
-
-## send, to
+## `send`, `to`
 
 Sends a text/iMessage with a body of $send to $to
 
@@ -69,7 +58,7 @@ Example queries:
 - /requests?send=hello there!&to=+18479276635
 - /requests?send=This is a test:))&to=email@icloud.com
 
-## check
+## `check`
 
 Simply checks if any new texts have arrived since either 'chats' or 'check' was last called. Will return an array of all conversation chat_identifiers with new texts, or an empty array if there are no new texts.
 
@@ -78,15 +67,29 @@ Simply checks if any new texts have arrived since either 'chats' or 'check' was 
 Example queries:
 - /requests?check=0
 
-# /attachments requests
+# `/attachments` requests
 
-Requests to this URL return image data, which is why they have to be sent to a different url from the rest of the requests. 
+Requests to this URL return image data, which is why they have to be sent to a different url from /requests
 
-## path
+## `path`
 
 This simply contains the path, excluding the attachments base URL ('/private/var/mobile/Library/SMS/Attachments/') of the attachment that is requested. It will only return image files, not any other format. So far, I have tested .gif, .png, and .jpeg, so I can only definitely confirm that it will work with those.
 
--path: Parameter is necessary, and value is consequential. Value needs to be a string containing the path of the file to get, minus the attachments base URL (mentioned above). This should (theoretically) work with the raw path, but just to be safe, please replace all forward slashes ('/') with period, underscore, then another period ('._.'), since that is more sure to parse correctly. 
+- path: Parameter is necessary, and value is consequential. Value needs to be a string containing the path of the file to get, minus the attachments base URL (mentioned above). This should (theoretically) work with the raw path, but just to be safe, please replace all forward slashes ('/') with period, underscore, then another period ('._.'), since that is more sure to parse correctly. It also filters out "../" to prevent LFI through this method.
 
 Example queries:
 - /attachments?path=00.\_.D8.\_.172BC809-BA7A-118D-18BCF0DEF._.IMG_9841.JPEG
+
+# `/profile` requests
+
+Requests to this URL return image data, which is why they have to be sent to a different URL from `/requests`
+
+## `chat_id`
+
+This contains the chat_id of the person that the request is trying to get the profile picture for. The chat_id should be in the same format as is specified in the `person` parameter above.
+
+- chat_id: Parameter is necessary, and value is consequential. As stated above, it has a specified format that it should be in. 
+
+Example queries:
+
+- /profile?chat_id=+15204458272
