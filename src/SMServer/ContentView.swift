@@ -15,16 +15,16 @@ struct ContentView: View {
     let server = GCDWebServer()
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
-    @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-    @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-    @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
+    //@State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
+    //@State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
+    //@State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-    @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
+    //@State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
     
-    @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-    @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-    @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
+    //@State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
+    //@State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
+    //@State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -65,6 +65,7 @@ struct ContentView: View {
     """
     
     func loadServer(port_num: UInt16) {
+        /// This starts the server at port $port_num
         
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
             if self.debug {
@@ -144,6 +145,7 @@ struct ContentView: View {
         })
         
         do {
+            let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
         } catch {
             print("failed to start server. fat rip right there.")
@@ -154,6 +156,8 @@ struct ContentView: View {
     }
     
     func startBackgroundTask() {
+        /// This starts the background task... I may deprecate this soon and put it in like SceneDelegate or AppDelegate
+        
         backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
             //self.stopServer()
             UIApplication.shared.endBackgroundTask(self.backgroundTask)
@@ -164,6 +168,12 @@ struct ContentView: View {
     }
     
     func loadFiles() {
+        /// This sets the website page files to local variables
+        
+        let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
+        let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
+        let server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
+        
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
         let c = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
         let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html") {
@@ -171,6 +181,7 @@ struct ContentView: View {
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
                     .replacingOccurrences(of: "const num_texts_to_load;", with: "const num_texts_to_load = \(default_num_messages);")
                     .replacingOccurrences(of: "const num_chats_to_load;", with: "const num_chats_to_load = \(default_num_chats);")
+                    .replacingOccurrences(of: "const timeout;", with: "const timeout = \(server_ping)000;")
                 self.main_page_style = try String(contentsOf: c, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
             }
@@ -181,7 +192,9 @@ struct ContentView: View {
     }
     
     func checkIfAuthenticated(ras: String) -> Bool {
-        require_authentication = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
+        /// This checks if the ip address $ras has already authenticated with the host
+        
+        let require_authentication = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
         
         if !require_authentication { return true }
         
@@ -197,6 +210,8 @@ struct ContentView: View {
     }
     
     func encodeToJson(object: Any, title: String) -> String {
+        /// This encodes $object (normally like an array of dictionary or dictionary of dictionaries) to JSON, with the title of $title
+        
         guard let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted) else {
             return ""
         }
@@ -206,13 +221,17 @@ struct ContentView: View {
     }
     
     func parseAndReturn(params: [String:String], address: String = "") -> String {
+        /// This function handles all the requests to the /requests subdirectory, and returns stuff like conversations, messages, and can send texts.
+        
         if self.debug {
             print("parsing:")
             print(params)
         }
         
+        let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
+        
         if Array(params.keys)[0] == "password" {
-            self.debug ? print("comparing " + Array(params.values)[0] + " to " + self.password) : nil
+            self.debug ? print("comparing " + Array(params.values)[0] + " to " + password) : nil
             if Array(params.values)[0] == password {
                 var already_in = false;
                 for i in authenticated_addresses {
@@ -232,6 +251,9 @@ struct ContentView: View {
         if !self.checkIfAuthenticated(ras: address) {
             return ""
         }
+        
+        let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
+        let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
         
         var person = ""
         var num_texts = 0
@@ -255,7 +277,7 @@ struct ContentView: View {
             
             person = f == "person" ? Array(params.values)[0] : (s == "person" ? Array(params.values)[1] : Array(params.values)[2])
             
-            num_texts = default_num_chats
+            num_texts = default_num_messages
             if f == "num" || s == "num" || t == "num" {
                 num_texts = (f == "num" ? Int(Array(params.values)[0]) : (s == "num" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? default_num_chats
             }
@@ -325,6 +347,8 @@ struct ContentView: View {
     }
     
     func stopServer() {
+        /// Stops the server & and de-authenticates all ip addresses
+        
         self.server.stop()
         self.debug ? print("Stopped server") : nil
         self.authenticated_addresses = [String]()
@@ -332,12 +356,16 @@ struct ContentView: View {
     }
     
     func sendText(body: String, address: [String]) {
+        /// Sends a text with the body of $body and to the address $address[0]. Don't quite know why address is an array; need to fix that.
+        
         self.debug ? print("body: \(body), address[0]: \(address[0])") : nil
         
         s.sendIPCText(body, toAddress: address[0])
     }
     
     func getWiFiAddress() -> String? {
+        /// Gets the private IP of the host device
+        
         var address : String?
 
         // Get list of all interfaces on the local machine:
@@ -372,10 +400,11 @@ struct ContentView: View {
     }
     
     var body: some View {
+        let port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
         
         return NavigationView {
                 VStack {
-                    Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(self.port) in your browser to view your messages!")
+                    Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
                         .font(Font.custom("smallTitle", size: 22))
                         .padding()
                     
@@ -427,7 +456,7 @@ struct ContentView: View {
                             Spacer().frame(width: 30)
                             
                             Button(action: {
-                                self.server_running ? nil : self.loadServer(port_num: UInt16(self.port)!)
+                                self.server_running ? nil : self.loadServer(port_num: UInt16(port)!)
                                 UserDefaults.standard.setValue(true, forKey: "has_run")
                             }) {
                                 Image(systemName: "play.fill")
@@ -457,7 +486,7 @@ struct ContentView: View {
         }
         .onAppear() {
             self.loadFiles()
-            self.start_on_load ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
+            UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
             //s.launchMobileSMS()
         }
     }
