@@ -487,7 +487,7 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
-            //s.launchMobileSMS()
+            s.launchMobileSMS()
         }
     }
 }
