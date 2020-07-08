@@ -12,12 +12,16 @@ import SwiftUI
 
 class ChatDelegate {
     var debug: Bool = UserDefaults.standard.object(forKey: "debug") == nil ? false : UserDefaults.standard.object(forKey: "debug") as! Bool
-    @State var past_latest_texts = [String:[String:[String:String]]]() /// Should be in the format of [address: [Chats]]
+    @State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
+    //@State var past_latest_texts = ["ex": [["ROWID": "0", "test": "example", "date_read": "0"]]]
+    @State var past_latest_texts_hashes = 0
     
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     
     func createConnection(connection_string: String = "/private/var/mobile/Library/SMS/sms.db") -> OpaquePointer? {
+        /// This simply returns an opaque pointer to the database at $connection_string, allowing for sqlite connections.
+        
         var db: OpaquePointer?
         let connection_url = URL(fileURLWithPath: connection_string)
         guard sqlite3_open(connection_url.path, &db) == SQLITE_OK else {
@@ -33,6 +37,7 @@ class ChatDelegate {
     }
     
     func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0) -> [[String:String]] {
+        /// This executes an SQL query, specifically 'SELECT $columns from $table $condition LIMIT $offset, $num_items', on $db
         
         var sqlString = "SELECT "
         for i in columns {
@@ -112,6 +117,7 @@ class ChatDelegate {
     }
     
     func selectFromSqlWithId(db: OpaquePointer?, columns: [String], table: String, identifier: String, condition: String = "", num_items: Int = 0) -> [String: [String:String]] {
+        /// This does the same thing as selectFromSql, but returns a dictionary, for O(1) access, instead of an array, for when it doesn't need to be sorted.
         
         var sqlString = "SELECT "
         for i in columns {
@@ -195,6 +201,8 @@ class ChatDelegate {
     }
     
     func parsePhoneNum(num: String) -> String {
+        /// This returns a string with SQL wildcards so that you can enter a phone number (e.g. +12837291837) and match it with something like +1 (283) 729-1837.
+        
         let new_num = num.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
         if new_num.count == 0 {
             return ""
@@ -213,6 +221,8 @@ class ChatDelegate {
     }
     
     func getDisplayName(chat_id: String) -> String {
+        /// Gets the first + last name of a contact with the phone number or email of $chat_id
+        
         var db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         
         var display_name_array = [[String:String]]()
@@ -243,6 +253,8 @@ class ChatDelegate {
     }
     
     func getDisplayNameWithDb(db: OpaquePointer?, chat_id: String) -> String {
+        /// This does the same thing as getDisplayName, but with the database as an argument. This allows batch display name fetching to be much faster
+        /// than if you had to remake the database for each display name that you wanted to fetch.
         
         var display_name_array = [[String:String]]()
         
@@ -263,6 +275,8 @@ class ChatDelegate {
     }
     
     func loadMessages(num: String, num_items: Int, offset: Int = 0) -> [[String:String]] {
+        /// This loads the latest $num_items messages from/to $num, offset by $offset.
+        
         var db = createConnection()
         
         var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
@@ -302,6 +316,8 @@ class ChatDelegate {
     }
     
     func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:String]] {
+        /// This loads the most recent $num_to_load conversations, offset by $offset
+        
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
@@ -366,6 +382,8 @@ class ChatDelegate {
     }
     
     func returnImageData(chat_id: String) -> Data {
+        /// This returns the profile picture for someone with the phone number or email $chat_id as pure image data
+        
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
@@ -387,6 +405,7 @@ class ChatDelegate {
     }
     
     func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
+        /// This does the same thing as returnImageDB, but with the contact_db and image_db as arguments, allowing for optimized batch profile image fetching
         
         var docid = [[String:String]]()
         
@@ -448,14 +467,50 @@ class ChatDelegate {
         return pngdata
     }
     
-    func setFirstTexts(address: String) {
+    func setFirstTextsHash(address: String) {
+        let inner = getLatestTexts()
+        
+        var hasher = Hasher()
+        hasher.combine(inner)
+        let hash = hasher.finalize()
+        
+        past_latest_texts_hashes = hash
+    }
+    
+    func checkLatestTextsHash(address: String) -> Bool {
+        
+        if past_latest_texts_hashes == 0 {
+            return true
+        }
+        
+        let new = getLatestTexts()
+        
+        var hasher = Hasher()
+        hasher.combine(new)
+        let hash = hasher.finalize()
+        
+        if past_latest_texts_hashes != hash {
+            return true
+        } else {
+            return false
+        }
+        
+    }
+    
+    func setFirstTexts(address: String) { /// WHAT. WHAT IS THE ISSUE. WHY CAN I NOT INSERT NESTED DICTIONARIES.
+        /// This just sets a variable for the latest texts that one has received, so that it can be compared against
+        /// whenever something pings the server to check if they have received more text messages
+        
         past_latest_texts[address] = getLatestTexts();
     }
     
     func checkLatestTexts(address: String) -> [String] {
+        /// This just checks if the host device has received more texts ever since the ip address $address last pinged the host
+        
         self.debug ? print("Ran checkLatestTexts(\(address))") : nil
         var db = createConnection()
         let latest_texts = getLatestTexts()
+        //let plt = past_latest_texts
         let ap_latest_texts = past_latest_texts[address]
         if latest_texts == ap_latest_texts {
             self.debug ? print("They're identical.") : nil
@@ -469,15 +524,20 @@ class ChatDelegate {
             for i in 0..<string.count {
                 ret.append(string[i]["chat_identifier"] ?? "chat_identifier not found")
             }
+            
+            self.past_latest_texts[address] = latest_texts
+            
+            self.debug ? print(past_latest_texts) : nil
+            
             return ret
         }
         
         var new_texts: [String] = [] /// Will just contain a list of all the chats that have new messages since they've last checked
         
-        for i in Array(latest_texts.keys) {
-            self.debug ? print("checking between \(String(describing: ap_latest_texts?[i]?["text"])) and \(String(describing: latest_texts[i]?["text"]))") : nil
+        for i in 0..<latest_texts.count {
+            self.debug ? print("checking between \(String(describing: ap_latest_texts?[i]["text"])) and \(String(describing: latest_texts[i]["text"]))") : nil
             if latest_texts[i] != ap_latest_texts?[i] {
-                if let check_message_id = latest_texts[i]?["ROWID"] {
+                if let check_message_id = latest_texts[i]["ROWID"] {
                     let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(check_message_id))")
                     
                     new_texts.append(append_num[0]["chat_identifier"] ?? "")
@@ -501,10 +561,12 @@ class ChatDelegate {
         return new_texts;
     }
     
-    func getLatestTexts() -> [String: [String:String]] {
+    func getLatestTexts() -> [[String:String]] {
+        /// This simply returns the most recent text from every existing conversation
+        
         var db = createConnection()
         
-        let latest_texts = selectFromSqlWithId(db: db, columns: ["ROWID", "text", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
+        let latest_texts = selectFromSql(db: db, columns: ["ROWID", "text", "date_read"], table: "message", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
         
         if sqlite3_close(db) != SQLITE_OK {
             print("WARNING: error closing database")
@@ -515,7 +577,9 @@ class ChatDelegate {
         return latest_texts
     }
     
-    func getAttachmentFromMessage(mid: String) -> [[String]] { /// So this will just return the partial file name/path & mime_type
+    func getAttachmentFromMessage(mid: String) -> [[String]] {
+        /// This returns the file path for all attachments associated with a certain message with the message_id of $mid
+        
         let db = createConnection()
         let file = selectFromSql(db: db, columns: ["filename", "mime_type", "hide_attachment"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
         
@@ -537,6 +601,8 @@ class ChatDelegate {
     }
     
     func getAttachmentType(path: String) -> String {
+        /// This gets the file type of the attachment at $path
+        
         let new_path = path.replacingOccurrences(of: "._.", with: "/")
         
         let db = createConnection()
@@ -551,7 +617,9 @@ class ChatDelegate {
     }
     
     func getAttachmentDataFromPath(path: String) -> Data {
-        let parsed_path = path.replacingOccurrences(of: "._.", with: "/")
+        /// This returns the pure data of a file (attachment) at $path
+        
+        let parsed_path = path.replacingOccurrences(of: "._.", with: "/").replacingOccurrences(of: "../", with: "") ///Prevents LFI
         
         do {
             let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ContentView.imageStoragePrefix + parsed_path))
