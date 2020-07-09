@@ -158,7 +158,6 @@
 			isa = PBXGroup;
 			children = (
 				3CD012E3247CD42500973951 /* SMServer.entitlements */,
-				3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */,
 				3C760E86245BCFE000EF24FE /* AppDelegate.swift */,
 				3C760E88245BCFE000EF24FE /* SceneDelegate.swift */,
 				3C760E8A245BCFE000EF24FE /* ContentView.swift */,
@@ -167,6 +166,7 @@
 				3C7CFF84246C8F8D0061749A /* Obj.m */,
 				3C6A5FB224B3E94600102AE2 /* Obj.h */,
 				3C7CFF7D246BC6A80061749A /* SMServer-Bridging-Header.h */,
+				3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */,
 				3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */,
 				3C760E8C245BCFE100EF24FE /* Assets.xcassets */,
 				3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */,
@@ -663,7 +663,7 @@
 					"-ObjC",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "Ian-Welker.SMServer";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianwelker.smserver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "SMServer/SMServer-Bridging-Header.h";
@@ -707,7 +707,7 @@
 					"-ObjC",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "Ian-Welker.SMServer";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ianwelker.smserver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "SMServer/SMServer-Bridging-Header.h";
