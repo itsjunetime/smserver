@@ -185,7 +185,7 @@ p {
     font-family: var(--main-font);
     width: max-content;
     max-width: 40vw;
-    padding: 5px 10px 2px 8px;
+    padding: 7px 10px 4px 8px;
     margin: 0px 10px 20px 10px;
     font-weight: 300;
     font-size: 18px;
@@ -195,6 +195,14 @@ p {
 }
 .text a {
     color: dodgerblue;
+}
+.sender {
+    margin-left: 14px;
+    margin-bottom: -14px;
+}
+.sender p {
+    font-size: 14px;
+    font-weight: lighter;
 }
 .is_from_me {
     float: right;
