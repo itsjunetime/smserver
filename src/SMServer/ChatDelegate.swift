@@ -351,8 +351,11 @@ class ChatDelegate {
         /// This loads the latest $num_items messages from/to $num, offset by $offset.
         
         var db = createConnection()
+        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         
-        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+        
+        let is_group = num.prefix(4) == "chat"
         
         for i in 0..<messages.count {
             if messages[i]["cache_has_attachments"] == "1" {
@@ -364,13 +367,26 @@ class ChatDelegate {
                     print(a)
                 }
                 for i in 0..<a.count {
-                    file_string += a[i][0]
-                    file_string += i != a.count ? ":" : ""
-                    type_string += a[i][1]
-                    type_string += i != a.count ? ":" : ""
+                    file_string += a[i][0] + (i != a.count ? ":" : "")
+                    //file_string += i != a.count ? ":" : ""
+                    type_string += a[i][1] + (i != a.count ? ":" : "")
+                    //type_string += i != a.count ? ":" : ""
                 }
                 messages[i]["attachment_file"] = file_string
                 messages[i]["attachment_type"] = type_string
+            }
+            
+            if is_group && messages[i]["is_from_me"] == "0" {
+                
+                let handle = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID is \(messages[i]["handle_id"]!)", num_items: 1)
+                
+                if handle.count > 0 {
+                    let name = getDisplayNameWithDb(db: contact_db, chat_id: handle[0]["id"]!)
+                    
+                    messages[i]["sender"] = name
+                }
+            } else {
+                messages[i]["sender"] = "nil"
             }
         }
         
@@ -564,7 +580,7 @@ class ChatDelegate {
         return pngdata
     }
     
-    func setFirstTextsHash(address: String) {
+    /*func setFirstTextsHash(address: String) {
         let inner = getLatestTexts()
         
         var hasher = Hasher()
@@ -592,7 +608,7 @@ class ChatDelegate {
             return false
         }
         
-    }
+    }*/
     
     func setFirstTexts(address: String) { /// WHAT. WHAT IS THE ISSUE. WHY CAN I NOT INSERT NESTED DICTIONARIES.
         /// This just sets a variable for the latest texts that one has received, so that it can be compared against
