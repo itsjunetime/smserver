@@ -441,7 +441,7 @@ struct ContentView: View {
                                 self.loadFiles()
                                 //s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
                                 self.alert_connected = true
-                                self.chat_delegate.printLog()
+                                self.s.launchMobileSMS()
                             }) {
                                 Image(systemName: "goforward")
                                     .scaleEffect(1.5)
@@ -497,8 +497,8 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
-            self.has_root = (self.s.launchMobileSMS() == uid_t(0))
-            self.show_root_alert = true
+            //self.has_root = (self.s.launchMobileSMS() == uid_t(0))
+            //self.show_root_alert = self.debug
         }.alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
         })
