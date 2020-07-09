@@ -15,22 +15,16 @@ struct ContentView: View {
     let server = GCDWebServer()
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
-    //@State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-    //@State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-    //@State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
+    let prefix = "SMServer: "
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-    //@State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
-    
-    //@State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-    //@State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-    //@State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
     @State var view_settings = false
     @State var server_running = false
     @State var authenticated_addresses = [String]()
+    @State var alert_connected = false
     
     let chat_delegate = ChatDelegate()
     let s = sender()
@@ -79,7 +73,7 @@ struct ContentView: View {
                 print(request.remoteAddressString)
             }
             
-            self.debug ? print("entered default handler") : nil
+            self.debug ? print(prefix + "entered default handler") : nil
             
             if self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
                 return GCDWebServerDataResponse(html: self.main_page)
@@ -148,7 +142,7 @@ struct ContentView: View {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
         } catch {
-            print("failed to start server. fat rip right there.")
+            print(prefix + "failed to start server. fat rip right there.")
         }
         self.server_running = server.isRunning
         
@@ -186,9 +180,13 @@ struct ContentView: View {
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
             }
             catch {
-                print("WARNING: ran into an error with loading the files, try again.")
+                print(prefix + "WARNING: ran into an error with loading the files, try again.")
             }
         }
+    }
+    
+    func checkIfConnected() -> Bool {
+        return chat_delegate.checkIfConnected()
     }
     
     func checkIfAuthenticated(ras: String) -> Bool {
@@ -224,14 +222,14 @@ struct ContentView: View {
         /// This function handles all the requests to the /requests subdirectory, and returns stuff like conversations, messages, and can send texts.
         
         if self.debug {
-            print("parsing:")
+            print(prefix + "parsing:")
             print(params)
         }
         
         let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
         
         if Array(params.keys)[0] == "password" {
-            self.debug ? print("comparing " + Array(params.values)[0] + " to " + password) : nil
+            self.debug ? print(prefix + "comparing " + Array(params.values)[0] + " to " + password) : nil
             if Array(params.values)[0] == password {
                 var already_in = false;
                 for i in authenticated_addresses {
@@ -285,7 +283,7 @@ struct ContentView: View {
                 offset = (f == "offset" ? Int(Array(params.values)[0]) : (s == "offset" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? 0
             }
             
-            self.debug ? print("selecting person: " + person + ", num: " + String(num_texts)) : nil
+            self.debug ? print(prefix + "selecting person: " + person + ", num: " + String(num_texts)) : nil
             
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
@@ -306,8 +304,8 @@ struct ContentView: View {
             }
             
             if self.debug {
-                print("num chats: \(num_texts)")
-                print("chats offset: \(chats_offset)")
+                print(prefix + "num chats: \(num_texts)")
+                print(prefix + "chats offset: \(chats_offset)")
             }
             
             let chats_array = chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
@@ -334,13 +332,15 @@ struct ContentView: View {
             
             let lt = encodeToJson(object: chat_delegate.checkLatestTexts(address: address), title: "chat_ids")
             if self.debug  {
-                print("lt:")
+                print(prefix + "lt:")
                 print(lt)
             }
             return lt
             
+        } else if f == "log" {
+            return chat_delegate.printLog()
         } else {
-            self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
+            self.debug ? print(prefix + "We haven't implemented this functionality yet, sorry :/") : nil
         }
         
         return ""
@@ -350,7 +350,7 @@ struct ContentView: View {
         /// Stops the server & and de-authenticates all ip addresses
         
         self.server.stop()
-        self.debug ? print("Stopped server") : nil
+        self.debug ? print(prefix + "Stopped server") : nil
         self.authenticated_addresses = [String]()
         server_running = server.isRunning
     }
@@ -358,7 +358,7 @@ struct ContentView: View {
     func sendText(body: String, address: [String]) {
         /// Sends a text with the body of $body and to the address $address[0]. Don't quite know why address is an array; need to fix that.
         
-        self.debug ? print("body: \(body), address[0]: \(address[0])") : nil
+        self.debug ? print(prefix + "body: \(body), address[0]: \(address[0])") : nil
         
         s.sendIPCText(body, toAddress: address[0])
     }
@@ -438,11 +438,18 @@ struct ContentView: View {
                             Button(action: {
                                 self.loadFiles()
                                 //s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
+                                self.alert_connected = true
+                                chat_delegate.printLog()
                             }) {
                                 Image(systemName: "goforward")
                                     .scaleEffect(1.5)
                                     .foregroundColor(Color.purple)
-                            }
+                            }.alert(isPresented: $alert_connected, content: {
+                                    Alert(title: Text("Checking connection to sms.db"),
+                                            message: Text( self.checkIfConnected() ? "You can connect to the database." :
+                                            "You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact the developer about this issue."
+                                    ))
+                            })
                             
                             Spacer().frame(width: 30)
                             
