@@ -25,6 +25,8 @@ struct ContentView: View {
     @State var server_running = false
     @State var authenticated_addresses = [String]()
     @State var alert_connected = false
+    @State var has_root = false
+    @State var show_root_alert = false
     
     let chat_delegate = ChatDelegate()
     let s = sender()
@@ -495,8 +497,11 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
-            self.s.launchMobileSMS()
-        }
+            self.has_root = (self.s.launchMobileSMS() == uid_t(0))
+            self.show_root_alert = true
+        }.alert(isPresented: $show_root_alert, content: {
+            Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
+        })
     }
 }
 
