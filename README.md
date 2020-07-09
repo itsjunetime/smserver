@@ -16,10 +16,11 @@
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
-- The app only has limited background time (about 1 - 3 minutes), so after that much time of the app being suspended/backgrounded, the server will be killed & you'll need to re-enter the app and restart it.
+- The app only has limited background time (about 1 - 3 minutes), so after that much time of the app being suspended/backgrounded, the server will be killed & you'll need to re-enter the app and restart it. Fixing this is a major priority and I'm hoping to enable unlimited background time before a public release.
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
+- AppSync Unified (probably) - Without this, the IPA may fail to install (according to early reports). I'll look into removing this a dependency, but that's not a major priority right now.
 
 ## To Install
 This is definitely still in Beta stages; there are still issues and many features that need to be implemented. You have two options for installing: The provided IPA or building from source. If you want to use the IPA, simply download it from the `ipa` subdirectory here. To build from source:
