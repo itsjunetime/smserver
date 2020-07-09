@@ -8,8 +8,6 @@
 	<true/>
 	<key>com.apple.private.security.no-container</key>
 	<true/>
-	<key>task_for_pid-allow</key>
-	<true/>
 	<key>com.apple.private.security.storage.Messages</key>
 	<true/>
 	<key>com.apple.private.security.no-sandbox</key>
