@@ -8,28 +8,17 @@
 
 #import <Foundation/Foundation.h>
 #import "MRYIPCCenter.h"
-//#include "CPDistributedMessagingCenter.h"
-//#include "rocketbootstrap.h"
 
 #import "Obj.h"
 
 @implementation sender
 
 -(uid_t)launchMobileSMS {
-    //[[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.apple.MobileSMS" suspended:YES];
     
     setuid(0);
     
-    
-    
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
     [center callExternalMethod:@selector(launchSMS) withArguments:nil];
-    
-    /*NSLog(@"uid now %d", getuid());
-    CPDistributedMessagingCenter *messageCenter = [CPDistributedMessagingCenter centerNamed:@"com.jakeashacks.rootme"];
-    rocketbootstrap_distributedmessagingcenter_apply(messageCenter);
-    [messageCenter sendMessageAndReceiveReplyName:@"rootme" userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%d", getpid()] forKey:@"pid"]];
-    NSLog(@"uid after %d", getuid());*/
     
     return getuid();
 }

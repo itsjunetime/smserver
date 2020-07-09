@@ -204,7 +204,8 @@
                 myNode.appendChild(more)
                 
                 printed_texts = texts.length
-
+                
+                var is_group = chat_id.substring(0, 4) == "chat";
                 
                 for (var i = 0; i < texts.length; i++) {
                     var doc = document.getElementsByClassName("text-content")[0];
@@ -213,14 +214,13 @@
                         t.setAttribute("id", "more_texts");
                     }
                     
-                    var classes = "text";
-                    if (texts[i].is_from_me === "0") {
+                    var classes = "text"
+                    if (texts[i].is_from_me === "0") { /// I know that I could use ternary; it just doesn't play nice if i do that, for some reason
                         classes += " is_from_them";
-                        t.setAttribute("class", classes);
                     } else {
                         classes += " is_from_me";
-                        t.setAttribute("class", classes);
                     }
+                    t.setAttribute("class", classes);
                     
                     t.innerHTML = ''
                     
@@ -268,6 +268,15 @@
                     }
                                                 
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
+
+                    if (is_group && texts[i].is_from_me == "0" && i != texts.length - 1 && texts[i].sender != texts[i + 1].sender){
+                        var from = document.createElement("div");
+
+                        from.innerHTML = "<p>" + texts[i].sender + "</p>";
+                        from.setAttribute("class", "sender");
+                                                
+                        doc.insertBefore(from, document.getElementById("moretextsbutton").nextSibling)
+                    }
                 }
                                                   
                 var scrollDoc = document.getElementById("text-content").lastChild
@@ -311,14 +320,13 @@
                         t.setAttribute("id", "more_texts");
                     }
                     
-                    var classes = "text";
-                    if (texts[i].is_from_me === "0") {
+                    var classes = "text"
+                    if (texts[i].is_from_me === "0") { /// I know that I could use ternary; it just doesn't play nice if i do that, for some reason
                         classes += " is_from_them";
-                        t.setAttribute("class", classes);
                     } else {
                         classes += " is_from_me";
-                        t.setAttribute("class", classes);
                     }
+                    t.setAttribute("class", classes);
                     
                     t.innerHTML = ''
                     
@@ -366,6 +374,15 @@
                     }
                                               
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
+
+                    if (is_group && texts[i].is_from_me == "0" && i != texts.length - 1 && texts[i].sender != texts[i + 1].sender){
+                        var from = document.createElement("div");
+
+                        from.innerHTML = "<p>" + texts[i].sender + "</p>";
+                        from.setAttribute("class", "sender");
+                                                
+                        doc.insertBefore(from, document.getElementById("moretextsbutton").nextSibling)
+                    }
                 }
             }
 
