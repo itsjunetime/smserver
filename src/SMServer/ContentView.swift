@@ -73,7 +73,7 @@ struct ContentView: View {
                 print(request.remoteAddressString)
             }
             
-            self.debug ? print(prefix + "entered default handler") : nil
+            self.debug ? print("entered default handler") : nil
             
             if self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
                 return GCDWebServerDataResponse(html: self.main_page)
@@ -114,8 +114,8 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: "")
             }
             
-            let dataResponse = chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
-            let type = chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
+            let dataResponse = self.chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
+            let type = self.chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
             
             return GCDWebServerDataResponse(data: dataResponse, contentType: type)
         })
@@ -126,7 +126,7 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: "")
             }
             
-            return GCDWebServerDataResponse(data: chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
+            return GCDWebServerDataResponse(data: self.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
@@ -311,7 +311,7 @@ struct ContentView: View {
             let chats_array = chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
             let chats = encodeToJson(object: chats_array, title: "chats")
             DispatchQueue.main.async {
-                chat_delegate.setFirstTexts(address: address);
+                self.chat_delegate.setFirstTexts(address: address);
             }
             return chats
             
@@ -439,7 +439,7 @@ struct ContentView: View {
                                 self.loadFiles()
                                 //s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
                                 self.alert_connected = true
-                                chat_delegate.printLog()
+                                self.chat_delegate.printLog()
                             }) {
                                 Image(systemName: "goforward")
                                     .scaleEffect(1.5)
@@ -495,7 +495,7 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
-            s.launchMobileSMS()
+            self.s.launchMobileSMS()
         }
     }
 }
