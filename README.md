@@ -90,5 +90,19 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 - If you install the .deb, the app always claims you have new messages. I suspect this is an issue with the beta version of Xcode which I built it on.
 - When you send an attachment, the filename is lost along the way, and it is given a random new name (a 32-length string of random characters). This will be fixed soon.
 
+### To file an issue:
+Please include the following information:
+ - Device model
+ - Jailbreak
+ - iOS Version
+ - If you installed the .deb or built from source (and if from source, .ipa or .deb)
+ - A detailed description of what failed
+ - A crash report if it crashed and you have an app like cr4shed to collect those
+
+Also, if the app did not crash, but rather had an issue after it was already up and running, please do the following: 
+ - Install the package 'oslog' from your package manager
+ - ssh into your device or open a terminal app, and run: `oslog --info | grep -i "smserver_app" > /var/mobile/Documents/smserver.log`
+ - DM me the file at `/var/mobile/Documents/smserver.log` on your device at u/Janshai on reddit. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site.
+
 ## Companion App
 There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, much more customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
