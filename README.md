@@ -10,6 +10,7 @@
 - Viewing image attachments in browser
 - Saving image attachments to device
 - Sending iMessages remotely, without on-device interaction
+- Sending all types of attachments from desktop 
 - Authentication to protect against spying eyes
 - Ability to permanently change passwords and default values
 - Background operation of server (app doesn't always have to be in the foreground)  
@@ -20,19 +21,39 @@
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
-- AppSync Unified (probably) - Without this, the IPA may fail to install (according to early reports). I'll look into removing this a dependency, but that's not a major priority right now.
+- AppSync Unified (probably) - Without this, the .deb may fail to install (according to early reports). I'll look into removing this a dependency, but that's not a major priority right now.
 
 ## To Install
-This is definitely still in Beta stages; there are still issues and many features that need to be implemented. You have two options for installing: The provided IPA or building from source. If you want to use the IPA, simply download it from the `ipa` subdirectory here. To build from source:
+This is definitely still in Beta stages; there are still issues and many features that need to be implemented. You have two options for installing: Using the provided .deb or building from source. If you want to use the .deb, simply download it from the `package` subdirectory here. 
+
+### To build from source and install as regular app:
 
 1. Clone this repository
-2. cd into the directory where the podfile is installed
-3. If cocoapods are not installed, run 'sudo gem install cocoapods'
-4. Run 'pod intall'
-5. Open the .xcworkspace file in Xcode
-6. Build and install the project!
+1. cd into the directory where the podfile is installed
+1. If cocoapods are not installed, run `sudo gem install cocoapods`
+1. Run `pod intall`
+1. Open the .xcworkspace file in Xcode
+1. Connect your device
+1. Build and install the project!
 
-I would recommend building it yourself, since the IPA (under `ipa`) may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the IPA should be updated rather frequently, so it is also safe to use.
+### To build from source and install as .deb (system app):
+
+1. Clone this repository
+1. cd into the directory where the podfile is installed
+1. If cocoapods are not installed, run `sudo gem install cocoapods`
+1. Run `pod install`
+1. Open the .xcworkspace file in Xcode
+1. In the 'product' section of the menu bar, run 'clean build folder', then 'build for > running', then 'archive'
+1. When the archive window appears, right click on the archive and select 'show in finder'
+1. Right click on the .xcarchive file, and select 'show package contents'. 
+1. Navigate to 'products' > 'Applications', and copy 'SMServer.app'
+1. Place the 'SMServer.app' package in the 'package/deb/Applications/' subdirectory of this cloned repository
+1. If you do not have `dpkg`, run `brew install dpkg` (if you don't have homebrew installed yet, then install that, and then run this step.)
+1. cd into the directory where the 'deb' folder is located
+1. Run `dpkg -b deb`, assuming that the 'deb' folder is still named 'deb'. This will produce a package named 'deb.deb'. You can rename it to whatever you want.
+1. Install the package that the last step created just as you would install a tweak.
+
+I would recommend building it yourself, since the .deb (under `package`) may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the .deb should be updated rather frequently, so it is also safe to use.
 
 ## To run
 
@@ -49,15 +70,15 @@ I would recommend building it yourself, since the IPA (under `ipa`) may not alwa
 - [x] Dynamic loading of texts
 - [x] Send texts from browser without on-device interaction
 - [x] View all attachments in browser
-- [ ] Send images/attachments from browser
+- [x] Send images/attachments from browser
 - [x] Automatic checking for new messages
 - [ ] Notifications on client whenever new messages arrive
 - [x] Display notifier for which conversations have unread messages
 - [x] Persistent defaults
+- [ ] Allow the server to run in the background - This has somewhat been implemented. 
 
 ### Future plans
 - [ ] Convenient Custom CSS Loading
-- [ ] Allow the server to run in the background - This has somewhat been implemented. 
 - [ ] Search through messages from browser
 - [ ] Start new conversations from browser
 
@@ -66,7 +87,8 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 
 ### Acknowledged current issues:
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
-- If you install the IPA, the app always claims you have new messages. I suspect this is an issue with the beta version of Xcode which I built it on.
+- If you install the .deb, the app always claims you have new messages. I suspect this is an issue with the beta version of Xcode which I built it on.
+- When you send an attachment, the filename is lost along the way, and it is given a random new name (a 32-length string of random characters). This will be fixed soon.
 
 ## Companion App
 There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, much more customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
