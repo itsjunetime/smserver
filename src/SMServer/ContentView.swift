@@ -9,10 +9,10 @@
 import SwiftUI
 import GCDWebServer
 import SQLite3
-import MessageUI
+import MobileCoreServices
 
 struct ContentView: View {
-    let server = GCDWebServer()
+    let server = GCDWebUploader(uploadDirectory: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.path)
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
     let prefix = "SMServer: "
@@ -63,6 +63,8 @@ struct ContentView: View {
     func loadServer(port_num: UInt16) {
         /// This starts the server at port $port_num
         
+        self.s.launchMobileSMS()
+        
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
             if self.debug {
                 print("headers:")
@@ -111,7 +113,6 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/attachments", request: GCDWebServerRequest.self, processBlock: { request in
-            
             if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
                 return GCDWebServerDataResponse(text: "")
             }
@@ -129,6 +130,42 @@ struct ContentView: View {
             }
             
             return GCDWebServerDataResponse(data: self.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
+        })
+        
+        server.addHandler(forMethod: "POST", path: "/uploads", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
+            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+                return GCDWebServerDataResponse(text: "")
+            }
+            
+            let req = (request as! GCDWebServerMultiPartFormRequest)
+            
+            var body = ""
+            var address = ""
+            var files = [String]()
+            
+            for i in Array(req.arguments) {
+                if (i.string?.prefix(5) == "text:") {
+                    body = String(i.string?.suffix(i.string!.count - 5) ?? "")
+                } else if (i.string?.prefix(5) == "chat:") {
+                    address = String(i.string?.suffix(i.string!.count - 5) ?? "")
+                }
+            }
+            
+            for i in req.files {
+                let unmanagedFileUTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, i.mimeType as CFString, nil)?.takeRetainedValue()
+                let fileExtension = UTTypeCopyPreferredTagWithClass((unmanagedFileUTI)!, kUTTagClassFilenameExtension)?.takeRetainedValue()
+                let newFilePath: String = i.temporaryPath + "." + (fileExtension! as String)
+                do {
+                    try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
+                } catch {
+                    print("failed to move file; won't send text")
+                }
+                files.append(newFilePath)
+            }
+            
+            self.s.sendIPCAttachment(body, toAddress: address, withAttachments: files)
+            
+            return GCDWebServerDataResponse(text: "true")
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
@@ -261,9 +298,6 @@ struct ContentView: View {
         
         var chat_id = ""
         
-        var sendBody = ""
-        var sendAddress = ""
-        
         let f = Array(params.keys)[0]
         var s = ""
         if params.count > 1 {
@@ -324,12 +358,6 @@ struct ContentView: View {
             let name = chat_delegate.getDisplayName(chat_id: chat_id)
             return name
             
-        } else if f == "send" || f == "to" {
-            
-            sendBody = f == "send" ?  Array(params.values)[0] : Array(params.values)[1]
-            sendAddress = s == "to" ? Array(params.values)[1] : Array(params.values)[0]
-            sendText(body: sendBody, address: [sendAddress])
-            
         } else if f == "check" {
             
             let lt = encodeToJson(object: chat_delegate.checkLatestTexts(address: address), title: "chat_ids")
@@ -355,14 +383,6 @@ struct ContentView: View {
         self.debug ? print(prefix + "Stopped server") : nil
         self.authenticated_addresses = [String]()
         server_running = server.isRunning
-    }
-    
-    func sendText(body: String, address: [String]) {
-        /// Sends a text with the body of $body and to the address $address[0]. Don't quite know why address is an array; need to fix that.
-        
-        self.debug ? print(prefix + "body: \(body), address[0]: \(address[0])") : nil
-        
-        s.sendIPCText(body, toAddress: address[0])
     }
     
     func getWiFiAddress() -> String? {
@@ -439,8 +459,8 @@ struct ContentView: View {
                         HStack {
                             Button(action: {
                                 self.loadFiles()
-                                //s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
-                                self.alert_connected = true
+                                //self.s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
+                                self.alert_connected = self.debug
                                 self.s.launchMobileSMS()
                             }) {
                                 Image(systemName: "goforward")
@@ -497,7 +517,7 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
-            //self.has_root = (self.s.launchMobileSMS() == uid_t(0))
+            self.has_root = (self.s.setUID() == uid_t(0))
             //self.show_root_alert = self.debug
         }.alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))

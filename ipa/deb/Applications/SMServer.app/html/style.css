@@ -7,6 +7,7 @@
     --chats-width: 30vw;
     --send-button-size: calc(var(--send-box-size) - 4px);
     --send-box-size:  calc(var(--messages-send-height) - 8px);
+    --attachments-button-size: 46px;
 }
 * {
     font-family: var(--main-font);
@@ -66,11 +67,11 @@ p {
 
 .textbox {
     display: grid;
-    grid-template-columns: var(--send-button-size) 1fr var(--send-button-size);
+    grid-template-columns: calc(var(--attachments-button-size) + 10px) 1fr var(--send-button-size);
     grid-template-rows: 1fr;
     padding: 5px 5px;
     max-width: 100%;
-    height: var(--messages-send-height);
+    height: calc(var(--messages-send-height) - 20px);
     resize: vertical;
 }
 
@@ -251,7 +252,7 @@ p {
     z-index: 1;
 }
 #sendbox {
-    grid-column: 1/4;
+    grid-column: 2/4;
     grid-row: 1;
     outline: none;
     border-radius: calc(var(--send-box-size) / 2);
@@ -262,4 +263,18 @@ p {
     padding: 5px calc(var(--send-button-size) + 10px) 0px 10px;
     border: none;
     font-size: calc(var(--send-box-size) - 6px);
+}
+#attachmentbutton {
+    display: none;
+}
+#unhiddenbutton {
+    border-radius: 5px;
+    background-color: grey;
+    width: var(--attachments-button-size);
+    height: var(--send-box-size);
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: calc((var(--messages-send-height) - var(--send-box-size)) / 2);
+    outline: none;
+    border: none;
 }
