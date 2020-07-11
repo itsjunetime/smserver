@@ -152,9 +152,20 @@ struct ContentView: View {
             }
             
             for i in req.files {
+                do {
+                    let attr = try FileManager.default.attributesOfItem(atPath: i.temporaryPath)
+                    let fileSize = attr[FileAttributeKey.size] as! UInt64
+                    
+                    if fileSize == 0 {
+                        continue
+                    }
+                } catch {
+                    print("couldn't get filesize")
+                }
+                
                 let unmanagedFileUTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, i.mimeType as CFString, nil)?.takeRetainedValue()
                 let fileExtension = UTTypeCopyPreferredTagWithClass((unmanagedFileUTI)!, kUTTagClassFilenameExtension)?.takeRetainedValue()
-                let newFilePath: String = i.temporaryPath + "." + (fileExtension! as String)
+                let newFilePath: String = i.temporaryPath + "." + ((fileExtension ?? "txt" as CFString) as String)
                 do {
                     try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
                 } catch {
@@ -163,7 +174,9 @@ struct ContentView: View {
                 files.append(newFilePath)
             }
             
-            self.s.sendIPCAttachment(body, toAddress: address, withAttachments: files)
+            if !(body == "" && files.count == 0) {
+                self.s.sendIPCAttachment(body, toAddress: address, withAttachments: files)
+            }
             
             return GCDWebServerDataResponse(text: "true")
         })
