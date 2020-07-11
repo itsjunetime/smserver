@@ -13,12 +13,14 @@
 
 @implementation sender
 
--(uid_t)launchMobileSMS {
-    
-    setuid(0);
+- (void)launchMobileSMS {
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
     [center callExternalMethod:@selector(launchSMS) withArguments:nil];
+}
+
+- (uid_t)setUID {
+    setuid(0);
     
     return getuid();
 }
@@ -30,12 +32,12 @@
     [center callExternalMethod:@selector(handleText:) withArguments:@{@"body": body, @"address": address}];
 }
 
-/*- (void)sendIPCAttachment:(NSString *)body toAddress:(NSString *)address withAttachment:(NSString *)path {
+- (void)sendIPCAttachment:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths {
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
     
-    [center callExternalMethod:@selector(sendAttachment:) withArguments:@{@"body": body, @"address": address, @"attachment": path}];
+    [center callExternalMethod:@selector(sendAttachment:) withArguments:@{@"body": body, @"address": address, @"attachment": paths}];
     
-}*/
+}
 
 @end
