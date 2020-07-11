@@ -12,7 +12,8 @@
             const timeout;
             
             var printed_texts = 0;
-            var printed_chats = 0
+            var printed_chats = 0;
+            var has_shown_warning = false;
             
             const checkNewTexts = async () => {
                 
@@ -35,9 +36,11 @@
                 var _ = await fetch_new_chats
                 
                 if (new_chats.length > 0) {
+                    console.log("new chats!, :")
                     console.log(new_chats)
                     
                     printItems()
+                    
                     var selected_id = document.getElementsByClassName("title")[0].id;
                     for (var i = 0; i < new_chats.length; ++i) {
                         if (new_chats[i] === selected_id) {
@@ -45,7 +48,7 @@
                         }
                     }
                 } else {
-                    console.log("")
+                    console.log("no new chats.")
                 }
             }
         
@@ -70,7 +73,8 @@
                     return items
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate. (readJson func)')
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (readJson func)')
+                    has_shown_warning = true
                     this.dataError = true;
                 })
             }
@@ -114,7 +118,8 @@
                     return new_items
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate. (moreJsonChats func)')
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (moreJsonChats func)')
+                    has_shown_warning = true
                     this.dataError = true;
                 })
             }
@@ -135,7 +140,7 @@
                     
                     if (new_items[i].has_unread === "true") { b.setAttribute("class", "unread") }
                     
-                    var get_texts_string = "await getTexts(\"" + new_items[i].chat_identifier + "\", " + num_texts_to_load + ");";
+                    var get_texts_string = "getTexts(\"" + new_items[i].chat_identifier + "\", " + num_texts_to_load + ");";
                     b.setAttribute("onclick", get_texts_string);
                     
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
@@ -167,6 +172,9 @@
                     selected[0].setAttribute("class", "");
                 }
 
+                var hiddenchatbox = document.getElementById("hiddenchatbox");
+                hiddenchatbox.setAttribute("value", "chat:" + chat_id);
+
                 var orig_btn = document.getElementById(chat_id);
                 orig_btn.setAttribute("class", "selected");
                 
@@ -184,7 +192,8 @@
                     return texts
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate. (fetch_texts func)')
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_texts func)')
+                    has_shown_warning = true
                     this.dataError = true;
                 })
 
@@ -230,18 +239,15 @@
                         var types = texts[i].attachment_type.split(":");
                         
                         for (var l = 0; l < files.length; ++l) {
-                            //console.log("files at " + l + ": " + files[l] + ", type: " + types[l])
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
                                 t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
                                 t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
-                        
-                        t.innerHTML += texts[i].text.substring(files.length - 1, texts[i].text.length)
-                    } else {
-                        t.innerHTML += texts[i].text;
-                    }
+                    } 
+                    
+                    t.innerHTML += texts[i].text;
                     
                     /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
                     if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
@@ -269,7 +275,7 @@
                                                 
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
 
-                    if (is_group && texts[i].is_from_me == "0" && i != texts.length - 1 && texts[i].sender != texts[i + 1].sender){
+                    if (is_group && texts[i].is_from_me == "0" && ((i != texts.length - 1 && texts[i].sender != texts[i + 1].sender) || (i == texts.length - 1))){
                         var from = document.createElement("div");
 
                         from.innerHTML = "<p>" + texts[i].sender + "</p>";
@@ -288,7 +294,6 @@
                 
                 var new_chat_id = chat_id.replace("+", "%2B");
                 let url = "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts;
-                console.log("url: " + url)
                 const fetch_texts = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -301,7 +306,8 @@
                     return texts
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                    has_shown_warning = true
                     this.dataError = true;
                 })
 
@@ -311,8 +317,11 @@
                 
                 var last_item = document.createElement("br")
                 var first_item = document.getElementsByClassName("text-content")[0]
+                
+                var is_group = chat_id.substring(0, 4) == "chat";
 
                 for (var i = 0; i < texts.length; i++) {
+
                     var doc = document.getElementsByClassName("text-content")[0]
                     var t = document.createElement("p");
 
@@ -342,12 +351,10 @@
                                 t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
-                        
-                        t.innerHTML += texts[i].text.substring(files.length - 1, texts[i].text.length)
-                    } else {
-                        t.innerHTML += texts[i].text;
                     }
                     
+                    t.innerHTML += texts[i].text;
+
                     /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
                     if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
                         var time = document.createElement("div");
@@ -375,7 +382,7 @@
                                               
                     doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
 
-                    if (is_group && texts[i].is_from_me == "0" && i != texts.length - 1 && texts[i].sender != texts[i + 1].sender){
+                    if (is_group && texts[i].is_from_me == "0" && ((i != texts.length - 1 && texts[i].sender != texts[i + 1].sender) || (i == texts.length - 1))){
                         var from = document.createElement("div");
 
                         from.innerHTML = "<p>" + texts[i].sender + "</p>";
@@ -401,42 +408,31 @@
                     return image_string
                 })
                 .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate. (fetch_image func)')
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_image func)')
+                    has_shown_warning = true
                     this.dataError = true;
                 })
             }
-        
-            function sendText() {
-                body = document.getElementById("sendbox").value
-                recipient = document.getElementsByClassName("title")[0].id
-                
-                var new_recipient = recipient.replace("+", "%2B")
-                
-                var url = '/requests?send=' + body + "&to=" + new_recipient
-                const fetch_image = fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("HTTP error " + response.status);
-                    }
-                })
-                .catch(function () {
-                    alert('The server restarted, you need to reload and re-authenticate. (sendText func)')
-                    this.dataError = true;
-                })
-                
-                document.getElementById("sendbox").value = "";
-                
-                var doc = document.getElementsByClassName("text-content")[0];
-                var t = document.createElement("p");
-                t.setAttribute("class", "text is_from_me");
-                t.innerHTML = body;
-                
-                doc.appendChild(t);
-                doc.appendChild(document.createElement("br"));
-                
-                t.focus();
-                var elem = document.getElementById('text-content');
-                elem.scrollTop = elem.scrollHeight;
+
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            async function sendForm() {
+                var form = document.getElementById("sendform");
+
+                var tbox = document.getElementById("sendbox")
+                var oldval = tbox.value;
+                tbox.value = "text:" + oldval
+                console.log("new val:" + tbox.value);
+
+                form.submit();
+
+                await sleep(1000);
+
+                tbox.value = "";
+                document.getElementById("attachmentbutton").value = "";
+                document.getElementById("unhiddenbutton").value = "";
             }
         
             function auto_grow(element) {
@@ -472,10 +468,14 @@
                 <div class="text-content" id="text-content">
                     <br> <!--So that the first element doesn't fail to insert-->
                 </div>
-                <div class="textbox">
-                    <textarea id="sendbox" oninput="auto_grow(this)" onKeyDown="if(event.keyCode==13) sendText();"></textarea>
-                    <button onclick="sendText()" id="sendbutton"><span></span></button>
-                </div>
+                <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+                <form action="/uploads" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
+                    <input value="" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
+                    <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
+                    <textarea name="text" id="sendbox" oninput="auto_grow(this)" form="sendform" onkeydown="if (event.keyCode === 13) document.getElementById('sendbutton').click();"></textarea>
+                    <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
+                    <button id="sendbutton" onclick="sendForm();" value="⇡">
+                </form>
             </div>
         </div>
     </body>
