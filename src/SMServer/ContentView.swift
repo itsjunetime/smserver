@@ -10,12 +10,13 @@ import SwiftUI
 import GCDWebServer
 import SQLite3
 import MobileCoreServices
+import os
 
 struct ContentView: View {
     let server = GCDWebUploader(uploadDirectory: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.path)
     let bbheight: CGFloat? = 40
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
-    let prefix = "SMServer: "
+    let prefix = "SMServer_app: "
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     
@@ -60,10 +61,16 @@ struct ContentView: View {
     """
     """
     
+    func log(s: String) {
+        os_log("%@%@", log: .default, type: .info, self.prefix, s)
+    }
+    
     func loadServer(port_num: UInt16) {
         /// This starts the server at port $port_num
         
         self.s.launchMobileSMS()
+        
+        self.log(s: "launched mobilesms")
         
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
             if self.debug {
@@ -76,10 +83,14 @@ struct ContentView: View {
                 print("ras:")
                 print(request.remoteAddressString)
             }
+            let ip = request.remoteAddressString
             
-            self.debug ? print("entered default handler") : nil
+            if self.debug {
+                print("entered default handler")
+                self.log(s: "GET main: " + ip)
+            }
             
-            if self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+            if self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(html: self.main_page)
             } else {
                 return GCDWebServerDataResponse(html: self.gatekeeper_page)
@@ -87,6 +98,9 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/requests", request: GCDWebServerRequest.self, processBlock: { request in
+            /// There is no authentication handler here 'cause it handles that within parseAndReturn()
+            /// since they send the password auth request to this subdirectory
+            
             if self.debug {
                 print("headers:")
                 print(request.headers)
@@ -113,7 +127,11 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/attachments", request: GCDWebServerRequest.self, processBlock: { request in
-            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+            let ip = request.remoteAddressString
+            
+            self.log(s: "GET Attachments: " + ip)
+            
+            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
             }
             
@@ -124,8 +142,11 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
+            let ip = request.remoteAddressString
             
-            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+            self.log(s: "GET profile: " + ip)
+            
+            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
             }
             
@@ -133,7 +154,11 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "POST", path: "/uploads", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
-            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+            let ip = request.remoteAddressString
+            
+            self.log(s: "POST upluads: " + ip)
+            
+            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
             }
             
@@ -160,6 +185,7 @@ struct ContentView: View {
                         continue
                     }
                 } catch {
+                    self.log(s: "couldn't get filesize")
                     print("couldn't get filesize")
                 }
                 
@@ -169,6 +195,7 @@ struct ContentView: View {
                 do {
                     try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
                 } catch {
+                    self.log(s: "failed to move file; won't send text")
                     print("failed to move file; won't send text")
                 }
                 files.append(newFilePath)
@@ -182,8 +209,11 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
+            let ip = request.remoteAddressString
             
-            if !self.checkIfAuthenticated(ras: String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))) {
+            self.log(s: ip)
+            
+            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
             }
             
@@ -194,11 +224,14 @@ struct ContentView: View {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
         } catch {
-            print(prefix + "failed to start server. fat rip right there.")
+            self.log(s: "failed to start server. fat rip right there.")
+            print("failed to start server. fat rip right there.")
         }
         self.server_running = server.isRunning
         
         self.startBackgroundTask()
+        
+        self.log(s: "Started server and background task")
     }
     
     func startBackgroundTask() {
@@ -232,7 +265,8 @@ struct ContentView: View {
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
             }
             catch {
-                print(prefix + "WARNING: ran into an error with loading the files, try again.")
+                self.log(s: "WARNING: ran into an error with loading the files, try again.")
+                print("WARNING: ran into an error with loading the files, try again.")
             }
         }
     }
@@ -274,14 +308,20 @@ struct ContentView: View {
         /// This function handles all the requests to the /requests subdirectory, and returns stuff like conversations, messages, and can send texts.
         
         if self.debug {
-            print(prefix + "parsing:")
+            print("parsing:")
             print(params)
+            for i in Array(params.keys) {
+                self.log(s: "parsing \(i) and \(params[i])")
+            }
         }
         
         let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
         
         if Array(params.keys)[0] == "password" {
-            self.debug ? print(prefix + "comparing " + Array(params.values)[0] + " to " + password) : nil
+            if self.debug {
+                self.log(s: "comparing " + Array(params.values)[0] + " to " + password)
+                print("comparing " + Array(params.values)[0] + " to " + password)
+            }
             if Array(params.values)[0] == password {
                 var already_in = false;
                 for i in authenticated_addresses {
@@ -332,7 +372,10 @@ struct ContentView: View {
                 offset = (f == "offset" ? Int(Array(params.values)[0]) : (s == "offset" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? 0
             }
             
-            self.debug ? print(prefix + "selecting person: " + person + ", num: " + String(num_texts)) : nil
+            if self.debug {
+                self.log(s:  "selecting person: " + person + ", num: " + String(num_texts))
+                print("selecting person: " + person + ", num: " + String(num_texts))
+            }
             
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
@@ -353,8 +396,10 @@ struct ContentView: View {
             }
             
             if self.debug {
-                print(prefix + "num chats: \(num_texts)")
-                print(prefix + "chats offset: \(chats_offset)")
+                self.log(s: "num chats: \(num_texts)")
+                self.log(s: "chats offset: \(chats_offset)")
+                print("num chats: \(num_texts)")
+                print("chats offset: \(chats_offset)")
             }
             
             let chats_array = chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
@@ -375,15 +420,13 @@ struct ContentView: View {
             
             let lt = encodeToJson(object: chat_delegate.checkLatestTexts(address: address), title: "chat_ids")
             if self.debug  {
-                print(prefix + "lt:")
+                print("lt:")
                 print(lt)
             }
             return lt
             
-        } else if f == "log" {
-            return chat_delegate.printLog()
         } else {
-            self.debug ? print(prefix + "We haven't implemented this functionality yet, sorry :/") : nil
+            self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
         }
         
         return ""
@@ -393,7 +436,10 @@ struct ContentView: View {
         /// Stops the server & and de-authenticates all ip addresses
         
         self.server.stop()
-        self.debug ? print(prefix + "Stopped server") : nil
+        if self.debug {
+            self.log(s: "Stopped Server")
+            print("Stopped server")
+        }
         self.authenticated_addresses = [String]()
         server_running = server.isRunning
     }
