@@ -18,7 +18,7 @@ struct ContentView: View {
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
     let prefix = "SMServer_app: "
     
-    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? true
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -521,6 +521,7 @@ struct ContentView: View {
                                 //self.s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
                                 self.alert_connected = self.debug
                                 self.s.launchMobileSMS()
+                                self.has_root = self.s.setUID() == uid_t(0)
                             }) {
                                 Image(systemName: "goforward")
                                     .scaleEffect(1.5)
@@ -576,8 +577,8 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
-            self.has_root = (self.s.setUID() == uid_t(0))
-            //self.show_root_alert = self.debug
+            //self.has_root = self.s.setUID() == uid_t(0)
+            self.show_root_alert = self.debug
         }.alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
         })
