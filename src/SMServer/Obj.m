@@ -25,14 +25,7 @@
     return getuid();
 }
 
-- (void)sendIPCText:(NSString *)body toAddress:(NSString *)address {
-
-    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
-    
-    [center callExternalMethod:@selector(handleText:) withArguments:@{@"body": body, @"address": address}];
-}
-
-- (void)sendIPCAttachment:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths {
+- (void)sendIPCText:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths {
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
     
