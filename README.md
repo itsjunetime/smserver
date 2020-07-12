@@ -53,6 +53,13 @@ This is definitely still in Beta stages; there are still issues and many feature
 1. Run `dpkg -b deb`, assuming that the 'deb' folder is still named 'deb'. This will produce a package named 'deb.deb'. You can rename it to whatever you want.
 1. Install the package that the last step created just as you would install a tweak.
 
+Alternately, if you want to install the deb but don't want to go through with the above steps, you can: 
+
+1. Install the package 'sshpass' on your mac
+1. Export $THEOS_DEVICE_PASS as your iDevice's password
+1. Export $THEOS_DEVICE_IP as your iDevice's private IP
+1. Run the `make_deb.sh` script in the root of this repository
+
 I would recommend building it yourself, since the .deb (under `package`) may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the .deb should be updated rather frequently, so it is also safe to use.
 
 ## To run
@@ -101,7 +108,7 @@ Please include the following information:
 
 Also, if the app did not crash, but rather had an issue after it was already up and running, please do the following: 
  - Install the package 'oslog' from your package manager
- - ssh into your device or open a terminal app, and run: `oslog --info | grep -i "smserver_app" > /var/mobile/Documents/smserver.log`
+ - ssh into your device or open a terminal app, and run: `oslog --debug | grep "SMServer_app" > /var/mobile/Documents/smserver.log`
  - DM me the file at `/var/mobile/Documents/smserver.log` on your device at u/Janshai on reddit. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site.
 
 ## Companion App
