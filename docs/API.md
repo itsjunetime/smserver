@@ -2,15 +2,17 @@
 
 All non-image get requests are made to \<ip>:\<port>/requests. Requests for attachments are made to /attachments, and requests for profile images are made to /profile.
 
-All post requests are directed to /uploads. In the latest version, this is the only way to send things.
+All post requests are directed to /uploads. In the latest version, this is the only way to send texts and/or attachments.
 
 All request parameters require a value, but only some of the values are consequential. However, the app will not interpret a parameter as a parameter unless it has an accompanying value -- For example, to retrieve the list of conversations, one must make a request to /requests with a parameter of 'chat', but 'GET /requests?chat' will return nothing. Something like 'GET /requests?chat=0' will return the correct information.
 
+Lastly, every time you see a plus ('+'), it needs to be replaced with a '%2B'. The server won't handle it correctly if it is a plus.
+
 # `/requests` requests:
 
-All requests to `/requests` besides 'image') return JSON information.
+All requests to `/requests` return JSON information.
 
-### `person`, `num`, `offset`
+## `person`, `num`, `offset`
 
 Retrieves the most recent $num messages to or from $person, offset by $offset.
 
@@ -22,11 +24,11 @@ Retrieves the most recent $num messages to or from $person, offset by $offset.
 
 Example queries:
 - /requests?person=chat192370112946&num=500
-- /requests?person=+15202621138
+- /requests?person=%2B15202621138
 - /requests?person=email@icloud.com&num=50&offset=100
 - /requests?person=person@gmail.com&offset=200
 
-### `chat`, `num_chats`
+## `chat`, `num_chats`
 
 Retrieves the latest $num_chats conversations
 
@@ -46,7 +48,7 @@ Retrieves the contact name that accompanies chat_identifier $name
   
 Example queries:
 - /requests?name=email@icloud.com
-- /requests?name=+12761938272
+- /requests?name=%2B12761938272
 
 ## `send`, `to` -- THIS IS DEPRECATED IN THE LATEST VERSION.
 
@@ -59,7 +61,7 @@ Sends a text/iMessage with a body of $send to $to
 - to: Parameter is necessary, and value is consequential. This will be the recipient of the text, as a string. It requires a number or iMessage address, and cannot be a contact name.
 
 Example queries:
-- /requests?send=hello there!&to=+18479276635
+- /requests?send=hello there!&to=%2B18479276635
 - /requests?send=This is a test:))&to=email@icloud.com
 
 ## `check`
@@ -96,7 +98,7 @@ This contains the chat_id of the person that the request is trying to get the pr
 
 Example queries:
 
-- /profile?chat_id=+15204458272
+- /profile?chat_id=%2B15204458272
 
 # `/uploads` requests
 
@@ -116,7 +118,7 @@ This parameter is not necessary for every request
 
 This argument contains the chat_identifier of the recipient, specified as in the `person` parameter above, with the string 'chat:' prepended onto it. For example, if I wanted to send a text to the phone number '+15001001000', the value for this parameter would need to be 'chat:+15001001000'. 
 
-This parameter is necessary for every request, or else the app won't know who to send the text to.
+This parameter is necessary for every request, or else the app won't know who to send the text to. Also, plus signs should not be replaced with an escape character for these requests; they should stay plus signs.
 
 ## files
 
@@ -127,7 +129,7 @@ These need to be sent with the key 'attachments'. Other than that, just send the
 ### Python3 --
 
 Sending a text with no attachments:
-```
+```python
 from requests import post
 
 vals = {'text': 'text:Hello world!', 'chat': 'chat:email@email.org'}
@@ -138,7 +140,7 @@ post(url, files={'attachments': (None, '0')}, data=vals)
 ```
 
 Sending an attachment with no text:
-```
+```python
 from requests import post
 
 vals = {'chat': 'chat:+13020499949'}

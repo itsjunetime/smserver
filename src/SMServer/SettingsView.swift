@@ -16,7 +16,7 @@ struct SettingsView: View {
     @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
     @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
     
-    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? true
     @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
     @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     
