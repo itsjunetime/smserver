@@ -1,13 +1,15 @@
 # Uncomment the next line to define a global platform for your project
-platform :ios, '13.3'
+# platform :ios, '13.3'
 
 target 'SMServer' do
   # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
 
   # Pods for SMServer
-  pod "GCDWebServer", "~> 3.0"
-  pod "GCDWebServer/WebUploader", "~> 3.0"
+  # pod "GCDWebServer", "~> 3.0"
+  # pod "GCDWebServer/WebUploader", "~> 3.0"
+  pod "GCDWebServer",:modular_headers => true
+  pod "GCDWebServer/WebUploader",:modular_headers => true
 
   target 'SMServerTests' do
     inherit! :search_paths
