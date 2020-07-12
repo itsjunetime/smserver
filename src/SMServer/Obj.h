@@ -13,8 +13,7 @@
 
 - (void)launchMobileSMS;
 - (uid_t)setUID;
-- (void)sendIPCText:(NSString *)body toAddress:(NSString *)address;
-- (void)sendIPCAttachment:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths;
+- (void)sendIPCText:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths;
 
 @end
 
