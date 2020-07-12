@@ -13,15 +13,15 @@ import os
 
 class ChatDelegate {
     var debug: Bool = UserDefaults.standard.object(forKey: "debug") == nil ? false : UserDefaults.standard.object(forKey: "debug") as! Bool
-    @State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
-    //@State var past_latest_texts_hashes = 0
+    //@State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
+    var past_latest_texts = [[String:String]]()
     let prefix = "SMServer_app: "
     
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     
     func log(s: String) {
-        os_log("%@%@", log: .default, type: .info, self.prefix, s)
+        os_log("%@%@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
     func createConnection(connection_string: String = "/private/var/mobile/Library/SMS/sms.db") -> OpaquePointer? {
@@ -290,7 +290,6 @@ class ChatDelegate {
         }
         
         if sqlite3_close(db) != SQLITE_OK {
-            //updateLog(s: "WARNING: error closing database")
             self.log(s: "WARNING: error closing database")
             print("WARNING: error closing database")
         }
@@ -298,7 +297,6 @@ class ChatDelegate {
         db = nil
         
         if self.debug {
-            //updateLog(s: "destroyed db")
             self.log(s: "destroyed db")
             print("destroyed db")
         }
@@ -466,7 +464,6 @@ class ChatDelegate {
         db = nil
         
         if self.debug {
-            //updateLog(s: "destroyed db")
             self.log(s: "destroyed db")
             print("destroyed db")
         }
@@ -571,15 +568,22 @@ class ChatDelegate {
         return pngdata
     }
     
-    func setFirstTexts(address: String) { /// WHAT. WHAT IS THE ISSUE. WHY CAN I NOT INSERT NESTED DICTIONARIES.
+    func setFirstTexts(address: String) { 
         /// This just sets a variable for the latest texts that one has received, so that it can be compared against
         /// whenever something pings the server to check if they have received more text messages
         
-        past_latest_texts[address] = getLatestTexts();
+        //past_latest_texts[address] = getLatestTexts();
+        past_latest_texts = getLatestTexts()
     }
     
     func checkLatestTexts(address: String) -> [String] {
         /// This just checks if the host device has received more texts ever since the ip address $address last pinged the host
+        
+        /// Ok I know it looks kinda funky, especially `let ap_latest_texts = past_latest_texts`, but this is a temporary workaround.
+        /// Before, past_latest_texts stored an array per ip address, but now it just stores one array of all the past latest texts.
+        /// If two people are communicating with the server, only the first person to ping the server after a new text has been received
+        /// will get notified that there is a new text. But for now, that's best I can do 'cause Xcode doesn't like to let me edit nested dicts.
+        
         if self.debug {
             self.log(s: "Ran checkLatestTexts(\(address))")
             print("Ran checkLatestTexts(\(address))")
@@ -587,7 +591,8 @@ class ChatDelegate {
         
         var db = createConnection()
         let latest_texts = getLatestTexts()
-        let ap_latest_texts = past_latest_texts[address]
+        //let ap_latest_texts = past_latest_texts[address]
+        let ap_latest_texts = past_latest_texts
         if latest_texts == ap_latest_texts {
             if self.debug {
                 self.log(s: "They're identical.")
@@ -616,7 +621,8 @@ class ChatDelegate {
                 ret.append(string[i]["chat_identifier"] ?? "chat_identifier not found")
             }
             
-            self.past_latest_texts[address] = latest_texts
+            //self.past_latest_texts[address] = latest_texts
+            self.past_latest_texts = latest_texts
             
             if self.debug {
                 self.log(s: "past_l_t.count = \(String(past_latest_texts.count))")
@@ -637,11 +643,11 @@ class ChatDelegate {
         
         for i in 0..<latest_texts.count {
             if self.debug {
-                self.log(s: "checking between \(String(describing: ap_latest_texts?[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
-                print("checking between \(String(describing: ap_latest_texts?[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
+                self.log(s: "checking between \(String(describing: ap_latest_texts[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
+                print("checking between \(String(describing: ap_latest_texts[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
             }
             
-            if latest_texts[i] != ap_latest_texts?[i] {
+            if latest_texts[i] != ap_latest_texts[i] {
                 if let check_message_id = latest_texts[i]["ROWID"] {
                     let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(check_message_id))")
                     
@@ -664,7 +670,8 @@ class ChatDelegate {
             print(String(new_texts.count))
         }
         
-        past_latest_texts[address] = latest_texts
+        //past_latest_texts[address] = latest_texts
+        past_latest_texts = latest_texts
         
         return new_texts;
     }

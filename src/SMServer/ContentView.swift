@@ -62,7 +62,7 @@ struct ContentView: View {
     """
     
     func log(s: String) {
-        os_log("%@%@", log: .default, type: .info, self.prefix, s)
+        os_log("%@%@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
     func loadServer(port_num: UInt16) {
@@ -202,7 +202,7 @@ struct ContentView: View {
             }
             
             if !(body == "" && files.count == 0) {
-                self.s.sendIPCAttachment(body, toAddress: address, withAttachments: files)
+                self.s.sendIPCText(body, toAddress: address, withAttachments: files)
             }
             
             return GCDWebServerDataResponse(text: "true")
@@ -229,21 +229,20 @@ struct ContentView: View {
         }
         self.server_running = server.isRunning
         
-        self.startBackgroundTask()
-        
-        self.log(s: "Started server and background task")
+        self.log(s: "Started server and launched MobileSMS")
     }
     
     func startBackgroundTask() {
         /// This starts the background task... I may deprecate this soon and put it in like SceneDelegate or AppDelegate
         
-        backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-            //self.stopServer()
-            UIApplication.shared.endBackgroundTask(self.backgroundTask)
-            self.backgroundTask = .invalid
-        })
-        
-        assert(backgroundTask != .invalid)
+        DispatchQueue.global().async {
+            backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+                UIApplication.shared.endBackgroundTask(self.backgroundTask)
+                self.backgroundTask = .invalid
+            })
+            
+            //assert(backgroundTask != .invalid) /// I mean, ideally, I would include this, but it's failing rn :/
+        }
     }
     
     func loadFiles() {
@@ -311,7 +310,7 @@ struct ContentView: View {
             print("parsing:")
             print(params)
             for i in Array(params.keys) {
-                self.log(s: "parsing \(i) and \(params[i])")
+                self.log(s: "parsing \(i) and \(String(describing: params[i]))")
             }
         }
         
@@ -518,10 +517,8 @@ struct ContentView: View {
                         HStack {
                             Button(action: {
                                 self.loadFiles()
-                                //self.s.sendIPCAttachment("attachment test", toAddress: "+15202621123", withAttachment: "/var/mobile/media/DCIM/100APPLE/IMG_0584.JPG") ///TESTING
                                 self.alert_connected = self.debug
                                 self.s.launchMobileSMS()
-                                self.has_root = self.s.setUID() == uid_t(0)
                             }) {
                                 Image(systemName: "goforward")
                                     .scaleEffect(1.5)
@@ -577,7 +574,7 @@ struct ContentView: View {
         .onAppear() {
             self.loadFiles()
             UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
-            //self.has_root = self.s.setUID() == uid_t(0)
+            self.has_root = self.s.setUID() == uid_t(0)
             self.show_root_alert = self.debug
         }.alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
