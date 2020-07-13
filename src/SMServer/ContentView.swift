@@ -11,6 +11,7 @@ import GCDWebServer
 import SQLite3
 import MobileCoreServices
 import os
+import AVFoundation
 
 struct ContentView: View {
     let server = GCDWebUploader(uploadDirectory: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.path)
@@ -18,13 +19,13 @@ struct ContentView: View {
     let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
     let prefix = "SMServer_app: "
     
-    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? true
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+    @State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? Array<String> ?? [String]()
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
     @State var view_settings = false
     @State var server_running = false
-    @State var authenticated_addresses = [String]()
     @State var alert_connected = false
     @State var has_root = false
     @State var show_root_alert = false
@@ -67,6 +68,10 @@ struct ContentView: View {
     
     func loadServer(port_num: UInt16) {
         /// This starts the server at port $port_num
+        
+        if server.isRunning {
+            self.stopServer()
+        }
         
         self.s.launchMobileSMS()
         
@@ -162,50 +167,9 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: "")
             }
             
-            let req = (request as! GCDWebServerMultiPartFormRequest)
+            let send = sendText(req: (request as! GCDWebServerMultiPartFormRequest))
             
-            var body = ""
-            var address = ""
-            var files = [String]()
-            
-            for i in Array(req.arguments) {
-                if (i.string?.prefix(5) == "text:") {
-                    body = String(i.string?.suffix(i.string!.count - 5) ?? "")
-                } else if (i.string?.prefix(5) == "chat:") {
-                    address = String(i.string?.suffix(i.string!.count - 5) ?? "")
-                }
-            }
-            
-            for i in req.files {
-                do {
-                    let attr = try FileManager.default.attributesOfItem(atPath: i.temporaryPath)
-                    let fileSize = attr[FileAttributeKey.size] as! UInt64
-                    
-                    if fileSize == 0 {
-                        continue
-                    }
-                } catch {
-                    self.log(s: "couldn't get filesize")
-                    print("couldn't get filesize")
-                }
-                
-                let unmanagedFileUTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, i.mimeType as CFString, nil)?.takeRetainedValue()
-                let fileExtension = UTTypeCopyPreferredTagWithClass((unmanagedFileUTI)!, kUTTagClassFilenameExtension)?.takeRetainedValue()
-                let newFilePath: String = i.temporaryPath + "." + ((fileExtension ?? "txt" as CFString) as String)
-                do {
-                    try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
-                } catch {
-                    self.log(s: "failed to move file; won't send text")
-                    print("failed to move file; won't send text")
-                }
-                files.append(newFilePath)
-            }
-            
-            if !(body == "" && files.count == 0) {
-                self.s.sendIPCText(body, toAddress: address, withAttachments: files)
-            }
-            
-            return GCDWebServerDataResponse(text: "true")
+            return GCDWebServerDataResponse(text: send)
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
@@ -232,16 +196,62 @@ struct ContentView: View {
         self.log(s: "Started server and launched MobileSMS")
     }
     
+    func sendText(req: GCDWebServerMultiPartFormRequest) -> String {
+        
+        var body = ""
+        var address = ""
+        var files = [String]()
+        
+        for i in Array(req.arguments) {
+            if (i.string?.prefix(5) == "text:") {
+                body = String(i.string?.suffix(i.string!.count - 5) ?? "")
+            } else if (i.string?.prefix(5) == "chat:") {
+                address = String(i.string?.suffix(i.string!.count - 5) ?? "")
+            }
+        }
+        
+        for i in req.files {
+            do {
+                let attr = try FileManager.default.attributesOfItem(atPath: i.temporaryPath)
+                let fileSize = attr[FileAttributeKey.size] as! UInt64
+                
+                if fileSize == 0 {
+                    continue
+                }
+            } catch {
+                self.log(s: "couldn't get filesize")
+                print("couldn't get filesize")
+            }
+            
+            let unmanagedFileUTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, i.mimeType as CFString, nil)?.takeRetainedValue()
+            let fileExtension = UTTypeCopyPreferredTagWithClass((unmanagedFileUTI)!, kUTTagClassFilenameExtension)?.takeRetainedValue()
+            let newFilePath: String = i.temporaryPath + "." + ((fileExtension ?? "txt" as CFString) as String)
+            do {
+                try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
+            } catch {
+                self.log(s: "failed to move file; won't send text")
+                print("failed to move file; won't send text")
+            }
+            files.append(newFilePath)
+        }
+        
+        if !(body == "" && files.count == 0) {
+            self.s.sendIPCText(body, toAddress: address, withAttachments: files)
+        }
+        
+        return "true"
+    }
+    
     func startBackgroundTask() {
         /// This starts the background task... I may deprecate this soon and put it in like SceneDelegate or AppDelegate
         
         DispatchQueue.global().async {
+            self.log(s: "started background task...")
+            print("started background task...")
+            //startRecording()
             backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-                UIApplication.shared.endBackgroundTask(self.backgroundTask)
-                self.backgroundTask = .invalid
+                self.s.relaunchApp()
             })
-            
-            //assert(backgroundTask != .invalid) /// I mean, ideally, I would include this, but it's failing rn :/
         }
     }
     
@@ -484,9 +494,15 @@ struct ContentView: View {
         
         return NavigationView {
                 VStack {
-                    Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
-                        .font(Font.custom("smallTitle", size: 22))
-                        .padding()
+                    if  self.getWiFiAddress() != nil {
+                        Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
+                            .font(Font.custom("smallTitle", size: 22))
+                            .padding()
+                    } else {
+                        Text("Please connect to wifi to operate the server.")
+                            .font(Font.custom("smallTitle", size: 22))
+                            .padding()
+                    }
                     
                     Spacer().frame(height: 20)
                     
@@ -501,6 +517,22 @@ struct ContentView: View {
                                 guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
                                 UIApplication.shared.open(github_url)
                             }
+                    }
+                    
+                    Spacer().frame(height: 20)
+                    
+                    Button(action: {
+                        UserDefaults.standard.setValue(self.authenticated_addresses, forKey: "authenticated_addresses")
+                    }) {
+                        Text("Save current authenticated addressses")
+                    }
+                    
+                    Spacer().frame(height: 10)
+                    
+                    Button(action: {
+                        UserDefaults.standard.setValue([String](), forKey: "authenticated_addresses")
+                    }) {
+                        Text("Clear all past authenticated addresses")
                     }
                     
                     Spacer()
@@ -570,10 +602,9 @@ struct ContentView: View {
                     
                 }.navigationBarTitle(Text("SMServer").font(.largeTitle))
             
-        }
-        .onAppear() {
+        }.onAppear() {
             self.loadFiles()
-            UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
+            (UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !server.isRunning) ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
             self.has_root = self.s.setUID() == uid_t(0)
             self.show_root_alert = self.debug
         }.alert(isPresented: $show_root_alert, content: {
