@@ -13,11 +13,10 @@
 - Sending all types of attachments from desktop 
 - Authentication to protect against spying eyes
 - Ability to permanently change passwords and default values
-- Background operation of server (app doesn't always have to be in the foreground)  
+- Background operation of server for unlimited time, with screen on or off.
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
-- The app only has limited background time (about 1 - 3 minutes), so after that much time of the app being suspended/backgrounded, the server will be killed & you'll need to re-enter the app and restart it. Fixing this is a major priority and I'm hoping to enable unlimited background time before a public release.
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
@@ -82,7 +81,7 @@ I would recommend building it yourself, since the .deb (under `package`) may not
 - [ ] Notifications on client whenever new messages arrive
 - [x] Display notifier for which conversations have unread messages
 - [x] Persistent defaults
-- [ ] Allow the server to run in the background - This has somewhat been implemented. 
+- [x] Allow the server to run in the background for unlimited time
 
 ### Future plans
 - [ ] Convenient Custom CSS Loading
@@ -94,15 +93,15 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 
 ### Acknowledged current issues:
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
-- If you install the .deb, the app always claims you have new messages. I suspect this is an issue with the beta version of Xcode which I built it on.
 - When you send an attachment, the filename is lost along the way, and it is given a random new name (a 32-length string of random characters). This will be fixed soon.
+- Settings are no longer persistent in the current .deb (+debug32). This is being looked into and should be fixed soon.
 
 ### To file an issue:
 Please include the following information:
  - Device model
  - Jailbreak
  - iOS Version
- - If you installed the .deb or built from source (and if from source, .ipa or .deb)
+ - If you installed the .deb or built from source (and if from source, whether in .ipa or .deb form)
  - A detailed description of what failed
  - A crash report if it crashed and you have an app like cr4shed to collect those
 
