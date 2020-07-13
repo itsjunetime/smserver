@@ -35,6 +35,12 @@ This is definitely still in Beta stages; there are still issues and many feature
 1. Connect your device
 1. Build and install the project!
 
+Alternately, if you want to install as a .ipa file:
+
+1. Run the `make_ipa.sh` script in the root of this directory.
+1. When the finder window pops up, right-click on the 'Payload' folder and select 'Compress Payload' 
+1. Rename `Payload.zip` to `SMServer.ipa` and install it as normal
+
 ### To build from source and install as .deb (system app):
 
 1. Clone this repository
@@ -57,7 +63,7 @@ Alternately, if you want to install the deb but don't want to go through with th
 1. Install the package 'sshpass' on your mac
 1. Export $THEOS_DEVICE_PASS as your iDevice's password
 1. Export $THEOS_DEVICE_IP as your iDevice's private IP
-1. Run the `make_deb.sh` script in the root of this repository
+1. Run the `make_deb.sh` script in the root of this repository. The new .deb will be in the 'package' subdirectory of this cloned repo.
 
 I would recommend building it yourself, since the .deb (under `package`) may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the .deb should be updated rather frequently, so it is also safe to use.
 
@@ -79,8 +85,8 @@ I would recommend building it yourself, since the .deb (under `package`) may not
 - [x] Send images/attachments from browser
 - [x] Automatic checking for new messages
 - [ ] Notifications on client whenever new messages arrive
-- [x] Display notifier for which conversations have unread messages
-- [x] Persistent defaults
+- [x] Display for which conversations have unread messages
+- [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
 
 ### Future plans
@@ -93,8 +99,8 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 
 ### Acknowledged current issues:
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
-- When you send an attachment, the filename is lost along the way, and it is given a random new name (a 32-length string of random characters). This will be fixed soon.
-- Settings are no longer persistent in the current .deb (+debug32). This is being looked into and should be fixed soon.
+- The current (+debug34) .deb cannot send attachments, though the .ipa can. I don't quite know why this is, but I'm looking into it.
+    - If you are not running checkra1n and decide to install the .ipa, you'll need to ssh into your device and run `chmod 7777 /Applications/SMServer.app/SMServer` ; If you don't do this, the app won't be able to communicate with your SMS database. This step is not necessary if you install the .deb, since it handles that for you.
 
 ### To file an issue:
 Please include the following information:
@@ -107,7 +113,7 @@ Please include the following information:
 
 Also, if the app did not crash, but rather had an issue after it was already up and running, please do the following: 
  - Install the package 'oslog' from your package manager
- - ssh into your device or open a terminal app, and run: `oslog --debug | grep "SMServer_app" > /var/mobile/Documents/smserver.log`
+ - ssh into your device or open a terminal app, and run: `oslog --debug | grep -i "SMServer_app" > /var/mobile/Documents/smserver.log`
  - DM me the file at `/var/mobile/Documents/smserver.log` on your device at u/Janshai on reddit. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site.
 
 ## Companion App
