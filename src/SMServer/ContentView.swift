@@ -11,7 +11,6 @@ import GCDWebServer
 import SQLite3
 import MobileCoreServices
 import os
-import AVFoundation
 
 struct ContentView: View {
     let server = GCDWebUploader(uploadDirectory: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.path)
@@ -167,7 +166,7 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: "")
             }
             
-            let send = sendText(req: (request as! GCDWebServerMultiPartFormRequest))
+            let send = self.sendText(req: (request as! GCDWebServerMultiPartFormRequest))
             
             return GCDWebServerDataResponse(text: send)
         })
@@ -249,7 +248,9 @@ struct ContentView: View {
             self.log(s: "started background task...")
             print("started background task...")
             //startRecording()
-            backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+            self.backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
+                self.log(s: "relaunching app...")
+                print("relaunching app...")
                 self.s.relaunchApp()
             })
         }
@@ -604,7 +605,7 @@ struct ContentView: View {
             
         }.onAppear() {
             self.loadFiles()
-            (UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !server.isRunning) ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
+            (UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning) ? self.loadServer(port_num: UInt16(port) ?? UInt16(8741)) : nil
             self.has_root = self.s.setUID() == uid_t(0)
             self.show_root_alert = self.debug
         }.alert(isPresented: $show_root_alert, content: {
