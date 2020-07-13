@@ -12,6 +12,7 @@
 @interface sender : NSObject
 
 - (void)launchMobileSMS;
+- (void)relaunchApp;
 - (uid_t)setUID;
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths;
 

@@ -16,9 +16,10 @@ struct SettingsView: View {
     @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
     @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
     
-    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? true
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
     @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
+    @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
     
     var body: some View {
         
@@ -83,7 +84,14 @@ struct SettingsView: View {
             UserDefaults.standard.setValue($0, forKey: "require_auth")
         })
         
-        return VStack(spacing: 20) {
+        let background_binding = Binding<Bool>(get: {
+            self.background
+        }, set: {
+            self.background = $0
+            UserDefaults.standard.setValue($0, forKey: "enable_backgrounding")
+        })
+        
+        return VStack(spacing: 16) {
             HStack {
                 Text("Settings")
                     .font(.title)
@@ -140,6 +148,8 @@ struct SettingsView: View {
                 Toggle("Start server on load", isOn: start_binding)
             
                 Toggle("Require Authentication to view messages", isOn: auth_binding)
+                
+                Toggle("Enable backgrounding", isOn: background_binding)
             
                 Spacer()
             }
