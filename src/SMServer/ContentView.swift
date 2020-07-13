@@ -9,7 +9,7 @@
 import SwiftUI
 import GCDWebServer
 import SQLite3
-import MobileCoreServices
+//import MobileCoreServices
 import os
 
 struct ContentView: View {
@@ -62,7 +62,7 @@ struct ContentView: View {
     """
     
     func log(s: String) {
-        os_log("%@%@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
+        os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
     func loadServer(port_num: UInt16) {
@@ -222,9 +222,7 @@ struct ContentView: View {
                 print("couldn't get filesize")
             }
             
-            let unmanagedFileUTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, i.mimeType as CFString, nil)?.takeRetainedValue()
-            let fileExtension = UTTypeCopyPreferredTagWithClass((unmanagedFileUTI)!, kUTTagClassFilenameExtension)?.takeRetainedValue()
-            let newFilePath: String = i.temporaryPath + "." + ((fileExtension ?? "txt" as CFString) as String)
+            let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName)
             do {
                 try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
             } catch {
@@ -247,13 +245,17 @@ struct ContentView: View {
         DispatchQueue.global().async {
             self.log(s: "started background task...")
             print("started background task...")
-            //startRecording()
+            
             self.backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
                 self.log(s: "relaunching app...")
                 print("relaunching app...")
                 self.s.relaunchApp()
             })
         }
+    }
+    
+    func endBackgroundTask() {
+        UIApplication.shared.endBackgroundTask(self.backgroundTask)
     }
     
     func loadFiles() {
