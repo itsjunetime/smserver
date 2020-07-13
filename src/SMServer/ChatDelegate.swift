@@ -609,7 +609,7 @@ class ChatDelegate {
             return [] /// If they haven't received any new messages, just return nothing
         }
         
-        if ap_latest_texts == nil {
+        if ap_latest_texts == [[String:String]]() {
             if self.debug {
                 self.log(s: "Haven't pinged before")
                 print("Haven't pinged before")
