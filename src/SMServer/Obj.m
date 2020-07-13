@@ -13,6 +13,13 @@
 
 @implementation sender
 
+- (void)relaunchApp {
+    
+    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
+    [center callExternalMethod:@selector(relaunchSMServer) withArguments:nil];
+    
+}
+
 - (void)launchMobileSMS {
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
