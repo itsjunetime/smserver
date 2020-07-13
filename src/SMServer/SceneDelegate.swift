@@ -46,12 +46,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             contentView.loadServer(port_num: UInt16(port) ?? UInt16(8741))
         }
+        contentView.endBackgroundTask()
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
-        //contentView.startBackgroundTask()
+        contentView.startBackgroundTask()
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
@@ -61,6 +62,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             contentView.loadServer(port_num: UInt16(port) ?? UInt16(8741))
         }
+        contentView.endBackgroundTask()
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
