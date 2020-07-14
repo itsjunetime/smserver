@@ -14,6 +14,7 @@
 - Authentication to protect against spying eyes
 - Ability to permanently change passwords and default values
 - Background operation of server for unlimited time, with screen on or off.
+- Ability to set custom css rules for easy web interface customization
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
@@ -84,13 +85,13 @@ I would recommend building it yourself, since the .deb (under `package`) may not
 - [x] View all attachments in browser
 - [x] Send images/attachments from browser
 - [x] Automatic checking for new messages
-- [ ] Notifications on client whenever new messages arrive
 - [x] Display for which conversations have unread messages
 - [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
+- [x] Convenient Custom CSS Loading
+- [ ] Notifications on client whenever new messages arrive
 
 ### Future plans
-- [ ] Convenient Custom CSS Loading
 - [ ] Search through messages from browser
 - [ ] Start new conversations from browser
 
@@ -98,9 +99,9 @@ I would recommend building it yourself, since the .deb (under `package`) may not
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged current issues:
-- Message text box in web interface doesn't correctly resize when typing a multi-line text
-- The current (+debug34) .deb cannot send attachments, though the .ipa can. I don't quite know why this is, but I'm looking into it.
+- The current (+debug35) .deb cannot send attachments, though the .ipa can. I don't quite know why this is, but I'm looking into it.
     - If you are not running checkra1n and decide to install the .ipa, you'll need to ssh into your device and run `chmod 7777 /Applications/SMServer.app/SMServer` ; If you don't do this, the app won't be able to communicate with your SMS database. This step is not necessary if you install the .deb, since it handles that for you.
+- Message text box in web interface doesn't correctly resize when typing a multi-line text
 
 ### To file an issue:
 Please include the following information:

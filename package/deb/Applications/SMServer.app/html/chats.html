@@ -432,7 +432,7 @@
 
                 tbox.value = "";
                 document.getElementById("attachmentbutton").value = "";
-                document.getElementById("unhiddenbutton").value = "";
+                document.getElementById("unhiddenbutton").value = "&#128206";
             }
         
             function auto_grow(element) {
@@ -449,6 +449,7 @@
             interval;
         </script>
         <link rel="stylesheet" type="text/css" href="style.css">
+        <link rel="stylesheet" type="text/css" href="custom.css">
     </head>
     <body>
         <div class="everything">
@@ -470,11 +471,11 @@
                 </div>
                 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
                 <form action="/uploads" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
-                    <input value="" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
+                    <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
                     <textarea name="text" id="sendbox" oninput="auto_grow(this)" form="sendform" onkeydown="if (event.keyCode === 13) document.getElementById('sendbutton').click();"></textarea>
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
-                    <button id="sendbutton" onclick="sendForm();" value="⇡">
+                    <button id="sendbutton" onclick="sendForm();">↑</button>
                 </form>
             </div>
         </div>
