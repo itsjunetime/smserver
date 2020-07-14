@@ -12,7 +12,7 @@ import SwiftUI
 import os
 
 class ChatDelegate {
-    var debug: Bool = UserDefaults.standard.object(forKey: "debug") == nil ? false : UserDefaults.standard.object(forKey: "debug") as! Bool
+    var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     //@State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
     var past_latest_texts = [[String:String]]()
     let prefix = "SMServer_app: "
@@ -331,6 +331,23 @@ class ChatDelegate {
         return ""
     }
     
+    func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
+        let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is \"\(ci)\"))")
+        
+        var ret_val = [String]()
+        
+        for i in recipients {
+            if recipients.count > 2 && i == recipients[2] {
+                ret_val.append("...")
+                break
+            }
+            let ds = getDisplayNameWithDb(db: contact_db, chat_id: i["id"] ?? "")
+            ret_val.append((ds == "" ? i["id"] : ds) ?? "")
+        }
+        
+        return ret_val
+    }
+    
     func loadMessages(num: String, num_items: Int, offset: Int = 0) -> [[String:String]] {
         /// This loads the latest $num_items messages from/to $num, offset by $offset.
         
@@ -342,7 +359,7 @@ class ChatDelegate {
         let is_group = num.prefix(4) == "chat"
         
         for i in 0..<messages.count {
-            if messages[i]["cache_has_attachments"] == "1" {
+            if messages[i]["cache_has_attachments"] == "1" && messages[i]["ROWID"] != nil {
                 let a = getAttachmentFromMessage(mid: messages[i]["ROWID"]!)
                 var file_string = ""
                 var type_string = ""
@@ -358,7 +375,7 @@ class ChatDelegate {
                 messages[i]["attachment_type"] = type_string
             }
             
-            if is_group && messages[i]["is_from_me"] == "0" {
+            if is_group && messages[i]["is_from_me"] == "0" && messages[i]["handle_id"] != nil {
                 
                 let handle = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID is \(messages[i]["handle_id"]!)", num_items: 1)
                 
@@ -417,25 +434,38 @@ class ChatDelegate {
         var already_selected = [String:Int]() /// Just making it a dictionary so I have O(1) access instead of iterating through, as with an array
         
         for i in chat_ids_ordered {
-            if chats[i["chat_id"] ?? ""] == nil {
-                continue
-            }
-            
-            let ci = chats[i["chat_id"]!]!["chat_identifier"]
-            
-            if already_selected[ci!] != nil {
-                continue;
-            }
+            if chats[i["chat_id"] ?? ""] == nil { continue }
             
             var new_chat = chats[i["chat_id"]!]
             
+            let ci = new_chat?["chat_identifier"]
+            
+            if already_selected[ci!] != nil { continue }
+            
             new_chat!["has_unread"] = "false"
-            if messages[i["message_id"]!]!["is_from_me"] == "0" && messages[i["message_id"]!]!["date_read"] == "0" && messages[i["message_id"]!]!["text"] != nil && messages[i["message_id"]!]!["is_read"] == "0" && messages[i["message_id"]!]!["item_type"] == "0" {
+            if messages[i["message_id"]!]?["is_from_me"] == "0" && messages[i["message_id"]!]?["date_read"] == "0" &&
+                messages[i["message_id"]!]?["text"] != nil && messages[i["message_id"]!]?["is_read"] == "0" &&
+                messages[i["message_id"]!]?["item_type"] == "0" {
                 new_chat!["has_unread"] = "true"
             }
             
             if new_chat?["display_name"]!.count == 0 {
-                new_chat?["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: ci ?? "")
+                if ci?.prefix(4) == "chat" && !((ci?.contains("@"))!) { /// Making sure it's a group chat
+                    let recipients = getGroupRecipientsWithDb(contact_db: contacts_db, db: db, ci: ci!)
+                    
+                    var display_val = ""
+                    
+                    for r in recipients {
+                        display_val += r
+                        if r != recipients[recipients.count - 1] {
+                            display_val += ", "
+                        }
+                    }
+                    
+                    new_chat?["display_name"] = display_val
+                } else {
+                    new_chat?["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: ci ?? "")
+                }
             }
             
             chats_array.append(new_chat!)

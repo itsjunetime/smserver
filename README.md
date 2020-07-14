@@ -99,7 +99,7 @@ I would recommend building it yourself, since the .deb (under `package`) may not
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged current issues:
-- The current (+debug35) .deb cannot send attachments, though the .ipa can. I don't quite know why this is, but I'm looking into it.
+- The current (+debug36) .deb does not support sending attachments or custom css loading, though the .ipa does. I don't quite know why this is, but I'm looking into it.
     - If you are not running checkra1n and decide to install the .ipa, you'll need to ssh into your device and run `chmod 7777 /Applications/SMServer.app/SMServer` ; If you don't do this, the app won't be able to communicate with your SMS database. This step is not necessary if you install the .deb, since it handles that for you.
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
 
