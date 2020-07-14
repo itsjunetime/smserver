@@ -42,11 +42,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneDidBecomeActive(_ scene: UIScene) {
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
-        if !contentView.server.isRunning {
+        /*if !contentView.server.isRunning && (UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true) {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             contentView.loadServer(port_num: UInt16(port) ?? UInt16(8741))
         }
-        contentView.endBackgroundTask()
+        contentView.endBackgroundTask()*/
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
@@ -58,11 +58,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
-        if !contentView.server.isRunning {
+        /*if !contentView.server.isRunning && (UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true) {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             contentView.loadServer(port_num: UInt16(port) ?? UInt16(8741))
         }
-        contentView.endBackgroundTask()
+        contentView.endBackgroundTask()*/
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
