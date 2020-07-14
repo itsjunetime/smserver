@@ -53,46 +53,6 @@
 		<data>
 		3DVn24GdU+bvthfxcGetRM3SYxg=
 		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/bootstrap.min.js</key>
-		<data>
-		WBTpG7Ynb03ot5Ucll8vGQoDl40=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/html5shiv.min.js</key>
-		<data>
-		PHs2lIXK3VhdJL5EcB5FnIqlTWA=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/index.js</key>
-		<data>
-		8qOORS30nnUWHw3vcsJqhFcH/kI=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.fileupload.js</key>
-		<data>
-		gmMptr0t98V6A7wqNCwn7NMkiCI=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.iframe-transport.js</key>
-		<data>
-		yRrUxqNIOefirRzfmDtmapT5lUY=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.jeditable.js</key>
-		<data>
-		sNReNA+/xi4NQZZfzpzsHFBur10=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.min.js</key>
-		<data>
-		tm7XCHF78LSgBaTQETr4hD7zuP8=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.ui.widget.js</key>
-		<data>
-		aPO2PrYkLy13UxJXz8gZTjNVAu8=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/respond.min.js</key>
-		<data>
-		taukDWWw1vhYWdtH91fqlxoO/TA=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/tmpl.min.js</key>
-		<data>
-		WNTm03roa7jsSwV6J2fQOZx158s=
-		</data>
 		<key>Info.plist</key>
 		<data>
 		l+O+etqkuhbbW43LFpR95vmBUsw=
@@ -177,76 +137,6 @@
 			<key>hash2</key>
 			<data>
 			OeaXbI7w8QhmqQk3g0TBhZM5dDC3H4YKof1fCW2TJqY=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/bootstrap.min.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			iY0FoX8s/FEg3c26R6iFw3jAtGbzDwcA5QJ1fiS0A6E=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/html5shiv.min.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			jHqcBHBWM2erADB7T7m7MFLQon8LlOY7ncC7jDaUScs=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/index.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			7ffkRUp/lAC6HIT4tpWI3eitnMEAUeIE/VkV0yBllUY=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.fileupload.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			Kz321tvgwD7Hck26FL2Y84zwtM+0c34//3/wWU0QMFY=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.iframe-transport.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			4ScIL4xOdpUvWo4emgwnMTcso/fYAPqaXsG+0KUWwqk=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.jeditable.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			iCiSosDssw4YD0MFwuBNf48kloaBRz7o+eSKrUXDZYc=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.min.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			spTpc4lvj4dOkKjrGokIrHkJgNA0xMS98Pw9N7ir9oI=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/jquery.ui.widget.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			MOUi0jj56ErYKJq1tD7jlv+9HpbI6rdxV/vG+jDtqs0=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/respond.min.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			g6iAfvZp+nDQ2TdTR/VVKJf3bGro4ub5fvWSWVRi2NE=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/js/tmpl.min.js</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			jogq01E9p5Dq2LdRYfA3gKE0oN3ly7rn3tgHkVvCOqk=
 			</data>
 		</dict>
 	</dict>

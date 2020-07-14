@@ -1,6 +1,6 @@
 # Custom CSS
 
-**The latest version (+debug35) supports loading custom CSS for the main page.**
+**Since +debug35, the app has supported loading custom CSS for the main page.**
 
 ## To apply:
 
