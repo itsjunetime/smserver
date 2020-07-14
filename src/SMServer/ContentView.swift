@@ -20,6 +20,7 @@ struct ContentView: View {
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? Array<String> ?? [String]()
+    @State var custom_css = UserDefaults.standard.object(forKey: "custom_css") as? String ?? ""
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -28,6 +29,7 @@ struct ContentView: View {
     @State var alert_connected = false
     @State var has_root = false
     @State var show_root_alert = false
+    @State var show_picker = false
     
     let chat_delegate = ChatDelegate()
     let s = sender()
@@ -36,6 +38,7 @@ struct ContentView: View {
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
     static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
     static let userHomeString = "/private/var/mobile/"
+    let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     
@@ -60,6 +63,9 @@ struct ContentView: View {
     @State var gatekeeper_page =
     """
     """
+    @State var custom_style =
+    """
+    """
     
     func log(s: String) {
         os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
@@ -77,16 +83,7 @@ struct ContentView: View {
         self.log(s: "launched mobilesms")
         
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
-            if self.debug {
-                print("headers:")
-                print(request.headers)
-                print("query:")
-                print(request.query as Any)
-                print("url:")
-                print(request.url)
-                print("ras:")
-                print(request.remoteAddressString)
-            }
+            
             let ip = request.remoteAddressString
             
             if self.debug {
@@ -104,17 +101,6 @@ struct ContentView: View {
         server.addHandler(forMethod: "GET", path: "/requests", request: GCDWebServerRequest.self, processBlock: { request in
             /// There is no authentication handler here 'cause it handles that within parseAndReturn()
             /// since they send the password auth request to this subdirectory
-            
-            if self.debug {
-                print("headers:")
-                print(request.headers)
-                print("query:")
-                print(request.query as Any)
-                print("url:")
-                print(request.url)
-                print("ras:")
-                print(request.remoteAddressString)
-            }
             
             let query = request.query
             
@@ -181,6 +167,18 @@ struct ContentView: View {
             }
             
             return GCDWebServerDataResponse(text: self.main_page_style)
+        })
+        
+        server.addHandler(forMethod: "GET", path: "/custom.css", request: GCDWebServerRequest.self, processBlock: { request in
+            let ip = request.remoteAddressString
+            
+            self.log(s: ip)
+            
+            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
+                return GCDWebServerDataResponse(text: "")
+            }
+            
+            return GCDWebServerDataResponse(text: self.custom_style)
         })
         
         do {
@@ -266,20 +264,27 @@ struct ContentView: View {
         let server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
         
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
-        let c = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
+        let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
         let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html") {
             do {
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
                     .replacingOccurrences(of: "const num_texts_to_load;", with: "const num_texts_to_load = \(default_num_messages);")
                     .replacingOccurrences(of: "const num_chats_to_load;", with: "const num_chats_to_load = \(default_num_chats);")
                     .replacingOccurrences(of: "const timeout;", with: "const timeout = \(server_ping)000;")
-                self.main_page_style = try String(contentsOf: c, encoding: .utf8)
+                self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
-            }
-            catch {
+            } catch {
                 self.log(s: "WARNING: ran into an error with loading the files, try again.")
                 print("WARNING: ran into an error with loading the files, try again.")
             }
+        }
+        
+        do {
+            self.custom_style = try String(contentsOf: self.custom_css_path, encoding: .utf8)
+        } catch {
+            self.log(s: "Could not load custom css file")
+            print("could not load custom css file")
+            self.custom_style = ""
         }
     }
     
@@ -497,7 +502,7 @@ struct ContentView: View {
         
         return NavigationView {
                 VStack {
-                    if  self.getWiFiAddress() != nil {
+                    if self.getWiFiAddress() != nil {
                         Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
                             .font(Font.custom("smallTitle", size: 22))
                             .padding()
@@ -522,20 +527,66 @@ struct ContentView: View {
                             }
                     }
                     
-                    Spacer().frame(height: 20)
-                    
-                    Button(action: {
-                        UserDefaults.standard.setValue(self.authenticated_addresses, forKey: "authenticated_addresses")
-                    }) {
-                        Text("Save current authenticated addressses")
+                    Group {
+                        Spacer().frame(height: 20)
+                        
+                        Button(action: {
+                            UserDefaults.standard.setValue(self.authenticated_addresses, forKey: "authenticated_addresses")
+                        }) {
+                            Text("Save current authenticated addressses")
+                        }
+                        
+                        Spacer().frame(height: 10)
+                        
+                        Button(action: {
+                            UserDefaults.standard.setValue([String](), forKey: "authenticated_addresses")
+                        }) {
+                            Text("Clear all past authenticated addresses")
+                        }
+                        
+                        Spacer().frame(height: 30)
                     }
                     
-                    Spacer().frame(height: 10)
+                    HStack {
                     
-                    Button(action: {
-                        UserDefaults.standard.setValue([String](), forKey: "authenticated_addresses")
-                    }) {
-                        Text("Clear all past authenticated addresses")
+                        Button(action: {
+                            let picker = Picker(
+                                supportedTypes: ["public.text"],
+                                onPick: { url in
+                                    if self.debug {
+                                        self.log(s: "document chosen")
+                                        print("document chosen")
+                                    }
+                                    do {
+                                        try FileManager.default.copyItem(at: url, to: self.custom_css_path)
+                                    } catch {
+                                        self.log(s: "Couldn't move custom css")
+                                        print("couldn't move custom css")
+                                    }
+                                }, onDismiss: {
+                                    if self.debug {
+                                        self.log(s: "picker dismissed")
+                                        print("dismissed")
+                                    }
+                                }
+                            )
+                            UIApplication.shared.windows.first?.rootViewController?.present(picker, animated: true)
+                        }) {
+                            Text("Show picker")
+                        }
+                        
+                        Spacer().frame(width: 40)
+                        
+                        Button(action: {
+                            do {
+                                try FileManager.default.removeItem(at: self.custom_css_path)
+                            } catch {
+                                self.log(s: "Deleted custom css file")
+                                print("Deleted custom css file")
+                            }
+                        }) {
+                            Text("Remove Custom CSS File")
+                        }
                     }
                     
                     Spacer()
@@ -568,7 +619,7 @@ struct ContentView: View {
                             Spacer().frame(width: 30)
                             
                             Button(action: {
-                                self.server_running ? self.stopServer() : nil
+                                (self.server_running && self.getWiFiAddress() != nil) ? self.stopServer() : nil
                             }) {
                                 Image(systemName: "stop.fill")
                                     .scaleEffect(1.5)
@@ -578,7 +629,7 @@ struct ContentView: View {
                             Spacer().frame(width: 30)
                             
                             Button(action: {
-                                self.server_running ? nil : self.loadServer(port_num: UInt16(port)!)
+                                self.server_running || self.getWiFiAddress() == nil ? nil : self.loadServer(port_num: UInt16(port)!)
                                 UserDefaults.standard.setValue(true, forKey: "has_run")
                             }) {
                                 Image(systemName: "play.fill")
@@ -613,6 +664,33 @@ struct ContentView: View {
         }.alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
         })
+    }
+}
+
+class Picker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
+    
+    private let onDismiss: () -> Void
+    private let onPick: (URL) -> ()
+    
+    init(supportedTypes: [String], onPick: @escaping (URL) -> Void, onDismiss: @escaping () -> Void) {
+        self.onDismiss = onDismiss
+        self.onPick = onPick
+        
+        super.init(documentTypes: supportedTypes, in: .open)
+        
+        allowsMultipleSelection = false
+        delegate = self
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        onPick(urls.first ?? URL(fileURLWithPath: ""))
+    }
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        onDismiss()
     }
 }
 
