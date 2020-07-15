@@ -278,7 +278,7 @@ class ChatDelegate {
         
         var db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         
-        var display_name_array = [[String:String]]()
+        /*var display_name_array = [[String:String]]()
         
         if chat_id.contains("@") {
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
@@ -287,7 +287,9 @@ class ChatDelegate {
             
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(parsed_num)\"", num_items: 1)
             
-        }
+        }*/
+        
+        let name = getDisplayNameWithDb(db: db, chat_id: chat_id)
         
         if sqlite3_close(db) != SQLITE_OK {
             self.log(s: "WARNING: error closing database")
@@ -301,12 +303,12 @@ class ChatDelegate {
             print("destroyed db")
         }
         
-        if display_name_array.count != 0 {
+        /*if display_name_array.count != 0 {
             let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
             return full_name
-        }
+        }*/
         
-        return ""
+        return name
     }
     
     func getDisplayNameWithDb(db: OpaquePointer?, chat_id: String) -> String {
