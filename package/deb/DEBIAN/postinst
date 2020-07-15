@@ -1,1 +1,9 @@
-chmod 7777 /Applications/SMServer.app/SMServer
+#!/bin/sh
+
+if ! ls /private/var/checkra1n.dmg ; then
+	echo "running chmod 7777 /Applications/SMServer.app/SMServer"
+	chmod 7777 /Applications/SMServer.app/SMServer
+else ;
+	echo "You're running checkra1n. No need to chmod."
+fi
+
