@@ -71,31 +71,32 @@ struct ContentView: View {
     """
     """
     
-    func log(s: String) {
+    func log(_ s: String) {
         os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
     func loadServer(port_num: UInt16) {
         /// This starts the server at port $port_num
         
-        self.debug ? self.log(s: "Loading server at port \(String(port_num))") : nil
+        self.debug ? self.log("Loading server at port \(String(port_num))") : nil
         
         if server.isRunning {
             self.stopServer()
-            self.debug ? self.log(s: "Server was already running, stopped.") : nil
+            self.debug ? self.log("Server was already running, stopped.") : nil
         }
         
         self.s.launchMobileSMS()
         
-        self.log(s: "launched mobilesms")
+        if self.debug {
+            self.log("launched mobilesms")
+        }
         
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
             
             let ip = request.remoteAddressString
             
             if self.debug {
-                print("entered default handler")
-                self.log(s: "GET main: " + ip)
+                self.log("GET main: " + ip)
             }
             
             if self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
@@ -117,7 +118,15 @@ struct ContentView: View {
                 
                 let address = String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))
                 
+                if self.debug {
+                    self.log("GET /requests: \(address)")
+                }
+                
                 let response = self.parseAndReturn(params: query ?? [String:String](), address: address)
+                
+                if self.debug {
+                    self.log("Returning from /requests")
+                }
                 
                 return GCDWebServerDataResponse(text: response)
             }
@@ -126,7 +135,9 @@ struct ContentView: View {
         server.addHandler(forMethod: "GET", path: "/attachments", request: GCDWebServerRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
             
-            self.log(s: "GET Attachments: " + ip)
+            if self.debug {
+                self.log("GET Attachments: " + ip)
+            }
             
             if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
@@ -135,16 +146,26 @@ struct ContentView: View {
             let dataResponse = self.chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
             let type = self.chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
             
+            if self.debug {
+                self.log("Returning attachment")
+            }
+            
             return GCDWebServerDataResponse(data: dataResponse, contentType: type)
         })
         
         server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
             
-            self.log(s: "GET profile: " + ip)
+            if self.debug {
+                self.log("GET profile: " + ip)
+            }
             
             if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
+            }
+            
+            if self.debug {
+                self.log("returning profile")
             }
             
             return GCDWebServerDataResponse(data: self.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
@@ -153,7 +174,9 @@ struct ContentView: View {
         server.addHandler(forMethod: "POST", path: "/uploads", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
             
-            self.log(s: "POST uploads: " + ip)
+            if self.debug {
+                self.log("POST uploads: " + ip)
+            }
             
             if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
@@ -161,13 +184,19 @@ struct ContentView: View {
             
             let send = self.sendText(req: (request as! GCDWebServerMultiPartFormRequest))
             
+            if self.debug {
+                self.log("Returning from sending text")
+            }
+            
             return GCDWebServerDataResponse(text: send)
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
             
-            self.log(s: ip)
+            if self.debug {
+                self.log("GET style.css: \(ip)")
+            }
             
             if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
@@ -179,7 +208,7 @@ struct ContentView: View {
         server.addHandler(forMethod: "GET", path: "/custom.css", request: GCDWebServerRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
             
-            self.log(s: ip)
+            self.log("GET /custom.css: \(ip)")
             
             if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
@@ -192,12 +221,14 @@ struct ContentView: View {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
         } catch {
-            self.log(s: "failed to start server. fat rip right there.")
+            self.log("failed to start server. fat rip right there.")
             print("failed to start server. fat rip right there.")
         }
         self.server_running = server.isRunning
         
-        self.log(s: "Started server and launched MobileSMS")
+        if self.debug {
+            self.log("Started server and launched MobileSMS")
+        }
     }
     
     func sendText(req: GCDWebServerMultiPartFormRequest) -> String {
@@ -223,16 +254,15 @@ struct ContentView: View {
                     continue
                 }
             } catch {
-                self.log(s: "couldn't get filesize")
-                print("couldn't get filesize")
+                self.log("couldn't get filesize")
             }
             
             let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName)
             do {
                 try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
             } catch {
-                self.log(s: "failed to move file; won't send text")
-                print("failed to move file; won't send text")
+                self.log("failed to move file; won't send text")
+                return "false"
             }
             files.append(newFilePath)
         }
@@ -249,12 +279,14 @@ struct ContentView: View {
         /// This starts the background task... I may deprecate this soon and put it in like SceneDelegate or AppDelegate
         
         DispatchQueue.global().async {
-            self.log(s: "started background task...")
-            print("started background task...")
+            if self.debug {
+                self.log("started background task...")
+            }
             
             self.backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-                self.log(s: "relaunching app...")
-                print("relaunching app...")
+                if self.debug {
+                    self.log("relaunching app...")
+                }
                 self.s.relaunchApp()
             })
         }
@@ -282,16 +314,14 @@ struct ContentView: View {
                 self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
             } catch {
-                self.log(s: "WARNING: ran into an error with loading the files, try again.")
-                print("WARNING: ran into an error with loading the files, try again.")
+                self.log("WARNING: ran into an error with loading the files, try again.")
             }
         }
         
         do {
             self.custom_style = try String(contentsOf: self.custom_css_path, encoding: .utf8)
         } catch {
-            self.log(s: "Could not load custom css file")
-            print("could not load custom css file")
+            self.log("Could not load custom css file")
             self.custom_style = ""
         }
         
@@ -337,8 +367,10 @@ struct ContentView: View {
         if self.debug {
             print("parsing:")
             print(params)
-            for i in Array(params.keys) {
-                self.log(s: "parsing \(i) and \(String(describing: params[i]))")
+            if self.debug {
+                for i in Array(params.keys) {
+                    self.log("parsing \(i) and \(String(describing: params[i]))")
+                }
             }
         }
         
@@ -346,8 +378,7 @@ struct ContentView: View {
         
         if Array(params.keys)[0] == "password" {
             if self.debug {
-                self.log(s: "comparing " + Array(params.values)[0] + " to " + password)
-                print("comparing " + Array(params.values)[0] + " to " + password)
+                self.log("comparing " + Array(params.values)[0] + " to " + password)
             }
             if Array(params.values)[0] == password {
                 var already_in = false;
@@ -400,8 +431,7 @@ struct ContentView: View {
             }
             
             if self.debug {
-                self.log(s:  "selecting person: " + person + ", num: " + String(num_texts))
-                print("selecting person: " + person + ", num: " + String(num_texts))
+                self.log( "selecting person: " + person + ", num: " + String(num_texts))
             }
             
             if person.contains("\"") { /// Just in case, I guess?
@@ -423,10 +453,8 @@ struct ContentView: View {
             }
             
             if self.debug {
-                self.log(s: "num chats: \(num_texts)")
-                self.log(s: "chats offset: \(chats_offset)")
-                print("num chats: \(num_texts)")
-                print("chats offset: \(chats_offset)")
+                self.log("num chats: \(num_texts)")
+                self.log("chats offset: \(chats_offset)")
             }
             
             let chats_array = chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
@@ -464,8 +492,7 @@ struct ContentView: View {
         
         self.server.stop()
         if self.debug {
-            self.log(s: "Stopped Server")
-            print("Stopped server")
+            self.log("Stopped Server")
         }
         self.authenticated_addresses = [String]()
         server_running = server.isRunning
@@ -600,19 +627,16 @@ struct ContentView: View {
                                     supportedTypes: ["public.text"],
                                     onPick: { url in
                                         if self.debug {
-                                            self.log(s: "document chosen")
-                                            print("document chosen")
+                                            self.log("document chosen")
                                         }
                                         do {
                                             try FileManager.default.copyItem(at: url, to: self.custom_css_path)
                                         } catch {
-                                            self.log(s: "Couldn't move custom css")
-                                            print("couldn't move custom css")
+                                            self.log("Couldn't move custom css")
                                         }
                                     }, onDismiss: {
                                         if self.debug {
-                                            self.log(s: "picker dismissed")
-                                            print("dismissed")
+                                            self.log("picker dismissed")
                                         }
                                     }
                                 )
@@ -630,9 +654,11 @@ struct ContentView: View {
                             Button(action: {
                                 do {
                                     try FileManager.default.removeItem(at: self.custom_css_path)
+                                    if self.debug {
+                                        self.log("Removed custom css file")
+                                    }
                                 } catch {
-                                    self.log(s: "Deleted custom css file")
-                                    print("Deleted custom css file")
+                                    self.log("Failed to remove custom css file")
                                 }
                             }) {
                                 Image(systemName: "trash")
