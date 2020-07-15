@@ -33,7 +33,10 @@ struct ContentView: View {
     @State var show_picker = false
     
     let chat_delegate = ChatDelegate()
-    let s = sender()
+    /*let s = Sender(callback: {
+        chat_delegate.setFirstTexts(address: "")
+    })*/
+    @State var s = Sender()
     
     let messagesString = "/private/var/mobile/Library/SMS/sms.db"
     let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
@@ -670,7 +673,7 @@ struct ContentView: View {
                             }.alert(isPresented: $alert_connected, content: {
                                 Alert(title: Text("Checking connection to sms.db"),
                                         message: Text( self.checkIfConnected() ? "You can connect to the database." :
-                                        "You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact thedeveloper   about this issue."
+                                        "You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact the developer about this issue."
                                 ))
                             })
                     
@@ -717,6 +720,7 @@ struct ContentView: View {
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color(UIColor.tertiarySystemBackground), lineWidth: 2)
                 )
+                .shadow(radius: 7)
                 
             }.padding(.init(top: 6, leading: 10, bottom: 6, trailing: 10))
             .frame(height: 80)
