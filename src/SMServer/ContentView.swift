@@ -9,18 +9,13 @@
 import SwiftUI
 import GCDWebServer
 import SQLite3
-//import MobileCoreServices
 import os
 
 struct ContentView: View {
     let server = GCDWebUploader(uploadDirectory: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.path)
-    let bbheight: CGFloat? = 40
-    let bbsize: CGSize = CGSize(width: 1.8, height: 1.8)
     let prefix = "SMServer_app: "
     let geo_width: CGFloat = 0.6
-    static let t_width: CGFloat = 200
-    static let b_width: CGFloat = 40
-    static let s_width: CGFloat = t_width + b_width + CGFloat(5)
+    let font_size: CGFloat = 25
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? Array<String> ?? [String]()
@@ -240,7 +235,7 @@ struct ContentView: View {
         }
         
         if !(body == "" && files.count == 0) {
-            try self.s.sendIPCText(body, toAddress: address, withAttachments: files)
+            self.s.sendIPCText(body, toAddress: address, withAttachments: files)
             return "true"
         } else {
             return "false"
@@ -529,34 +524,48 @@ struct ContentView: View {
             UserDefaults.standard.setValue($0, forKey: "password")
         })
         
-        return NavigationView {
-            VStack {
-                if self.getWiFiAddress() != nil {
-                    Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
-                        .font(Font.custom("smallTitle", size: 22))
-                        .padding()
-                } else {
-                    Text("Please connect to wifi to operate the server.")
-                        .font(Font.custom("smallTitle", size: 22))
-                        .padding()
-                }
+        return VStack {
+            HStack {
+                Text("SMServer")
+                    .font(.largeTitle)
                 
-                Spacer().frame(height: 20)
+                Spacer()
+            }.padding()
+            .padding(.top, 10)
+            
+            if self.getWiFiAddress() != nil {
+                Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
+                    .font(Font.custom("smallTitle", size: 22))
+                    .padding()
+            } else {
+                Text("Please connect to wifi to operate the server.")
+                    .font(Font.custom("smallTitle", size: 22))
+                    .padding()
+            }
+            
+            Spacer().frame(height: 20)
+            
+            HStack {
+                Text("To learn more, visit")
+                    .font(.headline)
+                Text("the github repo")
+                    .font(.headline)
+                    .foregroundColor(.blue)
+                    .onTapGesture {
+                        let url = URL.init(string: "https://github.com/iandwelker/smserver")
+                        guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
+                        UIApplication.shared.open(github_url)
+                    }
+            }
+            
+            GeometryReader { geo in
                 
-                HStack {
-                    Text("To learn more, visit")
-                        .font(.headline)
-                    Text("the github repo")
-                        .font(.headline)
-                        .foregroundColor(.blue)
-                        .onTapGesture {
-                            let url = URL.init(string: "https://github.com/iandwelker/smserver.git")
-                            guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
-                            UIApplication.shared.open(github_url)
-                        }
-                }
-                
-                GeometryReader { geo in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .padding(.init(top: geo.size.width * 0.2, leading: geo.size.width * 0.15, bottom: geo.size.width * 0.2, trailing: geo.size.width * 0.15))
+                        .foregroundColor(Color(UIColor.tertiarySystemBackground))
+                        .shadow(radius: 7)
+                    
                     VStack {
                         HStack {
                             Text("Port")
@@ -579,10 +588,9 @@ struct ContentView: View {
                                 .disableAutocorrection(true)
                         }.frame(width: geo.size.width * self.geo_width)
                         
-                        Spacer().frame(height: 10)
+                        Spacer().frame(height: 30)
                         
                         HStack {
-                            Spacer().frame(width: ((geo.size.width * self.geo_width) - ContentView.self.s_width) / 2)
                             
                             Button(action: {
                                 let picker = Picker(
@@ -608,14 +616,13 @@ struct ContentView: View {
                                 UIApplication.shared.windows.first?.rootViewController?.present(picker, animated: true)
                             }) {
                                 Text("Set custom CSS")
-                                    .padding(10)
+                                    .padding(8)
                                     .background(Color.blue)
                                     .cornerRadius(40)
                                     .foregroundColor(Color.white)
-                                    .frame(width: ContentView.t_width)
-                            }.frame(width: ContentView.t_width)
+                            }
                             
-                            Spacer().frame(width: 5)
+                            Spacer().frame(width: 10)
                             
                             Button(action: {
                                 do {
@@ -626,84 +633,94 @@ struct ContentView: View {
                                 }
                             }) {
                                 Image(systemName: "trash")
-                                    .padding(10)
+                                    .padding(12)
                                     .background(Color.blue)
                                     .cornerRadius(40)
                                     .foregroundColor(Color.white)
-                                    .frame(width: ContentView.self.b_width)
-                            }.frame(width: ContentView.self.b_width)
-                            
-                            Spacer()//.frame(width: ((geo.size.width * self.geo_width) - ContentView.self.s_width) / 2)
-                            
-                        }.frame(width: geo.size.width * self.geo_width)
+                            }
+                        }
                     }
                 }
-                
-                Spacer()
-                
-                if UserDefaults.standard.object(forKey: "has_run") == nil {
-                    HStack {
-                        Text("Tap the arrow to start!")
-                            .font(.callout)
-                        Spacer()
-                    }.padding(.leading)
-                }
-                
+            }
+            
+            Spacer()
+            
+            if UserDefaults.standard.object(forKey: "has_run") == nil {
+                HStack {
+                    Text("Tap the arrow to start!")
+                        .font(.callout)
+                    Spacer()
+                }.padding(.leading)
+            }
+            
+            Spacer()
+            
+            HStack {
                 HStack {
                     HStack {
-                        Button(action: {
-                            self.loadFiles()
-                            self.alert_connected = self.debug
-                            self.s.launchMobileSMS()
-                        }) {
-                            Image(systemName: "goforward")
-                                .scaleEffect(1.5)
-                                .foregroundColor(Color.purple)
-                        }.alert(isPresented: $alert_connected, content: {
-                            Alert(title: Text("Checking connection to sms.db"),
-                                    message: Text( self.checkIfConnected() ? "You can connect to the database." :
-                                    "You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact the developer about this issue."
-                            ))
-                        })
-                        
-                        Spacer().frame(width: 30)
-                        
-                        Button(action: {
-                            (self.server_running && self.getWiFiAddress() != nil) ? self.stopServer() : nil
-                        }) {
-                            Image(systemName: "stop.fill")
-                                .scaleEffect(1.5)
-                                .foregroundColor(self.server_running ? Color.red : Color.gray)
-                        }
-                        
-                        Spacer().frame(width: 30)
-                        
-                        Button(action: {
-                            self.server_running || self.getWiFiAddress() == nil ? nil : self.loadServer(port_num: UInt16(self.port)!)
-                            UserDefaults.standard.setValue(true, forKey: "has_run")
-                        }) {
-                            Image(systemName: "play.fill")
-                                .scaleEffect(1.5)
-                                .foregroundColor(self.server_running ? Color.gray : Color.green)
-                        }
-                        
-                    }.padding(10)
+                        HStack {
+                            Button(action: {
+                                self.loadFiles()
+                                self.alert_connected = self.debug
+                                self.s.launchMobileSMS()
+                            }) {
+                                Image(systemName: "goforward")
+                                    .font(.system(size: self.font_size))
+                                    .foregroundColor(Color.purple)
+                            }.alert(isPresented: $alert_connected, content: {
+                                Alert(title: Text("Checking connection to sms.db"),
+                                        message: Text( self.checkIfConnected() ? "You can connect to the database." :
+                                        "You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact thedeveloper   about this issue."
+                                ))
+                            })
                     
-                    Spacer()
+                            Spacer().frame(width: 24)
                     
-                    HStack {
-                        Button(action: {
-                            self.view_settings.toggle()
-                        }) {
-                            Image(systemName: "gear")
-                                .scaleEffect(1.5)
-                        }.sheet(isPresented: $view_settings) {
-                            SettingsView()
-                        }
-                    }.padding(10)
-                }.padding()
+                            Button(action: {
+                                (self.server_running && self.getWiFiAddress() != nil) ? self.stopServer() : nil
+                            }) {
+                                Image(systemName: "stop.fill")
+                                    .font(.system(size: self.font_size))
+                                    .foregroundColor(self.server_running ? Color.red : Color.gray)
+                            }
+                    
+                            Spacer().frame(width: 30)
+                    
+                            Button(action: {
+                                self.server_running || self.getWiFiAddress() == nil ? nil : self.loadServer(port_num: UInt16(self.port)!)
+                                UserDefaults.standard.setValue(true, forKey: "has_run")
+                            }) {
+                                Image(systemName: "play.fill")
+                                    .font(.system(size: self.font_size))
+                                    .foregroundColor(self.server_running ? Color.gray : Color.green)
+                            }
+                    
+                        }.padding(10)
+                    
+                        Spacer()
+                    
+                        HStack {
+                            Button(action: {
+                                self.view_settings.toggle()
+                            }) {
+                                Image(systemName: "gear")
+                                    .font(.system(size: 24))
+                            }.sheet(isPresented: $view_settings) {
+                                SettingsView()
+                            }
+                        }.padding(10)
+                    }.padding(8)
+                    
+                }.background(LinearGradient(gradient: Gradient(colors: [Color("BeginningBlur"), Color("EndBlur")]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(UIColor.tertiarySystemBackground), lineWidth: 2)
+                )
                 
-            }.navigationBarTitle(Text("SMServer").font(.largeTitle))
+            }.padding(.init(top: 6, leading: 10, bottom: 6, trailing: 10))
+            .frame(height: 80)
+            .background(Color(UIColor.secondarySystemBackground))
             
         }.onAppear() {
             self.loadFiles()
@@ -712,9 +729,12 @@ struct ContentView: View {
             
             self.has_root = self.s.setUID() == uid_t(0)
             self.show_root_alert = self.debug
-        }.alert(isPresented: $show_root_alert, content: {
+        }
+        .alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
         })
+        .background(Color(UIColor.secondarySystemBackground))
+        .edgesIgnoringSafeArea(.all)
     }
 }
 
