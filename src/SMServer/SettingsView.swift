@@ -23,24 +23,6 @@ struct SettingsView: View {
     
     var body: some View {
         
-        let port_binding = Binding<String>(get: {
-            self.port
-        }, set: {
-            var possible_port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-            if possible_port.count < 4 {
-                possible_port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-            }
-            self.port = possible_port
-            UserDefaults.standard.setValue(possible_port, forKey: "port")
-        })
-        
-        let pass_binding = Binding<String>(get: {
-            self.password
-        }, set: {
-            self.password = $0
-            UserDefaults.standard.setValue($0, forKey: "password")
-        })
-        
         let chats_binding = Binding<Int>(get: {
             self.default_num_chats
         }, set: {
@@ -94,54 +76,42 @@ struct SettingsView: View {
         return VStack(spacing: 16) {
             HStack {
                 Text("Settings")
-                    .font(.title)
+                    .font(.largeTitle)
                 Spacer()
             }
             
-            HStack {
-                Text("Change default port")
-                    .font(.subheadline)
-                Spacer()
+            Spacer().frame(height: 20)
+            
+            Section {
+            
+                HStack {
+                    Text("Initial number of chats to load")
+                    Spacer()
+                    TextField("Chats", value: chats_binding, formatter: NumberFormatter())
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .frame(width: 60)
+                }
+                
+                HStack {
+                    Text("Initial number of messages to load")
+                    Spacer()
+                    TextField("Messages", value: messages_binding, formatter: NumberFormatter())
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .frame(width: 60)
+                }
+                
+                HStack {
+                    Text("Interval for website to ping app (seconds)")
+                    Spacer()
+                    TextField("Ping", value: ping_binding, formatter: NumberFormatter())
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .frame(width: 60)
+                }
             }
             
-            TextField("Change default port (value must be >= 1000)", text: port_binding)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            Spacer().frame(height: 30)
             
-            HStack {
-                Text("Change password")
-                    .font(.subheadline)
-                Spacer()
-            }
-            
-            TextField("Change requests password", text: pass_binding)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .disableAutocorrection(true)
-            
-            HStack {
-                Text("Initial number of chats to load")
-                Spacer()
-                TextField("Chats", value: chats_binding, formatter: NumberFormatter())
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .frame(width: 60)
-            }
-            
-            HStack {
-                Text("Initial number of messages to load")
-                Spacer()
-                TextField("Messages", value: messages_binding, formatter: NumberFormatter())
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .frame(width: 60)
-            }
-            
-            HStack {
-                Text("Interval for website to ping app (seconds)")
-                Spacer()
-                TextField("Ping", value: ping_binding, formatter: NumberFormatter())
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .frame(width: 60)
-            }
-            
-            Group {
+            Section {
             
                 Toggle("Toggle debug", isOn: debug_binding)
             
@@ -150,9 +120,10 @@ struct SettingsView: View {
                 Toggle("Require Authentication to view messages", isOn: auth_binding)
                 
                 Toggle("Enable backgrounding", isOn: background_binding)
-            
-                Spacer()
             }
+            
+            Spacer()
+            
         }.padding()
     }
 }
