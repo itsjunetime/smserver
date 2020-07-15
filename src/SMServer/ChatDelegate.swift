@@ -20,7 +20,7 @@ class ChatDelegate {
     internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
     internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     
-    func log(s: String) {
+    func log(_ s: String) {
         os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
@@ -30,16 +30,14 @@ class ChatDelegate {
         var db: OpaquePointer?
         let connection_url = URL(fileURLWithPath: connection_string)
         guard sqlite3_open(connection_url.path, &db) == SQLITE_OK else {
-            self.log(s: "WARNING: error opening database")
-            print("WARNING: error opening database")
+            self.log("WARNING: error opening database")
             sqlite3_close(db)
             db = nil
             return db
         }
         
         if self.debug {
-            self.log(s: "opened database")
-            print("opened database")
+            self.log("opened database")
         }
         
         return db
@@ -65,21 +63,18 @@ class ChatDelegate {
         sqlString += ";"
         
         if self.debug {
-            self.log(s: "full sql query: " + sqlString)
-            print("full sql query: " + sqlString)
+            self.log("full sql query: " + sqlString)
         }
         
         var statement: OpaquePointer?
         
         if self.debug {
-            self.log(s: "opened statement")
-            print("opened statement")
+            self.log("opened statement")
         }
         
         if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log(s: "WARNING: error preparing select: \(errmsg)")
-            print("WARNING: error preparing select: \(errmsg)")
+            self.log("WARNING: error preparing select: \(errmsg)")
         }
         
         var main_return = [[String:String]]()
@@ -93,8 +88,7 @@ class ChatDelegate {
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
                     } else {
-                        self.log(s: "WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
-                        print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
+                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
                     minor_return[columns[j]] = tiny_return
                 }
@@ -112,8 +106,7 @@ class ChatDelegate {
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
                     } else {
-                        self.log(s: "WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
-                        print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
+                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
                     minor_return[columns[j]] = tiny_return
                 }
@@ -127,15 +120,13 @@ class ChatDelegate {
         
         if sqlite3_finalize(statement) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log(s: "WARNING: error finalizing prepared statement: \(errmsg)")
-            print("WARNING: error finalizing prepared statement: \(errmsg)")
+            self.log("WARNING: error finalizing prepared statement: \(errmsg)")
         }
 
         statement = nil
         
         if self.debug {
-            self.log(s: "destroyed statement")
-            print("destroyed statement")
+            self.log("destroyed statement")
         }
         
         return main_return
@@ -161,21 +152,18 @@ class ChatDelegate {
         sqlString += ";"
         
         if self.debug {
-            self.log(s: "full sql query: " + sqlString)
-            print("full sql query: " + sqlString)
+            self.log("full sql query: " + sqlString)
         }
         
         var statement: OpaquePointer?
         
         if self.debug {
-            self.log(s: "opened statement")
-            print("opened statement")
+            self.log("opened statement")
         }
         
         if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log(s: "WARNING: error preparing select: \(errmsg)")
-            print("WARNING: error preparing select: \(errmsg)")
+            self.log("WARNING: error preparing select: \(errmsg)")
         }
         
         var main_return = [String: [String:String]]()
@@ -190,8 +178,7 @@ class ChatDelegate {
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
                     } else {
-                        self.log(s: "WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
-                        print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
+                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
                     minor_return[columns[j]] = tiny_return
                     if columns[j] == identifier {
@@ -210,8 +197,7 @@ class ChatDelegate {
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
                     } else {
-                        self.log(s: "WARNING: Nothing returned for tiny_return_cstring when num_items == 0")
-                        print("WARNING: Nothing returned for tiny_return_cstring when num_items == 0")
+                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items == 0")
                     }
                     minor_return[columns[j]] = tiny_return
                     if columns[j] == identifier {
@@ -224,28 +210,29 @@ class ChatDelegate {
         
         if sqlite3_finalize(statement) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log(s: "WARNING: error finalizing prepared statement: \(errmsg)")
-            print("WARNING: error finalizing prepared statement: \(errmsg)")
+            self.log("WARNING: error finalizing prepared statement: \(errmsg)")
         }
 
         statement = nil
         
         if self.debug {
-            self.log(s: "destroyed statement")
-            print("destroyed statement")
+            self.log("destroyed statement")
         }
         
         return main_return
     }
     
     func checkIfConnected() -> Bool {
+        if self.debug {
+            self.log("Checking if connected")
+        }
+        
         var db = createConnection()
         
         let checker = selectFromSql(db: db, columns: ["ROWID"], table: "chat", num_items: 1)
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         db = nil
@@ -255,6 +242,10 @@ class ChatDelegate {
     
     func parsePhoneNum(num: String) -> String {
         /// This returns a string with SQL wildcards so that you can enter a phone number (e.g. +12837291837) and match it with something like +1 (283) 729-1837.
+        
+        if self.debug {
+            self.log("parsing phone number for \(num)")
+        }
         
         let new_num = num.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
         if new_num.count == 0 {
@@ -276,37 +267,23 @@ class ChatDelegate {
     func getDisplayName(chat_id: String) -> String {
         /// Gets the first + last name of a contact with the phone number or email of $chat_id
         
+        if self.debug {
+            self.log("Getting display name for \(chat_id)")
+        }
+        
         var db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
-        
-        /*var display_name_array = [[String:String]]()
-        
-        if chat_id.contains("@") {
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
-        } else {
-            let parsed_num = parsePhoneNum(num: chat_id)
-            
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(parsed_num)\"", num_items: 1)
-            
-        }*/
         
         let name = getDisplayNameWithDb(db: db, chat_id: chat_id)
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         db = nil
         
         if self.debug {
-            self.log(s: "destroyed db")
-            print("destroyed db")
+            self.log("destroyed db")
         }
-        
-        /*if display_name_array.count != 0 {
-            let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
-            return full_name
-        }*/
         
         return name
     }
@@ -314,6 +291,10 @@ class ChatDelegate {
     func getDisplayNameWithDb(db: OpaquePointer?, chat_id: String) -> String {
         /// This does the same thing as getDisplayName, but with the database as an argument. This allows batch display name fetching to be much faster
         /// than if you had to remake the database for each display name that you wanted to fetch.
+        
+        if self.debug {
+            self.log("Getting display name for \(chat_id) with db")
+        }
         
         var display_name_array = [[String:String]]()
         
@@ -327,6 +308,11 @@ class ChatDelegate {
         
         if display_name_array.count != 0 {
             let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
+            
+            if self.debug {
+                self.log("full name for \(chat_id) is \(full_name)")
+            }
+            
             return full_name
         }
         
@@ -334,6 +320,11 @@ class ChatDelegate {
     }
     
     func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
+        
+        if self.debug {
+            self.log("Getting group chat recipients for \(ci)")
+        }
+        
         let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is \"\(ci)\"))")
         
         var ret_val = [String]()
@@ -347,11 +338,19 @@ class ChatDelegate {
             ret_val.append((ds == "" ? i["id"] : ds) ?? "")
         }
         
+        if self.debug {
+            self.log("Finished retrieving recipients for \(ci)")
+        }
+        
         return ret_val
     }
     
     func loadMessages(num: String, num_items: Int, offset: Int = 0) -> [[String:String]] {
         /// This loads the latest $num_items messages from/to $num, offset by $offset.
+        
+        if self.debug {
+            self.log("getting messages for \(num)")
+        }
         
         var db = createConnection()
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
@@ -392,24 +391,20 @@ class ChatDelegate {
         }
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         db = nil
         
         if sqlite3_close(contact_db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         contact_db = nil
         
         if self.debug {
-            self.log(s: "destroyed db")
-            print("destroyed db")
-            self.log(s: "returning messages!")
-            print("returning messages!")
+            self.log("destroyed db")
+            self.log("returning messages!")
         }
         
         if self.debug {
@@ -424,6 +419,10 @@ class ChatDelegate {
     func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:String]] {
         /// This loads the most recent $num_to_load conversations, offset by $offset
         
+        if self.debug {
+            self.log("Getting chats")
+        }
+        
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
@@ -435,24 +434,33 @@ class ChatDelegate {
         var chats_array = [[String:String]]()
         var already_selected = [String:Int]() /// Just making it a dictionary so I have O(1) access instead of iterating through, as with an array
         
+        if self.debug {
+            self.log("len messages: \(messages.count), len chat_ids_ordered: \(chat_ids_ordered.count), len chats: \(chats.count)")
+        }
+        
         for i in chat_ids_ordered {
+            
             if chats[i["chat_id"] ?? ""] == nil { continue }
             
             var new_chat = chats[i["chat_id"]!]
             
             let ci = new_chat?["chat_identifier"]
             
-            if already_selected[ci!] != nil { continue }
+            if self.debug {
+                self.log("Beginning to iterate through chats for \(String(describing: ci))")
+            }
+            
+            if already_selected[ci ?? "no_chat"] != nil || ci == nil { continue }
+            
+            let mwid = messages[i["message_id"] ?? "nil"]
             
             new_chat!["has_unread"] = "false"
-            if messages[i["message_id"]!]?["is_from_me"] == "0" && messages[i["message_id"]!]?["date_read"] == "0" &&
-                messages[i["message_id"]!]?["text"] != nil && messages[i["message_id"]!]?["is_read"] == "0" &&
-                messages[i["message_id"]!]?["item_type"] == "0" {
+            if mwid?["is_from_me"] == "0" && mwid?["date_read"] == "0" && mwid?["text"] != nil && mwid?["is_read"] == "0" && mwid?["item_type"] == "0" {
                 new_chat!["has_unread"] = "true"
             }
             
             if new_chat?["display_name"]!.count == 0 {
-                if ci?.prefix(4) == "chat" && !((ci?.contains("@"))!) { /// Making sure it's a group chat
+                if ci?.prefix(4) == "chat" && !((ci?.contains("@")) ?? true) { /// Making sure it's a group chat
                     let recipients = getGroupRecipientsWithDb(contact_db: contacts_db, db: db, ci: ci!)
                     
                     var display_val = ""
@@ -470,34 +478,34 @@ class ChatDelegate {
                 }
             }
             
-            chats_array.append(new_chat!)
-            already_selected[ci!] = 0
+            chats_array.append(new_chat ?? [String:String]())
+            already_selected[ci ?? "no_chat"] = 0
+            
+            if self.debug {
+                self.log("Finished iterating through chats for \(String(describing: ci))")
+            }
         }
         
         if sqlite3_close(image_db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing image db")
-            print("WARNING: error closing image db")
+            self.log("WARNING: error closing image db")
         }
         
         image_db = nil
         
         if sqlite3_close(contacts_db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         contacts_db = nil
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         db = nil
         
         if self.debug {
-            self.log(s: "destroyed db")
-            print("destroyed db")
+            self.log("destroyed db")
         }
         
         return chats_array
@@ -506,21 +514,23 @@ class ChatDelegate {
     func returnImageData(chat_id: String) -> Data {
         /// This returns the profile picture for someone with the phone number or email $chat_id as pure image data
         
+        if self.debug {
+            self.log("Getting image data for chat_id \(chat_id)")
+        }
+        
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
         let return_val = returnImageDataDB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!)
         
         if sqlite3_close(contact_db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         contact_db = nil
         
         if sqlite3_close(image_db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         image_db = nil
@@ -530,6 +540,10 @@ class ChatDelegate {
     
     func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
         /// This does the same thing as returnImageDB, but with the contact_db and image_db as arguments, allowing for optimized batch profile image fetching
+        
+        if self.debug {
+            self.log("Getting image data with db for chat_id \(chat_id)")
+        }
         
         var docid = [[String:String]]()
         
@@ -553,14 +567,12 @@ class ChatDelegate {
         var statement: OpaquePointer?
         
         if self.debug {
-            self.log(s: "opened statement")
-            print("opened statement")
+            self.log("opened statement")
         }
         
         if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-            self.log(s: "WARNING: error preparing select: \(errmsg)")
-            print("WARNING: error preparing select: \(errmsg)")
+            self.log("WARNING: error preparing select: \(errmsg)")
         }
         
         var pngdata: Data;
@@ -574,8 +586,7 @@ class ChatDelegate {
                 pngdata = (image_w_dat?.pngData())!
                 
             } else {
-                self.log(s: "WARNING: Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
-                print("WARNING: Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
+                self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
                 let image_dat = UIImage(named: "profile")
                 pngdata = (image_dat?.pngData())!
             }
@@ -586,15 +597,13 @@ class ChatDelegate {
         
         if sqlite3_finalize(statement) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-            self.log(s: "WARNING: error finalizing prepared statement: \(errmsg)")
-            print("WARNING: error finalizing prepared statement: \(errmsg)")
+            self.log("WARNING: error finalizing prepared statement: \(errmsg)")
         }
 
         statement = nil
         
         if self.debug {
-            self.log(s: "destroyed statement")
-            print("destroyed statement")
+            self.log("destroyed statement")
         }
         
         return pngdata
@@ -605,6 +614,10 @@ class ChatDelegate {
         /// whenever something pings the server to check if they have received more text messages
         
         //past_latest_texts[address] = getLatestTexts();
+        if self.debug {
+            self.log("Setting first texts")
+        }
+        
         past_latest_texts = getLatestTexts()
     }
     
@@ -617,8 +630,7 @@ class ChatDelegate {
         /// will get notified that there is a new text. But for now, that's best I can do 'cause Xcode doesn't like to let me edit nested dicts.
         
         if self.debug {
-            self.log(s: "Ran checkLatestTexts(\(address))")
-            print("Ran checkLatestTexts(\(address))")
+            self.log("Ran checkLatestTexts(\(address))")
         }
         
         var db = createConnection()
@@ -627,13 +639,11 @@ class ChatDelegate {
         let ap_latest_texts = past_latest_texts
         if latest_texts == ap_latest_texts {
             if self.debug {
-                self.log(s: "They're identical.")
-                print("They're identical.")
+                self.log("They're identical.")
             }
             
             if sqlite3_close(db) != SQLITE_OK {
-                self.log(s: "WARNING: error closing database")
-                print("WARNING: error closing database")
+                self.log("WARNING: error closing database")
             }
 
             db = nil
@@ -643,8 +653,7 @@ class ChatDelegate {
         
         if ap_latest_texts == [[String:String]]() {
             if self.debug {
-                self.log(s: "Haven't pinged before")
-                print("Haven't pinged before")
+                self.log("Haven't pinged before")
             }
             
             let string = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat")
@@ -657,13 +666,11 @@ class ChatDelegate {
             self.past_latest_texts = latest_texts
             
             if self.debug {
-                self.log(s: "past_l_t.count = \(String(past_latest_texts.count))")
-                print("past_l_t.count = \(String(past_latest_texts.count))")
+                self.log("past_l_t.count = \(String(past_latest_texts.count))")
             }
             
             if sqlite3_close(db) != SQLITE_OK {
-                self.log(s: "WARNING: error closing database")
-                print("WARNING: error closing database")
+                self.log("WARNING: error closing database")
             }
 
             db = nil
@@ -675,8 +682,7 @@ class ChatDelegate {
         
         for i in 0..<latest_texts.count {
             if self.debug {
-                self.log(s: "checking between \(String(describing: ap_latest_texts[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
-                print("checking between \(String(describing: ap_latest_texts[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
+                self.log("checking between \(String(describing: ap_latest_texts[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
             }
             
             if latest_texts[i] != ap_latest_texts[i] {
@@ -689,17 +695,13 @@ class ChatDelegate {
         }
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
         
         db = nil
         
         if self.debug {
-            self.log(s: "new texts len:")
-            print("new texts len:")
-            self.log(s: String(new_texts.count))
-            print(String(new_texts.count))
+            self.log("new texts len:\(String(new_texts.count))")
         }
         
         //past_latest_texts[address] = latest_texts
@@ -711,13 +713,16 @@ class ChatDelegate {
     func getLatestTexts() -> [[String:String]] {
         /// This simply returns the most recent text from every existing conversation
         
+        if self.debug {
+            self.log("Getting latest texts")
+        }
+        
         var db = createConnection()
         
         let latest_texts = selectFromSql(db: db, columns: ["ROWID", "text", "date_read"], table: "message", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
         
         db = nil
@@ -728,15 +733,17 @@ class ChatDelegate {
     func getAttachmentFromMessage(mid: String) -> [[String]] {
         /// This returns the file path for all attachments associated with a certain message with the message_id of $mid
         
+        if self.debug {
+            self.log("Gettig attachment for mid \(mid)")
+        }
+        
         var db = createConnection()
         let file = selectFromSql(db: db, columns: ["filename", "mime_type", "hide_attachment"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
         
         var return_val = [[String]]()
         
         if self.debug {
-            self.log(s: "attachment file length:")
-            print("attachment file length:")
-            print(String(file.count))
+            self.log("attachment file length: \(String(file.count))")
         }
         
         if file.count > 0 {
@@ -749,8 +756,7 @@ class ChatDelegate {
         }
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         db = nil
@@ -760,6 +766,10 @@ class ChatDelegate {
     
     func getAttachmentType(path: String) -> String {
         /// This gets the file type of the attachment at $path
+        
+        if self.debug {
+            self.log("Getting attachment type for @ \(path)")
+        }
         
         let new_path = path.replacingOccurrences(of: "._.", with: "/")
         
@@ -772,8 +782,7 @@ class ChatDelegate {
         }
         
         if sqlite3_close(db) != SQLITE_OK {
-            self.log(s: "WARNING: error closing database")
-            print("WARNING: error closing database")
+            self.log("WARNING: error closing database")
         }
 
         db = nil
@@ -784,14 +793,17 @@ class ChatDelegate {
     func getAttachmentDataFromPath(path: String) -> Data {
         /// This returns the pure data of a file (attachment) at $path
         
+        if self.debug {
+            self.log("Getting attachment data for @ \(path)")
+        }
+        
         let parsed_path = path.replacingOccurrences(of: "._.", with: "/").replacingOccurrences(of: "../", with: "") ///Prevents LFI
         
         do {
             let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ContentView.imageStoragePrefix + parsed_path))
             return attachment_data
         } catch {
-            self.log(s: "WARNING: failed to load image for path \(ContentView.imageStoragePrefix + path)")
-            print("WARNING: failed to load image for path \(ContentView.imageStoragePrefix + path)")
+            self.log("WARNING: failed to load image for path \(ContentView.imageStoragePrefix + path)")
             return Data.init(capacity: 0)
         }
     }
