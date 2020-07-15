@@ -60,12 +60,12 @@ Alternately, if you want to install as a .ipa file:
 
 Alternately, if you want to install the deb but don't want to go through with the above steps, you can: 
 
-1. Install the package 'sshpass' on your mac
+1. Install the app 'sshpass' on your mac
 1. Export $THEOS_DEVICE_PASS as your iDevice's password
 1. Export $THEOS_DEVICE_IP as your iDevice's private IP
 1. Run the `make_deb.sh` script in the root of this repository. The new .deb will be in the 'package' subdirectory of this cloned repo.
 
-I would recommend building it yourself, since the .deb (under `package`) may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the .deb should be updated rather frequently, so it is also safe to use.
+I would recommend building it yourself, since the packages may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the packages will be updated rather frequently, so they are safe to use.
 
 ## To run
 
@@ -98,8 +98,8 @@ I would recommend building it yourself, since the .deb (under `package`) may not
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged current issues:
-- Since version +debug35, the .deb does not support sending attachments or custom css loading, though the .ipa does. I don't quite know why this is, but I'm looking into it.
-    - If you are not running checkra1n and decide to install the .ipa, you'll need to ssh into your device and run `chmod 7777 /Applications/SMServer.app/SMServer` ; If you don't do this, the app won't be able to communicate with your SMS database. This step is not necessary if you install the .deb, since it handles that for you.
+- Since version +debug35, the .deb does not support sending attachments or custom css loading, though the .ipa does. This is due to file permissions, specifically running `chmod 7777` on the SMServer executable (which the deb does upon install, to gain access to the sms database).
+    - Currently, there is no workaround for those not running checkra1n to send attachments and load custom CSS. I'm looking into this, though, and I'll update this as soon as there's something.
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
 
 ### To file an issue:
