@@ -98,7 +98,7 @@ I would recommend building it yourself, since the packages may not always be up 
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged current issues:
-- Since version +debug35, the .deb does not support sending attachments or custom css loading, though the .ipa does. See below for more issues
+- Since version +debug35, the .deb does not support sending attachments or custom css loading, though the .ipa does. See below for more information.
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
 
 ### .deb/.ipa attachments/css issues:
@@ -106,7 +106,7 @@ On checkra1n devices, the app can read from files in the filesystem by default, 
 
 My solution to this is currently to run `chmod 7777 /Applications/SMServer.app/SMServer` as soon as the .deb is installed. This gives the executable the necessary permissions to interact with SMS.db. However, doing this appears to prevent the app from writing to any directories that are normally user-writable, such as the documents or cache directory (and the app needs to write to those for sending attachments and loading custom CSS).
 
-I'm currently looking into fixing this issue, but I haven't found anything yet. For the time being, I'd recommend that checkra1n users install the .ipa, while non-checkra1n users install the .deb. I'll
+I'm currently looking into fixing this issue, but I haven't found anything yet. For the time being, I'd recommend that checkra1n users install the .ipa, while non-checkra1n users install the .deb. The .deb is still reporting issues with running the postinst script, so if you installed the .deb and the app isn't working, run `chmod 7777 /Applications/SMServer.app/SMServer` when logged in as root and the app should start to work fine.
 
 ### To file an issue:
 Please include the following information:
