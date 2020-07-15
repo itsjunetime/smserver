@@ -21,10 +21,9 @@
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
-- AppSync Unified (probably) - Without this, the .deb may fail to install (according to early reports). I'll look into removing this a dependency, but that's not a major priority right now.
 
 ## To Install
-This is definitely still in Beta stages; there are still issues and many features that need to be implemented. You have two options for installing: Using the provided .deb or building from source. If you want to use the .deb, simply download it from the `package` subdirectory here. 
+This is definitely still in Beta stages; there are still issues and many features that need to be implemented. You have two options for installing: Using the provided .deb or .ipa or building from source. If you want to use the .deb or .ipa, simply download it from the `package` subdirectory here. 
 
 ### To build from source and install as regular app:
 
@@ -99,7 +98,7 @@ I would recommend building it yourself, since the .deb (under `package`) may not
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged current issues:
-- The current (+debug36) .deb does not support sending attachments or custom css loading, though the .ipa does. I don't quite know why this is, but I'm looking into it.
+- Since version +debug35, the .deb does not support sending attachments or custom css loading, though the .ipa does. I don't quite know why this is, but I'm looking into it.
     - If you are not running checkra1n and decide to install the .ipa, you'll need to ssh into your device and run `chmod 7777 /Applications/SMServer.app/SMServer` ; If you don't do this, the app won't be able to communicate with your SMS database. This step is not necessary if you install the .deb, since it handles that for you.
 - Message text box in web interface doesn't correctly resize when typing a multi-line text
 
