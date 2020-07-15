@@ -22,8 +22,12 @@
 
 - (void)launchMobileSMS {
     
+    NSLog(@"SMServer_app: Entered obj-c func, launching MobileSMS");
+    
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
     [center callExternalMethod:@selector(launchSMS) withArguments:nil];
+    
+    NSLog(@"SMServer_app: Called IPC to launch MobileSMS");
 }
 
 - (uid_t)setUID {
@@ -36,7 +40,7 @@
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
     
-    [center callExternalMethod:@selector(sendAttachment:) withArguments:@{@"body": body, @"address": address, @"attachment": paths}];
+    [center callExternalMethod:@selector(sendText:) withArguments:@{@"body": body, @"address": address, @"attachment": paths}];
     
 }
 
