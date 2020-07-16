@@ -33,18 +33,8 @@ struct ContentView: View {
     @State var show_picker = false
     
     let chat_delegate = ChatDelegate()
-    /*let s = Sender(callback: {
-        chat_delegate.setFirstTexts(address: "")
-    })*/
     @State var s = Sender()
-    
-    let messagesString = "/private/var/mobile/Library/SMS/sms.db"
-    let messagesURL = URL(fileURLWithPath: "/private/var/mobile/Library/SMS/sms.db")
-    static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
-    static let userHomeString = "/private/var/mobile/"
     let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
-    internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
-    internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
     
     var requests_page = """
     <!DOCTYPE html>
@@ -217,17 +207,20 @@ struct ContentView: View {
             return GCDWebServerDataResponse(text: self.custom_style)
         })
         
+        if self.debug {
+            self.log("Got past adding all the handlers.")
+        }
+        
         do {
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
         } catch {
-            self.log("failed to start server. fat rip right there.")
-            print("failed to start server. fat rip right there.")
+            self.log("failed to start server. Try again or try reinstalling.")
         }
         self.server_running = server.isRunning
         
         if self.debug {
-            self.log("Started server and launched MobileSMS")
+            self.log("Successfully started server and launched MobileSMS")
         }
     }
     
