@@ -9,19 +9,18 @@
 #ifndef Obj_h
 #define Obj_h
 
-/*@interface IPCTextWatcher : NSObject
+@interface IPCTextWatcher : NSObject
 
-@property (nonatomic, strong) void(^completion)(void);
+@property (copy) void(^setTexts)(void);
++(void)load;
++(instancetype)sharedInstance;
+-(instancetype)init;
 -(void)handleReceivedTextWithCallback;
 
-@end*/
+@end
 
 @interface Sender : NSObject
 
-//@property (nonatomic, strong) void(^call)(void);
-//@property (nonatomic, strong) IPCTextWatcher* watcher;
-
-//- (id)initWithCallback:(void(^)(void))call;
 - (void)launchMobileSMS;
 - (void)relaunchApp;
 - (uid_t)setUID;

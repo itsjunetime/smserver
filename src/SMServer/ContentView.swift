@@ -32,9 +32,11 @@ struct ContentView: View {
     @State var show_root_alert = false
     @State var show_picker = false
     
-    let chat_delegate = ChatDelegate()
+    static let chat_delegate = ChatDelegate()
     @State var s = Sender()
     let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
+    
+    @State var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
     
     var requests_page = """
     <!DOCTYPE html>
@@ -133,8 +135,8 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: "")
             }
             
-            let dataResponse = self.chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
-            let type = self.chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
+            let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
+            let type = ContentView.chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
             
             if self.debug {
                 self.log("Returning attachment")
@@ -158,7 +160,7 @@ struct ContentView: View {
                 self.log("returning profile")
             }
             
-            return GCDWebServerDataResponse(data: self.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
+            return GCDWebServerDataResponse(data: ContentView.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
         })
         
         server.addHandler(forMethod: "POST", path: "/uploads", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
@@ -322,7 +324,11 @@ struct ContentView: View {
     }
     
     func checkIfConnected() -> Bool {
-        return chat_delegate.checkIfConnected()
+        return ContentView.chat_delegate.checkIfConnected()
+    }
+    
+    func setNewestTexts() -> Void {
+        ContentView.chat_delegate.setNewTexts()
     }
     
     func checkIfAuthenticated(ras: String) -> Bool {
@@ -430,7 +436,7 @@ struct ContentView: View {
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
             }
-            let texts_array = chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
+            let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
             
@@ -450,10 +456,10 @@ struct ContentView: View {
                 self.log("chats offset: \(chats_offset)")
             }
             
-            let chats_array = chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
+            let chats_array = ContentView.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
             let chats = encodeToJson(object: chats_array, title: "chats")
             DispatchQueue.main.async {
-                self.chat_delegate.setFirstTexts(address: address);
+                ContentView.chat_delegate.setFirstTexts(address: address);
             }
             return chats
             
@@ -461,12 +467,12 @@ struct ContentView: View {
             
             chat_id = Array(params.values)[0]
             
-            let name = chat_delegate.getDisplayName(chat_id: chat_id)
+            let name = ContentView.chat_delegate.getDisplayName(chat_id: chat_id)
             return name
             
         } else if f == "check" {
             
-            let lt = encodeToJson(object: chat_delegate.checkLatestTexts(address: address), title: "chat_ids")
+            let lt = encodeToJson(object: ContentView.chat_delegate.newest_texts, title: "chat_ids")
             if self.debug  {
                 print("lt:")
                 print(lt)
@@ -752,6 +758,7 @@ struct ContentView: View {
             
             self.has_root = self.s.setUID() == uid_t(0)
             self.show_root_alert = self.debug
+            self.watcher.setTexts = setNewestTexts
         }
         .alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
