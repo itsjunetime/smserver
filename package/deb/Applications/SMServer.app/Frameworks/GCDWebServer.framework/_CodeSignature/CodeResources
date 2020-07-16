@@ -17,35 +17,19 @@
 			<key>optional</key>
 			<true/>
 		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.eot</key>
-		<data>
-		86mjtgkTPD0h1rQqu/f0O9ER33I=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.svg</key>
-		<data>
-		PvkYWcvsFlrJffaVexdvaejWoE0=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.ttf</key>
-		<data>
-		qvr9wJQExKpER9fomKIYPe+cwbE=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.woff</key>
-		<data>
-		IgN6NFWRTlZi+lGllmd72zKeLFw=
-		</data>
-		<key>GCDWebUploader.bundle/Contents/Resources/index.html</key>
-		<data>
-		3DVn24GdU+bvthfxcGetRM3SYxg=
-		</data>
 		<key>Info.plist</key>
 		<data>
-		l+O+etqkuhbbW43LFpR95vmBUsw=
+		pBPI78PpsHn3D0udBp06Q5pB91Q=
 		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
 		<key>GCDWebUploader.bundle/Contents/Info.plist</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			1iIRJ6P+WWR07sERkhSrb+YSQEk=
+			</data>
 			<key>hash2</key>
 			<data>
 			AfSq5vmWgRSGIo4tHYXn9YzHwIKAplnfLDAyx6tKPRU=
@@ -53,47 +37,16 @@
 		</dict>
 		<key>GCDWebUploader.bundle/Contents/Resources/en.lproj/Localizable.strings</key>
 		<dict>
+			<key>hash</key>
+			<data>
+			B5pfPbMt1AAILVT+5XwjwfJVxKQ=
+			</data>
 			<key>hash2</key>
 			<data>
 			1kQcUYastnLP9JW7aH28mQjJ9gh18kdRdnzoxKbrdNM=
 			</data>
 			<key>optional</key>
 			<true/>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.eot</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			9JXzTk8XfPARWvmVu7/rP8q8iFAodudvxRpKtDm8hDE=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.svg</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			0WjVCojHMLTmgw3A2iorUdrkZYp32WGZQ8J7js/BnRo=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.ttf</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			vRjv0+/XD+yK0JYRogzb+ZRAssHUAIXCm+A2+JHWU1g=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.woff</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			/Jadwcb/Uxq882gIncuvV3UTOwYm/1a1IwGgWfwPnh4=
-			</data>
-		</dict>
-		<key>GCDWebUploader.bundle/Contents/Resources/index.html</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			OeaXbI7w8QhmqQk3g0TBhZM5dDC3H4YKof1fCW2TJqY=
-			</data>
 		</dict>
 	</dict>
 	<key>rules</key>

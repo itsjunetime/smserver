@@ -17,8 +17,8 @@ class ChatDelegate {
     var past_latest_texts = [[String:String]]()
     let prefix = "SMServer_app: "
     
-    internal let SQLITE_STATIC = unsafeBitCast(0, to: sqlite3_destructor_type.self)
-    internal let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+    static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
+    static let userHomeString = "/private/var/mobile/"
     
     func log(_ s: String) {
         os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
@@ -748,7 +748,7 @@ class ChatDelegate {
         
         if file.count > 0 {
             for i in file {
-                var suffixed = String(i["filename"]?.dropFirst(ContentView.imageStoragePrefix.count - ContentView.userHomeString.count + 2) ?? "")
+                var suffixed = String(i["filename"]?.dropFirst(ChatDelegate.imageStoragePrefix.count - ChatDelegate.userHomeString.count + 2) ?? "")
                 suffixed = suffixed.replacingOccurrences(of: "/", with: "._.")
                 let type = i["mime_type"] ?? ""
                 return_val.append([suffixed, type])
@@ -794,16 +794,16 @@ class ChatDelegate {
         /// This returns the pure data of a file (attachment) at $path
         
         if self.debug {
-            self.log("Getting attachment data for @ \(path)")
+            self.log("Getting attachment data from Path")
         }
         
         let parsed_path = path.replacingOccurrences(of: "._.", with: "/").replacingOccurrences(of: "../", with: "") ///Prevents LFI
         
         do {
-            let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ContentView.imageStoragePrefix + parsed_path))
+            let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.imageStoragePrefix + parsed_path))
             return attachment_data
         } catch {
-            self.log("WARNING: failed to load image for path \(ContentView.imageStoragePrefix + path)")
+            self.log("WARNING: failed to load image for path \(ChatDelegate.imageStoragePrefix + path)")
             return Data.init(capacity: 0)
         }
     }
