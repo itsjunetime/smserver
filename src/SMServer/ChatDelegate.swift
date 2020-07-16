@@ -14,7 +14,9 @@ import os
 class ChatDelegate {
     var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     //@State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
-    var past_latest_texts = [[String:String]]()
+    //var past_latest_texts = [[String:String]]()
+    var past_latest_texts = [String:String]()
+    var newest_texts = [String]()
     let prefix = "SMServer_app: "
     
     static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
@@ -621,76 +623,17 @@ class ChatDelegate {
         past_latest_texts = getLatestTexts()
     }
     
-    func checkLatestTexts(address: String) -> [String] {
-        /// This just checks if the host device has received more texts ever since the ip address $address last pinged the host
+    func setNewTexts() {
+        var newest = getLatestTexts()
+        newest_texts = [String]()
         
-        /// Ok I know it looks kinda funky, especially `let ap_latest_texts = past_latest_texts`, but this is a temporary workaround.
-        /// Before, past_latest_texts stored an array per ip address, but now it just stores one array of all the past latest texts.
-        /// If two people are communicating with the server, only the first person to ping the server after a new text has been received
-        /// will get notified that there is a new text. But for now, that's best I can do 'cause Xcode doesn't like to let me edit nested dicts.
-        
-        if self.debug {
-            self.log("Ran checkLatestTexts(\(address))")
-        }
+        if newest == past_latest_texts { return }
         
         var db = createConnection()
-        let latest_texts = getLatestTexts()
-        //let ap_latest_texts = past_latest_texts[address]
-        let ap_latest_texts = past_latest_texts
-        if latest_texts == ap_latest_texts {
-            if self.debug {
-                self.log("They're identical.")
-            }
-            
-            if sqlite3_close(db) != SQLITE_OK {
-                self.log("WARNING: error closing database")
-            }
-
-            db = nil
-            
-            return [] /// If they haven't received any new messages, just return nothing
-        }
         
-        if ap_latest_texts == [[String:String]]() {
-            if self.debug {
-                self.log("Haven't pinged before")
-            }
-            
-            let string = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat")
-            var ret = [String]()
-            for i in 0..<string.count {
-                ret.append(string[i]["chat_identifier"] ?? "chat_identifier not found")
-            }
-            
-            //self.past_latest_texts[address] = latest_texts
-            self.past_latest_texts = latest_texts
-            
-            if self.debug {
-                self.log("past_l_t.count = \(String(past_latest_texts.count))")
-            }
-            
-            if sqlite3_close(db) != SQLITE_OK {
-                self.log("WARNING: error closing database")
-            }
-
-            db = nil
-            
-            return ret
-        }
-        
-        var new_texts: [String] = [] /// Will just contain a list of all the chats that have new messages since they've last checked
-        
-        for i in 0..<latest_texts.count {
-            if self.debug {
-                self.log("checking between \(String(describing: ap_latest_texts[i]["text"])) and \(String(describing: latest_texts[i]["text"]))")
-            }
-            
-            if latest_texts[i] != ap_latest_texts[i] {
-                if let check_message_id = latest_texts[i]["ROWID"] {
-                    let append_num = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id is \(check_message_id))")
-                    
-                    new_texts.append(append_num[0]["chat_identifier"] ?? "")
-                }
+        for i in past_latest_texts.keys {
+            if newest[i] == nil {
+                newest_texts.append(selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "WHERE ROWID in (SELECT chat_id from chat_message_join WHERE message_id is \(String(i)))", num_items: 1, offset: 0)[0]["chat_identifier"] ?? "nil")
             }
         }
         
@@ -699,18 +642,9 @@ class ChatDelegate {
         }
         
         db = nil
-        
-        if self.debug {
-            self.log("new texts len:\(String(new_texts.count))")
-        }
-        
-        //past_latest_texts[address] = latest_texts
-        past_latest_texts = latest_texts
-        
-        return new_texts;
     }
     
-    func getLatestTexts() -> [[String:String]] {
+    func getLatestTexts() -> [String:String] {
         /// This simply returns the most recent text from every existing conversation
         
         if self.debug {
@@ -719,15 +653,20 @@ class ChatDelegate {
         
         var db = createConnection()
         
-        let latest_texts = selectFromSql(db: db, columns: ["ROWID", "text", "date_read"], table: "message", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
+        let latest_texts = selectFromSqlWithId(db: db, columns: ["ROWID", "text"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
         
         if sqlite3_close(db) != SQLITE_OK {
             self.log("WARNING: error closing database")
         }
         
+        var return_val = [String:String]()
+        for i in latest_texts.keys {
+            return_val[i] = latest_texts[i]?["text"]
+        }
+        
         db = nil
         
-        return latest_texts
+        return return_val
     }
     
     func getAttachmentFromMessage(mid: String) -> [[String]] {
