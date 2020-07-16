@@ -6,11 +6,11 @@
 	<dict>
 		<key>Assets.car</key>
 		<data>
-		VNnPQhIcXH5HcEnUHejVu2qzbjg=
+		EV+dEnam1fk3P3eW/Uz1Pb8tu0A=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
-		mg69XLBnQWU9JHPl3Kw0kXHymyI=
+		sqHDQsmVfFNdFRtdUT/RjDxtSCA=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
 		<data>
@@ -18,11 +18,11 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib</key>
 		<data>
-		tcdxXpPYEYof5vTNnt5jzTGK540=
+		I/yrUtMwJCzUzN/0s5BIHeCgUOM=
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebServer</key>
 		<data>
-		zoCLMYh37OVHqZM4OWoSHMPXR8o=
+		pnAUEoLWBYvnk4t36HEfubryWwA=
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
 		<data>
@@ -37,45 +37,25 @@
 			<key>optional</key>
 			<true/>
 		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.eot</key>
-		<data>
-		86mjtgkTPD0h1rQqu/f0O9ER33I=
-		</data>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.svg</key>
-		<data>
-		PvkYWcvsFlrJffaVexdvaejWoE0=
-		</data>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.ttf</key>
-		<data>
-		qvr9wJQExKpER9fomKIYPe+cwbE=
-		</data>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.woff</key>
-		<data>
-		IgN6NFWRTlZi+lGllmd72zKeLFw=
-		</data>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/index.html</key>
-		<data>
-		3DVn24GdU+bvthfxcGetRM3SYxg=
-		</data>
 		<key>Frameworks/GCDWebServer.framework/Info.plist</key>
 		<data>
-		l+O+etqkuhbbW43LFpR95vmBUsw=
+		pBPI78PpsHn3D0udBp06Q5pB91Q=
 		</data>
 		<key>Frameworks/GCDWebServer.framework/_CodeSignature/CodeResources</key>
 		<data>
-		Aejn0c6MCTlAjmD1xcbuMZp9brs=
+		mHD4+qphjqsTQ96EthLx2aMD/fc=
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/Info.plist</key>
 		<data>
-		fZkV4+C5wo2dXuN75OvkZkfo2EI=
+		LtQbsDbDp4cnmorsXxweXjACrEo=
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/Pods_SMServer</key>
 		<data>
-		T9cBP/Y/bUAclBYxesU+w7AUKMQ=
+		96nFNxW7eH0OlObe426z7/cgak4=
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeDirectory</key>
 		<data>
-		sOVWACRttyZY/NFb1C1ACyIDfas=
+		DqTdJ4gG+Gl5aWy2dnwpYPLvb+s=
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeRequirements</key>
 		<data>
@@ -83,15 +63,15 @@
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeRequirements-1</key>
 		<data>
-		MntP/wTZjcZckFmjXPHSuewXnJk=
+		JYbkV5P5x2ABLZkhhwj80NLbCSI=
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeResources</key>
 		<data>
-		ncShDl4jh/LvpLxP9k7RU3SY/Lg=
+		0AiHyY0ge/kP6a86+9M4Uu1FqwQ=
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeSignature</key>
 		<data>
-		YUk7Z39E+1YPcBUTab+S1/HYKPY=
+		QHAna7cPx0Vxv/W28b+hfmekCjQ=
 		</data>
 		<key>Info.plist</key>
 		<data>
@@ -140,14 +120,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			EqngYGLkrg2MOMcsWoOlLn4Cuk0ndtRhri760oIoMp0=
+			vPWVix/C8LYd39Xp9AA3McekmrAgKKxt7hAZNbAyI4k=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			dh8gJs4KD2OJmKOXuo0OKwtetz9NVd1h+7NInq3karw=
+			L73QIHlhJ7zgTwLj50aHv+rEKJeExSAjSOwKM2qOmoI=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
@@ -161,14 +141,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			JfstOqQHNRb+BNIRfw9l9/DjeFGF10PbI7JEKYGITTE=
+			kSUl46Bv8R4qAI8GJCUy5LHwPY++TnMiZxmGElbcaTI=
 			</data>
 		</dict>
 		<key>Frameworks/GCDWebServer.framework/GCDWebServer</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			dCCoSf9t2mInNHhfn5m2JuT+5goMdapYedWWeFDG7v8=
+			llgyM9xareBBFZGRZ+VOOc6EraFfxZAek3uOFMxEbTg=
 			</data>
 		</dict>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
@@ -187,74 +167,39 @@
 			<key>optional</key>
 			<true/>
 		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.eot</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			9JXzTk8XfPARWvmVu7/rP8q8iFAodudvxRpKtDm8hDE=
-			</data>
-		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.svg</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			0WjVCojHMLTmgw3A2iorUdrkZYp32WGZQ8J7js/BnRo=
-			</data>
-		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.ttf</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			vRjv0+/XD+yK0JYRogzb+ZRAssHUAIXCm+A2+JHWU1g=
-			</data>
-		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/fonts/glyphicons-halflings-regular.woff</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			/Jadwcb/Uxq882gIncuvV3UTOwYm/1a1IwGgWfwPnh4=
-			</data>
-		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/index.html</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			OeaXbI7w8QhmqQk3g0TBhZM5dDC3H4YKof1fCW2TJqY=
-			</data>
-		</dict>
 		<key>Frameworks/GCDWebServer.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			7MHPZzTE6zdlWRMPCu+KIN/QeCeEEoLykkK+9g7e6pA=
+			4s7jrKULCd6/+YQINtiqdlss/+QG/oRskYUaTyJ1314=
 			</data>
 		</dict>
 		<key>Frameworks/GCDWebServer.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			ni88b/k1OdUadRUxUKVxnmDeLpnJxf/0IUbKJUGcxS8=
+			zckFN7R1Doq5/gj1Ec9xRsGuXzRF9jfCLxHDp826rT8=
 			</data>
 		</dict>
 		<key>Frameworks/Pods_SMServer.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			JOMb4xbWuZSkwnFVC3RV8PE8xn5GkXyl6LQ+sY4/R9U=
+			GQBKFUtOzPq35MVz9i79aTN/dRbG5qfz/KkdCQPzCco=
 			</data>
 		</dict>
 		<key>Frameworks/Pods_SMServer.framework/Pods_SMServer</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			IyogryMqI1ET/XFLnBz8OeINz0JX78UKAacwzCkzEqo=
+			u0MdlurUw5G1IQ1IpWSouI0/bHlJBQVemQfdKIghCS8=
 			</data>
 		</dict>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeDirectory</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			vg36zrJWQbXmzObOfBfohS2QTFLco1Su9phOgqhAt9g=
+			U0GoCLcOUGUaT8xHBocDBIZT6VImKlTGHoOWN7clTCY=
 			</data>
 		</dict>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeRequirements</key>
@@ -268,21 +213,21 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			6pNS9UeawJM9lhZfB9lF9zh7SpUFd9sUxOmcBTD1Fr8=
+			D2pbt5Fbk5nz3UZCnJ0eGBBILXIJ+nd47aJOggkjo54=
 			</data>
 		</dict>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			fB6W+rxV2wZ1Vk2fbLSndEnBo0k+enOOaycctJi2AhI=
+			y6rAaPKOu0bMVjxR2ekUdbwWs4lNmT/18MoHPpkCObg=
 			</data>
 		</dict>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeSignature</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			7xqFT/bXFrgWTQPd5s1znK6uMNlZP46cJPceegzSWZA=
+			4fFcPNwS7vtNFliATfM0CTQ6+WnUL0PvM2rueK5y+W4=
 			</data>
 		</dict>
 		<key>embedded.mobileprovision</key>
