@@ -11,6 +11,8 @@
 
 #import "Obj.h"
 
+/// This IPCTextWatcher was set up to do something every time you receive a text, but setting a callback wasn't working right
+/// so I'm just commenting it all out for now until I can find out what went wrong
 /*@implementation IPCTextWatcher {
     MRYIPCCenter* _center;
 }
