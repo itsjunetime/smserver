@@ -11,50 +11,39 @@
 
 #import "Obj.h"
 
-/// This IPCTextWatcher was set up to do something every time you receive a text, but setting a callback wasn't working right
-/// so I'm just commenting it all out for now until I can find out what went wrong
-/*@implementation IPCTextWatcher {
+@implementation IPCTextWatcher {
     MRYIPCCenter* _center;
 }
 
 +(void)load {
-    [self sharedInstance:nil];
+    [self sharedInstance];
 }
 
-+(instancetype)sharedInstance:(void(^)(void))callback {
++(instancetype)sharedInstance {
     static dispatch_once_t onceToken = 0;
     __strong static IPCTextWatcher* sharedInstance = nil;
     dispatch_once(&onceToken, ^{
-        sharedInstance = [[self alloc] init:callback];
+        sharedInstance = [[self alloc] init];
     });
     return sharedInstance;
 }
 
--(instancetype)init:(void(^)(void))callback {
+-(instancetype)init {
     if ((self = [super init])) {
         _center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
         [_center addTarget:self action:@selector(handleReceivedTextWithCallback)];
-        _completion = callback;
     }
     return self;
 }
 
 -(void)handleReceivedTextWithCallback {
-    _completion();
+    _setTexts();
 }
 
-@end*/
+@end
 
 @implementation Sender
 
-/*- (id)initWithCallback:(void(^)(void))call {
-    self = [super init];
-    if (self) {
-        _call = call;
-        _watcher = [IPCTextWatcher sharedInstance:_call];
-    }
-    return self;
-}*/
 
 - (void)relaunchApp {
     

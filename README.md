@@ -106,7 +106,7 @@ On checkra1n devices, the app can read from files in the filesystem by default, 
 
 My solution to this is currently to run `chmod 7777 /Applications/SMServer.app/SMServer` as soon as the .deb is installed. This gives the executable the necessary permissions to interact with SMS.db. However, doing this appears to prevent the app from writing to any directories that are normally user-writable, such as the documents or cache directory (and the app needs to write to those for sending attachments and loading custom CSS).
 
-I'm currently looking into fixing this issue, but I haven't found anything yet. For the time being, I'd recommend that checkra1n users install the .ipa, while non-checkra1n users install the .deb. The .deb is still reporting issues with running the postinst script, so if you installed the .deb and the app isn't working, run `chmod 7777 /Applications/SMServer.app/SMServer` when logged in as root and the app should start to work fine.
+I'm currently looking into fixing this issue, but I haven't found anything yet. For the time being, I'd recommend that non-checkra1n users install the .deb, since that manages the chmod command for them, and checkra1n users can install either (since the chmod command checks first to make sure you don't have checkra1n before running). 
 
 ### To file an issue:
 Please include the following information:
