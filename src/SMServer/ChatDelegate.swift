@@ -401,12 +401,6 @@ class ChatDelegate {
             self.log("returning messages!")
         }
         
-        if self.debug {
-            for i in messages {
-                print(i)
-            }
-        }
-        
         return messages
     }
     
@@ -419,7 +413,7 @@ class ChatDelegate {
         
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
-        var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
+        //var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
         let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
         let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc", num_items: num_to_load, offset: offset)
@@ -453,6 +447,8 @@ class ChatDelegate {
                 new_chat!["has_unread"] = "true"
             }
             
+            new_chat?["latest_text"] = mwid?["text"]
+            
             if new_chat?["display_name"]!.count == 0 {
                 if ci?.prefix(4) == "chat" && !((ci?.contains("@")) ?? true) { /// Making sure it's a group chat
                     let recipients = getGroupRecipientsWithDb(contact_db: contacts_db, db: db, ci: ci!)
@@ -480,11 +476,11 @@ class ChatDelegate {
             }
         }
         
-        if sqlite3_close(image_db) != SQLITE_OK {
+        /*if sqlite3_close(image_db) != SQLITE_OK {
             self.log("WARNING: error closing image db")
         }
         
-        image_db = nil
+        image_db = nil*/
         
         if sqlite3_close(contacts_db) != SQLITE_OK {
             self.log("WARNING: error closing database")
