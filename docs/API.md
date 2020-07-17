@@ -2,7 +2,7 @@
 
 All non-image get requests are made to \<ip>:\<port>/requests. Requests for attachments are made to /attachments, and requests for profile images are made to /profile.
 
-All post requests are directed to /uploads. In the latest version, this is the only way to send texts and/or attachments.
+All post requests are directed to /send. In the latest version, this is the only way to send texts and/or attachments.
 
 All request parameters require a value, but only some of the values are consequential. However, the app will not interpret a parameter as a parameter unless it has an accompanying value -- For example, to retrieve the list of conversations, one must make a request to /requests with a parameter of 'chat', but 'GET /requests?chat' will return nothing. Something like 'GET /requests?chat=0' will return the correct information.
 
@@ -52,7 +52,7 @@ Example queries:
 
 ## `send`, `to` -- THIS IS DEPRECATED IN THE LATEST VERSION.
 
-**See the /uploads requests section for information on how to send a text now**
+**See the /send requests section for information on how to send a text now**
 
 Sends a text/iMessage with a body of $send to $to
 
@@ -100,7 +100,7 @@ Example queries:
 
 - /profile?chat_id=%2B15204458272
 
-# `/uploads` requests
+# `/send` requests
 
 Requests to this url are all sent using `POST`, are what are used to send texts and attachments. There are two arguments that can be sent to this, and it accepts multiple files as well. 
 
@@ -133,7 +133,7 @@ Sending a text with no attachments:
 from requests import post
 
 vals = {'text': 'text:Hello world!', 'chat': 'chat:email@email.org'}
-url = 'http://192.168.0.127:8741/uploads'
+url = 'http://192.168.0.127:8741/send'
 
 # The files is still included in the next line 'cause the app crashes if the files parameter is null/empty. No files are actually sent with this example, though.
 post(url, files={'attachments': (None, '0')}, data=vals)
@@ -147,7 +147,7 @@ vals = {'chat': 'chat:+13020499949'}
 # file is a tuple, with the first val being the file name, the second being an open operator on the file, and the third being the mimetype.
 file = ('image.jpeg', open('/home/user/Pictures/image.jpeg', 'rb'), 'image/jpeg')
 files_values = {'attachments': file}
-url = 'http://192.168.0.127:8741/uploads'
+url = 'http://192.168.0.127:8741/send'
 
 post(url, files=files_values, data=vals)
 ```
