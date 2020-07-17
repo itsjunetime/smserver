@@ -30,7 +30,7 @@ This is definitely still in Beta stages; there are still issues and many feature
 1. Clone this repository
 1. cd into the directory where the podfile is installed
 1. If cocoapods are not installed, run `sudo gem install cocoapods`
-1. Run `pod intall`
+1. Run `pod install`
 1. Open the .xcworkspace file in Xcode
 1. Connect your device
 1. Build and install the project!
@@ -61,8 +61,8 @@ Alternately, if you want to install as a .ipa file:
 Alternately, if you want to install the deb but don't want to go through with the above steps, you can: 
 
 1. Install the app 'sshpass' on your mac
-1. Export $THEOS_DEVICE_PASS as your iDevice's password
-1. Export $THEOS_DEVICE_IP as your iDevice's private IP
+1. Export `$THEOS_DEVICE_PASS` as your iDevice's password
+1. Export `$THEOS_DEVICE_IP` as your iDevice's private IP
 1. Run the `make_deb.sh` script in the root of this repository. The new .deb will be in the 'package' subdirectory of this cloned repo.
 
 I would recommend building it yourself, since the packages may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the packages will be updated rather frequently, so they are safe to use.
@@ -88,11 +88,16 @@ I would recommend building it yourself, since the packages may not always be up 
 - [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
 - [x] Convenient Custom CSS Loading
-- [ ] Notifications on client whenever new messages arrive
+- [ ] Information on web page about battery life, wifi connection, etc
+- [ ] Access to camera roll
 
 ### Future plans
+- [ ] HTTPS
+- [ ] Websockets for instant communication
+- [ ] Notification when other party starts typing
 - [ ] Search through messages from browser
 - [ ] Start new conversations from browser
+
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
