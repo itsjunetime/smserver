@@ -246,7 +246,7 @@ p {
     outline: none;
     border: none;
     border-radius: calc(var(--send-button-size) / 2);
-    margin-top: calc((var(--messages-send-height) - var(--send-button-size)) / 2);
+    margin-top: calc(((var(--messages-send-height) - var(--send-button-size)) / 2) + 1px);
     padding: 5px;
     margin-left: -4px;
     z-index: 1;

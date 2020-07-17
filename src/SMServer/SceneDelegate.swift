@@ -8,6 +8,7 @@
 
 import UIKit
 import SwiftUI
+import os
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -36,44 +37,39 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
         // The scene may re-connect later, as its session was not neccessarily discarded (see `application:didDiscardSceneSessions` instead).
-        if contentView.server.isRunning && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true {
+        /*if contentView.server.isRunning && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true && contentView.backgroundTask == .invalid {
+            os_log("%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, "SMServer_app: sceneDidDisconnect, starting background task")
             contentView.startBackgroundTask()
-        }
+        }*/
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
-        /*if !contentView.server.isRunning && (UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true) {
-            let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-            contentView.loadServer(port_num: UInt16(port) ?? UInt16(8741))
-        }
-        contentView.endBackgroundTask()*/
+        contentView.endBackgroundTask()
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
-        if contentView.server.isRunning && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true {
+        /*if contentView.server.isRunning && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true && contentView.backgroundTask == .invalid {
+            os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, "SMServer_app: ", "sceneWillResignActive, starting background task")
             contentView.startBackgroundTask()
-        }
+        }*/
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
-        /*if !contentView.server.isRunning && (UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true) {
-            let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-            contentView.loadServer(port_num: UInt16(port) ?? UInt16(8741))
-        }
-        contentView.endBackgroundTask()*/
+        contentView.endBackgroundTask()
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
-        if contentView.server.isRunning && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true {
+        if contentView.server.isRunning && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true && contentView.backgroundTask == .invalid {
+            os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, "SMServer_app: ", "sceneDidEnterBackground, starting background task")
             contentView.startBackgroundTask()
         }
     }

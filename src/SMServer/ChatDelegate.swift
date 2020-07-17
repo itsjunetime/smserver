@@ -59,7 +59,7 @@ class ChatDelegate {
         if condition != "" {
             sqlString += " " + condition
         }
-        if num_items != -1 || offset != 0 {
+        if num_items > 0 || offset != 0 {
             sqlString += " LIMIT \(offset), \(String(num_items))"
         }
         sqlString += ";"
@@ -89,8 +89,6 @@ class ChatDelegate {
                     var tiny_return = ""
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
-                    } else {
-                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
                     minor_return[columns[j]] = tiny_return
                 }
@@ -107,8 +105,6 @@ class ChatDelegate {
                     var tiny_return = ""
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
-                    } else {
-                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
                     minor_return[columns[j]] = tiny_return
                 }
@@ -179,8 +175,6 @@ class ChatDelegate {
                     var tiny_return = ""
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
-                    } else {
-                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0")
                     }
                     minor_return[columns[j]] = tiny_return
                     if columns[j] == identifier {
@@ -198,8 +192,6 @@ class ChatDelegate {
                     var tiny_return = ""
                     if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
                         tiny_return = String(cString: tiny_return_cstring)
-                    } else {
-                        self.log("WARNING: Nothing returned for tiny_return_cstring when num_items == 0")
                     }
                     minor_return[columns[j]] = tiny_return
                     if columns[j] == identifier {
@@ -588,7 +580,9 @@ class ChatDelegate {
                 pngdata = (image_w_dat?.pngData())!
                 
             } else {
-                self.log("WARNING: Nothing returned for tiny_return_cstring when num_items != 0. Using default.")
+                if self.debug {
+                    self.log("No profile picture found. Using default.")
+                }
                 let image_dat = UIImage(named: "profile")
                 pngdata = (image_dat?.pngData())!
             }
@@ -612,61 +606,20 @@ class ChatDelegate {
     }
     
     func setFirstTexts(address: String) { 
-        /// This just sets a variable for the latest texts that one has received, so that it can be compared against
-        /// whenever something pings the server to check if they have received more text messages
+        /// This just clears out the newest_texts array so that in case a new text was received before someone established a connection
+        /// it won't show that as a new text on the first ping.
         
-        //past_latest_texts[address] = getLatestTexts();
         if self.debug {
             self.log("Setting first texts")
         }
         
-        past_latest_texts = getLatestTexts()
-    }
-    
-    func setNewTexts() {
-        var newest = getLatestTexts()
         newest_texts = [String]()
-        
-        if newest == past_latest_texts { return }
-        
-        var db = createConnection()
-        
-        for i in past_latest_texts.keys {
-            if newest[i] == nil {
-                newest_texts.append(selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "WHERE ROWID in (SELECT chat_id from chat_message_join WHERE message_id is \(String(i)))", num_items: 1, offset: 0)[0]["chat_identifier"] ?? "nil")
-            }
-        }
-        
-        if sqlite3_close(db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-        
-        db = nil
     }
     
-    func getLatestTexts() -> [String:String] {
-        /// This simply returns the most recent text from every existing conversation
+    func setNewTexts(_ chat_id: String) {
+        newest_texts.removeAll(where: {$0 == chat_id})
         
-        if self.debug {
-            self.log("Getting latest texts")
-        }
-        
-        var db = createConnection()
-        
-        let latest_texts = selectFromSqlWithId(db: db, columns: ["ROWID", "text"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)" )
-        
-        if sqlite3_close(db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-        
-        var return_val = [String:String]()
-        for i in latest_texts.keys {
-            return_val[i] = latest_texts[i]?["text"]
-        }
-        
-        db = nil
-        
-        return return_val
+        newest_texts.append(chat_id)
     }
     
     func getAttachmentFromMessage(mid: String) -> [[String]] {
