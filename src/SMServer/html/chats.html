@@ -14,7 +14,13 @@
             var printed_texts = 0;
             var printed_chats = 0;
             var has_shown_warning = false;
-            
+
+            var items = "";
+            var new_items = "";
+            var shown_name = "";
+            var texts = "";
+            var image_string = "";
+
             const checkNewTexts = async () => {
                 
                 let url = "/requests?check=0"
@@ -36,29 +42,143 @@
                 var _ = await fetch_new_chats
                 
                 if (new_chats.length > 0) {
-                    console.log("new chats!, :")
-                    console.log(new_chats)
-                    
-                    printItems()
+                    //console.log("new chats, :")
+                    //console.log(new_chats)
                     
                     var selected_id = document.getElementsByClassName("title")[0].id;
+                    
+                    if (selected_id != document.getElementsByClassName("chats-list")[0].firstChild.id) {
+                        printItems()
+                    }
+
                     for (var i = 0; i < new_chats.length; ++i) {
                         if (new_chats[i] === selected_id) {
-                            getTexts(selected_id, num_texts_to_load)
+                            printNewTexts()
                         }
                     }
                 } else {
-                    console.log("no new chats.")
+                    //console.log("no new chats.")
                 }
             }
         
             const interval = setInterval(checkNewTexts, timeout);
 
-            var items = "";
-            var new_items = "";
-            var shown_name = "";
-            var texts = "";
-            var image_string = "";
+            const printNewTexts = async () => {
+                var selected_id = document.getElementsByClassName("title")[0].id;
+                var new_chat_id = selected_id.replace("+", "%2B")
+
+                let url = "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load;
+                const fetch_new_texts = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    this.texts = (json.texts)
+                    return texts
+                })
+                .catch(function () {
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_texts func)')
+                    has_shown_warning = true
+                    this.dataError = true;
+                })
+
+                var _ = await fetch_new_texts;
+                var content = document.getElementById("text-content");
+                var more = document.getElementsByClassName("more_texts")
+                if (more.length > 0) {
+                    more[0].setAttribute("class", more[0].getAttribute("class").replace(" more_texts", ""));
+                }
+                var is_group = selected_id.substring(0, 4) == "chat";
+
+                texts.reverse();
+
+                var i = 0;
+                for (var i = texts.length - 1; !document.getElementById("texts-" + texts[i].ROWID) && i > 0; i--) {
+                    //console.log("Checking for ROWID 'texts-" + texts[i].ROWID)
+                }
+
+                if (i === texts.length - 1) {
+                    return
+                }
+
+                for (var i = i + 1; i < texts.length; ++i) {
+                    //console.log("Now printing i:" + i.toString() + ", ROWID: " + texts[i].ROWID);
+
+                    var t = document.createElement("p")
+                    
+                    var classes = "text"
+                    if (i == texts.length - 1) {
+                        classes += " more_texts";
+                    }
+                    if (texts[i].is_from_me === "0") { /// I know that I could use ternary; it just doesn't play nice if i do that, for some reason
+                        classes += " is_from_them";
+                    } else {
+                        classes += " is_from_me";
+                    }
+                    t.setAttribute("class", classes);
+                    
+                    t.setAttribute("id", "texts-" + texts[i].ROWID);
+                    
+                    t.innerHTML = ''
+                    
+                    if (texts[i].hasOwnProperty('attachment_file') && texts[i].attachment_file.length != 0) {
+                        
+                        var files = texts[i].attachment_file.split(":");
+                        var types = texts[i].attachment_type.split(":");
+                        
+                        for (var l = 0; l < files.length; ++l) {
+                            if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
+                                t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                            } else if (files[l].length != 0) {
+                                t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                            }
+                        }
+                    } 
+                    
+                    t.innerHTML += texts[i].text;
+                    
+                    /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
+                    if (i != 0 && texts[i].date - texts[i - 1].date > 3600000000000) { /// Was < -3600000000000
+                        var time = document.createElement("div");
+                        time.setAttribute("class", "time-display");
+
+                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200
+                        function timeConverter(UNIX_timestamp){
+                            var a = new Date(UNIX_timestamp * 1000);
+                            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                            var year = a.getFullYear();
+                            var month = months[a.getMonth()];
+                            var date = a.getDate();
+                            var hour = a.getHours();
+                            var min = a.getMinutes();
+                            var time = date + ' ' + month + ' ' + year + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (min < 10 ? '0' : '') + min;
+                            return time;
+                        }
+                        
+                        var formattedTime = timeConverter(unix_timestamp)
+                                                
+                        time.innerHTML = "<p>" + formattedTime + "</p>"
+                        content.appendChild(time)
+                    }
+
+                    if (is_group && texts[i].is_from_me == "0" && ((i != texts.length - 1 && texts[i].sender != texts[i + 1].sender) || (i == texts.length - 1))){
+                        var from = document.createElement("div");
+
+                        from.innerHTML = "<p>" + texts[i].sender + "</p>";
+                        from.setAttribute("class", "sender");
+                        
+                        doc.appendChild(from);
+                    }                   
+                                                
+                    content.appendChild(t);
+                }
+                
+                document.getElementsByClassName("more_texts")[0].scrollIntoView()
+            }
+
             const readJson = async (offset = 0) => {
                 let url = "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
                 const fetch_val = await fetch(url)
@@ -222,11 +342,11 @@
                 for (var i = 0; i < texts.length; i++) {
                     var doc = document.getElementsByClassName("text-content")[0];
                     var t = document.createElement("p")
-                    if (i == 0) {
-                        t.setAttribute("id", "more_texts");
-                    }
                     
                     var classes = "text"
+                    if (i == 0) {
+                        classes += " more_texts";
+                    }
                     if (texts[i].is_from_me === "0") { /// I know that I could use ternary; it just doesn't play nice if i do that, for some reason
                         classes += " is_from_them";
                     } else {
@@ -234,6 +354,8 @@
                     }
                     t.setAttribute("class", classes);
                     
+                    t.setAttribute("id", "texts-" + texts[i].ROWID);
+
                     t.innerHTML = ''
                     
                     if (texts[i].hasOwnProperty('attachment_file') && texts[i].attachment_file.length != 0) {
@@ -288,8 +410,10 @@
                     }
                 }
                                                   
-                var scrollDoc = document.getElementById("text-content").lastChild
-                document.getElementById("text-content").scrollTop = scrollDoc.offsetTop
+                //var scrollDoc = document.getElementById("text-content").lastChild
+                //document.getElementById("text-content").scrollTop = scrollDoc.offsetTop
+                
+                document.getElementsByClassName("more_texts")[0].scrollIntoView()
             }
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
@@ -339,6 +463,8 @@
                         classes += " is_from_me";
                     }
                     t.setAttribute("class", classes);
+                    
+                    t.setAttribute("id", "texts-" + texts[i].ROWID);
                     
                     t.innerHTML = ''
                     
@@ -422,14 +548,14 @@
             }
 
             async function sendForm() {
+
                 var form = document.getElementById("sendform");
 
                 var tbox = document.getElementById("sendbox")
                 var oldval = tbox.value;
-                //tbox.value = "text:" + oldval
 
                 var hta = document.getElementById("hiddentextarea")
-                hta.value = "text:" + oldval
+                hta.value = "text:" + oldval;
 
                 form.submit();
 
@@ -443,6 +569,8 @@
                 
                 document.getElementById("attachmentbutton").value = "";
                 document.getElementById("unhiddenbutton").value = '📎';
+
+                printNewTexts();
             }
         
             function auto_grow(element) {
@@ -480,10 +608,10 @@
                     <br> <!--So that the first element doesn't fail to insert-->
                 </div>
                 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
-                <form action="/uploads" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
+                <form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
                     <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
-                    <textarea id="sendbox" oninput="auto_grow(this)" form="sendform" onkeydown="if (event.keyCode === 13) document.getElementById('sendbutton').click();"></textarea>
+                    <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13) sendForm();"></textarea>
                     <textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
                     <button id="sendbutton" onclick="sendForm();">↑</button>

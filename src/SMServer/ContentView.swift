@@ -163,7 +163,7 @@ struct ContentView: View {
             return GCDWebServerDataResponse(data: ContentView.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
         })
         
-        server.addHandler(forMethod: "POST", path: "/uploads", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
+        server.addHandler(forMethod: "POST", path: "/send", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
             
             if self.debug {
@@ -244,9 +244,11 @@ struct ContentView: View {
         
         self.setNewestTexts(address)
         
+        let fm = FileManager.default
+        
         for i in req.files {
             do {
-                let attr = try FileManager.default.attributesOfItem(atPath: i.temporaryPath)
+                let attr = try fm.attributesOfItem(atPath: i.temporaryPath)
                 let fileSize = attr[FileAttributeKey.size] as! UInt64
                 
                 if fileSize == 0 {
@@ -256,13 +258,22 @@ struct ContentView: View {
                 self.log("couldn't get filesize")
             }
             
-            let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName)
+            let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName).replacingOccurrences(of: " ", with: "_")
+            
+            if fm.fileExists(atPath: newFilePath) {
+                do {
+                    try fm.removeItem(atPath: newFilePath)
+                } catch {
+                    self.log("Couldn't remove file from path for whatever reason")
+                }
+            }
             do {
                 try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
             } catch {
                 self.log("failed to move file; won't send text")
                 return "false"
             }
+            
             files.append(newFilePath)
         }
         
