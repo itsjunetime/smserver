@@ -1,1 +1,1 @@
-*.app binary
+*.app -diff
