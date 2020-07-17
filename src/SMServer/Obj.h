@@ -11,11 +11,11 @@
 
 @interface IPCTextWatcher : NSObject
 
-@property (copy) void(^setTexts)(void);
+@property (copy) void(^setTexts)(NSString *);
 +(void)load;
 +(instancetype)sharedInstance;
 -(instancetype)init;
--(void)handleReceivedTextWithCallback;
+-(void)handleReceivedTextWithCallback:(NSString *)chat_id;
 
 @end
 
