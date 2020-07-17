@@ -34,9 +34,9 @@ struct ContentView: View {
     
     static let chat_delegate = ChatDelegate()
     @State var s = Sender()
-    let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
-    
     @State var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
+    
+    let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
     
     var requests_page = """
     <!DOCTYPE html>
@@ -200,7 +200,9 @@ struct ContentView: View {
         server.addHandler(forMethod: "GET", path: "/custom.css", request: GCDWebServerRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
             
-            self.log("GET /custom.css: \(ip)")
+            if self.debug {
+                self.log("GET /custom.css: \(ip)")
+            }
             
             if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
                 return GCDWebServerDataResponse(text: "")
@@ -239,6 +241,8 @@ struct ContentView: View {
                 address = String(i.string?.suffix(i.string!.count - 5) ?? "")
             }
         }
+        
+        self.setNewestTexts(address)
         
         for i in req.files {
             do {
@@ -279,15 +283,25 @@ struct ContentView: View {
             }
             
             self.backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-                if self.debug {
-                    self.log("relaunching app...")
+                if UIApplication.shared.applicationState == .background {
+                    if self.debug {
+                        self.log("relaunching app...")
+                    }
+                    self.s.relaunchApp()
+                } else {
+                    if self.debug {
+                        self.log("Not in background, invalidating background task.")
+                    }
+                    backgroundTask = .invalid
                 }
-                self.s.relaunchApp()
             })
         }
     }
     
     func endBackgroundTask() {
+        if self.debug {
+            self.log("Called endBackgroundTask()")
+        }
         UIApplication.shared.endBackgroundTask(self.backgroundTask)
     }
     
@@ -327,8 +341,8 @@ struct ContentView: View {
         return ContentView.chat_delegate.checkIfConnected()
     }
     
-    func setNewestTexts() -> Void {
-        ContentView.chat_delegate.setNewTexts()
+    func setNewestTexts(_ chat_id: String) -> Void {
+        ContentView.chat_delegate.setNewTexts(chat_id)
     }
     
     func checkIfAuthenticated(ras: String) -> Bool {
@@ -409,24 +423,17 @@ struct ContentView: View {
         var chat_id = ""
         
         let f = Array(params.keys)[0]
-        var s = ""
-        if params.count > 1 {
-            s = Array(params.keys)[1]
-        }
-        var t = ""
-        if params.count > 2 {
-            t = Array(params.keys)[2]
-        }
+        
         if f == "person" || f == "num" || f == "offset" {
             
-            person = f == "person" ? Array(params.values)[0] : (s == "person" ? Array(params.values)[1] : Array(params.values)[2])
+            person = params["person"] ?? ""
             
             num_texts = default_num_messages
-            if f == "num" || s == "num" || t == "num" {
-                num_texts = (f == "num" ? Int(Array(params.values)[0]) : (s == "num" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? default_num_chats
+            if params["num"] != nil {
+                num_texts = Int(params["num"] ?? String(default_num_chats)) ?? default_num_chats
             }
-            if f == "offset" || s == "offset" || t == "offset" {
-                offset = (f == "offset" ? Int(Array(params.values)[0]) : (s == "offset" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? 0
+            if params["offset"] != nil {
+                offset = Int(params["offset"] ?? "0") ?? 0
             }
             
             if self.debug {
@@ -444,11 +451,11 @@ struct ContentView: View {
             
             num_texts = default_num_chats
             var chats_offset = 0
-            if f == "num_chats" || s == "num_chats" || t == "num_chats" {
-                num_texts = (f == "num_chats" ? Int(Array(params.values)[0]) : (s == "num_chats" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? default_num_chats
+            if params["num_chats"] != nil {
+                num_texts = Int(params["num_chats"] ?? String(default_num_chats)) ?? default_num_chats
             }
-            if f == "chats_offset" || s == "chats_offset" || t == "chats_offset" {
-                chats_offset = (f == "chats_offset" ? Int(Array(params.values)[0]) : (s == "chats_offset" ? Int(Array(params.values)[1]) : Int(Array(params.values)[2]))) ?? 0
+            if params["chats_offset"] != nil {
+                chats_offset = Int(params["chats_offset"] ?? "0") ?? 0
             }
             
             if self.debug {
@@ -465,7 +472,7 @@ struct ContentView: View {
             
         } else if f == "name" {
             
-            chat_id = Array(params.values)[0]
+            chat_id = params["name"] ?? ""
             
             let name = ContentView.chat_delegate.getDisplayName(chat_id: chat_id)
             return name
@@ -473,6 +480,7 @@ struct ContentView: View {
         } else if f == "check" {
             
             let lt = encodeToJson(object: ContentView.chat_delegate.newest_texts, title: "chat_ids")
+            ContentView.chat_delegate.newest_texts = [String]()
             if self.debug  {
                 print("lt:")
                 print(lt)
@@ -758,7 +766,9 @@ struct ContentView: View {
             
             self.has_root = self.s.setUID() == uid_t(0)
             self.show_root_alert = self.debug
-            self.watcher.setTexts = setNewestTexts
+            self.watcher.setTexts = { value in
+                self.setNewestTexts(value ?? "None")
+            }
         }
         .alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))

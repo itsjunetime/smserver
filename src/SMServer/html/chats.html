@@ -83,6 +83,9 @@
                 var new_items = await readJson();
                 const num_texts = num_texts_to_load;
                 var doc = document.getElementsByClassName("chats-list")[0];
+                var old_button = document.getElementById("morechatsbutton");
+                doc.innerHTML = "";
+                doc.appendChild(old_button);
 
                 printed_chats = num_chats_to_load
                 
@@ -423,16 +426,23 @@
 
                 var tbox = document.getElementById("sendbox")
                 var oldval = tbox.value;
-                tbox.value = "text:" + oldval
-                console.log("new val:" + tbox.value);
+                //tbox.value = "text:" + oldval
+
+                var hta = document.getElementById("hiddentextarea")
+                hta.value = "text:" + oldval
 
                 form.submit();
 
-                await sleep(1000);
+                await sleep(500);
 
                 tbox.value = "";
+                hta.value = "";
+                hta.style.height = (hta.scrollHeight)+"px";
+                var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
+                hta.style.height = sh;
+                
                 document.getElementById("attachmentbutton").value = "";
-                document.getElementById("unhiddenbutton").value = "&#128206";
+                document.getElementById("unhiddenbutton").value = '📎';
             }
         
             function auto_grow(element) {
@@ -473,7 +483,8 @@
                 <form action="/uploads" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
                     <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
-                    <textarea name="text" id="sendbox" oninput="auto_grow(this)" form="sendform" onkeydown="if (event.keyCode === 13) document.getElementById('sendbutton').click();"></textarea>
+                    <textarea id="sendbox" oninput="auto_grow(this)" form="sendform" onkeydown="if (event.keyCode === 13) document.getElementById('sendbutton').click();"></textarea>
+                    <textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
                     <button id="sendbutton" onclick="sendForm();">↑</button>
                 </form>
