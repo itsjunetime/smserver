@@ -19,17 +19,13 @@
 		</dict>
 		<key>Info.plist</key>
 		<data>
-		pBPI78PpsHn3D0udBp06Q5pB91Q=
+		l+O+etqkuhbbW43LFpR95vmBUsw=
 		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
 		<key>GCDWebUploader.bundle/Contents/Info.plist</key>
 		<dict>
-			<key>hash</key>
-			<data>
-			1iIRJ6P+WWR07sERkhSrb+YSQEk=
-			</data>
 			<key>hash2</key>
 			<data>
 			AfSq5vmWgRSGIo4tHYXn9YzHwIKAplnfLDAyx6tKPRU=
@@ -37,10 +33,6 @@
 		</dict>
 		<key>GCDWebUploader.bundle/Contents/Resources/en.lproj/Localizable.strings</key>
 		<dict>
-			<key>hash</key>
-			<data>
-			B5pfPbMt1AAILVT+5XwjwfJVxKQ=
-			</data>
 			<key>hash2</key>
 			<data>
 			1kQcUYastnLP9JW7aH28mQjJ9gh18kdRdnzoxKbrdNM=
