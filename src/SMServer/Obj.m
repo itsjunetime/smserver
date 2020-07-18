@@ -64,8 +64,9 @@
 
 - (uid_t)setUID {
     setuid(0);
+    setgid(0);
     
-    return getuid();
+    return getuid() + getgid();
 }
 
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths {

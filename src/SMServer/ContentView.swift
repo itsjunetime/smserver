@@ -345,7 +345,7 @@ struct ContentView: View {
             self.custom_style = ""
         }
         
-        debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+        self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     }
     
     func checkIfConnected() -> Bool {
