@@ -10,5 +10,7 @@ rm -rf ${ROOTDIR}/package/Payload/SMServer.app
 cp -r ${ROOTDIR}/package/SMServer_ipa.xcarchive/Products/Applications/SMServer.app ${ROOTDIR}/package/Payload/SMServer.app
 rm -rf ${ROOTDIR}/package/SMServer_ipa.xcarchive
 
+codesign --entitlements ${ROOTDIR}/src/app.entitlements -f -s "${DEV_CERT}" ${ROOTDIR}/package/deb/Applications/SMServer.app
+
 open ${ROOTDIR}/package # 'Cause 'Compress' in the finder can't be done via commandline
 # Now, once it's open, just Click 'compress' on the Payload folder and rename it to 'SMServer.ipa'
