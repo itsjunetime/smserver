@@ -8,6 +8,10 @@
     --send-button-size: calc(var(--send-box-size) - 4px);
     --send-box-size:  calc(var(--messages-send-height) - 8px);
     --attachments-button-size: 46px;
+    --top-button-gradient: linear-gradient(to bottom right, #bbb, #999);
+    --top-hover-gradient: linear-gradient(to bottom right, #aaa, #888);
+    --text-box-gradient: linear-gradient(to bottom right, #c8c8c8, #fff);
+    --light-button-gradient: linear-gradient(to bottom right, #c8c8c8, #d9d9d9);
 }
 * {
     font-family: var(--main-font);
@@ -64,7 +68,6 @@ p {
     align-content: center;
     background-color: #1a191b;
 }
-
 .textbox {
     display: grid;
     grid-template-columns: calc(var(--attachments-button-size) + 10px) 1fr var(--send-button-size);
@@ -277,4 +280,118 @@ p {
     margin-top: calc((var(--messages-send-height) - var(--send-box-size)) / 2);
     outline: none;
     border: none;
+}
+.popup {
+    display: none;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    z-index: 3;
+    overflow: auto;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.compose {
+    background-color: #222;
+    border-radius: 10px;
+    height: 46vh;
+    max-width: 60vw;
+    display: grid;
+    grid-template-rows: 40px 40px 1fr;
+    grid-template-columns: 1fr;
+    margin: auto;
+    margin-top: 20vh; 
+}
+.composeTitleBoxDiv {
+    background-color: #555;
+    color: #ddd;
+    border-radius: 8px 8px 0px 0px;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: 14% 1fr 14%;
+    grid-row: 1;
+}
+#composeHideButton {
+    grid-column: 1;
+}
+#composeTitleBoxTitle {
+    grid-column: 2;
+    text-align: center;
+}
+#composeSendButton {
+    grid-column: 3;
+}
+#composeHideButton, #composeSendButton {
+    background-color: rgba(0, 0, 0, 0);
+    background: var(--top-button-gradient);
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    transition: all linear 0.1s;
+    box-shadow: 0px 0px 6px #333;
+}
+#composeHideButton:hover, #composeSendButton:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+    box-shadow: none;
+    transition: all linear 0.1s;
+}
+#composeAttachmentButton {
+    display: none;
+}
+.composeAddressBoxDiv {
+    display: grid;
+    grid-template-columns: 30px 1fr 10%;
+    grid-gap: 10px;
+    padding: 5px;
+    grid-row: 2;
+}
+.composeAddressToDiv {
+    grid-column: 1;
+    color: #eee;
+}
+#composeAddressBox {
+    grid-column: 2;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    background: var(--text-box-gradient);
+    color: black;
+    padding: 0px 4px
+}
+#composeShowingAttachmentButton {
+    grid-column: 3;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    background-color: white;
+    box-shadow: 0px 0px 6px black;
+    transition: all linear 0.1s;
+}
+#composeShowingAttachmentButton:hover {
+    background-color: #d4d4d4;
+    transition: all linear 0.1s;
+}
+#composeSendBox {
+    margin: 10px;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    width: calc(100% - (2 * 10px));
+    height: calc(46vh - 40px - 40px);
+    resize: none;
+    grid-row: 3;
+    color: black;
+    padding: 4px;
+    background-color: #959595;
+}
+#composeShowButton {
+    background-color: #444;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    width: 60px;
+    height: 24px;
+    padding: 12px;
+    margin-left: -20px;
 }

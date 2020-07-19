@@ -1,5 +1,9 @@
 # Changelog
 
++debug76 -> +debug
+- Added support within libsmserver for sending texts to previously nonexistent conversations
+- Added support in web interface for sending texts to previously nonexistent conversations
+
 +debug72 -> +debug76
 - Fixed issue with unc0ver devices being unable to send attachments or set custom CSS
 - Fixed entitlements
