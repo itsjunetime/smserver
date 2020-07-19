@@ -116,7 +116,7 @@ This parameter is not necessary for every request
 
 ## chat
 
-This argument contains the chat_identifier of the recipient, specified as in the `person` parameter above, with the string 'chat:' prepended onto it. For example, if I wanted to send a text to the phone number '+15001001000', the value for this parameter would need to be 'chat:+15001001000'. 
+This argument contains the chat_identifier of the recipient, specified as in the `person` parameter above, with the string 'chat:' prepended onto it. For example, if I wanted to send a text to the phone number '+15001001000', the value for this parameter would need to be 'chat:+15001001000'. Before +debug77, these could only be an address for an existing conversation, but with version +debug77 of SMServer (and +debug85 of libsmserver), you can post requests for new conversations; new conversations do not yet support attachments, though.
 
 This parameter is necessary for every request, or else the app won't know who to send the text to. Also, plus signs should not be replaced with an escape character for these requests; they should stay plus signs.
 
