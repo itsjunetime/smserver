@@ -21,6 +21,7 @@
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
+- Some signing service/bypass -- Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign and you can install either the .deb or .ipa, but if that doesn't work for you, then feel free to sign & install the .ipa. I'll look into making this not required soon, but it may not be for a while.
 
 ## To Install
 This is definitely still in Beta stages; there are still issues and many features that need to be implemented. You have two options for installing: Using the provided .deb or .ipa or building from source. If you want to use the .deb or .ipa, simply download it from the `package` subdirectory here. 
@@ -81,6 +82,7 @@ I would recommend building it yourself, since the packages may not always be up 
 - [x] View texts in browser
 - [x] Dynamic loading of texts
 - [x] Send texts from browser without on-device interaction
+- [x] Start new conversations from browser
 - [x] View all attachments in browser
 - [x] Send images/attachments from browser
 - [x] Automatic checking for new messages
@@ -96,7 +98,6 @@ I would recommend building it yourself, since the packages may not always be up 
 - [ ] Websockets for instant communication
 - [ ] Notification when other party starts typing
 - [ ] Search through messages from browser
-- [ ] Start new conversations from browser
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
