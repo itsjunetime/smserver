@@ -572,6 +572,32 @@
 
                 printNewTexts();
             }
+
+            async function sendComposeForm() {
+                hidePopup();
+
+                var form = document.getElementById("composeform");
+                var tbox = document.getElementById("composeSendBox");
+                var oldval = tbox.value;
+
+                var hta = document.getElementById("hiddenComposeTextArea");
+                hta.value = "text:" + oldval;
+
+                var cbox = document.getElementById("composeAddressBox");
+                var coldval = cbox.value;
+                cbox.value = "chat:" + coldval;
+
+                form.submit();
+
+                await sleep(500);
+
+                tbox.value = "";
+                hta.value = "";
+                cbox.value = "";
+                document.getElementById("composeShowingAttachmentButton").value = "";
+                document.getElementById("composeAttachmentButton").value = "";
+
+            }
         
             function auto_grow(element) {
                 var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
@@ -580,6 +606,15 @@
             
                 var m = document.getElementsByClassName("messages")[0];
                 m.style.gridTemplateRows = "var(--messages-title-height) auto min-content";
+            }
+
+            function showPopup() {
+                document.getElementById("popup").style.display = "block";
+            }
+
+            function hidePopup() {
+                var pop = document.getElementById("popup");
+                pop.style.display = "none";
             }
             
             printItems()
@@ -594,6 +629,7 @@
             <div class="chats">
                 <div class="chats-title">
                     <h1>Messages</h1>
+                    <button onclick="showPopup();" id="composeShowButton">+ New</button>
                 </div>
                 <div class="chats-search">Search</div>
                 <div class="chats-list">
@@ -616,6 +652,25 @@
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
                     <button id="sendbutton" onclick="sendForm();">↑</button>
                 </form>
+            </div>
+            <div class="popup" id="popup">
+                <div class="compose" id="compose">
+                    <form action="send" method="POST" enctype="multipart/form-data" id="composeform" class="composeTextBox" target="dummyframe" name="composeform">
+                        <div class="composeTitleBoxDiv">
+                            <button onclick="hidePopup();" id="composeHideButton">Cancel</button>
+                            <span id="composeTitleBoxTitle">New Message</span>
+                            <button onclick="sendComposeForm();" id="composeSendButton">Send</button>
+                        </div>
+                        <div class="composeAddressBoxDiv">
+                            <span class="composeAddressToDiv">To:</span>
+                            <input name="chat" id="composeAddressBox" form="composeform" placeholder="address here">
+                            <input value="&#128206" onclick="document.getElementById('composeAttachmentButton').click();" type="button" id="composeShowingAttachmentButton"></input>
+                            <input type="file" name="attachments" id="composeAttachmentButton" multiple onchange="document.getElementById('composeShowingAttachmentButton').value = document.getElementById('composeAttachmentButton').files.length.toString();"></input>
+                        </div>
+                        <textarea id="composeSendBox" form="composeform" placeholder="body here"></textarea>
+                        <textarea name="text" style="display: none;" form="composeform" id="hiddenComposeTextArea"></textarea>
+                    </form>
+                </div>
             </div>
         </div>
     </body>
