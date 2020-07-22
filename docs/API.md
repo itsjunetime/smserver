@@ -73,6 +73,18 @@ Simply checks if any new texts have arrived since either 'chats' or 'check' was 
 Example queries:
 - /requests?check=0
 
+## `search`, `case_sensitive`, `bridge_gaps`
+
+This searches for the term $search in all your texts. `case_sensitive` and `bridge_gaps` are customization options.
+
+- search: Parameter is necessary, and value is consequential. This must be the term you want to search for. Does not have to be surrounded by quotes. Case sensitivity is determined by the `case_sensitive` parameter.
+- case_sensitive: Parameter is not necessary, and value is consequential; default is false. This determines whether or not you want the search to be case sensitive; a value of `true` make it sensitive, and `false` makes it insensitive
+- bridge_gaps: Parameter is not necessary, and value is consequential; default is true. If set to true, this replaces all spaces with wildcard characters, allowing for the search term to be spaced out over a text. A value of `true` makes it true, and `false` makes it false
+
+Example queries:
+- /requests?search=hello%20world&case_sensitive=true&bridge_gaps=false
+- /requests?search=hello_there
+
 # `/attachments` requests
 
 Requests to this URL return image data, which is why they have to be sent to a different url from /requests

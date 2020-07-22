@@ -43,7 +43,7 @@ class ChatDelegate {
         return db
     }
     
-    func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0) -> [[String:String]] {
+	func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0, prefix: String = "") -> [[String:String]] {
         /// This executes an SQL query, specifically 'SELECT $columns from $table $condition LIMIT $offset, $num_items', on $db
         
         var sqlString = "SELECT "
@@ -61,6 +61,10 @@ class ChatDelegate {
             sqlString += " LIMIT \(offset), \(String(num_items))"
         }
         sqlString += ";"
+		
+		if prefix.count != 0 {
+			sqlString = prefix + "; " + sqlString
+		}
         
         if self.debug {
             self.log("full sql query: " + sqlString)
@@ -693,4 +697,69 @@ class ChatDelegate {
             return Data.init(capacity: 0)
         }
     }
+	
+	func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]]{
+		var db = createConnection()
+		var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+		
+		var upperTerm = term
+		if bridge_gaps { upperTerm = upperTerm.split(separator: " ").joined(separator: "%") }
+		
+		var return_texts = [String:[[String:String]]]()
+		
+		let texts = selectFromSql(db: db, columns: ["ROWID", "text", "service", "date", "cache_has_attachments"], table: "message", condition: "WHERE text like \"%\(upperTerm)%\"")
+		
+		for var i in texts {
+			if case_sensitive && !(i["text"]?.contains(term) ?? true) { continue } /// Sqlite3 library can't set like to be case-sensitive. Must manually check.
+			
+			if i["date"] != nil {
+				let date: Int = Int(String(i["date"] ?? "0")) ?? 0
+				let new_date: Int = date / 1000000000
+				let timestamp: Int = new_date + 978307200
+				i["date"] = String(timestamp) /// Turns it into unix timestamp for easier use
+			}
+			
+			let handle = selectFromSql(db: db, columns: ["chat_identifier", "display_name"], table: "chat", condition: "WHERE ROWID in (SELECT chat_id from chat_message_join WHERE message_id is \(i["ROWID"] ?? ""))", num_items: 1)
+			var chat = ""
+			
+			if handle.count > 0 {
+				if handle[0]["display_name"]?.count == 0 {
+					chat = handle[0]["chat_identifier"] ?? "(null)"
+				} else {
+					chat = "Group: " + (handle[0]["display_name"] ?? "(null)")
+				}
+			}
+			
+			if return_texts[chat] == nil {
+				return_texts[chat] = [i]
+			} else {
+				return_texts[chat]?.append(i)
+			}
+		}
+		
+		for i in Array(return_texts.keys) {
+			if i.prefix(7) != "Group: " {
+				let name = getDisplayNameWithDb(db: contact_db, chat_id: i)
+				
+				if name.count != 0 {
+					return_texts[name] = return_texts[i]
+					return_texts.removeValue(forKey: i)
+				}
+			}
+		}
+		
+		if sqlite3_close(db) != SQLITE_OK {
+			self.log("WARNING: error closing database")
+		}
+
+		db = nil
+		
+		if sqlite3_close(contact_db) != SQLITE_OK {
+			self.log("WARNING: error closing database")
+		}
+
+		contact_db = nil
+		
+		return return_texts
+	}
 }
