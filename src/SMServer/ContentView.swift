@@ -557,12 +557,10 @@ struct ContentView: View {
         let port_binding = Binding<String>(get: {
             self.port
         }, set: {
-            var possible_port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-            if possible_port.count < 4 {
-                possible_port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-            }
-            self.port = possible_port
-            UserDefaults.standard.setValue(possible_port, forKey: "port")
+			self.port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().count > 4 ?
+						$0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined() :
+						UserDefaults.standard.object(forKey: "port") as? String ?? "8741" /// To make sure it's an available port
+			UserDefaults.standard.setValue(self.port, forKey: "port")
         })
         
         let pass_binding = Binding<String>(get: {
