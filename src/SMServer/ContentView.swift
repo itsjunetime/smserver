@@ -498,7 +498,23 @@ struct ContentView: View {
             }
             return lt
             
-        } else {
+		} else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" {
+			var case_sensitive = false
+			var bridge_gaps = true
+			
+			let term = params["search"]
+			if params["case_sensitive"] != nil {
+				case_sensitive = params["case_sensitive"] == "true"
+			}
+			if params["bridge_gaps"] != nil {
+				bridge_gaps = params["bridge_gaps"] == "true"
+			}
+			let responses = ContentView.chat_delegate.searchForString(term: term ?? "", case_sensitive: case_sensitive, bridge_gaps: bridge_gaps)
+			
+			let return_val = encodeToJson(object: responses, title: "Texts that match '" + (term ?? "nil") + "'")
+			
+			return return_val
+		} else {
             self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
         }
         
