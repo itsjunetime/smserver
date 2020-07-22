@@ -60,7 +60,6 @@
 		11DD333727F7F8A0CA8BF24A /* Pods_SMServer_SMServerUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer_SMServerUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		38FF86EDB3665EBBCAF147C3 /* Pods-SMServerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServerTests.debug.xcconfig"; path = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		394D89331824401241AEFBC1 /* Pods-SMServer-SMServerUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer-SMServerUITests.release.xcconfig"; path = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests.release.xcconfig"; sourceTree = "<group>"; };
-		3C1D518824B80E2A00669329 /* uploads */ = {isa = PBXFileReference; lastKnownFileType = folder; name = uploads; path = SMServer/uploads; sourceTree = "<group>"; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
 		3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MRYIPCCenter.h; sourceTree = "<group>"; };
 		3C6A5FB224B3E94600102AE2 /* Obj.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Obj.h; sourceTree = "<group>"; };
@@ -132,7 +131,6 @@
 		3C760E7A245BCFE000EF24FE = {
 			isa = PBXGroup;
 			children = (
-				3C1D518824B80E2A00669329 /* uploads */,
 				3C562A37245FB4A000A4474B /* html */,
 				3C760E85245BCFE000EF24FE /* SMServer */,
 				3C760E84245BCFE000EF24FE /* Products */,

@@ -1,2 +1,3 @@
 package/deb/Applications/SMServer.app/** binary
 package/Payload/SMServer.app/** binary
+package/* linguist-vendored

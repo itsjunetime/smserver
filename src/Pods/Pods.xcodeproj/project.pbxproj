@@ -7,37 +7,34 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0D3C78EB2275D81EBDDBBB467A83021D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84F02DA82896291E1FBCDE4B4CB70111 /* Foundation.framework */; };
 		1348A458A409E64980A918070D747001 /* GCDWebServerRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 70863C638D9063803F973FB7FECA4D8D /* GCDWebServerRequest.m */; };
 		1D142856163AF9DBA9FD58D4245B881F /* GCDWebServerFunctions.m in Sources */ = {isa = PBXBuildFile; fileRef = AAF5FE62CD50EFA86F080C43B8588277 /* GCDWebServerFunctions.m */; };
 		2177630F909561C7C64E3269C7444AB2 /* GCDWebServerStreamedResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DDE41377AA37A8F1B9B758179C7924DC /* GCDWebServerStreamedResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		239764973247CE56A5048951BD6C5798 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84F02DA82896291E1FBCDE4B4CB70111 /* Foundation.framework */; };
+		24F896A7F423ACD9A168C8FEA1CE1BE7 /* Pods-SMServer-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = BC72274FBD42D6C2BA7D967466ECD693 /* Pods-SMServer-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2A9C8563217F04DD7399F0356BA93A1A /* GCDWebServerDataResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = B435AD2F2146821543736A9F3F00CA95 /* GCDWebServerDataResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		32D5D6CBEB41E55161CB483097E751D1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84F02DA82896291E1FBCDE4B4CB70111 /* Foundation.framework */; };
 		34D76C607387FA0235C280C9DE032F4E /* GCDWebServerPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 591A5CA3B29966019A93E672E538D31C /* GCDWebServerPrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		3502DA8AA76D7E7912A243A608D5C9CE /* GCDWebServerFileRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 840EEB90348804EDEAFB2E9940A655F2 /* GCDWebServerFileRequest.m */; };
+		3B0CCA7DA4B1128F7A17093CF8C7F5F6 /* Pods-SMServer-SMServerUITests-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = AE88D26F5B4877327395DA541FE4D9F1 /* Pods-SMServer-SMServerUITests-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		3C47DD9124C6A24C00B12946 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C47DD9024C6A24C00B12946 /* CoreServices.framework */; };
 		3CCA984FB83DB50846C172F6C6E2F71F /* GCDWebUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 1968F273E7DCCB0A13D8D7DC585631B0 /* GCDWebUploader.m */; };
-		3E3A4E580A7F041D1439311C8CD7A0FF /* Pods-SMServer-SMServerUITests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 665BB1FD78D56610AB01176C8FB0F98C /* Pods-SMServer-SMServerUITests-dummy.m */; };
 		4706D6846EA04AEA7F59FC4E219ED2DA /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84F02DA82896291E1FBCDE4B4CB70111 /* Foundation.framework */; };
 		4C81730535158D24223F6E28C636A6FD /* GCDWebServerDataRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 4FEECEC98014A2E7A4FA1AF05C2D840F /* GCDWebServerDataRequest.m */; };
+		5D8D446D3459E0E1275B0602BB83D795 /* Pods-SMServer-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = A294F6D2ADFF4F8123A52C5A164002B3 /* Pods-SMServer-dummy.m */; };
 		62678D7976B59846688ABB234D50111F /* GCDWebServerHTTPStatusCodes.h in Headers */ = {isa = PBXBuildFile; fileRef = 71FBC139B31F01FB871AA70F25CC110B /* GCDWebServerHTTPStatusCodes.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		67CAB1758DC611756561DD30AF2C827A /* Pods-SMServer-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = BC72274FBD42D6C2BA7D967466ECD693 /* Pods-SMServer-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6AE596FA558B2D8B9AE4D740F4C01BE3 /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 51F13490FE63C9C0B373530A5A4C13C3 /* GCDWebServerStreamedResponse.m */; };
 		6C5CF6B156281E4C9938EE5A0E72884F /* GCDWebServer-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = FD3F472D8F01B41EC28DD5DF4A1A584D /* GCDWebServer-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6E56CB5D4D23457949B5A21EAE9AE797 /* GCDWebServerMultiPartFormRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = B0142CB02C84016C3F668B1586C91408 /* GCDWebServerMultiPartFormRequest.m */; };
 		6F03DA41C41597B942DA338FB9134AB4 /* GCDWebServerDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 839E8E46A97C2B19378897C68C4A8004 /* GCDWebServerDataResponse.m */; };
-		711337056DEB1C635F38A64853522478 /* Pods-SMServer-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = A294F6D2ADFF4F8123A52C5A164002B3 /* Pods-SMServer-dummy.m */; };
 		763E61E42F2384F204C525CD5C52C20F /* GCDWebServerFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B0EBCB1D9AFB3A3667CCE51FCB8A23 /* GCDWebServerFunctions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		76EC2E84393AF1831878A4C5B586B4A9 /* GCDWebServerFileResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 9A7EB694158FDFA90C9A09C33BA0336D /* GCDWebServerFileResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7AF73C41899DDA935071AEC548FD0A3A /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C80D117D9C037C834DC6A8201EDBD995 /* CFNetwork.framework */; };
-		7D13F6C0277AF37F2A72D3803DB8A87C /* Pods-SMServer-SMServerUITests-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = AE88D26F5B4877327395DA541FE4D9F1 /* Pods-SMServer-SMServerUITests-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		80C1B1F4A9383D8D32C640A290CB21E7 /* GCDWebServerURLEncodedFormRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 5689702FEB840A71EF127FDE3F03A27C /* GCDWebServerURLEncodedFormRequest.m */; };
 		83A06F5877D74E9CA57EA7277E587B1E /* GCDWebServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 25B05828948E502ABF07DB4A423923E0 /* GCDWebServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		84C62B6E0FDEFBDDA310E74C1AE07241 /* GCDWebServerFileRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = D7EA88C721481F951B18565F2AB76FD2 /* GCDWebServerFileRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		856E33E8A3E83EDFE7431C449068EBF5 /* GCDWebUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 697E21734D492E01752F7113497ED3AE /* GCDWebUploader.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		86528368D7CA0E2C1D17977943360B8C /* GCDWebUploader.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4F7922258564FAF3EA4B49A3FB956DCA /* GCDWebUploader.bundle */; };
 		86FDD9D59832A8C22EE946F04FE9C903 /* GCDWebServer-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 5879E3BF62E3E6F5DA4C5B5D8A925752 /* GCDWebServer-dummy.m */; };
-		87E0243C92CED8BE0310589921708D43 /* Pods-SMServerTests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = CAE82FB91602D8F214A8B416A189C986 /* Pods-SMServerTests-dummy.m */; };
-		8C6D8A89FFD16D0A9245DE12696DE102 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84F02DA82896291E1FBCDE4B4CB70111 /* Foundation.framework */; };
 		9371F95E59BD01F72F985B6D3EB2AC38 /* GCDWebServerResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 867598BBF9637778BAB1C50B12564EB9 /* GCDWebServerResponse.m */; };
 		993360280C3E4FABF5730E60BEF56755 /* GCDWebServerResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B01BC652F1BF246B8C12A6A623CDB75 /* GCDWebServerResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9D3E7AE9BA532D23F768165E672E8933 /* GCDWebServer.m in Sources */ = {isa = PBXBuildFile; fileRef = AC5F8564F0789C52D4EA4E14D91AD5E6 /* GCDWebServer.m */; };
@@ -47,29 +44,32 @@
 		A25497366EB4B8F1997C89BFE239D52E /* GCDWebServerFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E46140A24E3D4D770FCF138F9A5F0352 /* GCDWebServerFileResponse.m */; };
 		AB9424FB7DCDAEB7590A66718EFB7D6F /* GCDWebServerURLEncodedFormRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 055A4B3980B47886ABA6BB291ADB420D /* GCDWebServerURLEncodedFormRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AF4F7D052A110624BA37F32BA2154488 /* GCDWebServerConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = B830A57E3623AB8AFC628B57F91E00C4 /* GCDWebServerConnection.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B0BF9A20F1880704E16C12C2C9FBEF85 /* Pods-SMServerTests-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = C104B1490964813B0BBF39F96FF0A9F9 /* Pods-SMServerTests-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B5718815D4A224E7A3A14D5109CD7C4E /* GCDWebServerMultiPartFormRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = A424A41A9A3A5FAD0543837A95202FCC /* GCDWebServerMultiPartFormRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		BBBADC5763D0B5FBEE7ABF3CDAF8D58A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84F02DA82896291E1FBCDE4B4CB70111 /* Foundation.framework */; };
 		BDC13949DD9AD258ADA57242885E26B8 /* GCDWebServerErrorResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 447F4CD0B2B678D0DD84210A27411004 /* GCDWebServerErrorResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		DCB0F0BD63C1F9A1FC264F79788FB512 /* Pods-SMServer-SMServerUITests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 665BB1FD78D56610AB01176C8FB0F98C /* Pods-SMServer-SMServerUITests-dummy.m */; };
+		E6A84E81160EA87DE1380B067D4BE69A /* Pods-SMServerTests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = CAE82FB91602D8F214A8B416A189C986 /* Pods-SMServerTests-dummy.m */; };
 		F7FC88D8A787373383627AB4E0129650 /* GCDWebServerErrorResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 55C77F97FCBCC7DE392101FCB05902C6 /* GCDWebServerErrorResponse.m */; };
-		FAB9C8987F30EFE40A3A689774D9EEC7 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 147829449DB6B66F49A658BFC8D561D0 /* MobileCoreServices.framework */; };
-		FF8E4848AF99554573C919D7F843251F /* Pods-SMServerTests-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = C104B1490964813B0BBF39F96FF0A9F9 /* Pods-SMServerTests-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		FEE97A4E42754237CF2ADA406C7D95F6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84F02DA82896291E1FBCDE4B4CB70111 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		0530AE02B6175105876C649D55809086 /* PBXContainerItemProxy */ = {
+		04CBA46C3DCE64EE42D24926F184AB7B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AD904F32069787EFB2DFFE05EB82F5BD;
 			remoteInfo = GCDWebServer;
 		};
-		A69A1D13D8F50A60964F18455BAF164D /* PBXContainerItemProxy */ = {
+		95FEFC95D12B9B7F46AB9201C45CC159 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AD904F32069787EFB2DFFE05EB82F5BD;
 			remoteInfo = GCDWebServer;
 		};
-		C9CD172AB1F83C193553703DC627D296 /* PBXContainerItemProxy */ = {
+		EF57FAA7811768047E8D046C8B2E0391 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BFDFE7DC352907FC980B868725387E98 /* Project object */;
 			proxyType = 1;
@@ -90,6 +90,7 @@
 		2B01BC652F1BF246B8C12A6A623CDB75 /* GCDWebServerResponse.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GCDWebServerResponse.h; path = GCDWebServer/Core/GCDWebServerResponse.h; sourceTree = "<group>"; };
 		2D749F4D4269DF53EE53881BFE946342 /* Pods-SMServerTests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-SMServerTests-acknowledgements.plist"; sourceTree = "<group>"; };
 		2DC9B03566AC886A31FDF0C8FC67423B /* Pods-SMServer-SMServerUITests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = "Pods-SMServer-SMServerUITests.modulemap"; sourceTree = "<group>"; };
+		3C47DD9024C6A24C00B12946 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/CoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		431EFFEF1475B90F6C5E827FF791CD2A /* Pods-SMServer-SMServerUITests-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-SMServer-SMServerUITests-frameworks.sh"; sourceTree = "<group>"; };
 		447F4CD0B2B678D0DD84210A27411004 /* GCDWebServerErrorResponse.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GCDWebServerErrorResponse.h; path = GCDWebServer/Responses/GCDWebServerErrorResponse.h; sourceTree = "<group>"; };
 		48547B1C543AD662C1016E3FD6D2D319 /* GCDWebServerDataRequest.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GCDWebServerDataRequest.h; path = GCDWebServer/Requests/GCDWebServerDataRequest.h; sourceTree = "<group>"; };
@@ -154,27 +155,27 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		288B086992F1F83FAF38FB36FCC2CA75 /* Frameworks */ = {
+		1BF89171B26F94F13E48C66671440B96 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0D3C78EB2275D81EBDDBBB467A83021D /* Foundation.framework in Frameworks */,
+				239764973247CE56A5048951BD6C5798 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A2341AF7E5682FB759670199AC16F2D1 /* Frameworks */ = {
+		5926ED85348BC16E6607CD4F00ED8A31 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8C6D8A89FFD16D0A9245DE12696DE102 /* Foundation.framework in Frameworks */,
+				BBBADC5763D0B5FBEE7ABF3CDAF8D58A /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		DD3BF27F5B016C3DA5A80B2DE56ACE8C /* Frameworks */ = {
+		A53401560E26B9E62DA067147A7E83C7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32D5D6CBEB41E55161CB483097E751D1 /* Foundation.framework in Frameworks */,
+				FEE97A4E42754237CF2ADA406C7D95F6 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -184,7 +185,7 @@
 			files = (
 				7AF73C41899DDA935071AEC548FD0A3A /* CFNetwork.framework in Frameworks */,
 				4706D6846EA04AEA7F59FC4E219ED2DA /* Foundation.framework in Frameworks */,
-				FAB9C8987F30EFE40A3A689774D9EEC7 /* MobileCoreServices.framework in Frameworks */,
+				3C47DD9124C6A24C00B12946 /* CoreServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -194,6 +195,7 @@
 		03C5C200A0787E300053CFA8F53CA094 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3C47DD9024C6A24C00B12946 /* CoreServices.framework */,
 				FBFD0B1C92FD832CA3BE968DF9131B7F /* iOS */,
 			);
 			name = Frameworks;
@@ -380,27 +382,19 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		216751218814705D3362C633A88D48AF /* Headers */ = {
+		1C632DA1385A260511B85750F78BBF2D /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				67CAB1758DC611756561DD30AF2C827A /* Pods-SMServer-umbrella.h in Headers */,
+				3B0CCA7DA4B1128F7A17093CF8C7F5F6 /* Pods-SMServer-SMServerUITests-umbrella.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7D5253DCE6916D72C71E12C207EE56A1 /* Headers */ = {
+		8C03ED724644D12C8E72EA2FD774B84B /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FF8E4848AF99554573C919D7F843251F /* Pods-SMServerTests-umbrella.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		82E1659C66436886269256D7F127D1F3 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				7D13F6C0277AF37F2A72D3803DB8A87C /* Pods-SMServer-SMServerUITests-umbrella.h in Headers */,
+				24F896A7F423ACD9A168C8FEA1CE1BE7 /* Pods-SMServer-umbrella.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,22 +422,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E99A34EB72350C7EE8069FF97648C93B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0BF9A20F1880704E16C12C2C9FBEF85 /* Pods-SMServerTests-umbrella.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		0526D61A9B1F057D9DE062E167C2375C /* Pods-SMServerTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FF7862D5BF11B277196B02F6724C0E71 /* Build configuration list for PBXNativeTarget "Pods-SMServerTests" */;
+			buildConfigurationList = CA4F98D313B53E150EB35D910A9836B5 /* Build configuration list for PBXNativeTarget "Pods-SMServerTests" */;
 			buildPhases = (
-				7D5253DCE6916D72C71E12C207EE56A1 /* Headers */,
-				A51B1EB74D54BC241996F73A2D098520 /* Sources */,
-				A2341AF7E5682FB759670199AC16F2D1 /* Frameworks */,
-				4AF9DA84F09D1615D1FA41456AB0FAAA /* Resources */,
+				E99A34EB72350C7EE8069FF97648C93B /* Headers */,
+				C766F44EBD1C3EC73D519ED1F3B49291 /* Sources */,
+				5926ED85348BC16E6607CD4F00ED8A31 /* Frameworks */,
+				9C76A71628E922FDAA14F26E34F68A52 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				CDBD651A0E756D0D159CC6FF03801149 /* PBXTargetDependency */,
+				B76233E8873BEA835C9BAF12C8C93847 /* PBXTargetDependency */,
 			);
 			name = "Pods-SMServerTests";
 			productName = "Pods-SMServerTests";
@@ -452,17 +454,17 @@
 		};
 		3D70557B778DC65665C05C3170CF8EC9 /* Pods-SMServer-SMServerUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4F311AB7A6B474863D83911D6D7B35B4 /* Build configuration list for PBXNativeTarget "Pods-SMServer-SMServerUITests" */;
+			buildConfigurationList = 697DD14365E1C9CB28AF77611D2382D1 /* Build configuration list for PBXNativeTarget "Pods-SMServer-SMServerUITests" */;
 			buildPhases = (
-				82E1659C66436886269256D7F127D1F3 /* Headers */,
-				5706BACA973C831A8F7603372AD06933 /* Sources */,
-				DD3BF27F5B016C3DA5A80B2DE56ACE8C /* Frameworks */,
-				6C0F1EEB3BF36C2F08AB5800A58A4232 /* Resources */,
+				1C632DA1385A260511B85750F78BBF2D /* Headers */,
+				C02B1461BAD042FDD84289BF80BBAFE3 /* Sources */,
+				1BF89171B26F94F13E48C66671440B96 /* Frameworks */,
+				ED4BA45A2839DB50EB518AF9BE375CEB /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				F371A6FDCC63F6B9C27EACE6B14710DD /* PBXTargetDependency */,
+				A0AD117FB1A476D8576DA088D2B0AE16 /* PBXTargetDependency */,
 			);
 			name = "Pods-SMServer-SMServerUITests";
 			productName = "Pods-SMServer-SMServerUITests";
@@ -471,17 +473,17 @@
 		};
 		A190CAE68F413C2043103C7DCFC7E6F8 /* Pods-SMServer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4A1298405B8A698CBFEAA9A0ED50308D /* Build configuration list for PBXNativeTarget "Pods-SMServer" */;
+			buildConfigurationList = 574ACE2C00CC47B2648231139C41DBAC /* Build configuration list for PBXNativeTarget "Pods-SMServer" */;
 			buildPhases = (
-				216751218814705D3362C633A88D48AF /* Headers */,
-				FD9ACE708F5E9DD58ADF21D9FCCC4563 /* Sources */,
-				288B086992F1F83FAF38FB36FCC2CA75 /* Frameworks */,
-				6A26C2DBAC6DB5F918788E055140B7EE /* Resources */,
+				8C03ED724644D12C8E72EA2FD774B84B /* Headers */,
+				A57B220B5F0C9672E3B5DF436DC9AA70 /* Sources */,
+				A53401560E26B9E62DA067147A7E83C7 /* Frameworks */,
+				2403A5A3C9A7EB07DFC657E53E7ED34F /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				31260DC8EE99B702EBC70E1A8AE93A04 /* PBXTargetDependency */,
+				B3A436921749DEB62CA5AAEEF503C34F /* PBXTargetDependency */,
 			);
 			name = "Pods-SMServer";
 			productName = "Pods-SMServer";
@@ -537,21 +539,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		4AF9DA84F09D1615D1FA41456AB0FAAA /* Resources */ = {
+		2403A5A3C9A7EB07DFC657E53E7ED34F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		6A26C2DBAC6DB5F918788E055140B7EE /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		6C0F1EEB3BF36C2F08AB5800A58A4232 /* Resources */ = {
+		9C76A71628E922FDAA14F26E34F68A52 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -563,6 +558,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				86528368D7CA0E2C1D17977943360B8C /* GCDWebUploader.bundle in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ED4BA45A2839DB50EB518AF9BE375CEB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -591,130 +593,54 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		5706BACA973C831A8F7603372AD06933 /* Sources */ = {
+		A57B220B5F0C9672E3B5DF436DC9AA70 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3E3A4E580A7F041D1439311C8CD7A0FF /* Pods-SMServer-SMServerUITests-dummy.m in Sources */,
+				5D8D446D3459E0E1275B0602BB83D795 /* Pods-SMServer-dummy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A51B1EB74D54BC241996F73A2D098520 /* Sources */ = {
+		C02B1461BAD042FDD84289BF80BBAFE3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87E0243C92CED8BE0310589921708D43 /* Pods-SMServerTests-dummy.m in Sources */,
+				DCB0F0BD63C1F9A1FC264F79788FB512 /* Pods-SMServer-SMServerUITests-dummy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FD9ACE708F5E9DD58ADF21D9FCCC4563 /* Sources */ = {
+		C766F44EBD1C3EC73D519ED1F3B49291 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				711337056DEB1C635F38A64853522478 /* Pods-SMServer-dummy.m in Sources */,
+				E6A84E81160EA87DE1380B067D4BE69A /* Pods-SMServerTests-dummy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		31260DC8EE99B702EBC70E1A8AE93A04 /* PBXTargetDependency */ = {
+		A0AD117FB1A476D8576DA088D2B0AE16 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = GCDWebServer;
 			target = AD904F32069787EFB2DFFE05EB82F5BD /* GCDWebServer */;
-			targetProxy = 0530AE02B6175105876C649D55809086 /* PBXContainerItemProxy */;
+			targetProxy = 95FEFC95D12B9B7F46AB9201C45CC159 /* PBXContainerItemProxy */;
 		};
-		CDBD651A0E756D0D159CC6FF03801149 /* PBXTargetDependency */ = {
+		B3A436921749DEB62CA5AAEEF503C34F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = GCDWebServer;
+			target = AD904F32069787EFB2DFFE05EB82F5BD /* GCDWebServer */;
+			targetProxy = 04CBA46C3DCE64EE42D24926F184AB7B /* PBXContainerItemProxy */;
+		};
+		B76233E8873BEA835C9BAF12C8C93847 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "Pods-SMServer";
 			target = A190CAE68F413C2043103C7DCFC7E6F8 /* Pods-SMServer */;
-			targetProxy = C9CD172AB1F83C193553703DC627D296 /* PBXContainerItemProxy */;
-		};
-		F371A6FDCC63F6B9C27EACE6B14710DD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = GCDWebServer;
-			target = AD904F32069787EFB2DFFE05EB82F5BD /* GCDWebServer */;
-			targetProxy = A69A1D13D8F50A60964F18455BAF164D /* PBXContainerItemProxy */;
+			targetProxy = EF57FAA7811768047E8D046C8B2E0391 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		0FF73356199FD78E9E0768E013DB0F8D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = B245573A691AE9FC1C0D2D3C8F6C378B /* Pods-SMServer-SMServerUITests.debug.xcconfig */;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MACH_O_TYPE = staticlib;
-				MODULEMAP_FILE = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests.modulemap";
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "";
-				PODS_ROOT = "$(SRCROOT)";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Debug;
-		};
-		132D2BD5579A10C3545BA2D8AEF80BBD /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 95428E1F87DA4C0371B55987A15F0E6F /* Pods-SMServerTests.debug.xcconfig */;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MACH_O_TYPE = staticlib;
-				MODULEMAP_FILE = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests.modulemap";
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "";
-				PODS_ROOT = "$(SRCROOT)";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Debug;
-		};
 		1422B121EAEAEA11307496903FA623C6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -776,80 +702,9 @@
 			};
 			name = Release;
 		};
-		8DF30F9F4740C4790DC97E0803B766D8 /* Release */ = {
+		19F47BA560F6D6AD97E4EDA4D25ED5EB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BA22E675476397F11F02BCB91E34019E /* GCDWebServer.release.xcconfig */;
-			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREFIX_HEADER = "Target Support Files/GCDWebServer/GCDWebServer-prefix.pch";
-				INFOPLIST_FILE = "Target Support Files/GCDWebServer/GCDWebServer-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MODULEMAP_FILE = "Target Support Files/GCDWebServer/GCDWebServer.modulemap";
-				PRODUCT_MODULE_NAME = GCDWebServer;
-				PRODUCT_NAME = GCDWebServer;
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Release;
-		};
-		96E77E6E865300BF453BBBAE332C3F3B /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = D5BFFC94FBEB0BAF65C099D431E97D0F /* GCDWebServer.debug.xcconfig */;
-			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				GCC_PREFIX_HEADER = "Target Support Files/GCDWebServer/GCDWebServer-prefix.pch";
-				INFOPLIST_FILE = "Target Support Files/GCDWebServer/GCDWebServer-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MODULEMAP_FILE = "Target Support Files/GCDWebServer/GCDWebServer.modulemap";
-				PRODUCT_MODULE_NAME = GCDWebServer;
-				PRODUCT_NAME = GCDWebServer;
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Debug;
-		};
-		9A147D260993E175BBE9719D2B691CA6 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9296442A9A60FA8F37A3739A251BD6BB /* Pods-SMServer.debug.xcconfig */;
+			baseConfigurationReference = E4908548B5A2D3B0AF9E527E3B17472A /* Pods-SMServer.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -880,12 +735,13 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = Debug;
+			name = Release;
 		};
-		DABC6B3AA7A2DDEC9863F23B6E74B4A9 /* Release */ = {
+		2BC63101986EAA19CF6E61C6C7CFB3C1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = CEB73599BC28A39608A22F341812763B /* Pods-SMServer-SMServerUITests.release.xcconfig */;
 			buildSettings = {
@@ -924,7 +780,45 @@
 			};
 			name = Release;
 		};
-		E5B5121AD57E0284D3F479389F8BB4BD /* Release */ = {
+		304966665363A088482503769CCF982E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 95428E1F87DA4C0371B55987A15F0E6F /* Pods-SMServerTests.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MODULEMAP_FILE = "Target Support Files/Pods-SMServerTests/Pods-SMServerTests.modulemap";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PODS_ROOT = "$(SRCROOT)";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		560450C2CC2687EE3F982D1C6E350337 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 65A5E5F0F091549DA015E7A3797DBD6B /* Pods-SMServerTests.release.xcconfig */;
 			buildSettings = {
@@ -962,6 +856,155 @@
 				VERSION_INFO_PREFIX = "";
 			};
 			name = Release;
+		};
+		8DF30F9F4740C4790DC97E0803B766D8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = BA22E675476397F11F02BCB91E34019E /* GCDWebServer.release.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREFIX_HEADER = "Target Support Files/GCDWebServer/GCDWebServer-prefix.pch";
+				INFOPLIST_FILE = "Target Support Files/GCDWebServer/GCDWebServer-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MODULEMAP_FILE = "Target Support Files/GCDWebServer/GCDWebServer.modulemap";
+				PRODUCT_MODULE_NAME = GCDWebServer;
+				PRODUCT_NAME = GCDWebServer;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		901ED483CC2E381B3B1E55EF149C7CAB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9296442A9A60FA8F37A3739A251BD6BB /* Pods-SMServer.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = "Target Support Files/Pods-SMServer/Pods-SMServer-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MODULEMAP_FILE = "Target Support Files/Pods-SMServer/Pods-SMServer.modulemap";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PODS_ROOT = "$(SRCROOT)";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		96E77E6E865300BF453BBBAE332C3F3B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D5BFFC94FBEB0BAF65C099D431E97D0F /* GCDWebServer.debug.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREFIX_HEADER = "Target Support Files/GCDWebServer/GCDWebServer-prefix.pch";
+				INFOPLIST_FILE = "Target Support Files/GCDWebServer/GCDWebServer-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MODULEMAP_FILE = "Target Support Files/GCDWebServer/GCDWebServer.modulemap";
+				PRODUCT_MODULE_NAME = GCDWebServer;
+				PRODUCT_NAME = GCDWebServer;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		BFE5663FB0D8C2D3154E8A64001BFDA5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B245573A691AE9FC1C0D2D3C8F6C378B /* Pods-SMServer-SMServerUITests.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MODULEMAP_FILE = "Target Support Files/Pods-SMServer-SMServerUITests/Pods-SMServer-SMServerUITests.modulemap";
+				OTHER_LDFLAGS = "";
+				OTHER_LIBTOOLFLAGS = "";
+				PODS_ROOT = "$(SRCROOT)";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
 		};
 		ED7888FA6713EABBF66D26A8003AD1CA /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1028,45 +1071,6 @@
 			};
 			name = Debug;
 		};
-		F55BD6913082C0A65ADFCB088B34968B /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = E4908548B5A2D3B0AF9E527E3B17472A /* Pods-SMServer.release.xcconfig */;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				INFOPLIST_FILE = "Target Support Files/Pods-SMServer/Pods-SMServer-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MACH_O_TYPE = staticlib;
-				MODULEMAP_FILE = "Target Support Files/Pods-SMServer/Pods-SMServer.modulemap";
-				OTHER_LDFLAGS = "";
-				OTHER_LIBTOOLFLAGS = "";
-				PODS_ROOT = "$(SRCROOT)";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.${PRODUCT_NAME:rfc1034identifier}";
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1079,20 +1083,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4A1298405B8A698CBFEAA9A0ED50308D /* Build configuration list for PBXNativeTarget "Pods-SMServer" */ = {
+		574ACE2C00CC47B2648231139C41DBAC /* Build configuration list for PBXNativeTarget "Pods-SMServer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				9A147D260993E175BBE9719D2B691CA6 /* Debug */,
-				F55BD6913082C0A65ADFCB088B34968B /* Release */,
+				901ED483CC2E381B3B1E55EF149C7CAB /* Debug */,
+				19F47BA560F6D6AD97E4EDA4D25ED5EB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4F311AB7A6B474863D83911D6D7B35B4 /* Build configuration list for PBXNativeTarget "Pods-SMServer-SMServerUITests" */ = {
+		697DD14365E1C9CB28AF77611D2382D1 /* Build configuration list for PBXNativeTarget "Pods-SMServer-SMServerUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0FF73356199FD78E9E0768E013DB0F8D /* Debug */,
-				DABC6B3AA7A2DDEC9863F23B6E74B4A9 /* Release */,
+				BFE5663FB0D8C2D3154E8A64001BFDA5 /* Debug */,
+				2BC63101986EAA19CF6E61C6C7CFB3C1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1106,11 +1110,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FF7862D5BF11B277196B02F6724C0E71 /* Build configuration list for PBXNativeTarget "Pods-SMServerTests" */ = {
+		CA4F98D313B53E150EB35D910A9836B5 /* Build configuration list for PBXNativeTarget "Pods-SMServerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				132D2BD5579A10C3545BA2D8AEF80BBD /* Debug */,
-				E5B5121AD57E0284D3F479389F8BB4BD /* Release */,
+				304966665363A088482503769CCF982E /* Debug */,
+				560450C2CC2687EE3F982D1C6E350337 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
