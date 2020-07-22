@@ -1,6 +1,10 @@
 # Changelog
 
-+debug76 -> +debug
++debug77 -> +debug80
+- Added basic search API
+- Fixed CSS issues in web interface
+
++debug76 -> +debug77
 - Added support within libsmserver for sending texts to previously nonexistent conversations
 - Added support in web interface for sending texts to previously nonexistent conversations
 

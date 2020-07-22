@@ -15,6 +15,7 @@
 - Ability to permanently change passwords and default values
 - Background operation of server for unlimited time, with screen on or off.
 - Ability to set custom css rules for easy web interface customization
+- More-than-stock accurate search API
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
@@ -90,14 +91,14 @@ I would recommend building it yourself, since the packages may not always be up 
 - [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
 - [x] Convenient Custom CSS Loading
+- [ ] Search through messages from browser - This has been implemented in the API
 - [ ] Information on web page about battery life, wifi connection, etc
-- [ ] Access to camera roll
 
 ### Future plans
 - [ ] HTTPS
 - [ ] Websockets for instant communication
 - [ ] Notification when other party starts typing
-- [ ] Search through messages from browser
+- [ ] Access to camera roll
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
@@ -114,10 +115,12 @@ Please include the following information:
  - A detailed description of what failed
  - A crash report if it crashed and you have an app like cr4shed to collect those
 
-Also, if the app did not crash, but rather had an issue after it was already up and running, please do the following: 
+Also, if the app did not crash on startup, but rather had an issue after it was already up and running, please do the following: 
  - Install the package 'oslog' from your package manager
- - ssh into your device or open a terminal app, and run: `oslog --debug | grep -i "SMServer_app" > /var/mobile/Documents/smserver.log`
- - DM me the file at `/var/mobile/Documents/smserver.log` on your device at u/Janshai on reddit. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site.
+ - ssh into your device or open a terminal app, and run: `oslog --debug | grep -i "SMServer_app"` and do not redirect the output into a file.
+ - Start the app and let it reach the error point
+ - Copy the output from the above command (as much as you can get) into a text file.
+ - DM me the file at u/Janshai on reddit. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site.
 
 ## Companion App
 There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, much more customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
