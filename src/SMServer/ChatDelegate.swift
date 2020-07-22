@@ -13,8 +13,6 @@ import os
 
 class ChatDelegate {
     var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-    //@State var past_latest_texts = [String:[[String:String]]]() /// Should be in the format of [address: [Chats]]
-    //var past_latest_texts = [[String:String]]()
     var past_latest_texts = [String:String]()
     var newest_texts = [String]()
     let prefix = "SMServer_app: "
