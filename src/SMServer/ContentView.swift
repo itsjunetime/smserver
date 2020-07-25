@@ -8,11 +8,13 @@
 
 import SwiftUI
 import GCDWebServer
-import SQLite3
+import Telegraph
+//import SQLite3
 import os
 
 struct ContentView: View {
     let server = GCDWebUploader(uploadDirectory: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.path)
+	let socket = SocketDelegate()
     let prefix = "SMServer_app: "
     let geo_width: CGFloat = 0.6
     let font_size: CGFloat = 25
@@ -22,6 +24,7 @@ struct ContentView: View {
     @State var custom_css = UserDefaults.standard.object(forKey: "custom_css") as? String ?? ""
     @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
     @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
+	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -221,6 +224,9 @@ struct ContentView: View {
         } catch {
             self.log("failed to start server. Try again or try reinstalling.")
         }
+		
+		socket.startServer(port: self.socket_port)
+		
         self.server_running = server.isRunning
         
         if self.debug {
@@ -319,9 +325,9 @@ struct ContentView: View {
     func loadFiles() {
         /// This sets the website page files to local variables
         
-        let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-        let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-        let server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 60
+        let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 60
+        let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 200
+        let server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 10
         
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
         let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
@@ -331,6 +337,7 @@ struct ContentView: View {
                     .replacingOccurrences(of: "const num_texts_to_load;", with: "const num_texts_to_load = \(default_num_messages);")
                     .replacingOccurrences(of: "const num_chats_to_load;", with: "const num_chats_to_load = \(default_num_chats);")
                     .replacingOccurrences(of: "const timeout;", with: "const timeout = \(server_ping)000;")
+					.replacingOccurrences(of: "const socket_port;", with: "const socket_port = \(String(socket_port));")
                 self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
             } catch {
@@ -354,6 +361,7 @@ struct ContentView: View {
     
     func setNewestTexts(_ chat_id: String) -> Void {
         ContentView.chat_delegate.setNewTexts(chat_id)
+		socket.sendNewText(info: chat_id)
     }
     
     func checkIfAuthenticated(ras: String) -> Bool {
@@ -525,12 +533,27 @@ struct ContentView: View {
         /// Stops the server & and de-authenticates all ip addresses
         
         self.server.stop()
+		socket.stopServer()
         if self.debug {
             self.log("Stopped Server")
         }
         self.authenticated_addresses = [String]()
         server_running = server.isRunning
     }
+	
+	func loadFuncs() {
+		/// All the functions that run on scene load
+		
+		self.loadFiles()
+		(UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning) ? self.loadServer(port_num: UInt16(self.port) ?? UInt16(8741)) : nil
+		
+		self.has_root = self.s.setUID() == uid_t(0)
+		self.show_root_alert = self.debug
+		self.watcher.setTexts = { value in
+			self.setNewestTexts(value ?? "None")
+		}
+		socket.watcher = self.watcher
+	}
     
     func getWiFiAddress() -> String? {
         /// Gets the private IP of the host device
@@ -785,15 +808,7 @@ struct ContentView: View {
             .background(Color(UIColor.secondarySystemBackground))
             
         }.onAppear() {
-            self.loadFiles()
-            (UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning)
-                ? self.loadServer(port_num: UInt16(self.port) ?? UInt16(8741)) : nil
-            
-            self.has_root = self.s.setUID() == uid_t(0)
-            self.show_root_alert = self.debug
-            self.watcher.setTexts = { value in
-                self.setNewestTexts(value ?? "None")
-            }
+			loadFuncs()
         }
         .alert(isPresented: $show_root_alert, content: {
             Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))

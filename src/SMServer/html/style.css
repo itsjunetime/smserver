@@ -163,11 +163,14 @@ p {
 #morechatsbutton p {
 	color: dodgerblue;
 }
+.unread img {
+	box-shadow: 0 0 10px dodgerblue;
+}
 .chats img {
 	width: 3vw;
 	height: 3vw;
 	border-radius: 100%;
-	padding: 8px;
+	margin: 8px;
 }
 .text-content p img {
 	max-width: 100%;

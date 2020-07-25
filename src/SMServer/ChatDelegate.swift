@@ -43,7 +43,7 @@ class ChatDelegate {
         return db
     }
     
-	func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0, prefix: String = "") -> [[String:String]] {
+	func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0) -> [[String:String]] {
         /// This executes an SQL query, specifically 'SELECT $columns from $table $condition LIMIT $offset, $num_items', on $db
         
         var sqlString = "SELECT "
@@ -61,10 +61,6 @@ class ChatDelegate {
             sqlString += " LIMIT \(offset), \(String(num_items))"
         }
         sqlString += ";"
-		
-		if prefix.count != 0 {
-			sqlString = prefix + "; " + sqlString
-		}
         
         if self.debug {
             self.log("full sql query: " + sqlString)
