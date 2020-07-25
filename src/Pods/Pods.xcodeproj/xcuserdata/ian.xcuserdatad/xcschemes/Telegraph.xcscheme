@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3D70557B778DC65665C05C3170CF8EC9"
-               BuildableName = "Pods_SMServer_SMServerUITests.framework"
-               BlueprintName = "Pods-SMServer-SMServerUITests"
+               BlueprintIdentifier = "620D34D36CFC8F661EA7AC3834005886"
+               BuildableName = "Telegraph.framework"
+               BlueprintName = "Telegraph"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

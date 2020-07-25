@@ -10,14 +10,15 @@ target 'SMServer' do
   # pod "GCDWebServer/WebUploader", "~> 3.0"
   pod "GCDWebServer",:modular_headers => true
   pod "GCDWebServer/WebUploader",:modular_headers => true
+  pod 'Telegraph'
 
-  target 'SMServerTests' do
-    inherit! :search_paths
+  # target 'SMServerTests' do
+  #   inherit! :search_paths
     # Pods for testing
-  end
+  # end
 
-  target 'SMServerUITests' do
+  # target 'SMServerUITests' do
     # Pods for testing
-  end
+  # end
 
 end

@@ -39,6 +39,7 @@ This is definitely still in Beta stages; there are still issues and many feature
 
 Alternately, if you want to install as a .ipa file:
 
+1. Export `$DEV_CERT` as your apple codesigning identity (e.g. 'Apple Development: email@email.com (HS9D73GS8D)')
 1. Run the `make_ipa.sh` script in the root of this directory.
 1. When the finder window pops up, right-click on the 'Payload' folder and select 'Compress Payload' 
 1. Rename `Payload.zip` to `SMServer.ipa` and install it as normal
@@ -65,6 +66,7 @@ Alternately, if you want to install the deb but don't want to go through with th
 1. Install the app 'sshpass' on your mac
 1. Export `$THEOS_DEVICE_PASS` as your iDevice's password
 1. Export `$THEOS_DEVICE_IP` as your iDevice's private IP
+1. Export `$DEV_CERT` as your apple codesigning identity (e.g. 'Apple Development: email@email.com (HS9D73GS8D)')
 1. Run the `make_deb.sh` script in the root of this repository. The new .deb will be in the 'package' subdirectory of this cloned repo.
 
 I would recommend building it yourself, since the packages may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the packages will be updated rather frequently, so they are safe to use.
@@ -86,18 +88,18 @@ I would recommend building it yourself, since the packages may not always be up 
 - [x] Start new conversations from browser
 - [x] View all attachments in browser
 - [x] Send images/attachments from browser
+- [x] Websockets for instant communication -- Websockets are currently experimental, so the app still uses long-polling in conjunction with websockets to make sure all messages are sent to client
 - [x] Automatic checking for new messages
 - [x] Display for which conversations have unread messages
 - [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
 - [x] Convenient Custom CSS Loading
-- [ ] Search through messages from browser - This has been implemented in the API
+- [ ] Notification when other party starts typing
 - [ ] Information on web page about battery life, wifi connection, etc
 
 ### Future plans
 - [ ] HTTPS
-- [ ] Websockets for instant communication
-- [ ] Notification when other party starts typing
+- [ ] Search through messages from browser - This has been implemented in the API
 - [ ] Access to camera roll
 
 ## Issues
