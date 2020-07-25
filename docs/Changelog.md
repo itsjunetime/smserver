@@ -1,5 +1,10 @@
 # Changelog
 
++debug80 -> 0.2.0+debug22
+- Added support for websockets (instant notification on web client when new texts are received on host)
+- Fixed issue with defaults
+- Fixed issue with unread conversations not showing
+
 +debug77 -> +debug80
 - Added basic search API
 - Fixed CSS issues in web interface
