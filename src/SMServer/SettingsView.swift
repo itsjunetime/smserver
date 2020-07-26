@@ -15,11 +15,25 @@ struct SettingsView: View {
     @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 60
     @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 200
     @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 10
+	@State var socket_port = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
     @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
+	
+	@State var enable_sockets: Bool = UserDefaults.standard.object(forKey: "enable_sockets") as? Bool ?? true
+	@State var enable_polling: Bool = UserDefaults.standard.object(forKey: "enable_polling") as? Bool ?? true
+	@State var picker_select: Int = 2
+	let picker_options = ["WebSockets" , "Long polling", "Both"]
+	
+	func setPicker() {
+		if enable_sockets && enable_polling {
+			picker_select = 2
+		} else {
+			picker_select = (enable_sockets ? 0 : 1) /// Do 1 if only enable_polling
+		}
+	}
     
     var body: some View {
         
@@ -41,7 +55,6 @@ struct SettingsView: View {
             self.server_ping
         }, set: {
             self.server_ping = Int($0)
-            self.debug ? print("setting val for ping: \($0)") : nil
             UserDefaults.standard.setValue(Int($0), forKey: "server_ping")
         })
         
@@ -72,6 +85,13 @@ struct SettingsView: View {
             self.background = $0
             UserDefaults.standard.setValue($0, forKey: "enable_backgrounding")
         })
+		
+		let socket_binding = Binding<Int>(get: {
+			self.socket_port
+		}, set: {
+			self.socket_port = Int($0)
+			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
+		})
         
         return VStack(spacing: 16) {
             HStack {
@@ -80,7 +100,7 @@ struct SettingsView: View {
                 Spacer()
             }
             
-            Spacer().frame(height: 20)
+            Spacer().frame(height: 12)
             
             Section {
             
@@ -107,9 +127,17 @@ struct SettingsView: View {
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .frame(width: 60)
                 }
+				
+				HStack {
+					Text("Websocket port")
+					Spacer()
+					TextField("Port", value: socket_binding, formatter: NumberFormatter())
+						.textFieldStyle(RoundedBorderTextFieldStyle())
+						.frame(width: 60)
+				}
             }
             
-            Spacer().frame(height: 30)
+            Spacer().frame(height: 20)
             
             Section {
             
@@ -121,10 +149,25 @@ struct SettingsView: View {
                 
                 Toggle("Enable backgrounding", isOn: background_binding)
             }
+			
+			/*Spacer().frame(height: 20) /// This will be included later but is now failing to compile
+
+			VStack(alignment: .leading, spacing: 0) {
+				Text("How to detect new texts")
+				
+				Picker("Method", selection: $picker_select) {
+					ForEach(0..<picker_options.count, id: \.self) { index in
+						Text(self.picker_options[index]).tag(index)
+					}
+				}.pickerStyle(SegmentedPickerStyle())
+			}*/
             
             Spacer()
             
         }.padding()
+		.onAppear() {
+			self.setPicker()
+		}
     }
 }
 

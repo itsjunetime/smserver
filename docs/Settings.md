@@ -28,6 +28,9 @@ As of right now (version 0-1-0+debug68), server does not support WebSockets conn
 
 I think the ideal setting for this is somewhere between 3-5 seconds; it will still be regularly updating, but won't take up too much of the available bandwidth. This does not require a server restart to take effect.
 
+### Websocket Port
+This is the port that the webSocket runs on; must not be the same as the server port or outside of the allowable range, or else the app will crash when launching the server. You must restart the server before this takes effect
+
 ### Toggle debug
 This will log basically every thing that happens, and may slow down the server considerably. Unless you're actually debugging or logging with the app, I'd highly recommend leaving this off. This does not require a server restart to take effect.
 
