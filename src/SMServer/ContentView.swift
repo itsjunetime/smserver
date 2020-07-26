@@ -9,7 +9,6 @@
 import SwiftUI
 import GCDWebServer
 import Telegraph
-//import SQLite3
 import os
 
 struct ContentView: View {
@@ -338,6 +337,7 @@ struct ContentView: View {
                     .replacingOccurrences(of: "const num_chats_to_load;", with: "const num_chats_to_load = \(default_num_chats);")
                     .replacingOccurrences(of: "const timeout;", with: "const timeout = \(server_ping)000;")
 					.replacingOccurrences(of: "const socket_port;", with: "const socket_port = \(String(socket_port));")
+					
                 self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
             } catch {
@@ -552,7 +552,12 @@ struct ContentView: View {
 		self.watcher.setTexts = { value in
 			self.setNewestTexts(value ?? "None")
 		}
+		
 		socket.watcher = self.watcher
+		socket.authenticated_addresses = self.authenticated_addresses
+		socket.verify_auth = self.checkIfAuthenticated
+		
+		UIDevice.current.isBatteryMonitoringEnabled	= true
 	}
     
     func getWiFiAddress() -> String? {

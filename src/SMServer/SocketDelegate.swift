@@ -9,11 +9,14 @@
 import Foundation
 import Telegraph
 import os
+import NetworkExtension
 
 class SocketDelegate : ServerWebSocketDelegate {
 	
 	let server = Server()
 	var watcher: IPCTextWatcher? = nil
+	var authenticated_addresses = [String]()
+	var verify_auth: (String)->(Bool) = { _ in return false } /// nil init
 	let prefix = "SMServer_app: "
 	
 	var sendTypingNotifs = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
@@ -38,7 +41,9 @@ class SocketDelegate : ServerWebSocketDelegate {
 		}
 	}
 	
-	func sendNewBattery(percent: Int) {
+	func sendNewBattery(notification: NSNotification) {
+		let percent = UIDevice.current.batteryLevel * 100
+		
 		for i in server.webSockets {
 			i.send(text: "battery:" + String(percent))
 		}
@@ -56,6 +61,17 @@ class SocketDelegate : ServerWebSocketDelegate {
 	
 	func server(_ server: Server, webSocketDidConnect webSocket: WebSocket, handshake: HTTPRequest) {
 		// A web socket connected, you can extract additional information from the handshake request
+		
+		if !verify_auth(webSocket.remoteEndpoint?.host ?? "") {
+			webSocket.close(immediately: true)
+		}
+		
+		let battery_level = UIDevice.current.batteryLevel * 100
+		
+		webSocket.send(text: "battery:\(String(battery_level))")
+
+		/// Backgrounding doesn't work with the next line uncommented
+		//NotificationCenter.default.addObserver(self, selector: Selector(("sendNewBattery:")), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
 	}
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
