@@ -617,7 +617,6 @@
             }
 
             socket.onmessage = function(event) {
-                console.log("received: " + event.data)
                 parseMessage(event.data)
             }
 
@@ -634,6 +633,12 @@
                     case 'text':
                         processNewText(content)
                         break
+                    case "battery":
+                        setNewBatteryLevel(content)
+                        break
+                    case "wifi":
+                        setNewWifiLevel(content)
+                        break
                     default:
                         console.log("cannot handle request: '" + msg + "'")
                         break
@@ -641,15 +646,32 @@
             }
 
             function processNewText(chat) {
-                console.log("processing new text from " + chat)
                 if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id) { 
-                    console.log("reloading chats")
                     printItems() /// Hopefully will optimize this later
                 }
                 if (chat === document.getElementsByClassName("title")[0].id) {
-                    console.log("printing new texs")
                     printNewTexts()
                 }
+            }
+
+            function setNewBatteryLevel(level) {
+                var batt = document.getElementById("battery");
+                batt.innerHTML = "battery: " + String(level) + "%";
+
+                var dbl = Number(level)
+
+                if (dbl > 35) {
+                    batt.setAttribute("class", "fullEnough")
+                } else if (dbl > 20) {
+                    batt.setAttribute("class", "risky")
+                } else {
+                    batt.setAttribute("class", "low")
+                }
+            }
+
+            function setNewWifiLevel(level) {
+                var wifi = document.getElementById("wifi");
+                wifi.innerHTML = "wifi: " + String(level) + "%";
             }
 
             printItems()
@@ -664,9 +686,15 @@
             <div class="chats">
                 <div class="chats-title">
                     <h1>Messages</h1>
+                    <div id="stats">
+                        <!--<div id="battery">battery: 0%</div>--> <!-- Needs implementations in libsmserver; will do later -->
+                        <!--<div id="wifi">wifi: 0%</div>-->
+                    </div>
+                </div>
+                <div class="chats-search">
+                    Search
                     <button onclick="showPopup();" id="composeShowButton">+ New</button>
                 </div>
-                <div class="chats-search">Search</div>
                 <div class="chats-list">
                     <button onclick="getMoreChats()" id="morechatsbutton"><p>+ More Chats</p></button>
                 </div>
