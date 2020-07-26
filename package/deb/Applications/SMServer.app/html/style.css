@@ -126,8 +126,19 @@ p {
 	padding: 16px 0px 0px 10px;
 	vertical-align: bottom;
 	display: grid;
-	grid-template-columns: 1fr 60px;
-	grid-template-rows: 1fr;
+	grid-template-columns: 1fr 28%;
+}
+#battery.low {
+	color: red;
+}
+#battery.risky {
+	color: gold;
+}
+#battery.fullEnough {
+	color: limegreen;
+}
+#wifi {
+	color: dodgerblue;
 }
 .chats-title h1 {
 	grid-column: 1;
@@ -141,6 +152,9 @@ p {
 	grid-row: 2;
 	padding: 10px;
 	border-top: 1px solid var(--chats-border);
+	display: grid;
+	grid-template-columns: 1fr 60px;
+	grid-template-rows: 1fr;
 }
 .chats-list {
 	color: var(--font-color);
@@ -165,6 +179,9 @@ p {
 }
 .unread img {
 	box-shadow: 0 0 10px dodgerblue;
+}
+.selected {
+	box-shadow: 0 0 10px black inset;
 }
 .chats img {
 	width: 3vw;
@@ -408,5 +425,5 @@ p {
 	width: 60px;
 	height: 24px;
 	padding: 12px;
-	margin-left: -20px;
+	margin-top: -5px;
 }
