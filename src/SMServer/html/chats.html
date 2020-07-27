@@ -710,7 +710,7 @@
                 <form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
                     <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
-                    <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13) sendForm();"></textarea>
+                    <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
                     <textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
                     <button id="sendbutton" onclick="sendForm();">↑</button>
