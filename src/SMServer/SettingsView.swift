@@ -22,6 +22,10 @@ struct SettingsView: View {
     @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
 	
+	@State var full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
+	@State var area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? "" /// NYC?
+	@State var country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? "" /// US
+	
 	@State var enable_sockets: Bool = UserDefaults.standard.object(forKey: "enable_sockets") as? Bool ?? true
 	@State var enable_polling: Bool = UserDefaults.standard.object(forKey: "enable_polling") as? Bool ?? true
 	@State var picker_select: Int = 2
@@ -33,6 +37,11 @@ struct SettingsView: View {
 		} else {
 			picker_select = (enable_sockets ? 0 : 1) /// Do 1 if only enable_polling
 		}
+	}
+	
+	func resetDefaults() {
+		let domain = Bundle.main.bundleIdentifier!
+		UserDefaults.standard.removePersistentDomain(forName: domain)
 	}
     
     var body: some View {
@@ -92,79 +101,138 @@ struct SettingsView: View {
 			self.socket_port = Int($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
 		})
+		
+		let country_binding = Binding<String>(get: {
+			self.country_code
+		}, set: {
+			self.country_code = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+			UserDefaults.standard.setValue(self.country_code, forKey: "country_code")
+		})
+		
+		let area_binding = Binding<String>(get: {
+			self.area_code
+		}, set: {
+			self.area_code = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+			UserDefaults.standard.setValue(self.area_code, forKey: "area_code")
+		})
+		
+		let number_binding = Binding<String>(get: {
+			self.full_number
+		}, set: {
+			self.full_number = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+			UserDefaults.standard.setValue(self.full_number, forKey: "full_number")
+		})
         
-        return VStack(spacing: 16) {
-            HStack {
-                Text("Settings")
-                    .font(.largeTitle)
-                Spacer()
-            }
-            
-            Spacer().frame(height: 12)
-            
-            Section {
-            
-                HStack {
-                    Text("Initial number of chats to load")
-                    Spacer()
-                    TextField("Chats", value: chats_binding, formatter: NumberFormatter())
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 60)
-                }
-                
-                HStack {
-                    Text("Initial number of messages to load")
-                    Spacer()
-                    TextField("Messages", value: messages_binding, formatter: NumberFormatter())
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 60)
-                }
-                
-                HStack {
-                    Text("Interval for website to ping app (seconds)")
-                    Spacer()
-                    TextField("Ping", value: ping_binding, formatter: NumberFormatter())
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 60)
-                }
-				
+		return ScrollView {
+			VStack(spacing: 16) {
 				HStack {
-					Text("Websocket port")
+					Text("Settings")
+						.font(.largeTitle)
 					Spacer()
-					TextField("Port", value: socket_binding, formatter: NumberFormatter())
-						.textFieldStyle(RoundedBorderTextFieldStyle())
-						.frame(width: 60)
 				}
-            }
-            
-            Spacer().frame(height: 20)
-            
-            Section {
-            
-                Toggle("Toggle debug", isOn: debug_binding)
-            
-                Toggle("Start server on load", isOn: start_binding)
-            
-                Toggle("Require Authentication to view messages", isOn: auth_binding)
-                
-                Toggle("Enable backgrounding", isOn: background_binding)
-            }
-			
-			/*Spacer().frame(height: 20) /// This will be included later but is now failing to compile
-
-			VStack(alignment: .leading, spacing: 0) {
-				Text("How to detect new texts")
 				
-				Picker("Method", selection: $picker_select) {
-					ForEach(0..<picker_options.count, id: \.self) { index in
-						Text(self.picker_options[index]).tag(index)
+				Spacer().frame(height: 12)
+				
+				Section {
+				
+					HStack {
+						Text("Initial number of chats to load")
+						Spacer()
+						TextField("Chats", value: chats_binding, formatter: NumberFormatter())
+							.textFieldStyle(RoundedBorderTextFieldStyle())
+							.frame(width: 60)
 					}
-				}.pickerStyle(SegmentedPickerStyle())
-			}*/
-            
-            Spacer()
-            
-        }.padding()
+					
+					HStack {
+						Text("Initial number of messages to load")
+						Spacer()
+						TextField("Messages", value: messages_binding, formatter: NumberFormatter())
+							.textFieldStyle(RoundedBorderTextFieldStyle())
+							.frame(width: 60)
+					}
+					
+					HStack {
+						Text("Interval for website to ping app (seconds)")
+						Spacer()
+						TextField("Ping", value: ping_binding, formatter: NumberFormatter())
+							.textFieldStyle(RoundedBorderTextFieldStyle())
+							.frame(width: 60)
+					}
+					
+					HStack {
+						Text("Websocket port")
+						Spacer()
+						TextField("Port", value: socket_binding, formatter: NumberFormatter())
+							.textFieldStyle(RoundedBorderTextFieldStyle())
+							.frame(width: 60)
+					}
+				}
+				
+				Spacer().frame(height: 20)
+				
+				Section {
+				
+					Toggle("Toggle debug", isOn: debug_binding)
+				
+					Toggle("Start server on load", isOn: start_binding)
+				
+					Toggle("Require Authentication to view messages", isOn: auth_binding)
+					
+					Toggle("Enable backgrounding", isOn: background_binding)
+				}
+				
+				/*Spacer().frame(height: 20) /// This will be included later but is now failing to compile
+
+				VStack(alignment: .leading, spacing: 0) {
+					Text("How to detect new texts")
+					
+					Picker("Method", selection: $picker_select) {
+						ForEach(0..<picker_options.count, id: \.self) { index in
+							Text(self.picker_options[index]).tag(index)
+						}
+					}.pickerStyle(SegmentedPickerStyle())
+				}*/
+				
+				Section {
+					Spacer().frame(height: 20)
+					
+					HStack {
+						Text("Phone number (e.g. '1 394 283948')")
+						Spacer()
+					}
+					
+					GeometryReader { geo in
+						HStack {
+							TextField("Country code", text: country_binding)
+								.textFieldStyle(RoundedBorderTextFieldStyle())
+								.frame(width: geo.size.width * 0.3)
+							
+							TextField("Area code", text: area_binding)
+								.textFieldStyle(RoundedBorderTextFieldStyle())
+								.frame(width: geo.size.width * 0.3)
+							
+							TextField("Number", text: number_binding)
+								.textFieldStyle(RoundedBorderTextFieldStyle())
+						}
+					}
+					
+					Spacer().frame(height: 30)
+					
+					Button(action: {
+						self.resetDefaults()
+					}) {
+						Text("Reset Defaults")
+							.padding(.init(top: 8, leading: 24, bottom: 8, trailing: 24))
+							.background(Color.blue)
+							.cornerRadius(8)
+							.foregroundColor(Color.white)
+					}
+				}
+				
+				Spacer()
+				
+			}.padding()
+		}
 		.onAppear() {
 			self.setPicker()
 		}
