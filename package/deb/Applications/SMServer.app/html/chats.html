@@ -634,10 +634,10 @@
                         processNewText(content)
                         break
                     case "battery":
-                        setNewBatteryLevel(content)
+                        //setNewBatteryLevel(content)
                         break
                     case "wifi":
-                        setNewWifiLevel(content)
+                        //setNewWifiLevel(content)
                         break
                     default:
                         console.log("cannot handle request: '" + msg + "'")
@@ -646,31 +646,34 @@
             }
 
             function processNewText(chat) {
-                if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id) { 
-                    var existingButton = document.getElementById(chat);
-                    var chatsList = document.getElementsByClassName("chats-list")[0];
-                    if (existingButton) {
-                        existingButton.parentNode.removeChild(existingButton);
-                        chatsList.insertBefore(existingButton, chatsList.firstChild);
-                    } else {
-                        var new_name = fetchName(chat);
-
-                        var newButton = document.createElement("button");
-
-                        newButton.setAttribute("id", chat);
-                        newButton.innerHTML = "img src=\"/profile?chat_id=" + chat.replace("+", "%2B") + "\">";
-                        newButton.innerHTML += "<p>" + new_name + "</p>";
-
-                        newButton.setAttribute("class", "unread");
-                        newButton.setAttribute("onclick", "getTexts(\"" + chat + "\", " + num_texts_to_load + ");");
-                        
-                        chatsList.insertBefore(newButton, chatsList.firstChild);
-                    }
-                    //printItems() /// Hopefully will optimize this later
-                }
-                if (chat === document.getElementsByClassName("title")[0].id) {
-                    printNewTexts()
-                }
+				if (chat.length != 0) {
+					
+					if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id) {
+						var existingButton = document.getElementById(chat);
+						var chatsList = document.getElementsByClassName("chats-list")[0];
+						if (existingButton) {
+							existingButton.parentNode.removeChild(existingButton);
+							chatsList.insertBefore(existingButton, chatsList.firstChild);
+						} else {
+							var new_name = fetchName(chat);
+							
+							var newButton = document.createElement("button");
+							
+							newButton.setAttribute("id", chat);
+							newButton.innerHTML = "img src=\"/profile?chat_id=" + chat.replace("+", "%2B") + "\">";
+							newButton.innerHTML += "<p>" + new_name + "</p>";
+							
+							newButton.setAttribute("class", "unread");
+							newButton.setAttribute("onclick", "getTexts(\"" + chat + "\", " + num_texts_to_load + ");");
+							
+							chatsList.insertBefore(newButton, chatsList.firstChild);
+						}
+						//printItems() /// Hopefully will optimize this later
+					}
+					if (chat === document.getElementsByClassName("title")[0].id) {
+						printNewTexts()
+					}
+				}
             }
 
             /*function setNewBatteryLevel(level) {
@@ -745,7 +748,7 @@
                         </div>
                         <div class="composeAddressBoxDiv">
                             <span class="composeAddressToDiv">To:</span>
-                            <input name="chat" id="composeAddressBox" form="composeform" placeholder="address here (e.g. '+19280372949'). Must not exclude '+' or country code or area code.">
+                            <input name="chat" id="composeAddressBox" form="composeform" placeholder="address here (e.g. '+19280372949')">
                             <input value="&#128206" onclick="document.getElementById('composeAttachmentButton').click();" type="button" id="composeShowingAttachmentButton"></input>
                             <input type="file" name="attachments" id="composeAttachmentButton" multiple onchange="document.getElementById('composeShowingAttachmentButton').value = document.getElementById('composeAttachmentButton').files.length.toString();"></input>
                         </div>
