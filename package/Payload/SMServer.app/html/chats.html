@@ -266,7 +266,7 @@
                 }
             }
     
-            const fetchName = async (name) => {
+            function fetchName(name) {
                 name = name.replace("+", "%2B")
                 
                 var url = '/requests?name=' + name
@@ -647,14 +647,33 @@
 
             function processNewText(chat) {
                 if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id) { 
-                    printItems() /// Hopefully will optimize this later
+                    var existingButton = document.getElementById(chat);
+                    var chatsList = document.getElementsByClassName("chats-list")[0];
+                    if (existingButton) {
+                        existingButton.parentNode.removeChild(existingButton);
+                        chatsList.insertBefore(existingButton, chatsList.firstChild);
+                    } else {
+                        var new_name = fetchName(chat);
+
+                        var newButton = document.createElement("button");
+
+                        newButton.setAttribute("id", chat);
+                        newButton.innerHTML = "img src=\"/profile?chat_id=" + chat.replace("+", "%2B") + "\">";
+                        newButton.innerHTML += "<p>" + new_name + "</p>";
+
+                        newButton.setAttribute("class", "unread");
+                        newButton.setAttribute("onclick", "getTexts(\"" + chat + "\", " + num_texts_to_load + ");");
+                        
+                        chatsList.insertBefore(newButton, chatsList.firstChild);
+                    }
+                    //printItems() /// Hopefully will optimize this later
                 }
                 if (chat === document.getElementsByClassName("title")[0].id) {
                     printNewTexts()
                 }
             }
 
-            function setNewBatteryLevel(level) {
+            /*function setNewBatteryLevel(level) {
                 var batt = document.getElementById("battery");
                 batt.innerHTML = "battery: " + String(level) + "%";
 
@@ -672,7 +691,7 @@
             function setNewWifiLevel(level) {
                 var wifi = document.getElementById("wifi");
                 wifi.innerHTML = "wifi: " + String(level) + "%";
-            }
+            }*/
 
             printItems()
             
@@ -710,7 +729,7 @@
                 <form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
                     <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
-                    <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13) sendForm();"></textarea>
+                    <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
                     <textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
                     <button id="sendbutton" onclick="sendForm();">↑</button>
@@ -726,7 +745,7 @@
                         </div>
                         <div class="composeAddressBoxDiv">
                             <span class="composeAddressToDiv">To:</span>
-                            <input name="chat" id="composeAddressBox" form="composeform" placeholder="address here">
+                            <input name="chat" id="composeAddressBox" form="composeform" placeholder="address here (e.g. '+19280372949'). Must not exclude '+' or country code or area code.">
                             <input value="&#128206" onclick="document.getElementById('composeAttachmentButton').click();" type="button" id="composeShowingAttachmentButton"></input>
                             <input type="file" name="attachments" id="composeAttachmentButton" multiple onchange="document.getElementById('composeShowingAttachmentButton').value = document.getElementById('composeAttachmentButton').files.length.toString();"></input>
                         </div>

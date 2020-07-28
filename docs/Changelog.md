@@ -1,5 +1,11 @@
 # Changelog
 
+0.2.0+debug3 -> 0.2.0+debug5
+- Merged PR to fix extra line issue when sending text in web interface
+- Merged PR to allow extra line creation on web interface with Shift+Enter
+- Fixed spacing issue on main app view
+- Optimized new text retrieval
+
 0.2.0+debug2 -> 0.2.0+debug3
 - Added protections for unwanted webSocket connections
 - Added settings for changing webSocket port

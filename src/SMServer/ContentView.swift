@@ -740,7 +740,9 @@ struct ContentView: View {
                         .font(.callout)
                     Spacer()
                 }.padding(.leading)
-            }
+			} else {
+				Spacer().frame(height: 20)
+			}
             
             Spacer()
             
