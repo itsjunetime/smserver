@@ -24,15 +24,17 @@ struct ContentView: View {
     @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
     @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
 	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
-    
+	@State var shown_phone_alert: Bool = UserDefaults.standard.object(forKey: "shown_phone_alert")  as? Bool ?? false
+	
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
     @State var view_settings = false
     @State var server_running = false
     @State var alert_connected = false
     @State var has_root = false
-    @State var show_root_alert = false
+    //@State var show_root_alert = false
     @State var show_picker = false
+	@State var show_phone_alert = false
     
     static let chat_delegate = ChatDelegate()
     @State var s = Sender()
@@ -281,6 +283,28 @@ struct ContentView: View {
             
             files.append(newFilePath)
         }
+		
+		if !(address.contains("@") || address.prefix(1) == "+" || address.prefix(4) == "chat") {
+			/// This is the only area where your phone number is actually used
+			/// It checks the phone number that the text is being sent to and adds the '+'/country code/area code onto it if they are not included
+			let full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? "000000"
+			let area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? "212" /// NYC?
+			let country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? "1" /// US
+			
+			address = address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+			
+			if !(address.count < full_number.count) {
+				if address.count == full_number.count {
+					address = "+" + country_code + area_code + address
+				} else if address.count == (area_code + full_number).count {
+					address = "+" + country_code + address
+				} else if address.count == (country_code + area_code + full_number).count {
+					address = "+" + address
+				}
+			}
+		} else if address.prefix(1) == "+" { /// Make sure there are no unnecessary characters like parenthesis
+			address = "+" + address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+		}
         
         if !(body == "" && files.count == 0) {
             self.s.sendIPCText(body, toAddress: address, withAttachments: files)
@@ -548,7 +572,7 @@ struct ContentView: View {
 		(UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning) ? self.loadServer(port_num: UInt16(self.port) ?? UInt16(8741)) : nil
 		
 		self.has_root = self.s.setUID() == uid_t(0)
-		self.show_root_alert = self.debug
+		//self.show_root_alert = self.debug
 		self.watcher.setTexts = { value in
 			self.setNewestTexts(value ?? "None")
 		}
@@ -558,6 +582,11 @@ struct ContentView: View {
 		socket.verify_auth = self.checkIfAuthenticated
 		
 		UIDevice.current.isBatteryMonitoringEnabled	= true
+		
+		show_phone_alert = !shown_phone_alert
+		UserDefaults.standard.setValue(true, forKey: "shown_phone_alert")
+		
+		print("show is \(String(show_phone_alert)), shown is \(String(shown_phone_alert))")
 	}
     
     func getWiFiAddress() -> String? {
@@ -596,6 +625,76 @@ struct ContentView: View {
         return address
     }
     
+	var bottom_bar: some View { /// just to break up the code
+		HStack {
+			HStack {
+				HStack {
+					HStack {
+						Button(action: {
+							self.loadFiles()
+							self.alert_connected = self.debug
+							self.s.launchMobileSMS()
+						}) {
+							Image(systemName: "goforward")
+								.font(.system(size: self.font_size))
+								.foregroundColor(Color.purple)
+						}.alert(isPresented: $alert_connected, content: {
+							Alert(title: Text("Checking connection to sms.db"),
+									message: Text( self.checkIfConnected() ? "You can connect to the database." :
+									"You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact the developer about this issue."
+							))
+						})
+				
+						Spacer().frame(width: 24)
+				
+						Button(action: {
+							(self.server_running && self.getWiFiAddress() != nil) ? self.stopServer() : nil
+						}) {
+							Image(systemName: "stop.fill")
+								.font(.system(size: self.font_size))
+								.foregroundColor(self.server_running ? Color.red : Color.gray)
+						}
+				
+						Spacer().frame(width: 30)
+				
+						Button(action: {
+							self.server_running || self.getWiFiAddress() == nil ? nil : self.loadServer(port_num: UInt16(self.port)!)
+							UserDefaults.standard.setValue(true, forKey: "has_run")
+						}) {
+							Image(systemName: "play.fill")
+								.font(.system(size: self.font_size))
+								.foregroundColor(self.server_running ? Color.gray : Color.green)
+						}
+				
+					}.padding(10)
+				
+					Spacer()
+				
+					HStack {
+						Button(action: {
+							self.view_settings.toggle()
+						}) {
+							Image(systemName: "gear")
+								.font(.system(size: 24))
+						}.sheet(isPresented: $view_settings) {
+							SettingsView()
+						}
+					}.padding(10)
+				}.padding(8)
+				
+			}.background(LinearGradient(gradient: Gradient(colors: [Color("BeginningBlur"), Color("EndBlur")]), startPoint: .topLeading, endPoint: .bottomTrailing))
+			.cornerRadius(16)
+			.overlay(
+				RoundedRectangle(cornerRadius: 16)
+					.stroke(Color(UIColor.tertiarySystemBackground), lineWidth: 2)
+			)
+			.shadow(radius: 7)
+			
+		}.padding(.init(top: 6, leading: 10, bottom: 6, trailing: 10))
+		.frame(height: 80)
+		.background(Color(UIColor.secondarySystemBackground))
+	}
+	
     var body: some View {
         
         let port_binding = Binding<String>(get: {
@@ -730,7 +829,7 @@ struct ContentView: View {
                         }
                     }
                 }
-            }
+			}
             
             Spacer()
             
@@ -745,81 +844,15 @@ struct ContentView: View {
 			}
             
             Spacer()
-            
-            HStack {
-                HStack {
-                    HStack {
-                        HStack {
-                            Button(action: {
-                                self.loadFiles()
-                                self.alert_connected = self.debug
-                                self.s.launchMobileSMS()
-                            }) {
-                                Image(systemName: "goforward")
-                                    .font(.system(size: self.font_size))
-                                    .foregroundColor(Color.purple)
-                            }.alert(isPresented: $alert_connected, content: {
-                                Alert(title: Text("Checking connection to sms.db"),
-                                        message: Text( self.checkIfConnected() ? "You can connect to the database." :
-                                        "You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact the developer about this issue."
-                                ))
-                            })
-                    
-                            Spacer().frame(width: 24)
-                    
-                            Button(action: {
-                                (self.server_running && self.getWiFiAddress() != nil) ? self.stopServer() : nil
-                            }) {
-                                Image(systemName: "stop.fill")
-                                    .font(.system(size: self.font_size))
-                                    .foregroundColor(self.server_running ? Color.red : Color.gray)
-                            }
-                    
-                            Spacer().frame(width: 30)
-                    
-                            Button(action: {
-                                self.server_running || self.getWiFiAddress() == nil ? nil : self.loadServer(port_num: UInt16(self.port)!)
-                                UserDefaults.standard.setValue(true, forKey: "has_run")
-                            }) {
-                                Image(systemName: "play.fill")
-                                    .font(.system(size: self.font_size))
-                                    .foregroundColor(self.server_running ? Color.gray : Color.green)
-                            }
-                    
-                        }.padding(10)
-                    
-                        Spacer()
-                    
-                        HStack {
-                            Button(action: {
-                                self.view_settings.toggle()
-                            }) {
-                                Image(systemName: "gear")
-                                    .font(.system(size: 24))
-                            }.sheet(isPresented: $view_settings) {
-                                SettingsView()
-                            }
-                        }.padding(10)
-                    }.padding(8)
-                    
-                }.background(LinearGradient(gradient: Gradient(colors: [Color("BeginningBlur"), Color("EndBlur")]), startPoint: .topLeading, endPoint: .bottomTrailing))
-                .cornerRadius(16)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color(UIColor.tertiarySystemBackground), lineWidth: 2)
-                )
-                .shadow(radius: 7)
-                
-            }.padding(.init(top: 6, leading: 10, bottom: 6, trailing: 10))
-            .frame(height: 80)
-            .background(Color(UIColor.secondarySystemBackground))
+			
+			bottom_bar /// created above
             
         }.onAppear() {
 			loadFuncs()
         }
-        .alert(isPresented: $show_root_alert, content: {
-            Alert(title: Text("Checking for root privelege"), message: Text(self.has_root ? "You got root!" : "You didn't get root :("))
-        })
+		.alert(isPresented: $show_phone_alert, content: {
+			Alert(title: Text("To finish setup"), message: Text("Please enter your phone number in the settings section of this app. This is necessary to add your country/area code onto new conversations if they don't include it."))
+		})
         .background(Color(UIColor.secondarySystemBackground))
         .edgesIgnoringSafeArea(.all)
     }
