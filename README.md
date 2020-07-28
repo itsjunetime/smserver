@@ -19,16 +19,18 @@
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
+- Technically, the webclient conflicts with the LastPass browser extension, but I have not seen any issues because of it. It simply throws errors in the console of your browser, which can be easily ignored and appear not to hurt anything.
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
-- Some signing service/bypass -- Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign and you can install either the .deb or .ipa, but if that doesn't work for you, then feel free to sign & install the .ipa. I'll look into making this not required soon, but it may not be for a while.
+- To install the ipa: some signing service/bypass -- Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign it, but if that doesn't work for you, then feel free to sign & install the .ipa. The .deb does not require signing or any sort of bypass, since it 
 
 ## To Install
-This is definitely still in Beta stages; there are still issues and many features that need to be implemented. You have two options for installing: Using the provided .deb or .ipa or building from source. If you want to use the .deb or .ipa, simply download it from the `package` subdirectory here. 
+This is still in Beta stages; there are still issues and some features that I hope to implement. You have two options for installing: Using the provided .deb or .ipa or building from source. If you want to use the .deb or .ipa, simply download it from the `package` subdirectory here. 
 
 ### To build from source and install as regular app:
 
+1. Make sure you have xcode commandline tools installed
 1. Clone this repository
 1. cd into the directory where the podfile is installed
 1. If cocoapods are not installed, run `sudo gem install cocoapods`
@@ -46,6 +48,7 @@ Alternately, if you want to install as a .ipa file:
 
 ### To build from source and install as .deb (system app):
 
+1. Make sure you have xcode commandline tools installed
 1. Clone this repository
 1. cd into the directory where the podfile is installed
 1. If cocoapods are not installed, run `sudo gem install cocoapods`
@@ -106,14 +109,14 @@ I would recommend building it yourself, since the packages may not always be up 
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged current issues:
-- Message text box in web interface doesn't correctly resize when typing a multi-line text
+- New conversations aren't created correctly if not formatted as described in the hint box in the `new message` popup of the web interface
 
 ### To file an issue:
 Please include the following information:
  - Device model
  - Jailbreak
  - iOS Version
- - If you installed the .deb or built from source (and if from source, whether in .ipa or .deb form)
+ - If you installed a package or built from source (and if from source, how did you install it)
  - A detailed description of what failed
  - A crash report if it crashed and you have an app like cr4shed to collect those
 
