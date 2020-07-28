@@ -6,7 +6,7 @@ All post requests are directed to /send. In the latest version, this is the only
 
 All request parameters require a value, but only some of the values are consequential. However, the app will not interpret a parameter as a parameter unless it has an accompanying value -- For example, to retrieve the list of conversations, one must make a request to /requests with a parameter of 'chat', but 'GET /requests?chat' will return nothing. Something like 'GET /requests?chat=0' will return the correct information.
 
-Lastly, every time you see a plus ('+'), it needs to be replaced with a '%2B'. The server won't handle it correctly if it is a plus.
+Lastly, every time you see a plus ('+') in a get request, it needs to be replaced with a '%2B'. The server won't handle it correctly if it is a plus.
 
 # `/requests` requests:
 

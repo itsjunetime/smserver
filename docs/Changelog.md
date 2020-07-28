@@ -1,5 +1,11 @@
 # Changelog
 
+0.2.0+debug5 -> 0.2.0+debug
+- Added extra address handing to support more types of address formatting (e.g. with/without area code, country code, etc.)
+- Added options to reset defaults
+- Fixed bug with popup form sending even when 'cancel' was clicked instead of 'sent'
+- Fixed small css styling issues
+
 0.2.0+debug3 -> 0.2.0+debug5
 - Merged PR to fix extra line issue when sending text in web interface
 - Merged PR to allow extra line creation on web interface with Shift+Enter

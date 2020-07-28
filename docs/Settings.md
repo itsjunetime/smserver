@@ -42,3 +42,9 @@ Toggling this on will prevent anyone from querying the host if they have not alr
 
 ### Enable backgrounding
 Toggling this on will prevent the server from shutting off when the app goes into the background, given that the server is already running. Even if this is on, though, the server will shut down when the app is forcibly killed from the multitasking screen. This does not require anything to take effect, simply a toggle.
+
+### Phone number
+This should be your country code, area code, and phone number, with no extra characters. For example, the phone number +1 (239) 388-0209 should be typed in as:
+- Country code: 1
+- Area code: 239
+- Phone number: 3880209
