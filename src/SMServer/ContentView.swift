@@ -32,7 +32,6 @@ struct ContentView: View {
     @State var server_running = false
     @State var alert_connected = false
     @State var has_root = false
-    //@State var show_root_alert = false
     @State var show_picker = false
 	@State var show_phone_alert = false
     
@@ -75,6 +74,14 @@ struct ContentView: View {
         /// This starts the server at port $port_num
         
         self.debug ? self.log("Loading server at port \(String(port_num))") : nil
+		
+		let num = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
+		let country = UserDefaults.standard.object(forKey: "country_code") as? String ?? ""
+		
+		if country.count == 0 || num.count == 0 {
+			self.show_phone_alert = true /// Make them put in their number first
+			return
+		}
         
         if server.isRunning {
             self.stopServer()
@@ -184,7 +191,7 @@ struct ContentView: View {
                 self.log("Returning from sending text")
             }
             
-            return GCDWebServerDataResponse(text: send)
+			return GCDWebServerDataResponse(text: send ? "true" : "false")
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
@@ -235,7 +242,7 @@ struct ContentView: View {
         }
     }
     
-    func sendText(req: GCDWebServerMultiPartFormRequest) -> String {
+    func sendText(req: GCDWebServerMultiPartFormRequest) -> Bool {
         
         var body = ""
         var address = ""
@@ -243,13 +250,11 @@ struct ContentView: View {
         
         for i in Array(req.arguments) {
             if (i.string?.prefix(5) == "text:") {
-                body = String(i.string?.suffix(i.string!.count - 5) ?? "")
+				body = String(i.string?.suffix(i.string!.count - 5) ?? "")
             } else if (i.string?.prefix(5) == "chat:") {
-                address = String(i.string?.suffix(i.string!.count - 5) ?? "")
+				address = String(i.string?.suffix(i.string!.count - 5) ?? "")
             }
         }
-        
-        self.setNewestTexts(address)
         
         let fm = FileManager.default
         
@@ -265,20 +270,20 @@ struct ContentView: View {
                 self.log("couldn't get filesize")
             }
             
-            let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName).replacingOccurrences(of: " ", with: "_")
+            let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName).replacingOccurrences(of: " ", with: "_") /// I don't like spaces in file names. Also could cause bad behavior (I think?)
             
             if fm.fileExists(atPath: newFilePath) {
                 do {
                     try fm.removeItem(atPath: newFilePath)
                 } catch {
-                    self.log("Couldn't remove file from path for whatever reason")
+                    self.log("Couldn't remove file from path: \(newFilePath), for whatever reason")
                 }
             }
             do {
                 try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
             } catch {
                 self.log("failed to move file; won't send text")
-                return "false"
+                return false
             }
             
             files.append(newFilePath)
@@ -287,9 +292,10 @@ struct ContentView: View {
 		if !(address.contains("@") || address.prefix(1) == "+" || address.prefix(4) == "chat") {
 			/// This is the only area where your phone number is actually used
 			/// It checks the phone number that the text is being sent to and adds the '+'/country code/area code onto it if they are not included
-			let full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? "000000"
-			let area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? "212" /// NYC?
-			let country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? "1" /// US
+			
+			let full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
+			let area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? "" /// NYC?
+			let country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? "" /// US
 			
 			address = address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
 			
@@ -308,9 +314,11 @@ struct ContentView: View {
         
         if !(body == "" && files.count == 0) {
             self.s.sendIPCText(body, toAddress: address, withAttachments: files)
-            return "true"
+			//self.setNewestTexts(address)
+			
+            return true
         } else {
-            return "false"
+            return false
         }
     }
     
@@ -585,8 +593,6 @@ struct ContentView: View {
 		
 		show_phone_alert = !shown_phone_alert
 		UserDefaults.standard.setValue(true, forKey: "shown_phone_alert")
-		
-		print("show is \(String(show_phone_alert)), shown is \(String(shown_phone_alert))")
 	}
     
     func getWiFiAddress() -> String? {
@@ -605,7 +611,7 @@ struct ContentView: View {
 
             // Check for IPv4 or IPv6 interface:
             let addrFamily = interface.ifa_addr.pointee.sa_family
-            if addrFamily == UInt8(AF_INET) || addrFamily == UInt8(AF_INET6) {
+            if addrFamily == UInt8(AF_INET) {
 
                 // Check interface name:
                 let name = String(cString: interface.ifa_name)
@@ -720,7 +726,7 @@ struct ContentView: View {
                 
                 Spacer()
             }.padding()
-            .padding(.top, 10)
+            .padding(.top, 14)
             
             if self.getWiFiAddress() != nil {
                 Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
