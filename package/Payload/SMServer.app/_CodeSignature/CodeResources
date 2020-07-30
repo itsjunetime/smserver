@@ -10,7 +10,7 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
-		4WfkHkXc1Lf2CGwwcuZTa4LWRqg=
+		neZ+0wrUZeWj2OFpjKh8JxhpNeg=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
 		<data>
@@ -18,11 +18,11 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib</key>
 		<data>
-		UOa9FLh0jozKlpnkcKeojjpRXJM=
+		MRbBqwnzGge9OhMmdbUMPXJbn1U=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<data>
-		pz7ZhqhRzIeQWx0NYZH80EWR/Pg=
+		TnvSwnignmpzIgopsce34eN/Nmw=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
 		<data>
@@ -34,7 +34,7 @@
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebServer</key>
 		<data>
-		FAvfy8yDcT14mHKwK1FPH4LW8Fg=
+		baP474T11DvBgG5fOU5VJfDKXIA=
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
 		<data>
@@ -59,7 +59,7 @@
 		</data>
 		<key>Frameworks/HTTPParserC.framework/HTTPParserC</key>
 		<data>
-		97jTAzHcEOLDr32zJ/+MABns3nU=
+		W1YdcINpIikGcEFNg0W683G2DQM=
 		</data>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
 		<data>
@@ -95,7 +95,7 @@
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeSignature</key>
 		<data>
-		oJ6xuySXUr29sJJUwEQfE6G+Eqo=
+		qZm0yMLIMgOP8duUso7jZwhCT3Y=
 		</data>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
 		<data>
@@ -103,7 +103,7 @@
 		</data>
 		<key>Frameworks/Telegraph.framework/Telegraph</key>
 		<data>
-		/iTwUtycnQqMRCSefEOTdwt+B3k=
+		+UcnYV1ZHUIVz1WdVFX+MKYteTo=
 		</data>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
 		<data>
@@ -111,7 +111,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		cFKCWqEHjpCHPAvTEXobVfVCTfM=
+		qp5lRgwv7XZ+/MltymNmE7s2npU=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -123,7 +123,7 @@
 		</data>
 		<key>html/chats.html</key>
 		<data>
-		+dhaAzuMQ3X5Urd5emAJjceoErk=
+		wztMAJgwvNS6/lyr7cc/qeSsjEQ=
 		</data>
 		<key>html/custom.css</key>
 		<data>
@@ -136,10 +136,6 @@
 		<key>html/light_theme.css</key>
 		<data>
 		1IqSE464bFOlwHYjxwWc4vTJZxk=
-		</data>
-		<key>html/log.txt</key>
-		<data>
-		2jmj7l5rSw0yVb/vlWAYkK/YBwk=
 		</data>
 		<key>html/profile.png</key>
 		<data>
@@ -163,7 +159,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			DbFddqQy/EFcND7FScmsGPBg/fIUbHIhhg9OdCh44Bo=
+			8BSbL8CeWDmCSpaZiJskgFZhuPgGjJLNol7Fu+Fr7dU=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
@@ -177,14 +173,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			D4CKGM3GSv2gY8OqGg9IIqfbJYffRrgbExildJqOoWc=
+			mwkmtDrvWno/sck3Kph5jCRkppJW9aPtZxhRCtvmf9k=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			DYk8GZTkrb47Eofuo66KvhvW3MFXrnMYC8IoA3NzCTA=
+			sXWd6Sqj7nt0AGyFnQV4H3LTJCbmnPXylzWLJdgJ09g=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
@@ -205,7 +201,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			PoS2+VwGu1atQLcIindIXbTmk6JSOZw976Y1IV2ifLY=
+			++r6C+VneGUK4nRB6Ve/oqs8s49OMnfcFQcxxYqRxkE=
 			</data>
 		</dict>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
@@ -242,7 +238,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			igGhbX5F36uPgM7kmUEV8gi82HE2tZuGB/K5ulXkJn0=
+			0dsvLp3/TmStTLtVhnq0s6GrvmJFQQ9NdfZZqGB8bhk=
 			</data>
 		</dict>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
@@ -305,7 +301,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			JaZM+Syls3y2c+KVVj/t0UgQzuQ6mVtzDgPomEd9x8s=
+			w8BjFnhFIYM599y3V3cKoZUuocaSSJB0BJ4NGQ85So8=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
@@ -319,7 +315,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			GmtrhA4P2oSDju8WkiDO/QximH4bVqZ7QNegEjaDdis=
+			SOHb0KiOEjl7/ZUmCJCjm3BpAcyGnT0uFlcdEZaNhIk=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
@@ -340,7 +336,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			6yJhEqygB4BIzx/z1ZIAcw160xezkYqq7QhoqtLD7qk=
+			Xt6+kvZORsziSrELACqg8aa7B6/BcwpLfo0IARYMKNE=
 			</data>
 		</dict>
 		<key>html/custom.css</key>
@@ -362,13 +358,6 @@
 			<key>hash2</key>
 			<data>
 			NTZNWCBvf0WfzBVg3Lxkm+2N3L2syRGdpAOXZirrlwY=
-			</data>
-		</dict>
-		<key>html/log.txt</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
 			</data>
 		</dict>
 		<key>html/profile.png</key>

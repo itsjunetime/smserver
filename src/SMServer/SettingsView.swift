@@ -14,6 +14,7 @@ struct SettingsView: View {
     
     @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 60
     @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 200
+	@State var default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
     @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 10
 	@State var socket_port = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
     
@@ -61,6 +62,13 @@ struct SettingsView: View {
             self.default_num_messages = Int($0)
             UserDefaults.standard.setValue(Int($0), forKey: "num_messages")
         })
+		
+		let photos_binding = Binding<Int>(get: {
+			self.default_num_photos
+		}, set: {
+			self.default_num_photos = Int($0)
+			UserDefaults.standard.setValue(Int($0), forKey: "num_photos")
+		})
         
         let ping_binding = Binding<Int>(get: {
             self.server_ping
@@ -149,6 +157,14 @@ struct SettingsView: View {
 						Text("Initial number of messages to load")
 						Spacer()
 						TextField("Messages", value: messages_binding, formatter: NumberFormatter())
+							.textFieldStyle(RoundedBorderTextFieldStyle())
+							.frame(width: 60)
+					}
+					
+					HStack {
+						Text("Initial number of photos to load")
+						Spacer()
+						TextField("Photos", value: photos_binding, formatter: NumberFormatter())
 							.textFieldStyle(RoundedBorderTextFieldStyle())
 							.frame(width: 60)
 					}

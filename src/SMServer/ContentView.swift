@@ -134,45 +134,38 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: response)
             }
         })
-        
-        server.addHandler(forMethod: "GET", path: "/attachments", request: GCDWebServerRequest.self, processBlock: { request in
-            let ip = request.remoteAddressString
-            
-            if self.debug {
-                self.log("GET Attachments: " + ip)
-            }
-            
-            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
-                return GCDWebServerDataResponse(text: "")
-            }
-            
-            let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
-            let type = ContentView.chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
-            
-            if self.debug {
-                self.log("Returning attachment")
-            }
-            
-            return GCDWebServerDataResponse(data: dataResponse, contentType: type)
-        })
-        
-        server.addHandler(forMethod: "GET", path: "/profile", request: GCDWebServerRequest.self, processBlock: { request in
-            let ip = request.remoteAddressString
-            
-            if self.debug {
-                self.log("GET profile: " + ip)
-            }
-            
-            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
-                return GCDWebServerDataResponse(text: "")
-            }
-            
-            if self.debug {
-                self.log("returning profile")
-            }
-            
-            return GCDWebServerDataResponse(data: ContentView.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
-        })
+		
+		server.addHandler(forMethod: "GET", path: "/data", request: GCDWebServerRequest.self, processBlock: { request in
+			let ip = request.remoteAddressString
+   
+			if self.debug {
+				self.log("GET profile: " + ip)
+			}
+			
+			if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
+				return GCDWebServerDataResponse(text: "")
+			}
+			
+			if self.debug {
+				self.log("returning data")
+			}
+			
+			let f = request.query?.keys.first
+			
+			if f == "chat_id" {
+				return GCDWebServerDataResponse(data: ContentView.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
+			} else if f == "path" {
+				
+				let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
+				let type = ContentView.chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
+				
+				return GCDWebServerDataResponse(data: dataResponse, contentType: type)
+			} else if f == "photo" {
+				return GCDWebServerDataResponse(data: ContentView.chat_delegate.getPhotoDatafromPath(path: request.query?["photo"] ?? ""), contentType: "image/png")
+			}
+			
+			return GCDWebServerDataResponse(data: Data.init(capacity: 0), contentType: "") /// Nothing
+		})
         
         server.addHandler(forMethod: "POST", path: "/send", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
             let ip = request.remoteAddressString
@@ -323,7 +316,7 @@ struct ContentView: View {
     }
     
     func startBackgroundTask() {
-        /// This starts the background task... I may deprecate this soon and put it in like SceneDelegate or AppDelegate
+        /// This starts the background task
         
         DispatchQueue.global().async {
             if self.debug {
@@ -466,12 +459,13 @@ struct ContentView: View {
         
         let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
         let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
+		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
         
         var person = ""
+		var chat_id = ""
+		
         var num_texts = 0
         var offset = 0
-        
-        var chat_id = ""
         
         let f = Array(params.keys)[0]
         
@@ -494,6 +488,7 @@ struct ContentView: View {
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
             }
+			
             let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
@@ -554,6 +549,22 @@ struct ContentView: View {
 			let return_val = encodeToJson(object: responses, title: "Texts that match '" + (term ?? "nil") + "'")
 			
 			return return_val
+		} else if f == "photos" || f == "photo_offset" || f == "most_recent" {
+			var most_recent = true
+			var offset = 0
+			
+			let num = Int(params["photos"] ?? String(default_num_photos)) ?? default_num_photos
+			
+			if params["photo_offset"] != nil {
+				offset = Int(params["photo_offset"] ?? "0") ?? 0
+			}
+			if params["most_recent"] != nil {
+				most_recent = params["most_recent"] == "true"
+			}
+			
+			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
+			
+			return encodeToJson(object: ret_val, title: "photos")
 		} else {
             self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
         }
