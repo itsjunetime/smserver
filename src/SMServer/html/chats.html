@@ -127,9 +127,11 @@
                         
                         for (var l = 0; l < files.length; ++l) {
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-                                t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                                //t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                                t.innerHTML += "<img src=\"/data?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
-                                t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                                //t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                                t.innerHTML += "<a href=\"/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
                     } 
@@ -210,7 +212,8 @@
                     var b = document.createElement('button');
                     b.setAttribute("id", items[i].chat_identifier);
                     
-                    b.innerHTML = "<img src=\"/profile?chat_id=" + items[i].chat_identifier.replace("+", "%2B") + "\">";
+                    //b.innerHTML = "<img src=\"/profile?chat_id=" + items[i].chat_identifier.replace("+", "%2B") + "\">";
+                    b.innerHTML = "<img src=\"/data?chat_id=" + items[i].chat_identifier.replace("+", "%2B") + "\">";
                     
                     b.innerHTML += "<p>" + (items[i].display_name.length === 0 ? items[i].chat_identifier : items[i].display_name) + "</p>"
                     
@@ -253,7 +256,8 @@
                     var b = document.createElement('button');
                     b.setAttribute("id", new_items[i].chat_identifier);
                     
-                    b.innerHTML = "<img src=\"/profile?chat_id=" + new_items[i].chat_identifier.replace("+", "%2B") + "\">";
+                    //b.innerHTML = "<img src=\"/profile?chat_id=" + new_items[i].chat_identifier.replace("+", "%2B") + "\">";
+                    b.innerHTML = "<img src=\"/data?chat_id=" + new_items[i].chat_identifier.replace("+", "%2B") + "\">";
                     
                     b.innerHTML += "<p>" + (new_items[i].display_name.length === 0 ? new_items[i].chat_identifier : new_items[i].display_name) + "</p>"
                     
@@ -361,9 +365,11 @@
                         
                         for (var l = 0; l < files.length; ++l) {
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-                                t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                                //t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                                t.innerHTML += "<img src=\"/data?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
-                                t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                                //t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                                t.innerHTML += "<a href=\"/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
                     } 
@@ -468,9 +474,11 @@
                         
                         for (var l = 0; l < files.length; ++l) {
                             if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-                                t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                                //t.innerHTML += "<img src=\"/attachments?path=" + files[l] + "\">"
+                                t.innerHTML += "<img src=\"/data?path=" + files[l] + "\">"
                             } else if (files[l].length != 0) {
-                                t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                                //t.innerHTML += "<a href=\"attachments?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                                t.innerHTML += "<a href=\"/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                             }
                         }
                     }
@@ -678,7 +686,8 @@
 					var newButton = document.createElement("button");
 							
 					newButton.setAttribute("id", chat);
-					newButton.innerHTML = "img src=\"/profile?chat_id=" + chat.replace("+", "%2B") + "\">";
+					//ewButton.innerHTML = "img src=\"/profile?chat_id=" + chat.replace("+", "%2B") + "\">";
+					newButton.innerHTML = "img src=\"/data?chat_id=" + chat.replace("+", "%2B") + "\">";
 					newButton.innerHTML += "<p>" + new_name + "</p>";
 							
 					newButton.setAttribute("class", "unread");

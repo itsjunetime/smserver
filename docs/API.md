@@ -85,22 +85,31 @@ Example queries:
 - /requests?search=hello%20world&case_sensitive=true&bridge_gaps=false
 - /requests?search=hello_there
 
-# `/attachments` requests
+## `photos`, `offset`, `most_recent`
+
+if most_recent == "true", this retrieves a list of information about the most recent $photos ($photos is an integer) photos, offset by $offset ($offset is also an integer). if most_recent != "true", this retrieves a list of the oldest $photos photos, offset by $offset.
+
+- photos: Parameter is necessary, and value is consequential. This must be the number of photos that you want to receive information about, and if it is not an integer, it will be changed to the default number of photos (which is available to set in the settings of the app). Setting this to 0 will retrieve 0 photos, and the only way to retrieve all photos would be to set to $photos to an absurdly large number, such as 999999999. 
+- offset: Parameter is not necessary, and value is consequential. This must be the offset for the list of photos that you want to retrieve. For example, if you already retrieved the most recent 100 photos, but want to retrieve info about the next 100 images, you would set offset to 100, and photos to 100 as well. This must be an integer, or else it will default to 0. 
+- most_recent: Parameter is not necessary, and value is consequential. This must be either "true" or "false". If it is neither, it will default to true. setting this to false will query the oldest pictures first, and setting it to true or not settings it at all will retrieve the most recent images first.
+
+Example queries:
+- /requests?photos=100
+- /requests?photos=40&offset=120&most_recent=false
+- /requests?photos=1&most_recent=false
+
+# `/data` requests
 
 Requests to this URL return image data, which is why they have to be sent to a different url from /requests
 
 ## `path`
 
-This simply contains the path, excluding the attachments base URL ('/private/var/mobile/Library/SMS/Attachments/') of the attachment that is requested. It will only return image files, not any other format. So far, I have tested .gif, .png, and .jpeg, so I can only definitely confirm that it will work with those.
+This simply contains the path, excluding the attachments base URL ('/private/var/mobile/Library/SMS/Attachments/') of the attachment that is requested. It should return all attachment types, and will be handled by the browser just like any other file of its type.
 
-- path: Parameter is necessary, and value is consequential. Value needs to be a string containing the path of the file to get, minus the attachments base URL (mentioned above). This should (theoretically) work with the raw path, but just to be safe, please replace all forward slashes ('/') with period, underscore, then another period ('._.'), since that is more sure to parse correctly. It also filters out "../" to prevent LFI through this method.
+- path: Parameter is necessary, and value is consequential. Value needs to be a string containing the path of the file to get, minus the attachments base URL (mentioned above). It also filters out "../" to prevent LFI through this method, so any instances of '../' in the path will b filtered out.
 
 Example queries:
-- /attachments?path=00.\_.D8.\_.172BC809-BA7A-118D-18BCF0DEF._.IMG_9841.JPEG
-
-# `/profile` requests
-
-Requests to this URL return image data, which is why they have to be sent to a different URL from `/requests`
+- /data?path=00/D8/172BC809-BA7A-118D-18BCF0DEF/IMG_9841.JPEG
 
 ## `chat_id`
 
@@ -110,7 +119,17 @@ This contains the chat_id of the person that the request is trying to get the pr
 
 Example queries:
 
-- /profile?chat_id=%2B15204458272
+- /data?chat_id=%2B15204458272
+
+## `photo`
+
+This will return an image from the image library, specifically from the `/var/mobile/Media/DCIM/` folder. It it protected against LFI, just like `path` above. It will return whatever is at that address, whether it be a video or image.
+
+- photo: Parameter is necessary, and value is consequential. It should be the raw path, excluding the prefix of `/var/mobile/Media/DCIM/`, of the image that you want to retrieve.
+
+Example queries:
+
+- /data?photo=109APPLE/IMG_8273.JPEG
 
 # `/send` requests
 
@@ -147,7 +166,7 @@ from requests import post
 vals = {'text': 'text:Hello world!', 'chat': 'chat:email@email.org'}
 url = 'http://192.168.0.127:8741/send'
 
-# The files is still included in the next line 'cause the app crashes if the files parameter is null/empty. No files are actually sent with this example, though.
+# The files is still included in the next line 'cause the app crashes if the files parameter is null/empty (dunno why). No files are actually sent with this example, though.
 post(url, files={'attachments': (None, '0')}, data=vals)
 ```
 
@@ -156,6 +175,7 @@ Sending an attachment with no text:
 from requests import post
 
 vals = {'chat': 'chat:+13020499949'}
+
 # file is a tuple, with the first val being the file name, the second being an open operator on the file, and the third being the mimetype.
 file = ('image.jpeg', open('/home/user/Pictures/image.jpeg', 'rb'), 'image/jpeg')
 files_values = {'attachments': file}
@@ -164,4 +184,6 @@ url = 'http://192.168.0.127:8741/send'
 post(url, files=files_values, data=vals)
 ```
 
-I've read that the value for `attachments` in `files_values` could be a list of tuples (a list of variables like `file`), but doing that has cause python to fail every time I've tried it, so I would recommend just iterating over each attachment and sending them individually.
+I've read that the value for `attachments` in `files_values` could be a list of tuples (a list of variables like `file`), but doing that has cause python to fail every time I've tried it, so I would recommend just iterating over each attachment and sending them individually. 
+
+I also don't know for sure if the issue where the app crashes is only exclusive to a request made through the python library, or if it happens regardless of what is making the request. 
