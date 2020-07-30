@@ -9,6 +9,7 @@
 import Foundation
 import SQLite3
 import SwiftUI
+import Photos
 import os
 
 class ChatDelegate {
@@ -18,6 +19,7 @@ class ChatDelegate {
     let prefix = "SMServer_app: "
     
     static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
+	static let photoStoragePrefix = "/var/mobile/Media/DCIM/"
     static let userHomeString = "/private/var/mobile/"
     
     func log(_ s: String) {
@@ -634,8 +636,8 @@ class ChatDelegate {
         
         if file.count > 0 {
             for i in file {
-                var suffixed = String(i["filename"]?.dropFirst(ChatDelegate.imageStoragePrefix.count - ChatDelegate.userHomeString.count + 2) ?? "")
-                suffixed = suffixed.replacingOccurrences(of: "/", with: "._.")
+                let suffixed = String(i["filename"]?.dropFirst(ChatDelegate.imageStoragePrefix.count - ChatDelegate.userHomeString.count + 2) ?? "")
+                //suffixed = suffixed.replacingOccurrences(of: "/", with: "._.")
                 let type = i["mime_type"] ?? ""
                 return_val.append([suffixed, type])
             }
@@ -657,10 +659,11 @@ class ChatDelegate {
             self.log("Getting attachment type for @ \(path)")
         }
         
-        let new_path = path.replacingOccurrences(of: "._.", with: "/")
+        //let new_path = path.replacingOccurrences(of: "._.", with: "/")
+		//let new_path = path
         
         var db = createConnection()
-        let file_type_array = selectFromSql(db: db, columns: ["mime_type"], table: "attachment", condition: "WHERE filename like \"%\(new_path)%\"", num_items: 1)
+        let file_type_array = selectFromSql(db: db, columns: ["mime_type"], table: "attachment", condition: "WHERE filename like \"%\(path)%\"", num_items: 1)
         var return_val = "image/jpeg" /// Most likely thing
         
         if file_type_array.count > 0 {
@@ -680,10 +683,11 @@ class ChatDelegate {
         /// This returns the pure data of a file (attachment) at $path
         
         if self.debug {
-            self.log("Getting attachment data from Path")
+            self.log("Getting attachment data from path \(path)")
         }
         
-        let parsed_path = path.replacingOccurrences(of: "._.", with: "/").replacingOccurrences(of: "../", with: "") ///Prevents LFI
+        //let parsed_path = path.replacingOccurrences(of: "._.", with: "/").replacingOccurrences(of: "../", with: "") ///Prevents LFI
+		let parsed_path = path.replacingOccurrences(of: "../", with: "") /// To prevent LFI
         
         do {
             let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.imageStoragePrefix + parsed_path))
@@ -757,5 +761,93 @@ class ChatDelegate {
 		contact_db = nil
 		
 		return return_texts
+	}
+	
+	func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] { /// Gotta include stuff like favorite
+		/// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
+		
+		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized { return [[String:String]]() }
+		
+		var ret_val = [[String:String]]()
+		let fetchOptions = PHFetchOptions()
+		fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: !most_recent)]
+		fetchOptions.fetchLimit = num + offset
+		
+		let requestOptions = PHImageRequestOptions()
+		//requestOptions.isSynchronous = true
+		requestOptions.isNetworkAccessAllowed = true
+		
+		let result = PHAsset.fetchAssets(with: PHAssetMediaType.image, options: fetchOptions)
+		
+		let total = result.countOfAssets(with: PHAssetMediaType.image)
+		
+		for i in offset..<(total + offset) {
+			let dispatchGroup = DispatchGroup()
+			
+			var local_result = [String:String]()
+			
+			let image = result.object(at: i)
+			var img_url = ""
+			
+			dispatchGroup.enter() /// This whole dispatchGroup this is necessary to get the completion handler to run synchronously with the rest
+			
+			image.getURL(completionHandler: { url in
+				img_url = url!.path.replacingOccurrences(of: "/var/mobile/Media/DCIM/", with: "")
+				dispatchGroup.leave()
+			})
+			
+			dispatchGroup.notify(queue: DispatchQueue.main) {
+				local_result["URL"] = img_url
+				local_result["is_favorite"] = String(image.isFavorite)
+				
+				ret_val.append(local_result)
+			}
+		}
+		
+		return ret_val
+	}
+	
+	func getPhotoDatafromPath(path: String) -> Data {
+		/// This returns the pure data of a photo at $path
+		
+		if self.debug {
+			self.log("Getting photo data from path \(path)")
+		}
+		
+		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "") /// To prevent LFI
+		
+		do {
+			let photo_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.photoStoragePrefix + parsed_path))
+			return photo_data
+		} catch {
+			self.log("WARNING: failed to load photo for path \(ChatDelegate.photoStoragePrefix + path)")
+			return Data.init(capacity: 0)
+		}
+	}
+}
+
+extension PHAsset {
+
+	func getURL(completionHandler : @escaping ((_ responseURL : URL?) -> Void)){
+		if self.mediaType == .image {
+			let options: PHContentEditingInputRequestOptions = PHContentEditingInputRequestOptions()
+			options.canHandleAdjustmentData = {(adjustmeta: PHAdjustmentData) -> Bool in
+				return true
+			}
+			self.requestContentEditingInput(with: options, completionHandler: {(contentEditingInput: PHContentEditingInput?, info: [AnyHashable : Any]) -> Void in
+				completionHandler(contentEditingInput!.fullSizeImageURL as URL?)
+			})
+		} else if self.mediaType == .video {
+			let options: PHVideoRequestOptions = PHVideoRequestOptions()
+			options.version = .original
+			PHImageManager.default().requestAVAsset(forVideo: self, options: options, resultHandler: {(asset: AVAsset?, audioMix: AVAudioMix?, info: [AnyHashable : Any]?) -> Void in
+				if let urlAsset = asset as? AVURLAsset {
+					let localVideoUrl: URL = urlAsset.url as URL
+					completionHandler(localVideoUrl)
+				} else {
+					completionHandler(nil)
+				}
+			})
+		}
 	}
 }
