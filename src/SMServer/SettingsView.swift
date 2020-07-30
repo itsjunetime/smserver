@@ -23,13 +23,15 @@ struct SettingsView: View {
     @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
 	
 	@State var full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
-	@State var area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? "" /// NYC?
-	@State var country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? "" /// US
+	@State var area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? ""
+	@State var country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? ""
 	
 	@State var enable_sockets: Bool = UserDefaults.standard.object(forKey: "enable_sockets") as? Bool ?? true
 	@State var enable_polling: Bool = UserDefaults.standard.object(forKey: "enable_polling") as? Bool ?? true
 	@State var picker_select: Int = 2
 	let picker_options = ["WebSockets" , "Long polling", "Both"]
+	
+	@ObservedObject private var keyWatcher = KeyboardWatcher()
 	
 	func setPicker() {
 		if enable_sockets && enable_polling {
@@ -181,7 +183,7 @@ struct SettingsView: View {
 					Toggle("Enable backgrounding", isOn: background_binding)
 				}
 				
-				/*Spacer().frame(height: 20) /// This will be included later but is now failing to compile
+				/*Spacer().frame(height: 20) /// This will be included later but is now failing to compile; I think it's an Xcode beta issue
 
 				VStack(alignment: .leading, spacing: 0) {
 					Text("How to detect new texts")
@@ -232,11 +234,37 @@ struct SettingsView: View {
 				Spacer()
 				
 			}.padding()
+			.offset(y: -1 * keyWatcher.currentHeight)
+			.animation(.easeOut(duration: 0.16))
 		}
 		.onAppear() {
 			self.setPicker()
 		}
     }
+}
+
+final class KeyboardWatcher : ObservableObject {
+	private var notificationCenter = NotificationCenter.default
+	@Published private(set) var currentHeight: CGFloat = 0
+	
+	init() {
+		notificationCenter.addObserver(self, selector: #selector(keyBoardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+		notificationCenter.addObserver(self, selector: #selector(keyBoardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+	}
+	
+	deinit {
+		notificationCenter.removeObserver(self)
+	}
+
+	@objc func keyBoardWillShow(notification: Notification) {
+		if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+			currentHeight = keyboardSize.height
+		}
+	}
+
+	@objc func keyBoardWillHide(notification: Notification) {
+		currentHeight = 0
+	}
 }
 
 struct SettingsView_Previews: PreviewProvider {
