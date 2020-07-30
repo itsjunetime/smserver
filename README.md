@@ -63,7 +63,7 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged current issues:
-- New conversations aren't created correctly if not formatted as described in the hint box in the `new message` popup of the web interface
+- Retrieving a list of photos always fails the first time after the app has been restarted, but succeeds every time after that.
 
 ### To file an issue:
 Please include the following information:

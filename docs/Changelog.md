@@ -1,5 +1,11 @@
 # Changelog
 
+0.2.0+debug7 -> 0.2.0+debug8
+- Changed profile & attachment request directory from `profile` and `attachments` to `data` (for both)
+- Fixed issue with parsing attachment path
+- Added support for retrieving a list of photos from photo library through API
+- Added support for retrieving specific item from photo library through API
+
 0.2.0+debug6 -> 0.2.0+debug7
 - Fixed issue with IPv6 address incorrectly showing
 - Fixed issue with keyboard covering textfields when entering name
