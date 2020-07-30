@@ -1,6 +1,12 @@
 # Changelog
 
-0.2.0+debug5 -> 0.2.0+debug
+0.2.0+debug6 -> 0.2.0+debug7
+- Fixed issue with IPv6 address incorrectly showing
+- Fixed issue with keyboard covering textfields when entering name
+- Disabled long-polling by default on web interface; however, the code is still there and the call func is simply commented out. Easy to revert if you so wish
+- Removed unnecessary messages reloading in web interface
+
+0.2.0+debug5 -> 0.2.0+debug6
 - Added extra address handing to support more types of address formatting (e.g. with/without area code, country code, etc.)
 - Added options to reset defaults
 - Fixed bug with popup form sending even when 'cancel' was clicked instead of 'sent'
