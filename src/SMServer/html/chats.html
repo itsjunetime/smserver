@@ -563,7 +563,10 @@
                 document.getElementById("attachmentbutton").value = "";
                 document.getElementById("unhiddenbutton").value = '📎';
 
+                await sleep(200);
+
                 printNewTexts();
+                setChatAsTop(document.getElementsByClassName("title")[0].id);
             }
 
             async function sendComposeForm() {
@@ -648,31 +651,40 @@
             function processNewText(chat) {
 				if (chat.length != 0) {
 					
-					if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id) {
-						var existingButton = document.getElementById(chat);
-						var chatsList = document.getElementsByClassName("chats-list")[0];
-						if (existingButton) {
-							existingButton.parentNode.removeChild(existingButton);
-							chatsList.insertBefore(existingButton, chatsList.firstChild);
-						} else {
-							var new_name = fetchName(chat);
-							
-							var newButton = document.createElement("button");
-							
-							newButton.setAttribute("id", chat);
-							newButton.innerHTML = "img src=\"/profile?chat_id=" + chat.replace("+", "%2B") + "\">";
-							newButton.innerHTML += "<p>" + new_name + "</p>";
-							
-							newButton.setAttribute("class", "unread");
-							newButton.setAttribute("onclick", "getTexts(\"" + chat + "\", " + num_texts_to_load + ");");
-							
-							chatsList.insertBefore(newButton, chatsList.firstChild);
-						}
-						//printItems() /// Hopefully will optimize this later
+					if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
+                        if (chat === "any") {
+                            printItems()
+                        } else {
+                            setChatAsTop(chat)
+                        }
 					}
-					if (chat === document.getElementsByClassName("title")[0].id) {
+					if (chat === document.getElementsByClassName("title")[0].id || chat === "any") {
 						printNewTexts()
 					}
+				}
+            }
+
+            function setChatAsTop(chat) {
+                if (chat === document.getElementsByClassName("chats-list")[0].firstChild.id) { return }
+
+				var existingButton = document.getElementById(chat);
+				var chatsList = document.getElementsByClassName("chats-list")[0];
+				if (existingButton) {
+					existingButton.parentNode.removeChild(existingButton);
+					chatsList.insertBefore(existingButton, chatsList.firstChild);
+				} else {
+					var new_name = fetchName(chat);
+							
+					var newButton = document.createElement("button");
+							
+					newButton.setAttribute("id", chat);
+					newButton.innerHTML = "img src=\"/profile?chat_id=" + chat.replace("+", "%2B") + "\">";
+					newButton.innerHTML += "<p>" + new_name + "</p>";
+							
+					newButton.setAttribute("class", "unread");
+					newButton.setAttribute("onclick", "getTexts(\"" + chat + "\", " + num_texts_to_load + ");");
+							
+					chatsList.insertBefore(newButton, chatsList.firstChild);
 				}
             }
 
@@ -698,7 +710,7 @@
 
             printItems()
             
-            interval;
+            //interval;
         </script>
         <link rel="stylesheet" type="text/css" href="style.css">
         <link rel="stylesheet" type="text/css" href="custom.css">
