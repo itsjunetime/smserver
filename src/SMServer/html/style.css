@@ -5,6 +5,7 @@
 	--main-font: Calibri, sans-serif, Verdana, Courier;
 	--chats-border: #222;
 	--chats-width: 30vw;
+	--chats-button-height: 70px;
 	--send-button-size: calc(var(--send-box-size) - 4px);
 	--send-box-size:  calc(var(--messages-send-height) - 8px);
 	--attachments-button-size: 46px;
@@ -97,7 +98,7 @@ p {
 	font-size: 30px;
 }
 .title img {
-	max-height: calc(var(--messages-title-height) * 0.8);
+	max-height: calc(var(--messages-title-height) * 0.72);
 	grid-column: 1;
 	margin-left: calc(100% - var(--messages-title-height));
 	align-self: center;
@@ -168,14 +169,54 @@ p {
 	border-top: 1px solid var(--chats-border);
 	border-bottom: 1px solid var(--chats-border);
 	background-color: #111;
-	display: flex;
+	display: grid;
+	grid-template-columns: calc(var(--chats-button-height) + 10px) 1fr 140px; /* looks groovy, ya know? */
+	grid-template-rows: 2fr 3fr;
 	width: var(--chats-width);
 	transition: all linear 0.1s;
 	color: #dae3f0;
 	align-items: center;
+	height: var(--chats-button-height);
+}
+.chats button img {
+	grid-row: 1/3;
+	grid-column: 1;
+	height: calc(var(--chats-button-height) * 0.7);
+	width: calc(var(--chats-button-height) * 0.74);
+}
+.chat-name {
+	font-size: 16px;
+	grid-column: 2;
+	grid-row: 1;
+	margin-top: 10px;
+	line-height: 18px;
+	max-height: 18px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: start;
+	font-weight: 500;
+}
+.chat-text {
+	grid-column: 2/4;
+	grid-row: 2;
+	color: #ddd;
+	font-size: 12px;
+	margin-bottom: 10px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: start;
+	max-height: calc(var(--chats-button-height) - 45px);
+	white-space: nowrap;
+	padding-right: 10px
+}
+#morechatsbutton {
+	display: flex;
+	padding: auto;
+	text-align: center;
 }
 #morechatsbutton p {
 	color: dodgerblue;
+	margin: auto;
 }
 .unread img {
 	box-shadow: 0 0 10px dodgerblue;
@@ -425,6 +466,6 @@ p {
 	border-radius: 5px;
 	width: 60px;
 	height: 24px;
-	padding: 12px;
+	padding: 8px 12px 12px 0px;
 	margin-top: -5px;
 }

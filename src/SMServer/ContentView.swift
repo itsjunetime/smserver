@@ -1,11 +1,3 @@
-//
-//  ContentView.swift
-//  SMServer
-//
-//  Created by Ian Welker on 4/30/20.
-//  Copyright © 2020 Ian Welker. All rights reserved.
-//
-
 import SwiftUI
 import GCDWebServer
 import Telegraph
@@ -333,7 +325,7 @@ struct ContentView: View {
                     if self.debug {
                         self.log("Not in background, invalidating background task.")
                     }
-                    backgroundTask = .invalid
+                    self.backgroundTask = .invalid
                 }
             })
         }
@@ -358,10 +350,10 @@ struct ContentView: View {
         let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html") {
             do {
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
-                    .replacingOccurrences(of: "const num_texts_to_load;", with: "const num_texts_to_load = \(default_num_messages);")
-                    .replacingOccurrences(of: "const num_chats_to_load;", with: "const num_chats_to_load = \(default_num_chats);")
-                    .replacingOccurrences(of: "const timeout;", with: "const timeout = \(server_ping)000;")
-					.replacingOccurrences(of: "const socket_port;", with: "const socket_port = \(String(socket_port));")
+                    .replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(default_num_messages);")
+                    .replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
+                    .replacingOccurrences(of: "var timeout;", with: "var timeout = \(server_ping)000;")
+					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
 					
                 self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
@@ -799,7 +791,7 @@ struct ContentView: View {
                         HStack {
                             
                             Button(action: {
-                                let picker = Picker(
+                                let picker = DocPicker(
                                     supportedTypes: ["public.text"],
                                     onPick: { url in
                                         if self.debug {
@@ -865,7 +857,7 @@ struct ContentView: View {
 			bottom_bar /// created above
             
         }.onAppear() {
-			loadFuncs()
+            self.loadFuncs()
         }
 		.alert(isPresented: $show_phone_alert, content: {
 			Alert(title: Text("To finish setup"), message: Text("Please enter your phone number in the settings section of this app. This is necessary to add your country/area code onto new conversations if they don't include it."))
@@ -875,7 +867,7 @@ struct ContentView: View {
     }
 }
 
-class Picker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
+class DocPicker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
     
     private let onDismiss: () -> Void
     private let onPick: (URL) -> ()
