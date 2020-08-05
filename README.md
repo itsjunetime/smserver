@@ -45,7 +45,7 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 - [x] Start new conversations from browser
 - [x] View all attachments in browser
 - [x] Send images/attachments from browser
-- [x] Websockets for instant communication -- Websockets are currently experimental, so the app still uses long-polling in conjunction with websockets to make sure all messages are sent to client
+- [x] Websockets for instant communication
 - [x] Automatic checking for new messages
 - [x] Display for which conversations have unread messages
 - [x] Persistent settings
@@ -57,7 +57,7 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 ### Future plans
 - [ ] HTTPS
 - [ ] Search through messages from browser - This has been implemented in the API
-- [ ] Access to camera roll
+- [ ] Access to camera roll - This has been implemented in the API
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
@@ -68,11 +68,11 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 ### To file an issue:
 Please include the following information:
  - Device model
- - Jailbreak
+ - Jailbreak (e.g. checkra1n, unc0ver, Chimera, etc)
  - iOS Version
- - If you installed a package or built from source (and if from source, how did you install it)
+ - How you installed the app
  - A detailed description of what failed
- - A crash report if it crashed and you have an app like cr4shed to collect those
+ - And if the app crashed & you can get it, a crash log
 
 Also, if the app did not crash on startup, but rather had an issue after it was already up and running, please do the following: 
  - Install the package 'oslog' from your package manager
