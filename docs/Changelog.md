@@ -1,5 +1,11 @@
 # Changelog
 
+0.2.0+debug10 -> 0.2.0+debug11
+ - Fixed issue with new texts showing slowly
+ - No longer updates when user sends text from another device
+ - Fixed issue with new texts not appearing under conversation in chats list
+ - Will have issues with new texts doubling if you use libsmserver < 0.2.0+debug20
+
 0.2.0+debug9 -> 0.2.0+debug10
 - Fixed styling issues in web interface
 - Added dynamic colors for sms vs imessages

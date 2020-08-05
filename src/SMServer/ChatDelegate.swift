@@ -417,9 +417,9 @@ class ChatDelegate {
             self.log("len messages: \(messages.count), len chat_ids_ordered: \(chat_ids_ordered.count), len chats: \(chats.count)")
         }
         
-        var formatter = RelativeDateTimeFormatter()
+        /*let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
-        formatter.dateTimeStyle = .numeric
+        formatter.dateTimeStyle = .numeric*/
         
         for i in chat_ids_ordered {
             
