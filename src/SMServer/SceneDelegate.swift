@@ -1,11 +1,3 @@
-//
-//  SceneDelegate.swift
-//  SMServer
-//
-//  Created by Ian Welker on 4/30/20.
-//  Copyright © 2020 Ian Welker. All rights reserved.
-//
-
 import UIKit
 import SwiftUI
 import os
