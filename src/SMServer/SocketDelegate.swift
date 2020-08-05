@@ -1,11 +1,3 @@
-//
-//  SocketDelegate.swift
-//  SMServer
-//
-//  Created by ian on 7/21/20.
-//  Copyright © 2020 Ian Welker. All rights reserved.
-//
-
 import Foundation
 import Telegraph
 import os

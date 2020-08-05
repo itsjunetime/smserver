@@ -1,11 +1,3 @@
-//
-//  ChatDelegate.swift
-//  SMServer
-//
-//  Created by Ian Welker on 7/4/20.
-//  Copyright © 2020 Ian Welker. All rights reserved.
-//
-
 import Foundation
 import SQLite3
 import SwiftUI
@@ -413,9 +405,8 @@ class ChatDelegate {
         
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
-        //var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         
-        let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
+        let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read", "date"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
         let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc", num_items: num_to_load, offset: offset)
         let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id))")
         
@@ -425,6 +416,10 @@ class ChatDelegate {
         if self.debug {
             self.log("len messages: \(messages.count), len chat_ids_ordered: \(chat_ids_ordered.count), len chats: \(chats.count)")
         }
+        
+        var formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        formatter.dateTimeStyle = .numeric
         
         for i in chat_ids_ordered {
             
@@ -448,6 +443,15 @@ class ChatDelegate {
             }
             
             new_chat?["latest_text"] = mwid?["text"]
+            
+            new_chat?["time_marker"] = mwid?["date"]
+            
+            /*let temp_int = Double(Int(mwid?["date"] ?? "0") ?? 0 / 1000000000)
+            let ts: Double = temp_int + 978307200.0
+            
+            let date = Date(timeIntervalSince1970: ts)
+            
+            new_chat?["relative_time"] = formatter.string(for: date)*/ /// Will soon get relative date as opposed to explicit date
             
             if new_chat?["display_name"]!.count == 0 {
                 if ci?.prefix(4) == "chat" && !((ci?.contains("@")) ?? true) { /// Making sure it's a group chat
@@ -475,12 +479,6 @@ class ChatDelegate {
                 self.log("Finished iterating through chats for \(String(describing: ci))")
             }
         }
-        
-        /*if sqlite3_close(image_db) != SQLITE_OK {
-            self.log("WARNING: error closing image db")
-        }
-        
-        image_db = nil*/
         
         if sqlite3_close(contacts_db) != SQLITE_OK {
             self.log("WARNING: error closing database")

@@ -1,5 +1,10 @@
 # Changelog
 
+0.2.0+debug8 -> 0.2.0+debug9
+- Added view for time & most recent text on chat list in web interface
+- Refactored JS in web interface
+- Fixed styling issues in web interface
+
 0.2.0+debug7 -> 0.2.0+debug8
 - Changed profile & attachment request directory from `profile` and `attachments` to `data` (for both)
 - Fixed issue with parsing attachment path
