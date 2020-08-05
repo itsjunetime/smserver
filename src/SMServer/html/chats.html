@@ -109,12 +109,13 @@
                 return b;
             }
 
-            const printNewTexts = async () => {
-                var selected_id = document.getElementsByClassName("title-content")[0].id;
-                var new_chat_id = selected_id.replace("+", "%2B")
+            async function getLatestText(chat = document.getElementsByClassName("title-content")[0].id) {
+                var text;
+                var fixed_chat = chat.replace("+", "%2B");
 
-                let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load;
-                const fetch_new_texts = await fetch(url)
+                let url = prefix + "/requests?person=" + fixed_chat + "&num=1";
+                console.log(url);
+                const fetch_one_text = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("HTTP error " + response.status);
@@ -122,63 +123,40 @@
                     return response.json();
                 })
                 .then(json => {
-                    this.texts = (json.texts)
-                    return texts
+                    text = (json.texts)[0];
+                    return text;
                 })
                 .catch(function () {
-                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_texts func)')
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_one_text func)')
                     has_shown_warning = true
                     this.dataError = true;
                 })
 
-                var _ = await fetch_new_texts;
+                var _ = await fetch_one_text;
+
                 var content = document.getElementById("text-content");
                 var more = document.getElementsByClassName("more_texts")
                 if (more.length > 0) {
                     more[0].setAttribute("class", more[0].getAttribute("class").replace(" more_texts", ""));
                 }
-                var is_group = selected_id.substring(0, 4) === "chat";
+                var is_group = chat.substring(0, 4) === "chat";
 
-                texts.reverse();
+                var t = getTextElement(text, true);
 
-                var i = 0;
-                for (var i = texts.length - 1; !document.getElementById("texts-" + texts[i].ROWID) && i > 0; i--) {
-                }
+                var senders = document.getElementsByClassName("sender");
+                //var lastSender = senders[senders.length - 1].firstChild.innerHTML;
 
-                if (i === texts.length - 1) {
-                    return
-                }
+                if (is_group && senders.length > 0 && text.is_from_me === "0" && text.sender !== senders[senders.length - 1].firstChild.innerHTML) {
+                    var from = document.createElement("div");
 
-                for (var i = i + 1; i < texts.length; ++i) {
-
-                    var t = getTextElement(texts[i], i == texts.length - 1);
+                    from.innerHTML = "<p>" + text.sender + "</p>";
+                    from.setAttribute("class", "sender");
                     
-                    /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
-                    if (i != 0 && texts[i].date - texts[i - 1].date > 3600000000000) {
-                        var time = document.createElement("div");
-                        time.setAttribute("class", "time-display");
-
-                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200
-                        
-                        var formattedTime = timeConverter(unix_timestamp)
-                                                
-                        time.innerHTML = "<p>" + formattedTime + "</p>"
-                        content.appendChild(time)
-                    }
-
-                    if (is_group && texts[i].is_from_me === "0" && ((i !== texts.length - 1 && texts[i].sender !== texts[i + 1].sender) || (i === texts.length - 1))){
-                        var from = document.createElement("div");
-
-                        from.innerHTML = "<p>" + texts[i].sender + "</p>";
-                        from.setAttribute("class", "sender");
-                        
-                        doc.appendChild(from);
-                    }                   
-                                                
-                    content.appendChild(t);
-                }
-                
-                document.getElementsByClassName("more_texts")[0].scrollIntoView()
+                    doc.appendChild(from);
+                }                   
+                                            
+                content.appendChild(t);
+                t.scrollIntoView();
             }
 
             const getChats = async (offset = 0) => {
@@ -469,10 +447,16 @@
                 document.getElementById("attachmentbutton").value = "";
                 document.getElementById("unhiddenbutton").value = '📎';
 
-                await sleep(200);
+                var box = document.getElementById("text-content");
+                var t = document.createElement("p");
+                t.setAttribute("class", "text more_texts is_from_me iMessage");
+                t.setAttribute("id", "texts-nil");
 
-                printNewTexts();
-                setChatAsTop(document.getElementsByClassName("title-content")[0].id);
+                t.innerHTML = oldval;
+                box.appendChild(t);
+                t.scrollIntoView();
+                
+                setChatAsTop(document.getElementsByClassName("title-content")[0].id, oldval);
             }
 
             async function sendComposeForm() {
@@ -491,6 +475,8 @@
 
                 form.submit();
 
+                setChatAsTop(coldval, oldval);
+
                 await sleep(500);
 
                 tbox.value = "";
@@ -498,7 +484,6 @@
                 cbox.value = "";
                 document.getElementById("composeShowingAttachmentButton").value = "";
                 document.getElementById("composeAttachmentButton").value = "";
-
             }
         
             function auto_grow(element) {
@@ -565,34 +550,51 @@
                         }
 					}
 					if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
-						printNewTexts()
+                        getLatestText();
+						//printNewTexts;
 					}
 				}
             }
 
-            function setChatAsTop(chat) {
-                if (chat === document.getElementsByClassName("chats-list")[0].firstChild.id) { return }
+            async function setChatAsTop(chat, new_text = "") {
 
-				var existingButton = document.getElementById(chat);
-				var chatsList = document.getElementsByClassName("chats-list")[0];
-				if (existingButton) {
-					existingButton.parentNode.removeChild(existingButton);
-					chatsList.insertBefore(existingButton, chatsList.firstChild);
-				} else {
-					var new_name = fetchName(chat);
-							
-					var newButton = document.createElement("button");
-							
-					newButton.setAttribute("id", chat);
+                var chatsList = document.getElementsByClassName("chats-list")[0];
+                if (chat === chatsList.firstChild.id) {
+                    if (new_text !== "") {
+                        chatsList.firstChild.getElementsByClassName("chat-text")[0].innerHTML = new_text;
+                    }
+                } else {
+                    var new_chat;
+                    var url = "/requests?chat=0&num_chats=1" /// to get last text
+                    const fetch_recent_texts = await fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("HTTP error " + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(json => {
+                        new_chat = (json.chats)
+                        return new_chat
+                    })
+                    .catch(function () {
+                        has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                        has_shown_warning = true
+                        this.dataError = true;
+                    })
                     
-					newButton.innerHTML = "img src=\"/data?chat_id=" + chat.replace("+", "%2B") + "\">";
-					newButton.innerHTML += "<p>" + new_name + "</p>";
-							
-					newButton.setAttribute("class", "unread");
-					newButton.setAttribute("onclick", "getTexts(\"" + chat + "\", " + num_texts_to_load + ");");
-							
-					chatsList.insertBefore(newButton, chatsList.firstChild);
-				}
+                    var _ = fetch_recent_texts;
+
+                    var new_box = getChatElement(new_chat[0]);
+
+                    if (new_text.length > 0) new_box.getElementsByClassName("chat-text")[0].innerHTML = new_text;
+
+                    var existingButton = document.getElementById(chat);
+                    if (existingButton) existingButton.outerHTML = "";
+
+                    chatsList.insertBefore(new_box, chatsList.firstChild);
+                }
+
             }
 
             /*function setNewBatteryLevel(level) {
