@@ -1,11 +1,3 @@
-//
-//  SettingsView.swift
-//  SMServer
-//
-//  Created by Ian Welker on 7/4/20.
-//  Copyright © 2020 Ian Welker. All rights reserved.
-//
-
 import SwiftUI
 
 struct SettingsView: View {
@@ -27,20 +19,7 @@ struct SettingsView: View {
 	@State var area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? ""
 	@State var country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? ""
 	
-	@State var enable_sockets: Bool = UserDefaults.standard.object(forKey: "enable_sockets") as? Bool ?? true
-	@State var enable_polling: Bool = UserDefaults.standard.object(forKey: "enable_polling") as? Bool ?? true
-	@State var picker_select: Int = 2
-	let picker_options = ["WebSockets" , "Long polling", "Both"]
-	
 	@ObservedObject private var keyWatcher = KeyboardWatcher()
-	
-	func setPicker() {
-		if enable_sockets && enable_polling {
-			picker_select = 2
-		} else {
-			picker_select = (enable_sockets ? 0 : 1) /// Do 1 if only enable_polling
-		}
-	}
 	
 	func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
@@ -199,18 +178,6 @@ struct SettingsView: View {
 					Toggle("Enable backgrounding", isOn: background_binding)
 				}
 				
-				/*Spacer().frame(height: 20) /// This will be included later but is now failing to compile; I think it's an Xcode beta issue
-
-				VStack(alignment: .leading, spacing: 0) {
-					Text("How to detect new texts")
-					
-					Picker("Method", selection: $picker_select) {
-						ForEach(0..<picker_options.count, id: \.self) { index in
-							Text(self.picker_options[index]).tag(index)
-						}
-					}.pickerStyle(SegmentedPickerStyle())
-				}*/
-				
 				Section {
 					Spacer().frame(height: 20)
 					
@@ -252,9 +219,6 @@ struct SettingsView: View {
 			}.padding()
 			.offset(y: -1 * keyWatcher.currentHeight)
 			.animation(.easeOut(duration: 0.16))
-		}
-		.onAppear() {
-			self.setPicker()
 		}
     }
 }
