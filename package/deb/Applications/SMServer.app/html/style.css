@@ -63,11 +63,16 @@ p {
 	grid-row: 1;
 	grid-column: 1;
 	z-index: 1;
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 1fr;
-	align-content: center;
 	background-color: #1a191b;
+}
+.title-content {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	grid-template-rows: 1fr;
+	width: max-content;
+	margin: auto;
+	grid-gap: 10px;
+	transform: translateY(calc(var(--messages-title-height) / 8));
 }
 .textbox {
 	display: grid;
@@ -91,16 +96,17 @@ p {
 		background-color: transparent !important;
 	}
 }
-
 .title p {
 	color: var(--font-color);
-	text-align: start;
 	font-size: 30px;
+	grid-column: 2;
+	grid-row: 1;
+	margin: auto;
 }
 .title img {
 	max-height: calc(var(--messages-title-height) * 0.72);
 	grid-column: 1;
-	margin-left: calc(100% - var(--messages-title-height));
+	grid-row: 1;
 	align-self: center;
 	border-radius: 100%;
 }
@@ -110,6 +116,15 @@ p {
 	z-index: 0;
 	overflow-x: hidden;
 	padding-top: var(--messages-title-height);
+}
+.centered {
+	margin: auto;
+	margin-top: 30vh;
+	text-align: center;
+	color: #bbb;
+	font-size: 30px;
+	max-width: 30vw;
+	text-shadow: -4px 4px black;
 }
 .chats {
 	grid-area: conversations;
@@ -181,8 +196,6 @@ p {
 .chats button img {
 	grid-row: 1/3;
 	grid-column: 1;
-	height: calc(var(--chats-button-height) * 0.7);
-	width: calc(var(--chats-button-height) * 0.74);
 }
 .chat-name {
 	font-size: 16px;
@@ -276,7 +289,6 @@ p {
 }
 .is_from_me {
 	float: right;
-	background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
 	position: relative;
 	margin-left: 100%;
 	border-radius: 10px 10px 2px 10px;
@@ -291,6 +303,12 @@ p {
 .is_from_me + .is_from_them,
 .is_from_them + .is_from_me {
 	margin-top: -6px;
+}
+.is_from_me.iMessage {
+	background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
+}
+.is_from_me.SMS {
+	background-image: linear-gradient(to right, rgb(71, 194, 90), rgb(41, 194, 63));
 }
 .time-display {
 	text-align: center;
@@ -466,6 +484,12 @@ p {
 	border-radius: 5px;
 	width: 60px;
 	height: 24px;
-	padding: 8px 12px 12px 0px;
+	padding: 6px 0px 0px 0px;
 	margin-top: -5px;
+}
+#composeShowButton p {
+	padding: 0;
+	margin: 0px 16px 0 0;
+	font-size: 14px;
+	font-weight: 500;
 }
