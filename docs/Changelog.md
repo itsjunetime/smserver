@@ -1,5 +1,9 @@
 # Changelog
 
+0.2.0+debug9 -> 0.2.0+debug10
+- Fixed styling issues in web interface
+- Added dynamic colors for sms vs imessages
+
 0.2.0+debug8 -> 0.2.0+debug9
 - Added view for time & most recent text on chat list in web interface
 - Refactored JS in web interface

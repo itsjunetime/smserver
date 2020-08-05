@@ -25,7 +25,7 @@
             var socket_address = doc_url
             var prefix = "";
 
-            if (doc_url === "169.254.4.26") { /// when I'm debugging on local computer
+            if (doc_url === "10.0.81.117") { /// when I'm debugging on local computer
                 prefix = "192.168.50.10:8741";
                 num_texts_to_load = 100;
                 num_chats_to_load = 60;
@@ -58,6 +58,8 @@
                 } else {
                     classes += " is_from_me";
                 }
+                classes += " " + text.service;
+
                 t.setAttribute("class", classes);
                 
                 t.setAttribute("id", "texts-" + text.ROWID);
@@ -108,7 +110,7 @@
             }
 
             const printNewTexts = async () => {
-                var selected_id = document.getElementsByClassName("title")[0].id;
+                var selected_id = document.getElementsByClassName("title-content")[0].id;
                 var new_chat_id = selected_id.replace("+", "%2B")
 
                 let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load;
@@ -149,7 +151,7 @@
 
                 for (var i = i + 1; i < texts.length; ++i) {
 
-                    var t = getTextElement(text[i], i == texts.length - 1);
+                    var t = getTextElement(texts[i], i == texts.length - 1);
                     
                     /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
                     if (i != 0 && texts[i].date - texts[i - 1].date > 3600000000000) {
@@ -301,7 +303,7 @@
                 })
 
                 var chat_title = document.getElementById(chat_id).getElementsByClassName("chat-name")[0];
-                var title_doc = document.getElementsByClassName("title")[0];
+                var title_doc = document.getElementsByClassName("title-content")[0];
                 title_doc.innerHTML = "<p>" + chat_title.innerHTML + "</p>"
                 title_doc.setAttribute("id", chat_id);
 
@@ -358,7 +360,7 @@
             }
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
-                var chat_id = document.getElementsByClassName("title")[0].id
+                var chat_id = document.getElementsByClassName("title-content")[0].id
                 
                 var new_chat_id = chat_id.replace("+", "%2B");
                 let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts;
@@ -470,7 +472,7 @@
                 await sleep(200);
 
                 printNewTexts();
-                setChatAsTop(document.getElementsByClassName("title")[0].id);
+                setChatAsTop(document.getElementsByClassName("title-content")[0].id);
             }
 
             async function sendComposeForm() {
@@ -562,7 +564,7 @@
                             setChatAsTop(chat)
                         }
 					}
-					if (chat === document.getElementsByClassName("title")[0].id || chat === "any") {
+					if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
 						printNewTexts()
 					}
 				}
@@ -631,7 +633,7 @@
                 </div>
                 <div class="chats-search">
                     Search
-                    <button onclick="showPopup();" id="composeShowButton">+ New</button>
+                    <button onclick="showPopup();" id="composeShowButton"><p>+ New</p></button>
                 </div>
                 <div class="chats-list">
                     <button onclick="getMoreChats()" id="morechatsbutton"><p>+ More Chats</p></button>
@@ -639,10 +641,10 @@
             </div>
             <div class="messages">
                 <div class="title">
-                    <span class="title-name"></span>
+                    <span class="title-content"></span>
                 </div>
                 <div class="text-content" id="text-content">
-                    <br> <!--So that the first element doesn't fail to insert-->
+                    <div class="centered">Select a chat on the left to view your messages :)</div>
                 </div>
                 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
                 <form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
