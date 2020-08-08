@@ -8,7 +8,6 @@
             /// These next three lines need to remain without value, since they will be changed when swift parses the file.
             var num_texts_to_load;
             var num_chats_to_load;
-            var timeout;
             var socket_port;
             
             var printed_texts = 0;
@@ -29,7 +28,6 @@
                 prefix = "192.168.50.10:8741";
                 num_texts_to_load = 100;
                 num_chats_to_load = 60;
-                timeout = 10;
                 socket_port = 8740;
                 socket_address = "192.168.50.10";
             }
@@ -91,19 +89,14 @@
                 b.setAttribute("id", chat.chat_identifier);
                 
                 b.innerHTML = "<img src=\"/data?chat_id=" + chat.chat_identifier.replace("+", "%2B") + "\">";
-                
                 b.innerHTML += "<div class=\"chat-name\">" + (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name) + "</div>"
-                
                 b.innerHTML += "<div class=\"chat-text\">" + chat.latest_text + "</div>"
 
                 let unix_timestamp = (chat.time_marker / 1000000000) + 978307200;
-
                 b.innerHTML += "<div class=\"chat-date\">" + timeConverter(unix_timestamp) + "</div>";
                 
                 if (chat.has_unread === "true") { b.setAttribute("class", "unread") }
-                
                 var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
-
                 b.setAttribute("onclick", get_texts_string);
 
                 return b;
@@ -622,6 +615,8 @@
         </script>
         <link rel="stylesheet" type="text/css" href="style.css">
         <link rel="stylesheet" type="text/css" href="custom.css">
+        <!--light theme optional section; next line must remain as comment-->
+        <!--light-->
     </head>
     <body>
         <div class="everything">

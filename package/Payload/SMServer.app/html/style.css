@@ -196,6 +196,8 @@ p {
 .chats button img {
 	grid-row: 1/3;
 	grid-column: 1;
+	max-height: calc(var(--chats-button-height) * 0.76);
+	max-width: calc(var(--chats-button-height) * 0.76);
 }
 .chat-name {
 	font-size: 16px;
@@ -314,11 +316,10 @@ p {
 	text-align: center;
 }
 #moretextsbutton {
-	margin-left: 42%;
 	border: 1px solid black;
 	border-radius: 20px;
 	background-color: cornflowerblue;
-	margin-bottom: 20px;
+	margin: 10px 0 20px 42%;
 }
 #moretextsbutton p {
 	color: white;
