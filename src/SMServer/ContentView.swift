@@ -17,6 +17,7 @@ struct ContentView: View {
     @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
 	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
 	@State var shown_phone_alert: Bool = UserDefaults.standard.object(forKey: "shown_phone_alert")  as? Bool ?? false
+    @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
 	
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -55,6 +56,9 @@ struct ContentView: View {
     """
     """
     @State var custom_style =
+    """
+    """
+    @State var light_style =
     """
     """
     
@@ -207,6 +211,20 @@ struct ContentView: View {
             return GCDWebServerDataResponse(text: self.custom_style)
         })
         
+        server.addHandler(forMethod: "GET", path: "/light.css", request: GCDWebServerRequest.self, processBlock: { request in
+            let ip = request.remoteAddressString
+            
+            if self.debug {
+                self.log("GET /light.css: \(ip)")
+            }
+            
+            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
+                return GCDWebServerDataResponse(text: "")
+            }
+            
+            return GCDWebServerDataResponse(text: self.light_style)
+        })
+        
         if self.debug {
             self.log("Got past adding all the handlers.")
         }
@@ -343,20 +361,23 @@ struct ContentView: View {
         
         let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 60
         let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 200
-        let server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 10
+        
+        self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
         
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
         let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
-        let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html") {
+        let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html"),
+        let l = Bundle.main.url(forResource: "light_theme", withExtension: "css", subdirectory: "html") {
             do {
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
                     .replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(default_num_messages);")
                     .replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
-                    .replacingOccurrences(of: "var timeout;", with: "var timeout = \(server_ping)000;")
 					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
+                    .replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"light.css\">" : "")
 					
                 self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
+                self.light_style = try String(contentsOf: l, encoding: .utf8)
             } catch {
                 self.log("WARNING: ran into an error with loading the files, try again.")
             }
