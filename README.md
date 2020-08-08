@@ -29,7 +29,6 @@
 Use the provided .ipa or .deb package under the `package` subdirectory, or read `docs/INSTALL.md` for information on how to build from source
 
 ## To run
-
 1. Open the SMServer app, and click the green 'play' button in the bottom left.
 3. Open your browser to the ip/port combo specified at the top of the view
 4. Authenticate with the default password ('toor'), or your own custom password if you already set one
@@ -37,7 +36,6 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 6. (Optional) Customize the defaults under the settings section of the app to better fit your needs 
 
 ## TODO
-
 - [x] View conversations in browser
 - [x] View texts in browser
 - [x] Dynamic loading of texts
@@ -74,7 +72,7 @@ Please include the following information:
  - A detailed description of what failed
  - And if the app crashed & you can get it, a crash log
 
-Also, if the app did not crash on startup, but rather had an issue after it was already up and running, please do the following: 
+Also, if the app did not crash on startup, but rather crashed after it was already up and running, I would appreciate if you could do the following: 
  - Install the package 'oslog' from your package manager
  - ssh into your device or open a terminal app, and run (as root): `oslog --debug | grep "SMServer_app"`; do not redirect the output into a file.
  - Enable debug on the app, then kill the app in app switcher

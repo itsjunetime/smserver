@@ -26,10 +26,8 @@ This is the initial number of messages to load when you select a conversation on
 ### Initial number of photos to load:
 This is the initial number of photos that will load when retrieving photos from the photos library on the device, specifically with the `photos` parameter on the `requests` As of 0-2-0+debug8, this has not yet been implemented into the web interface, but exists in the API. 
 
-### Interval for website to ping app (seconds):
-As of right now (version 0-1-0+debug68), server does not support WebSockets connections, so it has to check with the host every time it wants new information. This setting could theoretically be set to 0, but that will virtually prevent any other connections from reaching the host, since these check requests will be taking up all the available bandwidth. The lower you set this value, the harder it will be for other requests to get through.
-
-I think the ideal setting for this is somewhere between 3-5 seconds; it will still be regularly updating, but won't take up too much of the available bandwidth. This does not require a server restart to take effect.
+### Theme
+This setting sets the color theme of the web interface; Dark is the default. It is much more polished, and, I think, looks much better than the light theme, but I did make a light theme as well for easy access.
 
 ### Websocket Port
 This is the port that the webSocket runs on; must not be the same as the server port or outside of the allowable range, or else the app will crash when launching the server. You must restart the server before this takes effect
