@@ -38,3 +38,22 @@ body, html {
   padding-left: 6px;
   padding-top: 2px;
 }
+#composeShowButton {
+	background-color: #ddd;
+}
+.centered {
+	text-shadow: -2px 2px #e5e5e5;
+}
+.chat-text {
+	color: black;
+}
+.selected {
+	box-shadow: none;
+	background-color: #e5e5ea !important;
+}
+.selected * {
+	color: rgba(0, 0, 100, 0.6);
+}
+#morechatsbutton {
+  border: none;
+}
