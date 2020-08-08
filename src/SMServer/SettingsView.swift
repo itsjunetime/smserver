@@ -7,17 +7,19 @@ struct SettingsView: View {
     @State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 60
     @State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 200
 	@State var default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
-    @State var server_ping = UserDefaults.standard.object(forKey: "server_ping") as? Int ?? 10
 	@State var socket_port = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
     @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
+    @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
 	
 	@State var full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
 	@State var area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? ""
 	@State var country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? ""
+    
+    let picker_options = ["Dark", "Light"]
 	
 	@ObservedObject private var keyWatcher = KeyboardWatcher()
 	
@@ -49,11 +51,11 @@ struct SettingsView: View {
 			UserDefaults.standard.setValue(Int($0), forKey: "num_photos")
 		})
         
-        let ping_binding = Binding<Int>(get: {
-            self.server_ping
+        let theme_binding = Binding<Int>(get: {
+            self.light_theme ? 1 : 0
         }, set: {
-            self.server_ping = Int($0)
-            UserDefaults.standard.setValue(Int($0), forKey: "server_ping")
+            self.light_theme = $0 == 1 ? true : false
+            UserDefaults.standard.setValue(self.light_theme, forKey: "light_theme")
         })
         
         let debug_binding = Binding<Bool>(get: {
@@ -149,14 +151,6 @@ struct SettingsView: View {
 					}
 					
 					HStack {
-						Text("Interval for website to ping app (seconds)")
-						Spacer()
-						TextField("Ping", value: ping_binding, formatter: NumberFormatter())
-							.textFieldStyle(RoundedBorderTextFieldStyle())
-							.frame(width: 60)
-					}
-					
-					HStack {
 						Text("Websocket port")
 						Spacer()
 						TextField("Port", value: socket_binding, formatter: NumberFormatter())
@@ -165,7 +159,22 @@ struct SettingsView: View {
 					}
 				}
 				
-				Spacer().frame(height: 20)
+				Spacer().frame(height: 14)
+                
+                HStack {
+                    Text("Theme")
+                    
+                    Spacer().frame(width: 20)
+                    
+                    Picker(selection: theme_binding, label: Text("")) {
+                        ForEach(0..<self.picker_options.count, id: \.self) { i in
+                            return Text(picker_options[i]).tag(i)
+                        }
+                    }.pickerStyle(SegmentedPickerStyle())
+                    
+                }
+                
+                Spacer().frame(height: 14)
 				
 				Section {
 				

@@ -316,11 +316,10 @@ p {
 	text-align: center;
 }
 #moretextsbutton {
-	margin-left: 42%;
 	border: 1px solid black;
 	border-radius: 20px;
 	background-color: cornflowerblue;
-	margin-bottom: 20px;
+	margin: 10px 0 20px 42%;
 }
 #moretextsbutton p {
 	color: white;
