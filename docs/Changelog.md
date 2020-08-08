@@ -1,5 +1,11 @@
 # Changelog
 
+0.2.0+debug11 -> 0.2.0+debug13
+ - Fixed issue with styling of profile pictures and more texts button
+ - Added easy access to light theme
+ - Fixed styling issues on light theme
+ - Removed server_ping setting
+
 0.2.0+debug10 -> 0.2.0+debug11
  - Fixed issue with new texts showing slowly
  - No longer updates when user sends text from another device
