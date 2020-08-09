@@ -4,13 +4,21 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>AppIcon60x60@2x.png</key>
+		<data>
+		pLrbw5qM+jLvNy57hoiHinSbQsg=
+		</data>
+		<key>AppIcon76x76@2x~ipad.png</key>
+		<data>
+		uu36ULmdwVJuhIWUcjxFYR9aO0M=
+		</data>
 		<key>Assets.car</key>
 		<data>
-		xXY1csuJ3j+yIMeXIWgHxSnl7bo=
+		0EuDVX43TTzSD+Sy55PITYhRELc=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
-		GMkbaAH+spXF6t0DiSAY0vEB4Ho=
+		BPeHptAEGyWWV29cEwG+GC4sSsA=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
 		<data>
@@ -18,11 +26,11 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib</key>
 		<data>
-		CfmnEEtepAtQoHw4GojRKLfp68s=
+		yBST3djlskNe/pwXwNadF0FXNmo=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<data>
-		ks/IEWAokGuY/JLnTBu7O+gVV5I=
+		E3Yp35MESv9XYgsovrPjMYK99rc=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
 		<data>
@@ -34,7 +42,7 @@
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebServer</key>
 		<data>
-		5wSu+rkH1mFji0DX6BAubMMphuI=
+		VfUHqAJ+mZP7ItnDCtzBm/mcKd4=
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
 		<data>
@@ -59,7 +67,7 @@
 		</data>
 		<key>Frameworks/HTTPParserC.framework/HTTPParserC</key>
 		<data>
-		YDm9apPdyWCFs7P2MbNLlMdBT64=
+		uH9A4l1mU6ZDiGw+OyDDcka0GW0=
 		</data>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
 		<data>
@@ -95,7 +103,7 @@
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeSignature</key>
 		<data>
-		memOu5zfm1KP1yKo8SDzPtysb7w=
+		GakkpSmSpKmjpZPgiXdgVBTXag8=
 		</data>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
 		<data>
@@ -103,7 +111,7 @@
 		</data>
 		<key>Frameworks/Telegraph.framework/Telegraph</key>
 		<data>
-		3/tFEvAVG1oUiXxm97fmciUo0uY=
+		anww7mQ2WYSBcV1EYTljHtf2Ydw=
 		</data>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
 		<data>
@@ -111,7 +119,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		M5Lu80OW54K9eQz3DX0VnPDVtgk=
+		tg14839ypj3YyeLkWVpKu5/69to=
 		</data>
 		<key>PkgInfo</key>
 		<data>
@@ -148,18 +156,32 @@
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>AppIcon60x60@2x.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			nEBsKXErxBHcUcQ8rC5b0L/1UR7rnayjQahIQ2jdmpU=
+			</data>
+		</dict>
+		<key>AppIcon76x76@2x~ipad.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			YOMhPeFzC13Qmnk/HEYda46FQcglx+2DDcSQqjeVqBs=
+			</data>
+		</dict>
 		<key>Assets.car</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			efr10yjcBw7sKTufE4kNAOVZCcHbxLk82E27Ddr4fjc=
+			UotMxGwss3Sem/FQpuyK+XXFypxUmunHZEhdAZspEqU=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			tM5A5/gYPJ6KZH1YZd7UtNqaPuWiaZ57AnWiPEE6i7I=
+			WhP7UpiM5ZRulvlpT3++ojexDRmzdAQd2WfXujPjOQY=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
@@ -173,14 +195,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			oaCDT0Pgq/PDZjk7pI6haV2E594L/BamrLOxIy1XEXI=
+			y7f46dFPOMr5eEK/FCxCqHkumRSqmLlunBP3yWHi+Fg=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			OToXwJuFGYNFDIt+QvzzxRL9op9ybBYWgS/xbdyqZyo=
+			mkk3FEyyr4In/DhTgdVhq0azi2ap/hA0GOBcyNvxCRM=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
@@ -201,7 +223,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			wVNUKmUdVtLiBSucHR8Mjkt4AJb7l0Z9gXX95lc/NPU=
+			QeZX5ccZQgdwPpwChBUgN82Zd96atIIsKw+Nq2fa4PI=
 			</data>
 		</dict>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
@@ -238,7 +260,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ZZv9vi1IYMlyx6BkOWByo3Iv97WYaYwClrfhIL72Jco=
+			hUPW+htwaANKw4v/ORKcfF3Brrxm7L27faiYvOuoIAY=
 			</data>
 		</dict>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
@@ -301,7 +323,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Gwm9VVBtCkW0ag9vf7iz2Ub+nKro4yn0PKPIxxlKOHE=
+			S/f3elqo5d8uQXAYaF12S+eBqtmLfxtqCHdPRP6bjbg=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
@@ -315,7 +337,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Y9EvIaYKW7g/JPfvJXgVVlfSYXe+h6yensUWbNFPmMI=
+			uij9g+ELTM7LXQNwYfH28gFfTyhAZSYjZyH39+3A/2U=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
