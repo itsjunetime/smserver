@@ -1,5 +1,9 @@
 # Changelog
 
+0.2.0+debug13 -> 0.2.0+debug14
+ - Added app icon on home screen
+ - Added app icon to website
+
 0.2.0+debug11 -> 0.2.0+debug13
  - Fixed issue with styling of profile pictures and more texts button
  - Added easy access to light theme
