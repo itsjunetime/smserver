@@ -225,6 +225,12 @@ struct ContentView: View {
             return GCDWebServerDataResponse(text: self.light_style)
         })
         
+        server.addHandler(forMethod: "GET", path: "/favicon.ico", request: GCDWebServerRequest.self, processBlock: { request in
+            let photo = UIImage(named: "icon")
+            let data = photo?.pngData()            
+            return GCDWebServerDataResponse(data: data ?? Data.init(capacity: 0), contentType: "image/png")
+        })
+        
         if self.debug {
             self.log("Got past adding all the handlers.")
         }
