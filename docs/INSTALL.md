@@ -15,7 +15,7 @@ This is still in Beta stages; there are still issues and some features that I ho
 Alternately, if you want to install as a .ipa file:
 
 1. Export `$DEV_CERT` as your apple codesigning identity (e.g. 'Apple Development: email@email.com (HS9D73GS8D)')
-1. Run the `make_ipa.sh` script in the root of this directory.
+1. Run the `ipa_make.sh` script in the root of this directory.
 1. When the finder window pops up, right-click on the 'Payload' folder and select 'Compress Payload' 
 1. Rename `Payload.zip` to `SMServer.ipa` and install it as normal
 
@@ -43,6 +43,6 @@ Alternately, if you want to install the deb but don't want to go through with th
 1. Export `$THEOS_DEVICE_PASS` as your iDevice's password
 1. Export `$THEOS_DEVICE_IP` as your iDevice's private IP
 1. Export `$DEV_CERT` as your apple codesigning identity (e.g. 'Apple Development: email@email.com (HS9D73GS8D)')
-1. Run the `make_deb.sh` script in the root of this repository. The new .deb will be in the 'package' subdirectory of this cloned repo.
+1. Run the `deb_make.sh` script in the root of this repository. The new .deb will be in the 'package' subdirectory of this cloned repo.
 
 I would recommend building it yourself, since the packages may not always be up to date with the source code, and I build it with Xcode-beta (so it may have issues that your build may not), but if you can't or would rather not, the packages will be updated rather frequently, so they are safe to use.
