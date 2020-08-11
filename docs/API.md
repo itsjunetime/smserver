@@ -50,21 +50,7 @@ Example queries:
 - /requests?name=email@icloud.com
 - /requests?name=%2B12761938272
 
-## `send`, `to` -- THIS IS DEPRECATED IN THE LATEST VERSION.
-
-**See the /send requests section for information on how to send a text now**
-
-Sends a text/iMessage with a body of $send to $to
-
-- send: Parameter is necessary, and value is consequential. This will be the body of the text, as a string. It requires no quotes to encapsulate it.
-
-- to: Parameter is necessary, and value is consequential. This will be the recipient of the text, as a string. It requires a number or iMessage address, and cannot be a contact name.
-
-Example queries:
-- /requests?send=hello there!&to=%2B18479276635
-- /requests?send=This is a test:))&to=email@icloud.com
-
-## `check`
+## `check` -- THIS HAS BEEN DEPRECATED. USE WEBSOCKETS INSTEAD
 
 Simply checks if any new texts have arrived since either 'chats' or 'check' was last called. Will return an array of all conversation chat_identifiers with new texts, or an empty array if there are no new texts.
 

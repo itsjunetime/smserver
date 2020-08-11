@@ -1,5 +1,9 @@
 # Changelog
 
+0.2.0+debug14 -> 0.2.0+debug15
+ - Fixed dependency issues
+ - Laid groundwork for showing camera roll images in browser interface
+
 0.2.0+debug13 -> 0.2.0+debug14
  - Added app icon on home screen
  - Added app icon to website
