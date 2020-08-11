@@ -74,7 +74,7 @@ Please include the following information:
 
 Also, if the app did not crash on startup, but rather crashed after it was already up and running, I would appreciate if you could do the following: 
  - Install the package 'oslog' from your package manager
- - ssh into your device or open a terminal app, and run (as root): `oslog --debug | grep "SMServer_app"`; do not redirect the output into a file.
+ - ssh into your device or open a terminal app, and run (as root): `oslog --debug | grep -i -e "SMServer_app" -e "mryipc"`; do not redirect the output into a file.
  - Enable debug on the app, then kill the app in app switcher
  - Start the app and let it reach the error point
  - Manually copy the output from the above command (as much as you can get) into a text file.

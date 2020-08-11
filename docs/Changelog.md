@@ -1,5 +1,10 @@
 # Changelog
 
+0.2.0+debug17 -> 0.2.0+debug18
+ - Fixed issue with port not changing
+ - Fixed issue with force unwrapping ip address
+ - Now calls mryipc methods asynchronously so that app does not crash if they fail
+
 0.2.0+debug15 -> 0.2.0+debug17
  - Updated libmryipc.dylib to newest version
  - Set libmryipc.dylib to embed & sign, not neither.
