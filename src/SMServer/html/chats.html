@@ -8,11 +8,13 @@
             /// These next three lines need to remain without value, since they will be changed when swift parses the file.
             var num_texts_to_load;
             var num_chats_to_load;
+	    var num_photos_to_load = 30;
             var socket_port;
             
             var printed_texts = 0;
             var printed_chats = 0;
             var has_shown_warning = false;
+	    var has_shown_camera_roll = false;
 
             var items = "";
             var new_items = "";
@@ -24,8 +26,8 @@
             var socket_address = doc_url
             var prefix = "";
 
-            if (doc_url === "10.0.81.117") { /// when I'm debugging on local computer
-                prefix = "192.168.50.10:8741";
+            if (doc_url === "127.0.0.1" || doc_url === "localhost") { /// when I'm debugging on local computer
+                prefix = "http://192.168.50.10:8741";
                 num_texts_to_load = 100;
                 num_chats_to_load = 60;
                 socket_port = 8740;
@@ -71,9 +73,9 @@
                     
                     for (var l = 0; l < files.length; ++l) {
                         if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-                            t.innerHTML += "<img src=\"/data?path=" + files[l] + "\">"
+			    t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>"
                         } else if (files[l].length != 0) {
-                            t.innerHTML += "<a href=\"/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                            t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                         }
                     }
                 } 
@@ -88,7 +90,7 @@
 
                 b.setAttribute("id", chat.chat_identifier);
                 
-                b.innerHTML = "<img src=\"/data?chat_id=" + chat.chat_identifier.replace("+", "%2B") + "\">";
+                b.innerHTML = "<img src=\"" + prefix + "/data?chat_id=" + chat.chat_identifier.replace("+", "%2B") + "\">";
                 b.innerHTML += "<div class=\"chat-name\">" + (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name) + "</div>"
                 b.innerHTML += "<div class=\"chat-text\">" + chat.latest_text + "</div>"
 
@@ -226,9 +228,9 @@
             function fetchName(name) {
                 name = name.replace("+", "%2B")
                 
-                var url = '/requests?name=' + name
+                var url = prefix + '/requests?name=' + name
                 var return_name = ""
-                xmlhttp=new XMLHttpRequest();
+                xmlhttp = new XMLHttpRequest();
                 xmlhttp.onreadystatechange=function() {
                     if (xmlhttp.readyState==4 && xmlhttp.status==200) {
                         return xmlhttp.responseText;
@@ -279,7 +281,7 @@
                 title_doc.setAttribute("id", chat_id);
 
                 var img = document.createElement("img");
-                img.src = "/data?chat_id=" + chat_id.replace("+", "%2B");
+                img.src = prefix + "/data?chat_id=" + chat_id.replace("+", "%2B");
 
                 title_doc.insertBefore(img, title_doc.firstChild);
 
@@ -532,22 +534,21 @@
                 }
             }
 
-            function processNewText(chat) {
-				if (chat.length != 0) {
-					
-					if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
-                        if (chat === "any") {
-                            printChats()
-                        } else {
-                            setChatAsTop(chat)
-                        }
-					}
-					if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
-                        getLatestText();
-						//printNewTexts;
-					}
-				}
-            }
+	    function processNewText(chat) {
+		if (chat.length != 0) {
+		    if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
+			if (chat === "any") {
+			    printChats()
+			} else {
+			    setChatAsTop(chat)
+			}
+		    }
+		    if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
+			getLatestText();
+			//printNewTexts;
+		    }
+		}
+	    }
 
             async function setChatAsTop(chat, new_text = "") {
 
@@ -558,7 +559,7 @@
                     }
                 } else {
                     var new_chat;
-                    var url = "/requests?chat=0&num_chats=1" /// to get last text
+                    var url = prefix + "/requests?chat=0&num_chats=1" /// to get last text
                     const fetch_recent_texts = await fetch(url)
                     .then(response => {
                         if (!response.ok) {
@@ -589,6 +590,80 @@
                 }
 
             }
+
+	    function setSelectedPhoto(url) {
+		var p = document.getElementById(url);
+		if (p.getAttribute("class").includes("selected-photo")) {
+		    p.setAttribute("class", "photo");
+		} else {
+		    p.setAttribute("class", p.getAttribute("class") + " selected-photo");
+		}
+	    }
+
+	    function getPhotoElement(photo) {
+		var p = document.createElement("span");
+
+		var c = "photo";
+		if (photo.is_favorite === "true") {
+		    c += " is_favorite";
+		}
+		p.setAttribute("class" , c);
+
+		var id = photo.URL.split("/")[1];
+		p.setAttribute("id", id);
+		p.setAttribute("onclick", "setSelectedPhoto(\"" + id + "\");");
+
+		p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">"
+		return p;
+	    }
+
+	    async function displayCameraRoll() {
+		document.getElementById("camerarollpopup").style.display = "block";
+
+		var cr = document.getElementById("camerarollContent")
+
+		alert("Accessing photos from the camera roll does not work yet; please wait for an update before using it");
+
+		if (!has_shown_camera_roll) {
+		    var photos;
+			
+		    var url = prefix + "/requests?photos=" + num_photos_to_load /// to get last text
+		    const fetch_recent_photos = await fetch(url)
+		    .then(response => {
+			if (!response.ok) {
+			    throw new Error("HTTP error " + response.status);
+			}
+			return response.json();
+		    })
+		    .then(json => {
+			photos = (json.photos)
+			return photos
+		    })
+		    .catch(function () {
+			has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
+			has_shown_warning = true
+			this.dataError = true;
+		    })
+
+		    var _ = await fetch_recent_photos
+		    if (photos.length === 0) { var _ = await fetch_recent_photos; }
+
+		    for (var i = 0; i < photos.length; i++) {
+			var p = await getPhotoElement(photos[i]); 
+
+			cr.insertBefore(p, cr.lastChild);
+		    }
+		    has_shown_camera_roll = true;
+		}
+	    }
+
+	    async function loadMoreCameraRoll() {
+		var cr = document.getElementById("camerarollContent");
+	    }
+
+	    function hideCameraRoll() {
+		document.getElementById("camerarollpopup").style.display = "none";
+	    }
 
             /*function setNewBatteryLevel(level) {
                 var batt = document.getElementById("battery");
@@ -645,6 +720,7 @@
                 </div>
                 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
                 <form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
+		    <input value="&#128247" onclick="displayCameraRoll();" type="button" id="camerarollbutton"></input>
                     <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
                     <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
@@ -672,6 +748,18 @@
                     </form>
                 </div>
             </div>
+	    <div class="camerarollpopup" id="camerarollpopup">
+		<div class="cameraroll" id="cameraroll">
+		    <div id="camerarollTitle">
+			<button onclick="hideCameraRoll();" id="camerarollHideButton">Cancel</button>
+			<span id="camerarollTitleBoxTitle">Choose Camera Roll Images</span>
+			<button onclick="selectCameraRollPhotos();" id="camerarollSelectButton">Select</button>
+		    </div>
+		    <div id="camerarollContent">
+			<button class="photo" value="+ More">
+		    </div>
+		</div>
+	    </div>
         </div>
     </body>
 </html>

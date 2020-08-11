@@ -49,13 +49,13 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 - [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
 - [x] Convenient Custom CSS Loading
-- [ ] Notification when other party starts typing
 - [ ] Information on web page about battery life, wifi connection, etc - This is nearly done.
+- [ ] Access to camera roll - This is nearly done
 
 ### Future plans
-- [ ] HTTPS
 - [ ] Search through messages from browser - This has been implemented in the API
-- [ ] Access to camera roll - This has been implemented in the API
+- [ ] HTTPS
+- [ ] Notification when other party starts typing
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
