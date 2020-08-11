@@ -8,9 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		21E3E9749D16DD469B95C327 /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E194467E7D33C20F5655318C /* Pods_SMServer.framework */; };
+		3C03DDE124E32EA90017A265 /* libmryipce.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipce.dylib */; };
+		3C03DDE224E32EA90017A265 /* libmryipce.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipce.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3C11174E24CC9F050065894F /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C11174D24CC9F050065894F /* SocketDelegate.swift */; };
 		3C11175024CCF3AC0065894F /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */; };
-		3C1D015224BD12A7000AE4C7 /* libmryipc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CB981AA24BA8E9C00724AA4 /* libmryipc.dylib */; };
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3C6A5FB624B3F99200102AE2 /* Obj.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF84246C8F8D0061749A /* Obj.m */; };
@@ -48,6 +49,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				3C03DDE224E32EA90017A265 /* libmryipce.dylib in Embed Frameworks */,
 				3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -56,12 +58,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3C03DDD824E32D570017A265 /* libmryipc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmryipc.dylib; sourceTree = "<group>"; };
 		3C11174D24CC9F050065894F /* SocketDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
 		3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MRYIPCCenter.h; sourceTree = "<group>"; };
 		3C6A5FB224B3E94600102AE2 /* Obj.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Obj.h; sourceTree = "<group>"; };
-		3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmryipc.dylib; sourceTree = "<group>"; };
+		3C6A5FB424B3EBBF00102AE2 /* libmryipce.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmryipce.dylib; sourceTree = "<group>"; };
 		3C760E83245BCFE000EF24FE /* SMServer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C760E86245BCFE000EF24FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3C760E88245BCFE000EF24FE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -90,7 +93,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3C11175024CCF3AC0065894F /* ExternalAccessory.framework in Frameworks */,
-				3C1D015224BD12A7000AE4C7 /* libmryipc.dylib in Frameworks */,
+				3C03DDE124E32EA90017A265 /* libmryipce.dylib in Frameworks */,
 				21E3E9749D16DD469B95C327 /* Pods_SMServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -158,7 +161,8 @@
 				3C6A5FB224B3E94600102AE2 /* Obj.h */,
 				3C7CFF7D246BC6A80061749A /* SMServer-Bridging-Header.h */,
 				3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */,
-				3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */,
+				3C6A5FB424B3EBBF00102AE2 /* libmryipce.dylib */,
+				3C03DDD824E32D570017A265 /* libmryipc.dylib */,
 				3C760E8C245BCFE100EF24FE /* Assets.xcassets */,
 				3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */,
 				3C760E94245BCFE100EF24FE /* Info.plist */,

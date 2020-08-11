@@ -1,5 +1,12 @@
 # Changelog
 
+0.2.0+debug15 -> 0.2.0+debug17
+ - Updated libmryipc.dylib to newest version
+ - Set libmryipc.dylib to embed & sign, not neither.
+ - Removed option to start server on load
+ - Added new information about entering phone number
+ - Added postinst script to recommend ldrestarting
+
 0.2.0+debug14 -> 0.2.0+debug15
  - Fixed dependency issues
  - Laid groundwork for showing camera roll images in browser interface
