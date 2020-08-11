@@ -638,7 +638,7 @@ struct ContentView: View {
 		/// All the functions that run on scene load
 		
 		self.loadFiles()
-		(UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning) ? self.loadServer(port_num: UInt16(self.port) ?? UInt16(8741)) : nil
+		//(UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning) ? self.loadServer(port_num: UInt16(self.port) ?? UInt16(8741)) : nil
 		
 		self.has_root = self.s.setUID() == uid_t(0)
 		//self.show_root_alert = self.debug
