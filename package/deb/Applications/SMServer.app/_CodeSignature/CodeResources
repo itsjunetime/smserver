@@ -14,11 +14,11 @@
 		</data>
 		<key>Assets.car</key>
 		<data>
-		w9gr/WtJpCE/d9GO7HYtFI5VNhk=
+		0EuDVX43TTzSD+Sy55PITYhRELc=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
-		w2x/IxoQgyyAjVQCedFkbpMSGxc=
+		3ep3qD83gE5p+odH3Qep6C9f3KU=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
 		<data>
@@ -26,11 +26,11 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib</key>
 		<data>
-		cbQk36pEodU/062AUlmrHYjWAT0=
+		2PL3X+Xc3j/c14Ibh1YLP3yt41M=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<data>
-		6n8zMJBgOClNCqSblvco0Bdvb5Y=
+		yZNOEDYE7uRkMn82Mx9frU2Da58=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
 		<data>
@@ -42,7 +42,7 @@
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebServer</key>
 		<data>
-		u+ifnvbo1sI0i42juIsBFLkqldc=
+		vJxijzuuy+VlawOsyrcNfqHqxSg=
 		</data>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
 		<data>
@@ -67,7 +67,7 @@
 		</data>
 		<key>Frameworks/HTTPParserC.framework/HTTPParserC</key>
 		<data>
-		JeMVjhA3UOhU0oPHN653kYbna3M=
+		8x3Ru1O4GQ9NAiKOFTT5ipQpkcc=
 		</data>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
 		<data>
@@ -103,7 +103,7 @@
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeSignature</key>
 		<data>
-		uLmV8l9UaKFXkA1xdNrFquCr9PQ=
+		uJJ/nAzj12CsZiRkUeLhznxkmWY=
 		</data>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
 		<data>
@@ -111,11 +111,15 @@
 		</data>
 		<key>Frameworks/Telegraph.framework/Telegraph</key>
 		<data>
-		OKvHWU0E1Oe4CDatXI09MN4xnwI=
+		l0of8cUopOb7QaV4LifxCe+LFO8=
 		</data>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
 		<data>
 		eLry+QVKgh/1nR9OF21jVkhXjl8=
+		</data>
+		<key>Frameworks/libmryipce.dylib</key>
+		<data>
+		a3zo/qMIRhu6p6Uh9PxHpjHcNrw=
 		</data>
 		<key>Info.plist</key>
 		<data>
@@ -127,7 +131,7 @@
 		</data>
 		<key>embedded.mobileprovision</key>
 		<data>
-		qD0Qn/TmP4IXwsIKSQCF2S5wpDM=
+		HcX7TvobdsfZoTlWccXaQP1+JnU=
 		</data>
 		<key>html/chats.html</key>
 		<data>
@@ -174,14 +178,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			k8Ben3iKHeUWeeEyva7gPzjq+I8bf5dInlvheCJfOzQ=
+			UotMxGwss3Sem/FQpuyK+XXFypxUmunHZEhdAZspEqU=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Z8b2v2nl3EapxWsJsCohufG0pfD9MrZgK8rqBfqkuSA=
+			lrpowfzyyZubrXgyRO9AviKU5ubz+shUxNmHAzaSSNM=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
@@ -195,14 +199,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			7tpW2xSzZjW4TsyHfeKZxHaYBiD8Quf5m6m63k20ijg=
+			FFzMkMElfrRajAwC0Pgm1Kf/P/roIf8yvgyClt/ugEU=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			HkoI/XUGhwaeeiK/hk2IKi9CtUfkCQYO6Mr1IYWesnI=
+			6hWs9oJpsgTL9X/CIZT8nEa1vSxRf2wzm/v4pENXOKs=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
@@ -223,7 +227,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			v2UL2Zz6p1Po02ftT2cjSSVTsa59OvzGswN/E4jnSBk=
+			PtP67Eek4zQkPr25ui5qzBdesPfALOnOeQQRDWv7Nb4=
 			</data>
 		</dict>
 		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
@@ -260,7 +264,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			3YN/FLhgCDC8xCDpkmo0wxeh2KIw4ZOKIwLQCgRGMNI=
+			kefkyothHVEiPKv64Zl/Bh54N3MC1S0EMrS6FyvXEk0=
 			</data>
 		</dict>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
@@ -323,7 +327,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			fZ2CpSWA81qwsc0tmSGGSXyrW2RFcDFpyb4Unv91EsA=
+			lR7OcF9JJ91slDvrQY64D/XfPEnBHTS3nopHnqBlGvs=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
@@ -337,7 +341,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			wY+bJQIm2+xY9xWOkoOe5XulhFUQBSwJwU4yGOEIT6w=
+			s6/YqQpF8y4C2iyd/F7xqHj8who0xA80SnLI1SlxsdU=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
@@ -347,11 +351,18 @@
 			zmAQagVqOBcGAJ+V7lti0wHpF2datI71LXsTc6enW4E=
 			</data>
 		</dict>
+		<key>Frameworks/libmryipce.dylib</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			GbeGvgC5Le7Va2FmFwWIaF4E0oUiXepbxNlKyz74Mnc=
+			</data>
+		</dict>
 		<key>embedded.mobileprovision</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			qmd4zDNFxHzXsu7/iUKdD5uzwY/k1VpeuQbE7+FJQr0=
+			NgYsWp2TqLCk1Rev+fNTX1weNvowAuxi2u1BiJhamNI=
 			</data>
 		</dict>
 		<key>html/chats.html</key>
