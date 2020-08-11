@@ -1,5 +1,8 @@
 package/deb/Applications/SMServer.app/** binary
 package/Payload/SMServer.app/** binary
+*.app binary
+*.app -diff
 package/* linguist-vendored
 src/SMServer.xcworkspace/* linguist-vendored
 src/SMServer.xcodeproj/* linguist-vendored
+src/Pods/* linguist-vendored

@@ -63,6 +63,7 @@ struct ContentView: View {
     """
     
     func log(_ s: String) {
+        /// This logs to syslog
         os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
@@ -84,6 +85,7 @@ struct ContentView: View {
             self.debug ? self.log("Server was already running, stopped.") : nil
         }
         
+        /// The mobileSMS App must be running to send texts in the background, so we start it with this.
         self.s.launchMobileSMS()
         
         if self.debug {
@@ -91,7 +93,7 @@ struct ContentView: View {
         }
         
         server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
-            
+            /// This handler manages the main chats page.
             let ip = request.remoteAddressString
             
             if self.debug {
@@ -109,9 +111,12 @@ struct ContentView: View {
             /// There is no authentication handler here 'cause it handles that within parseAndReturn()
             /// since they send the password auth request to this subdirectory
             
+            /// This handler is part of the API, and returns JSON info.
+            
             let query = request.query
             
             if query != nil && query?.count == 0 {
+                /// If there are no parameters, return default blank page
                 return GCDWebServerDataResponse(html: self.requests_page)
             } else {
                 
@@ -121,6 +126,7 @@ struct ContentView: View {
                     self.log("GET /requests: \(address)")
                 }
                 
+                /// parseAndReturn() manages retrieving info for the API
                 let response = self.parseAndReturn(params: query ?? [String:String](), address: address)
                 
                 if self.debug {
@@ -132,6 +138,7 @@ struct ContentView: View {
         })
 		
 		server.addHandler(forMethod: "GET", path: "/data", request: GCDWebServerRequest.self, processBlock: { request in
+            /// This handler returns attachment data and profile/attachment/photo images.
 			let ip = request.remoteAddressString
    
 			if self.debug {
@@ -139,6 +146,7 @@ struct ContentView: View {
 			}
 			
 			if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
+                /// Return nil if they haven't authenticated
 				return GCDWebServerDataResponse(text: "")
 			}
 			
@@ -148,6 +156,7 @@ struct ContentView: View {
 			
 			let f = request.query?.keys.first
 			
+            /// Handle different types of requests
 			if f == "chat_id" {
 				return GCDWebServerDataResponse(data: ContentView.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
 			} else if f == "path" {
@@ -160,10 +169,12 @@ struct ContentView: View {
 				return GCDWebServerDataResponse(data: ContentView.chat_delegate.getPhotoDatafromPath(path: request.query?["photo"] ?? ""), contentType: "image/png")
 			}
 			
-			return GCDWebServerDataResponse(data: Data.init(capacity: 0), contentType: "") /// Nothing
+            //if they don't have any of the above parameters, return nothing.
+			return GCDWebServerDataResponse(data: Data.init(capacity: 0), contentType: "")
 		})
         
         server.addHandler(forMethod: "POST", path: "/send", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
+            /// This handles a post request to send a text
             let ip = request.remoteAddressString
             
             if self.debug {
@@ -174,6 +185,7 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(text: "")
             }
             
+            /// send text
             let send = self.sendText(req: (request as! GCDWebServerMultiPartFormRequest))
             
             if self.debug {
@@ -184,6 +196,7 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
+            /// Returns the style.css file as text
             let ip = request.remoteAddressString
             
             if self.debug {
@@ -198,6 +211,7 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/custom.css", request: GCDWebServerRequest.self, processBlock: { request in
+            /// Returns the custom css file as text
             let ip = request.remoteAddressString
             
             if self.debug {
@@ -212,6 +226,7 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/light.css", request: GCDWebServerRequest.self, processBlock: { request in
+            /// returns the light theme css file as text
             let ip = request.remoteAddressString
             
             if self.debug {
@@ -226,6 +241,7 @@ struct ContentView: View {
         })
         
         server.addHandler(forMethod: "GET", path: "/favicon.ico", request: GCDWebServerRequest.self, processBlock: { request in
+            /// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
             let photo = UIImage(named: "icon")
             let data = photo?.pngData()            
             return GCDWebServerDataResponse(data: data ?? Data.init(capacity: 0), contentType: "image/png")
@@ -236,12 +252,14 @@ struct ContentView: View {
         }
         
         do {
+            /// Start the server
             let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
             try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
         } catch {
             self.log("failed to start server. Try again or try reinstalling.")
         }
 		
+        /// Start the websocket
 		socket.startServer(port: self.socket_port)
 		
         self.server_running = server.isRunning
@@ -257,6 +275,7 @@ struct ContentView: View {
         var address = ""
         var files = [String]()
         
+        /// Get text and body of the text
         for i in Array(req.arguments) {
             if (i.string?.prefix(5) == "text:") {
 				body = String(i.string?.suffix(i.string!.count - 5) ?? "")
@@ -269,18 +288,20 @@ struct ContentView: View {
         
         for i in req.files {
             do {
+                /// get info about uploaded file
                 let attr = try fm.attributesOfItem(atPath: i.temporaryPath)
                 let fileSize = attr[FileAttributeKey.size] as! UInt64
                 
-                if fileSize == 0 {
-                    continue
-                }
+                /// Don't send file if it is empty; fixes an issue where it would sometimes think null files were being uploaded?
+                if fileSize == 0 { continue }
             } catch {
                 self.log("couldn't get filesize")
             }
             
+            /// newFilePath = same directory, but with original file name + original file extension.
             let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName).replacingOccurrences(of: " ", with: "_") /// I don't like spaces in file names. Also could cause bad behavior (I think?)
             
+            /// Move file from temporary path to new type so that it displays original name and extension when sent
             if fm.fileExists(atPath: newFilePath) {
                 do {
                     try fm.removeItem(atPath: newFilePath)
@@ -295,6 +316,7 @@ struct ContentView: View {
                 return false
             }
             
+            /// Append to files array
             files.append(newFilePath)
         }
 		
@@ -321,7 +343,9 @@ struct ContentView: View {
 			address = "+" + address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
 		}
         
+        /// Make sure there's actually some content
         if !(body == "" && files.count == 0) {
+            /// Send text!!
             self.s.sendIPCText(body, toAddress: address, withAttachments: files)
 			//self.setNewestTexts(address)
 			
@@ -344,6 +368,8 @@ struct ContentView: View {
                     if self.debug {
                         self.log("relaunching app...")
                     }
+                    /// this is the completion handler, so whenever the background task is killed,
+                    /// it just calls an IPC function to restart the app, so it's never actually killed.
                     self.s.relaunchApp()
                 } else {
                     if self.debug {
@@ -375,6 +401,7 @@ struct ContentView: View {
         let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html"),
         let l = Bundle.main.url(forResource: "light_theme", withExtension: "css", subdirectory: "html") {
             do {
+                /// Set up all the pages as multi-line string variables, set values within them.
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
                     .replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(default_num_messages);")
                     .replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
@@ -389,6 +416,7 @@ struct ContentView: View {
             }
         }
         
+        /// Have to do custom style in a different do {} block, since it'll fail if the file doesn't exist/is empty
         do {
             self.custom_style = try String(contentsOf: self.custom_css_path, encoding: .utf8)
         } catch {
@@ -400,10 +428,12 @@ struct ContentView: View {
     }
     
     func checkIfConnected() -> Bool {
+        /// checks if you can interface with the sms.db
         return ContentView.chat_delegate.checkIfConnected()
     }
     
     func setNewestTexts(_ chat_id: String) -> Void {
+        /// Is called when you receive a new text; basically stores it so it can let you know when you ping and also tells the socket to ping all clients
         ContentView.chat_delegate.setNewTexts(chat_id)
 		socket.sendNewText(info: chat_id)
     }
@@ -441,21 +471,19 @@ struct ContentView: View {
         /// This function handles all the requests to the /requests subdirectory, and returns stuff like conversations, messages, and can send texts.
         
         if self.debug {
-            print("parsing:")
-            print(params)
-            if self.debug {
-                for i in Array(params.keys) {
-                    self.log("parsing \(i) and \(String(describing: params[i]))")
-                }
+            for i in Array(params.keys) {
+                self.log("parsing \(i) and \(String(describing: params[i]))")
             }
         }
         
-        let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-        
         if Array(params.keys)[0] == "password" {
+            /// If they're sending over the password to authenticate
+            let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
+        
             if self.debug {
                 self.log("comparing " + Array(params.values)[0] + " to " + password)
             }
+            /// If they sent the correct password
             if Array(params.values)[0] == password {
                 var already_in = false;
                 for i in authenticated_addresses {
@@ -467,11 +495,12 @@ struct ContentView: View {
                     authenticated_addresses.append(address)
                 }
                 return "true"
-            } else {
+            } else { /// if they didn't send the correct password
                 return "false"
             }
         }
         
+        /// If they're not authenticated
         if !self.checkIfAuthenticated(ras: address) {
             return ""
         }
@@ -489,7 +518,7 @@ struct ContentView: View {
         let f = Array(params.keys)[0]
         
         if f == "person" || f == "num" || f == "offset" {
-            
+            /// requesting messages from a specific person
             person = params["person"] ?? ""
             
             num_texts = default_num_messages
@@ -513,7 +542,7 @@ struct ContentView: View {
             return texts
             
         } else if f == "chat" || f == "num_chats"  || f == "chats_offset" {
-            
+            /// Requesting most recent conversations
             num_texts = default_num_chats
             var chats_offset = 0
             if params["num_chats"] != nil {
@@ -536,13 +565,13 @@ struct ContentView: View {
             return chats
             
         } else if f == "name" {
-            
+            /// Requesting name for a chat_id
             chat_id = params["name"] ?? ""
             
             let name = ContentView.chat_delegate.getDisplayName(chat_id: chat_id)
             return name
             
-        } else if f == "check" {
+        } /*else if f == "check" {
             
             let lt = encodeToJson(object: ContentView.chat_delegate.newest_texts, title: "chat_ids")
             ContentView.chat_delegate.newest_texts = [String]()
@@ -552,7 +581,8 @@ struct ContentView: View {
             }
             return lt
             
-		} else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" {
+		}*/ else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" {
+            /// Searching for a specific term
 			var case_sensitive = false
 			var bridge_gaps = true
 			
@@ -569,6 +599,7 @@ struct ContentView: View {
 			
 			return return_val
 		} else if f == "photos" || f == "photo_offset" || f == "most_recent" {
+            /// Retrieving most recent photos
 			var most_recent = true
 			var offset = 0
 			
@@ -895,6 +926,7 @@ struct ContentView: View {
 }
 
 class DocPicker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
+    /// Document Picker
     
     private let onDismiss: () -> Void
     private let onPick: (URL) -> ()
