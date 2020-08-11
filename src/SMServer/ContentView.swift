@@ -113,6 +113,10 @@ struct ContentView: View {
             
             /// This handler is part of the API, and returns JSON info.
             
+            if self.debug {
+                self.log("Getting requests..")
+            }
+            
             let query = request.query
             
             if query != nil && query?.count == 0 {
@@ -120,7 +124,7 @@ struct ContentView: View {
                 return GCDWebServerDataResponse(html: self.requests_page)
             } else {
                 
-                let address = String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":")!))
+                let address = String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":") ?? request.remoteAddressString.endIndex))
                 
                 if self.debug {
                     self.log("GET /requests: \(address)")
@@ -767,10 +771,11 @@ struct ContentView: View {
         let port_binding = Binding<String>(get: {
             self.port
         }, set: {
-			self.port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().count > 4 ?
-						$0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined() :
-						UserDefaults.standard.object(forKey: "port") as? String ?? "8741" /// To make sure it's an available port
-			UserDefaults.standard.setValue(self.port, forKey: "port")
+            let new_port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().count > 3 ?
+                            $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined() :
+                            UserDefaults.standard.object(forKey: "port") as? String ?? "8741" /// To make sure it's an available port
+			self.port = new_port
+			UserDefaults.standard.setValue(new_port, forKey: "port")
         })
         
         let pass_binding = Binding<String>(get: {

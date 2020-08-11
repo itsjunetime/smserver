@@ -872,7 +872,6 @@ class ChatDelegate {
 		let total = result.countOfAssets(with: PHAssetMediaType.image)
         print(result)
 		
-		//for i in offset..<(total + offset) {
         for i in offset..<total {
             var next = false;
 			let dispatchGroup = DispatchGroup()
