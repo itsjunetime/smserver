@@ -58,7 +58,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3C03DDD824E32D570017A265 /* libmryipc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmryipc.dylib; sourceTree = "<group>"; };
 		3C11174D24CC9F050065894F /* SocketDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
@@ -162,7 +161,6 @@
 				3C7CFF7D246BC6A80061749A /* SMServer-Bridging-Header.h */,
 				3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */,
 				3C6A5FB424B3EBBF00102AE2 /* libmryipce.dylib */,
-				3C03DDD824E32D570017A265 /* libmryipc.dylib */,
 				3C760E8C245BCFE100EF24FE /* Assets.xcassets */,
 				3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */,
 				3C760E94245BCFE100EF24FE /* Info.plist */,
@@ -565,6 +563,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SMServer",
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"z\"",

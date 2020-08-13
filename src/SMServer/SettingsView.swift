@@ -46,12 +46,12 @@ struct SettingsView: View {
             UserDefaults.standard.setValue(Int($0), forKey: "num_messages")
         })
 		
-		let photos_binding = Binding<Int>(get: {
+		/*let photos_binding = Binding<Int>(get: {
 			self.default_num_photos
 		}, set: {
 			self.default_num_photos = Int($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_photos")
-		})
+		})*/
         
         let theme_binding = Binding<Int>(get: {
             self.light_theme ? 1 : 0
@@ -170,7 +170,7 @@ struct SettingsView: View {
                     
                     Picker(selection: theme_binding, label: Text("")) {
                         ForEach(0..<self.picker_options.count, id: \.self) { i in
-                            return Text(picker_options[i]).tag(i)
+                            return Text(self.picker_options[i]).tag(i)
                         }
                     }.pickerStyle(SegmentedPickerStyle())
                     

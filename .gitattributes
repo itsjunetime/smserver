@@ -1,5 +1,7 @@
 package/deb/Applications/SMServer.app/** binary
+package/deb/Applications/SMServer.app/** -diff
 package/Payload/SMServer.app/** binary
+package/Payload/SMServer.app/** -diff
 *.app binary
 *.app -diff
 package/* linguist-vendored

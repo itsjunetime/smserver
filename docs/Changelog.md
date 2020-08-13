@@ -1,5 +1,11 @@
 # Changelog
 
+0.2.0+debug18 -> 0.2.0+debug19
+ - Improved phone number parsing
+ - Improved bounds checking on arrays
+ - Fixed minor css styling issues
+ - Fixed issue with default chats/messages numbers being switched
+
 0.2.0+debug17 -> 0.2.0+debug18
  - Fixed issue with port not changing
  - Fixed issue with force unwrapping ip address

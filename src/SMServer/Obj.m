@@ -1,11 +1,3 @@
-//
-//  Obj.m
-//  SMServer
-//
-//  Created by Ian Welker on 5/13/20.
-//  Copyright © 2020 Ian Welker. All rights reserved.
-//
-
 #import <Foundation/Foundation.h>
 #import "MRYIPCCenter.h"
 
