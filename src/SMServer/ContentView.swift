@@ -395,8 +395,8 @@ struct ContentView: View {
     func loadFiles() {
         /// This sets the website page files to local variables
         
-        let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 60
-        let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 200
+        let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 200
+        let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 60
         
         self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
         
