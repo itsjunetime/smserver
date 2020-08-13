@@ -8,13 +8,13 @@
             /// These next three lines need to remain without value, since they will be changed when swift parses the file.
             var num_texts_to_load;
             var num_chats_to_load;
-	    var num_photos_to_load = 30;
+            var num_photos_to_load = 30;
             var socket_port;
             
             var printed_texts = 0;
             var printed_chats = 0;
             var has_shown_warning = false;
-	    var has_shown_camera_roll = false;
+            var has_shown_camera_roll = false;
 
             var items = "";
             var new_items = "";
@@ -50,9 +50,8 @@
                 var t = document.createElement("p");
 
                 var classes = "text";
-                if (last) {
-                    classes += " more_texts";
-                }
+                if (last) classes += " more_texts";
+                
                 if (text.is_from_me === "0") { /// I know that I could use ternary; it just doesn't play nice if i do that, for some reason
                     classes += " is_from_them";
                 } else {
@@ -61,9 +60,7 @@
                 classes += " " + text.service;
 
                 t.setAttribute("class", classes);
-                
                 t.setAttribute("id", "texts-" + text.ROWID);
-                
                 t.innerHTML = ''
                 
                 if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
@@ -73,14 +70,15 @@
                     
                     for (var l = 0; l < files.length; ++l) {
                         if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-			    t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>"
+                            t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>"
                         } else if (files[l].length != 0) {
                             t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
                         }
                     }
-                } 
+                }
                 
-                t.innerHTML += text.text;
+                /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
+                t.innerHTML += text.text.replace("￼", "");
 
                 return t;
             }
@@ -97,7 +95,7 @@
                 let unix_timestamp = (chat.time_marker / 1000000000) + 978307200;
                 b.innerHTML += "<div class=\"chat-date\">" + timeConverter(unix_timestamp) + "</div>";
                 
-                if (chat.has_unread === "true") { b.setAttribute("class", "unread") }
+                if (chat.has_unread === "true") b.setAttribute("class", "unread");
                 var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
                 b.setAttribute("onclick", get_texts_string);
 
@@ -131,15 +129,13 @@
 
                 var content = document.getElementById("text-content");
                 var more = document.getElementsByClassName("more_texts")
-                if (more.length > 0) {
-                    more[0].setAttribute("class", more[0].getAttribute("class").replace(" more_texts", ""));
-                }
+                if (more.length > 0) more[0].setAttribute("class", more[0].getAttribute("class").replace(" more_texts", ""));
+                    
                 var is_group = chat.substring(0, 4) === "chat";
 
                 var t = getTextElement(text, true);
 
                 var senders = document.getElementsByClassName("sender");
-                //var lastSender = senders[senders.length - 1].firstChild.innerHTML;
 
                 if (is_group && senders.length > 0 && text.is_from_me === "0" && text.sender !== senders[senders.length - 1].firstChild.innerHTML) {
                     var from = document.createElement("div");
@@ -514,9 +510,7 @@
 
                 var prefix = split[0]
                 var content = ''
-                if (split.length > 0) {
-                    content = split[1]
-                }
+                if (split.length > 0) content = split[1];
                 
                 switch (prefix) {
                     case 'text':
@@ -534,21 +528,21 @@
                 }
             }
 
-	    function processNewText(chat) {
-		if (chat.length != 0) {
-		    if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
-			if (chat === "any") {
-			    printChats()
-			} else {
-			    setChatAsTop(chat)
-			}
-		    }
-		    if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
-			getLatestText();
-			//printNewTexts;
-		    }
-		}
-	    }
+            function processNewText(chat) {
+                if (chat.length != 0) {
+                    if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
+                        if (chat === "any") {
+                            printChats()
+                        } else {
+                            setChatAsTop(chat)
+                        }
+                    }
+                    if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
+                        getLatestText();
+                        //printNewTexts;
+                    }
+                }
+            }
 
             async function setChatAsTop(chat, new_text = "") {
 
@@ -591,79 +585,78 @@
 
             }
 
-	    function setSelectedPhoto(url) {
-		var p = document.getElementById(url);
-		if (p.getAttribute("class").includes("selected-photo")) {
-		    p.setAttribute("class", "photo");
-		} else {
-		    p.setAttribute("class", p.getAttribute("class") + " selected-photo");
-		}
-	    }
+            function setSelectedPhoto(url) {
+                var p = document.getElementById(url);
+                if (p.getAttribute("class").includes("selected-photo")) {
+                    p.setAttribute("class", "photo");
+                } else {
+                    p.setAttribute("class", p.getAttribute("class") + " selected-photo");
+                }
+            }
 
-	    function getPhotoElement(photo) {
-		var p = document.createElement("span");
+            function getPhotoElement(photo) {
+                var p = document.createElement("span");
+                
+                var c = "photo";
+                if (photo.is_favorite === "true") c += " is_favorite";
+                
+                p.setAttribute("class" , c);
+                
+                var id = photo.URL.split("/")[1];
+                p.setAttribute("id", id);
+                p.setAttribute("onclick", "setSelectedPhoto(\"" + id + "\");");
+                
+                p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">"
+                return p;
+            }
 
-		var c = "photo";
-		if (photo.is_favorite === "true") {
-		    c += " is_favorite";
-		}
-		p.setAttribute("class" , c);
+            async function displayCameraRoll() {
+                document.getElementById("camerarollpopup").style.display = "block";
+                
+                var cr = document.getElementById("camerarollContent")
+                
+                alert("Accessing photos from the camera roll does not work yet; please wait for an update before attempting to use it");
+                
+                if (!has_shown_camera_roll) {
+                    var photos;
+                    
+                    var url = prefix + "/requests?photos=" + num_photos_to_load /// to get last text
+                    const fetch_recent_photos = await fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("HTTP error " + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(json => {
+                        photos = (json.photos)
+                        return photos
+                    })
+                    .catch(function () {
+                        has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
+                        has_shown_warning = true
+                        this.dataError = true;
+                    })
+                    
+                    var _ = await fetch_recent_photos
+                    if (photos.length === 0) var _ = await fetch_recent_photos;
+                    
+                    for (var i = 0; i < photos.length; i++) {
+                        var p = await getPhotoElement(photos[i]);
+                        
+                        cr.insertBefore(p, cr.lastChild);
+                    }
+                    has_shown_camera_roll = true;
+                }
+            }
 
-		var id = photo.URL.split("/")[1];
-		p.setAttribute("id", id);
-		p.setAttribute("onclick", "setSelectedPhoto(\"" + id + "\");");
-
-		p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">"
-		return p;
-	    }
-
-	    async function displayCameraRoll() {
-		document.getElementById("camerarollpopup").style.display = "block";
-
-		var cr = document.getElementById("camerarollContent")
-
-		alert("Accessing photos from the camera roll does not work yet; please wait for an update before using it");
-
-		if (!has_shown_camera_roll) {
-		    var photos;
-			
-		    var url = prefix + "/requests?photos=" + num_photos_to_load /// to get last text
-		    const fetch_recent_photos = await fetch(url)
-		    .then(response => {
-			if (!response.ok) {
-			    throw new Error("HTTP error " + response.status);
-			}
-			return response.json();
-		    })
-		    .then(json => {
-			photos = (json.photos)
-			return photos
-		    })
-		    .catch(function () {
-			has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
-			has_shown_warning = true
-			this.dataError = true;
-		    })
-
-		    var _ = await fetch_recent_photos
-		    if (photos.length === 0) { var _ = await fetch_recent_photos; }
-
-		    for (var i = 0; i < photos.length; i++) {
-			var p = await getPhotoElement(photos[i]); 
-
-			cr.insertBefore(p, cr.lastChild);
-		    }
-		    has_shown_camera_roll = true;
-		}
-	    }
-
-	    async function loadMoreCameraRoll() {
-		var cr = document.getElementById("camerarollContent");
-	    }
-
-	    function hideCameraRoll() {
-		document.getElementById("camerarollpopup").style.display = "none";
-	    }
+            async function loadMoreCameraRoll() {
+                var cr = document.getElementById("camerarollContent");
+            }
+                                    
+            function hideCameraRoll() {
+                document.getElementById("camerarollpopup").style.display = "none";
+            }
 
             /*function setNewBatteryLevel(level) {
                 var batt = document.getElementById("battery");
