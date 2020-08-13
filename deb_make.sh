@@ -2,8 +2,8 @@
 
 ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-vers=$(cat ${ROOTDIR}/package/deb/DEBIAN/control | grep Version | cut -d "g" -f2-)
-sed -i '' "s/debug${vers}/debug$((vers+1))/" ${ROOTDIR}/package/deb/DEBIAN/control
+vers=$(cat ${ROOTDIR}/package/deb/DEBIAN/control | grep Version | cut -d "-" -f2- | cut -d "+" -f1)
+sed -i '' "s/${vers}+debug/$((vers+1))+debug/" ${ROOTDIR}/package/deb/DEBIAN/control
 
 rm -rf ${ROOTDIR}/package/SMServer_deb.xcarchive
 xcodebuild clean build -workspace ${ROOTDIR}/src/SMServer.xcworkspace -scheme SMServer -destination generic/platform=iOS

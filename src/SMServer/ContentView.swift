@@ -397,6 +397,7 @@ struct ContentView: View {
         
         let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 200
         let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 60
+        self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
         
         self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
         
@@ -411,6 +412,7 @@ struct ContentView: View {
                     .replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
 					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
                     .replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"light.css\">" : "")
+                    .replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
 					
                 self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
@@ -427,8 +429,6 @@ struct ContentView: View {
             self.log("Could not load custom css file")
             self.custom_style = ""
         }
-        
-        self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     }
     
     func checkIfConnected() -> Bool {
@@ -438,7 +438,7 @@ struct ContentView: View {
     
     func setNewestTexts(_ chat_id: String) -> Void {
         /// Is called when you receive a new text; basically stores it so it can let you know when you ping and also tells the socket to ping all clients
-        ContentView.chat_delegate.setNewTexts(chat_id)
+        //ContentView.chat_delegate.setNewTexts(chat_id)
 		socket.sendNewText(info: chat_id)
     }
     
@@ -563,9 +563,9 @@ struct ContentView: View {
             
             let chats_array = ContentView.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
             let chats = encodeToJson(object: chats_array, title: "chats")
-            DispatchQueue.main.async {
+            /*DispatchQueue.main.async {
                 ContentView.chat_delegate.setFirstTexts(address: address);
-            }
+            }*/
             return chats
             
         } else if f == "name" {
@@ -575,17 +575,7 @@ struct ContentView: View {
             let name = ContentView.chat_delegate.getDisplayName(chat_id: chat_id)
             return name
             
-        } /*else if f == "check" {
-            
-            let lt = encodeToJson(object: ContentView.chat_delegate.newest_texts, title: "chat_ids")
-            ContentView.chat_delegate.newest_texts = [String]()
-            if self.debug  {
-                print("lt:")
-                print(lt)
-            }
-            return lt
-            
-		}*/ else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" {
+        } else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" {
             /// Searching for a specific term
 			var case_sensitive = false
 			var bridge_gaps = true
@@ -619,9 +609,9 @@ struct ContentView: View {
 			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 			
 			return encodeToJson(object: ret_val, title: "photos")
-		} else {
-            self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
-        }
+		}
+        
+        self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
         
         return ""
     }
@@ -645,7 +635,7 @@ struct ContentView: View {
 		//(UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning) ? self.loadServer(port_num: UInt16(self.port) ?? UInt16(8741)) : nil
 		
 		self.has_root = self.s.setUID() == uid_t(0)
-		//self.show_root_alert = self.debug
+        
 		self.watcher.setTexts = { value in
 			self.setNewestTexts(value ?? "None")
 		}
