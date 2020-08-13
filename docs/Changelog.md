@@ -1,5 +1,13 @@
 # Changelog
 
+0.2.0+debug19 -> 0.2.0-20+debug
+ - Changed how version numbers are named
+ - Fixed issue with new text content not appearing on web interface conversation button if it was currently selected and top conversation
+ - Web interface now shows attachment description in place of latest text content when latest text had no body but had an attachment
+ - Removed deprecated functions
+ - Added error checking for when the database fails to open
+ - Updated method of opening database for possibly better compatibility
+
 0.2.0+debug18 -> 0.2.0+debug19
  - Improved phone number parsing
  - Improved bounds checking on arrays
