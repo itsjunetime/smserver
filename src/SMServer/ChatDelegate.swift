@@ -48,7 +48,7 @@ class ChatDelegate {
         var sqlString = "SELECT "
         for i in columns {
             sqlString += i
-            if i != columns[columns.count - 1] {
+            if columns.count > 0 && i != columns[columns.count - 1] {
                 sqlString += ", "
             }
         }
@@ -140,7 +140,7 @@ class ChatDelegate {
         var sqlString = "SELECT "
         for i in columns {
             sqlString += i
-            if i != columns[columns.count - 1] {
+            if columns.count > 0 && i != columns[columns.count - 1] {
                 sqlString += ", "
             }
         }
@@ -238,13 +238,15 @@ class ChatDelegate {
 
         db = nil
         
+        if self.debug {
+            self.log(checker.count != 0 ? "You're connected" : "You're not connected. You won't be able to view any chats or messages until this is resolved.")
+        }
+        
         return checker.count != 0
     }
     
     func parsePhoneNum(num: String) -> String {
-        /// This returns a string with SQL wildcards so that you can enter a phone number (e.g. +12837291837) and match it with something like +1 (283) 729-1837.
-        /// It'll probably only work reliably with American phone numbers but it's not a crucial part (only used to get names),
-        /// so I'm not gonna put too much effort into localization; submit a pull request if it doesn't work for yours
+        /// This used to do something larger but now just filters out everything but numbers and places wildcards on both sides
         
         if self.debug {
             self.log("parsing phone number for \(num)")
@@ -253,22 +255,8 @@ class ChatDelegate {
         /// remove everything but numbers
         let new_num = num.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
         
-        if new_num.count == 0 {
-            return ""
-        }
-        
-        if num.count <= 7 {
-            let num_zero = new_num[new_num.startIndex ..< (new_num.index(new_num.startIndex, offsetBy: 3, limitedBy: new_num.endIndex) ?? new_num.endIndex)]
-            let num_one = new_num[(new_num.index(new_num.startIndex, offsetBy: 3, limitedBy: new_num.endIndex) ?? new_num.endIndex) ..< new_num.endIndex]
-            return num_zero + "_" + num_one
-        } else {
-            let num_zero = String(new_num[new_num.startIndex ..< (new_num.index(new_num.startIndex, offsetBy: (new_num.count - 10), limitedBy: new_num.endIndex) ?? new_num.endIndex)])
-            let num_one = String(new_num[(new_num.index(new_num.startIndex, offsetBy: (new_num.count - 10), limitedBy: new_num.endIndex) ?? new_num.endIndex) ..< (new_num.index(new_num.startIndex, offsetBy: (new_num.count - 7), limitedBy: new_num.endIndex) ?? new_num.endIndex)])
-            let num_two = String(new_num[(new_num.index(new_num.startIndex, offsetBy: (new_num.count - 7), limitedBy: new_num.endIndex) ?? new_num.endIndex) ..< (new_num.index(new_num.startIndex, offsetBy: (new_num.count - 4), limitedBy: new_num.endIndex) ?? new_num.endIndex)])
-            let num_three = String(new_num[(new_num.index(new_num.startIndex, offsetBy: (new_num.count - 4), limitedBy: new_num.endIndex) ?? new_num.endIndex) ..< new_num.endIndex])
-            /// num_zero is country code, num_one is american area code, num_two is first 3 digits of regular number, and num_three is last 4 digits of regular number
-            return "%" + num_zero + "%" + num_one + "%" + num_two + "%" + num_three + "%"
-        }
+        /// Place wildcards
+        return "%" + new_num + "%"
     }
     
     func getDisplayName(chat_id: String) -> String {
@@ -469,7 +457,7 @@ class ChatDelegate {
             if chats[i["chat_id"] ?? ""] == nil { continue }
             
             /// get the chat information for the current chat_id
-            var new_chat = chats[i["chat_id"]!]
+            var new_chat = chats[i["chat_id"] ?? ""] // I guess just in case?
             
             /// get chat_identifier. Should be also equal to i["chat_id"]
             let ci = new_chat?["chat_identifier"]
@@ -514,7 +502,7 @@ class ChatDelegate {
                     
                     for r in recipients {
                         display_val += r
-                        if r != recipients[recipients.count - 1] {
+                        if recipients.count > 0 && r != recipients[recipients.count - 1] {
                             display_val += ", "
                         }
                     }

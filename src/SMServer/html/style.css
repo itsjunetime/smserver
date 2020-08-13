@@ -86,12 +86,8 @@ p {
 }
 
 @supports (backdrop-filter: blur(50px)) or (-webkit-backdrop-filter: blur(50px)) {
-	.messages .title, .textbox {
-		backdrop-filter: blur(50px);
-		-webkit-backdrop-filter: blur(50px);
-		background-color: transparent !important;
-	}
-	.compose, #cameraroll {
+	.messages .title, .textbox,
+    .compose, #cameraroll {
 		backdrop-filter: blur(50px);
 		-webkit-backdrop-filter: blur(50px);
 		background-color: transparent !important;
@@ -199,6 +195,7 @@ p {
 	grid-column: 1;
 	max-height: calc(var(--chats-button-height) * 0.76);
 	max-width: calc(var(--chats-button-height) * 0.76);
+    border-radius: 100%;
 }
 .chat-name {
 	font-size: 16px;
@@ -239,12 +236,6 @@ p {
 }
 .selected {
 	box-shadow: 0 0 10px black inset;
-}
-.chats img {
-	width: 3vw;
-	height: 3vw;
-	border-radius: 100%;
-	margin: 8px;
 }
 .text-content p img {
 	max-width: 100%;
