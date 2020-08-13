@@ -10,6 +10,7 @@
             var num_chats_to_load;
             var num_photos_to_load = 30;
             var socket_port;
+            var debug;
             
             var printed_texts = 0;
             var printed_chats = 0;
@@ -47,6 +48,7 @@
             }
 
             function getTextElement(text, last = false) {
+                if (debug) { console.log("Getting text element for text " + text + (last ? ", last" : ", not last")); }
                 var t = document.createElement("p");
 
                 var classes = "text";
@@ -84,6 +86,7 @@
             }
 
             function getChatElement(chat, num_texts) {
+                if (debug) { console.log("Getting chat element for " + chat + ", num: " + num_texts); }
                 var b = document.createElement('button');
 
                 b.setAttribute("id", chat.chat_identifier);
@@ -103,11 +106,11 @@
             }
 
             async function getLatestText(chat = document.getElementsByClassName("title-content")[0].id) {
+                if (debug) { console.log("Getting latest text for chat " + chat); }
                 var text;
                 var fixed_chat = chat.replace("+", "%2B");
 
                 let url = prefix + "/requests?person=" + fixed_chat + "&num=1";
-                console.log(url);
                 const fetch_one_text = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -151,6 +154,7 @@
             }
 
             const getChats = async (offset = 0) => {
+                if (debug) { console.log("getting chats with offset " + offset); }
                 let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
                 const fetch_val = await fetch(url)
                 .then(response => {
@@ -171,6 +175,7 @@
             }
     
             const printChats = async () => {
+                if (debug) { console.log("printing Chats"); }
                 var new_items = await getChats();
                 const num_texts = num_texts_to_load;
                 var doc = document.getElementsByClassName("chats-list")[0];
@@ -189,6 +194,7 @@
             }
         
             const moreJsonChats = async (offset = 0) => {
+                if (debug) { console.log("Calling moreJsonChats with offset " + offset); }
                 let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
                 const fetch_val = await fetch(url)
                 .then(response => {
@@ -209,6 +215,7 @@
             }
         
             const getMoreChats = async () => {
+                if (debug) { console.log("getting more chats"); }
                 var _ = await moreJsonChats(printed_chats);
                 printed_chats += num_chats_to_load
                 var doc = document.getElementsByClassName("chats-list")[0];
@@ -222,6 +229,7 @@
             }
     
             function fetchName(name) {
+                if (debug) { console.log("fetching name for " + name); }
                 name = name.replace("+", "%2B")
                 
                 var url = prefix + '/requests?name=' + name
@@ -239,6 +247,8 @@
             }
 
             const getTexts = async (chat_id, num_texts) => {
+                if (debug) { console.log("getting " + num_texts + " for chat " + chat_id); } 
+
                 var myNode = document.getElementsByClassName("text-content")[0];
 
                 var selected = document.getElementsByClassName("selected");
@@ -329,6 +339,7 @@
             }
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
+                if (debug) { console.log("called getMoreText; num == " + num_texts); }
                 var chat_id = document.getElementsByClassName("title-content")[0].id
                 
                 var new_chat_id = chat_id.replace("+", "%2B");
@@ -391,6 +402,8 @@
             }
 
             const getImage = async (chat_id) => {
+                if (debug) { console.log("calling getImage for chat " + chat_id); }
+
                 chat_id = chat_id.replace("+", "%2B")
                 var url = prefix + '/requests?image=' + chat_id
                 const fetch_image = await fetch(url)
@@ -416,7 +429,7 @@
             }
 
             async function sendForm() {
-
+                if (debug) { console.log("sending form"); }
                 var form = document.getElementById("sendform");
 
                 var tbox = document.getElementById("sendbox")
@@ -451,6 +464,7 @@
             }
 
             async function sendComposeForm() {
+                if (debug) { console.log("sending Compose form"); }
                 hidePopup();
 
                 var form = document.getElementById("composeform");
@@ -506,6 +520,7 @@
             }
 
             function parseMessage(msg) {
+                console.log("parsing message '" + msg + "'");
                 var split = msg.split(':')
 
                 var prefix = split[0]
@@ -528,7 +543,8 @@
                 }
             }
 
-            function processNewText(chat) {
+            async function processNewText(chat) {
+                if (debug) { console.log("received new text from " + chat); }
                 if (chat.length != 0) {
                     if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
                         if (chat === "any") {
@@ -536,6 +552,31 @@
                         } else {
                             setChatAsTop(chat)
                         }
+                    } else {
+                        var new_text;
+                        var url = prefix + "/requests?person=" + chat.replace("+", "%2B") + "&num=1";
+                        const fetch_newest_text = await fetch(url)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error("HTTP error " + response.status);
+                            }
+                            return response.json();
+                        })
+                        .then(json => {
+                            new_text = (json.texts)
+                            return new_text
+                        })
+                        .catch(function () {
+                            has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                            has_shown_warning = true
+                            this.dataError = true;
+                        })
+
+                        var _ = await fetch_newest_text;
+
+                        var btn = document.getElementsByClassName("chats-list").getElementById(chat).getElementsByClassName("chat-text")[0];
+
+                        btn.innerHTML = new_text;
                     }
                     if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
                         getLatestText();
@@ -545,6 +586,7 @@
             }
 
             async function setChatAsTop(chat, new_text = "") {
+                if (debug) { console.log("Setting chat as top: " + chat + ", new: " + new_text); }
 
                 var chatsList = document.getElementsByClassName("chats-list")[0];
                 if (chat === chatsList.firstChild.id) {
@@ -586,6 +628,7 @@
             }
 
             function setSelectedPhoto(url) {
+                if (debug) { console.log("setting selected photo for " + url); }
                 var p = document.getElementById(url);
                 if (p.getAttribute("class").includes("selected-photo")) {
                     p.setAttribute("class", "photo");
@@ -595,6 +638,7 @@
             }
 
             function getPhotoElement(photo) {
+                if (debug) { console.log("Getting photo element " + photo); }
                 var p = document.createElement("span");
                 
                 var c = "photo";
@@ -611,6 +655,7 @@
             }
 
             async function displayCameraRoll() {
+                if (debug) { console.log("Displaying camera roll"); }
                 document.getElementById("camerarollpopup").style.display = "block";
                 
                 var cr = document.getElementById("camerarollContent")

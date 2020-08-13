@@ -23,11 +23,12 @@ class ChatDelegate {
         /// This simply returns an opaque pointer to the database at $connection_string, allowing for sqlite connections.
         
         var db: OpaquePointer?
-        let connection_url = URL(fileURLWithPath: connection_string)
         
         /// Open the database
-        guard sqlite3_open(connection_url.path, &db) == SQLITE_OK else {
-            self.log("WARNING: error opening database")
+        let return_code = sqlite3_open_v2(connection_string, &db, SQLITE_OPEN_READONLY, nil)
+        
+        if return_code != SQLITE_OK {
+            self.log("WARNING: error opening database at \(connection_string): \(return_code)")
             sqlite3_close(db)
             db = nil
             return db
@@ -228,6 +229,7 @@ class ChatDelegate {
         }
         
         var db = createConnection()
+        if db == nil { return false }
         
         let checker = selectFromSql(db: db, columns: ["ROWID"], table: "chat", num_items: 1)
         
@@ -269,6 +271,7 @@ class ChatDelegate {
         
         /// Connect to contact database
         var db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        if db == nil { return "" }
         
         /// get name
         let name = getDisplayNameWithDb(db: db, chat_id: chat_id)
@@ -303,21 +306,18 @@ class ChatDelegate {
             let parsed_num = parsePhoneNum(num: chat_id)
             /// get first name and last name
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(parsed_num)\"", num_items: 1)
-            
         }
         
-        if display_name_array.count != 0 {
+        if display_name_array.count == 0 { return "" }
+        
             /// combine first name and last name
-            let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
-            
-            if self.debug {
-                self.log("full name for \(chat_id) is \(full_name)")
-            }
-            
-            return full_name
+        let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
+        
+        if self.debug {
+            self.log("full name for \(chat_id) is \(full_name)")
         }
         
-        return ""
+        return full_name
     }
     
     func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
@@ -360,6 +360,7 @@ class ChatDelegate {
         /// Create connection to text and contact databases
         var db = createConnection()
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        if db == nil || contact_db == nil { return [[String:String]]() }
         
         /// Get the most recent messages and all their relevant metadata from $num
         var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
@@ -434,9 +435,10 @@ class ChatDelegate {
         /// Create connections
         var db = createConnection()
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        if db == nil || contacts_db == nil { return [[String:String]]() }
         
         /// Get relevant information to construct most recent chats
-        let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read", "date"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
+        let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read", "date", "cache_has_attachments"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
         let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc", num_items: num_to_load, offset: offset)
         let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id))")
         
@@ -479,8 +481,17 @@ class ChatDelegate {
                 new_chat!["has_unread"] = "true"
             }
             
-            /// Content of the most recent text
-            new_chat?["latest_text"] = mwid?["text"]
+            /// Content of the most recent text. If a text has attachments, mwid?["text"] will look like '\u{ef}'. this checks for that.
+            if mwid?["text"]?.replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil)
+                             .trimmingCharacters(in: .whitespacesAndNewlines).count != 0 {
+                new_chat?["latest_text"] = mwid?["text"]
+            } else if mwid?["cache_has_attachments"] != "0" {
+                let att = getAttachmentFromMessage(mid: mwid?["ROWID"] ?? "")
+                
+                if att.count != 0 && att[0].count == 2 {
+                    new_chat?["latest_text"] = "Attachment: " + att[0][1].prefix(upTo: att[0][1].firstIndex(of: "/") ?? att[0][1].endIndex)
+                }
+            }
             
             /// Time when the most recent text was sent
             new_chat?["time_marker"] = mwid?["date"]
@@ -555,6 +566,7 @@ class ChatDelegate {
         /// Make connections
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
+        if contact_db == nil || image_db == nil { return Data.init(capacity: 0) }
         
         /// get image data with dbs as parameters
         let return_val = returnImageDataDB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!)
@@ -659,24 +671,6 @@ class ChatDelegate {
         return pngdata
     }
     
-    func setFirstTexts(address: String) { 
-        /// This just clears out the newest_texts array so that in case a new text was received before someone established a connection
-        /// it won't show that as a new text on the first ping.
-        
-        if self.debug {
-            self.log("Setting first texts")
-        }
-        
-        newest_texts = [String]()
-    }
-    
-    func setNewTexts(_ chat_id: String) {
-        /// uhhh can't remember what this does but I think it's deprecated
-        newest_texts.removeAll(where: {$0 == chat_id})
-        
-        newest_texts.append(chat_id)
-    }
-    
     func getAttachmentFromMessage(mid: String) -> [[String]] {
         /// This returns the file path for all attachments associated with a certain message with the message_id of $mid
         
@@ -686,6 +680,8 @@ class ChatDelegate {
         
         /// create connection, get attachments information
         var db = createConnection()
+        if db == nil { return [[String]]() }
+        
         let file = selectFromSql(db: db, columns: ["filename", "mime_type", "hide_attachment"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
         
         var return_val = [[String]]()
@@ -727,6 +723,8 @@ class ChatDelegate {
 		//let new_path = path
         
         var db = createConnection()
+        if db == nil { return "" }
+        
         let file_type_array = selectFromSql(db: db, columns: ["mime_type"], table: "attachment", condition: "WHERE filename like \"%\(path)%\"", num_items: 1)
         var return_val = "image/jpeg" /// Most likely thing
         
@@ -769,6 +767,7 @@ class ChatDelegate {
         /// Create Connections
 		var db = createConnection()
 		var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        if db == nil || contact_db == nil { return [String:[[String:String]]]() }
 		
         /// Replacing percentages with escaped so that they don't act as wildcard characters
         var upperTerm = term.replacingOccurrences(of: "%", with: "\\%")
@@ -858,7 +857,6 @@ class ChatDelegate {
 		let result = PHAsset.fetchAssets(with: PHAssetMediaType.image, options: fetchOptions)
 		
 		let total = result.countOfAssets(with: PHAssetMediaType.image)
-        print(result)
 		
         for i in offset..<total {
             var next = false;
@@ -868,25 +866,21 @@ class ChatDelegate {
             
 			let image = result.object(at: i)
 			var img_url = ""
-            print(image)
 			
 			dispatchGroup.enter() /// This whole dispatchGroup this is necessary to get the completion handler to run synchronously with the rest
 			
 			image.getURL(completionHandler: { url in
                 /// get url of each image
 				img_url = url!.path.replacingOccurrences(of: "/var/mobile/Media/DCIM/", with: "")
-                print("leaving: \(img_url)")
 				dispatchGroup.leave()
 			})
 			
 			dispatchGroup.notify(queue: DispatchQueue.main) {
                 /// append vals to return value
-                print("entering: \(img_url)")
 				local_result["URL"] = img_url
 				local_result["is_favorite"] = String(image.isFavorite)
 				
 				ret_val.append(local_result)
-                print("appended: \(img_url)")
                 next = true
 			}
             
