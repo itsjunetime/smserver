@@ -10,20 +10,16 @@ struct SettingsView: View {
 	@State var socket_port = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-    //@State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
     @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
     @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
-	
-	@State var full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
-	@State var area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? ""
-	@State var country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? ""
+    @State var is_secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
     
     let picker_options = ["Dark", "Light"]
 	
 	@ObservedObject private var keyWatcher = KeyboardWatcher()
     
-    @State var display_number_alert = false
+    @State var display_ssl_alert = false
 	
 	func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
@@ -67,12 +63,13 @@ struct SettingsView: View {
             UserDefaults.standard.setValue($0, forKey: "debug")
         })
         
-        /*let start_binding = Binding<Bool>(get: {
-            self.start_on_load
+        let secure_binding = Binding<Bool>(get: {
+            self.is_secure
         }, set: {
-            self.start_on_load = $0
-            UserDefaults.standard.setValue($0, forKey: "start_on_load")
-        })*/
+            self.is_secure = $0
+            UserDefaults.standard.setValue($0, forKey: "is_secure")
+            self.display_ssl_alert = true
+        })
         
         let auth_binding = Binding<Bool>(get: {
             self.require_authentication
@@ -93,27 +90,6 @@ struct SettingsView: View {
 		}, set: {
 			self.socket_port = Int($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
-		})
-		
-		let country_binding = Binding<String>(get: {
-			self.country_code
-		}, set: {
-			self.country_code = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-			UserDefaults.standard.setValue(self.country_code, forKey: "country_code")
-		})
-		
-		let area_binding = Binding<String>(get: {
-			self.area_code
-		}, set: {
-			self.area_code = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-			UserDefaults.standard.setValue(self.area_code, forKey: "area_code")
-		})
-		
-		let number_binding = Binding<String>(get: {
-			self.full_number
-		}, set: {
-			self.full_number = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-			UserDefaults.standard.setValue(self.full_number, forKey: "full_number")
 		})
         
 		return ScrollView {
@@ -185,37 +161,13 @@ struct SettingsView: View {
 					Toggle("Require Authentication to view messages", isOn: auth_binding)
 					
 					Toggle("Enable backgrounding", isOn: background_binding)
-				}
+                    
+                    Toggle("Enable SSL", isOn: secure_binding)
+                }.alert(isPresented: $display_ssl_alert, content: {
+                    Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
+                })
 				
 				Section {
-					Spacer().frame(height: 20)
-					
-					HStack {
-						Text("Phone number (e.g. '1 394 283948')")
-						Spacer()
-                        Button(action: {
-                            self.display_number_alert = true
-                        }) {
-                            Image(systemName: "questionmark.circle")
-                        }.alert(isPresented: $display_number_alert, content: {
-                            Alert(title: Text("Phone number"), message: Text("This is necessary to correctly parse phone numbers that are entered incorrectly (e.g. without country code), so that all texts go to where they are supposed to.\n\nIf you don't have an area code:\nLeave the area code field blank. It is optional; only the country code and number fields are necessary.\n\nIf you don't have a phone number:\nEnter a generic phone number that contains your country code and area code. The fields below don't need to be your phone number, they just need to contain your country code, area code, and a phone number that is the normal length for your area."))
-                        })
-					}
-					
-					GeometryReader { geo in
-						HStack {
-							TextField("Country code", text: country_binding)
-								.textFieldStyle(RoundedBorderTextFieldStyle())
-								.frame(width: geo.size.width * 0.3)
-							
-							TextField("Area code", text: area_binding)
-								.textFieldStyle(RoundedBorderTextFieldStyle())
-								.frame(width: geo.size.width * 0.3)
-							
-							TextField("Number", text: number_binding)
-								.textFieldStyle(RoundedBorderTextFieldStyle())
-						}
-					}
 					
 					Spacer().frame(height: 30)
 					
