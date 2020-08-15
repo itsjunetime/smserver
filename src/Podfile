@@ -6,11 +6,8 @@ target 'SMServer' do
   use_frameworks!
 
   # Pods for SMServer
-  # pod "GCDWebServer", "~> 3.0"
-  # pod "GCDWebServer/WebUploader", "~> 3.0"
-  pod "GCDWebServer",:modular_headers => true
-  pod "GCDWebServer/WebUploader",:modular_headers => true
   pod 'Telegraph'
+  pod 'Criollo', '~> 1.0'
 
   # target 'SMServerTests' do
   #   inherit! :search_paths

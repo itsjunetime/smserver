@@ -1,5 +1,10 @@
 # Changelog
 
+0.2.0-20+debug -> 0.3.0-1+debug
+ - Changed from GCDWebServer framework to my forked branch of Criollo
+ - Implemented HTTPS
+ - Implemented Desktop Notifications
+
 0.2.0+debug19 -> 0.2.0-20+debug
  - Changed how version numbers are named
  - Fixed issue with new text content not appearing on web interface conversation button if it was currently selected and top conversation
