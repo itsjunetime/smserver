@@ -14,6 +14,8 @@
 		3C11175024CCF3AC0065894F /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */; };
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3C69EB2F24E77F1D00F48291 /* cert.der in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB2E24E77F1D00F48291 /* cert.der */; };
+		3C69EB3124E77F7800F48291 /* identity.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB3024E77F7800F48291 /* identity.pfx */; };
 		3C6A5FB624B3F99200102AE2 /* Obj.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7CFF84246C8F8D0061749A /* Obj.m */; };
 		3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E86245BCFE000EF24FE /* AppDelegate.swift */; };
 		3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E88245BCFE000EF24FE /* SceneDelegate.swift */; };
@@ -61,6 +63,8 @@
 		3C11174D24CC9F050065894F /* SocketDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
+		3C69EB2E24E77F1D00F48291 /* cert.der */ = {isa = PBXFileReference; lastKnownFileType = file; path = cert.der; sourceTree = "<group>"; };
+		3C69EB3024E77F7800F48291 /* identity.pfx */ = {isa = PBXFileReference; lastKnownFileType = file; path = identity.pfx; sourceTree = "<group>"; };
 		3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MRYIPCCenter.h; sourceTree = "<group>"; };
 		3C6A5FB224B3E94600102AE2 /* Obj.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Obj.h; sourceTree = "<group>"; };
 		3C6A5FB424B3EBBF00102AE2 /* libmryipce.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmryipce.dylib; sourceTree = "<group>"; };
@@ -156,6 +160,8 @@
 				3CC4184F24B1327400A98288 /* SettingsView.swift */,
 				3CC4185324B135B500A98288 /* ChatDelegate.swift */,
 				3C11174D24CC9F050065894F /* SocketDelegate.swift */,
+				3C69EB3024E77F7800F48291 /* identity.pfx */,
+				3C69EB2E24E77F1D00F48291 /* cert.der */,
 				3C7CFF84246C8F8D0061749A /* Obj.m */,
 				3C6A5FB224B3E94600102AE2 /* Obj.h */,
 				3C7CFF7D246BC6A80061749A /* SMServer-Bridging-Header.h */,
@@ -303,7 +309,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				3C562A38245FB4A100A4474B /* html in Resources */,
+				3C69EB3124E77F7800F48291 /* identity.pfx in Resources */,
 				3C760E93245BCFE100EF24FE /* LaunchScreen.storyboard in Resources */,
+				3C69EB2F24E77F1D00F48291 /* cert.der in Resources */,
 				3C760E90245BCFE100EF24FE /* Preview Assets.xcassets in Resources */,
 				3C760E8D245BCFE100EF24FE /* Assets.xcassets in Resources */,
 			);
@@ -552,7 +560,22 @@
 				DEVELOPMENT_TEAM = X543N5D24H;
 				DYLIB_INSTALL_NAME_BASE = "";
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Criollo\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/HTTPParserC\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph\"",
+					"\"${PODS_ROOT}/Criollo/Libraries/OpenSSL\"",
+				);
 				GCC_WARN_UNUSED_VARIABLE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket/CocoaAsyncSocket.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Criollo/Criollo.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/HTTPParserC/HTTPParserC.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph/Telegraph.framework/Headers\"",
+				);
 				INFOPLIST_FILE = SMServer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -569,8 +592,6 @@
 					"-l\"z\"",
 					"-framework",
 					"\"CFNetwork\"",
-					"-framework",
-					"\"GCDWebServer\"",
 					"-framework",
 					"\"MobileCoreServices\"",
 					"-ObjC",
@@ -599,8 +620,23 @@
 				DEVELOPMENT_TEAM = X543N5D24H;
 				DYLIB_INSTALL_NAME_BASE = "";
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Criollo\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/HTTPParserC\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph\"",
+					"\"${PODS_ROOT}/Criollo/Libraries/OpenSSL\"",
+				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_UNUSED_VARIABLE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket/CocoaAsyncSocket.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Criollo/Criollo.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/HTTPParserC/HTTPParserC.framework/Headers\"",
+					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph/Telegraph.framework/Headers\"",
+				);
 				INFOPLIST_FILE = SMServer/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -616,8 +652,6 @@
 					"-l\"z\"",
 					"-framework",
 					"\"CFNetwork\"",
-					"-framework",
-					"\"GCDWebServer\"",
 					"-framework",
 					"\"MobileCoreServices\"",
 					"-ObjC",

@@ -840,11 +840,26 @@ class ChatDelegate {
 	func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] { /// Gotta include stuff like favorite
 		/// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
 		
+        self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
+        
         /// make sure that we have access to the photos library
-		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized { return [[String:String]]() }
+		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
+            var con = true;
+            
+            PHPhotoLibrary.requestAuthorization({ auth in
+                if auth != PHAuthorizationStatus.authorized {
+                    con = false
+                    self.log("App is not authorized to view photos. Please grant access.")
+                }
+            })
+            guard con else { return [[String:String]]() }
+        }
+        
+        print("Has authorization")
 		
 		var ret_val = [[String:String]]()
 		let fetchOptions = PHFetchOptions()
+        
         /// sort photos by most recent
 		fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: !most_recent)]
 		fetchOptions.fetchLimit = num + offset
@@ -857,8 +872,9 @@ class ChatDelegate {
 		let result = PHAsset.fetchAssets(with: PHAssetMediaType.image, options: fetchOptions)
 		
 		let total = result.countOfAssets(with: PHAssetMediaType.image)
-		
+        
         for i in offset..<total {
+            var timeout = 0;
             var next = false;
 			let dispatchGroup = DispatchGroup()
 			
@@ -885,9 +901,12 @@ class ChatDelegate {
 			}
             
             /// This is hacky and kinda hurts performance but it seems the most reliable way to load images in order + with the amount requested.
-            while next == false {}
+            while next == false && timeout < 10 {
+                timeout += 1
+                usleep(100000)
+            }
 		}
-		
+        
 		return ret_val
 	}
 	

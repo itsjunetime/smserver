@@ -14,11 +14,11 @@
 		</data>
 		<key>Assets.car</key>
 		<data>
-		k4Q/E8hKZAKxIcv67InDpZz+F2A=
+		6+UJ4O/Ni482JbSk7Zcg2Xa0bBE=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
-		cnVBjXJaRjNwsloEckr9te6qMis=
+		+49M08yyfHPTKX9t43JQijnKkxY=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
 		<data>
@@ -26,11 +26,11 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib</key>
 		<data>
-		oBUp9HIGnasFdGmb4gpic68AgGY=
+		10iGYd1TVuwI6hqj7grsEvyPVbQ=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<data>
-		U9N2RjiQwKTb+QyGJrdMlbfqpHU=
+		S9nwfNyAHSGgrc8/Nubb232KEt4=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
 		<data>
@@ -40,34 +40,21 @@
 		<data>
 		6RmPrDAbXXdUTYJdpjGuUi04Z8Y=
 		</data>
-		<key>Frameworks/GCDWebServer.framework/GCDWebServer</key>
+		<key>Frameworks/Criollo.framework/Criollo</key>
 		<data>
-		rOWV1fnunGptdUkZzIm/N1AO1Wo=
+		wE1vvdatkpk9BFZ1lN9rKyZf/Y0=
 		</data>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
+		<key>Frameworks/Criollo.framework/Info.plist</key>
 		<data>
-		1iIRJ6P+WWR07sERkhSrb+YSQEk=
+		U0flA9bx1/1CCqV1L3j6fYsJqx4=
 		</data>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/en.lproj/Localizable.strings</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			B5pfPbMt1AAILVT+5XwjwfJVxKQ=
-			</data>
-			<key>optional</key>
-			<true/>
-		</dict>
-		<key>Frameworks/GCDWebServer.framework/Info.plist</key>
+		<key>Frameworks/Criollo.framework/_CodeSignature/CodeResources</key>
 		<data>
-		TRe3p1SMJ6Z+A5uQn4hdDQPnbq8=
-		</data>
-		<key>Frameworks/GCDWebServer.framework/_CodeSignature/CodeResources</key>
-		<data>
-		JuqArKAujydwrc00WSbnM2vHD5A=
+		Kr6l49qmRbdQfBT/sYosp2zXO6M=
 		</data>
 		<key>Frameworks/HTTPParserC.framework/HTTPParserC</key>
 		<data>
-		gGv3dpPe0u1Ke3TPvaT6lzepaZ4=
+		H8CQUxKZVdKjFVr47PGTAQZ/aNc=
 		</data>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
 		<data>
@@ -103,7 +90,7 @@
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeSignature</key>
 		<data>
-		ICJAUUMDPWfwauKSssPh6pCpeYM=
+		i9zwhlfnJjEotUKxiEDD2086E/Q=
 		</data>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
 		<data>
@@ -111,7 +98,7 @@
 		</data>
 		<key>Frameworks/Telegraph.framework/Telegraph</key>
 		<data>
-		kV6O4PSe1re+wqdxfNTvIxFDLws=
+		A1aC2Mw8f5t8Sah+DFVaGLdi8ao=
 		</data>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
 		<data>
@@ -119,15 +106,19 @@
 		</data>
 		<key>Frameworks/libmryipce.dylib</key>
 		<data>
-		So8XvpaBkymNCgqEOmbuzrUeKgo=
+		46k9sF1bxHw+gPHBQ0LRBA+g2fM=
 		</data>
 		<key>Info.plist</key>
 		<data>
-		0nXIQz7KbXzqAR2wj5YZgFDPqEI=
+		RbVd/g1U2X30vTj7zbHmr1f3aK8=
 		</data>
 		<key>PkgInfo</key>
 		<data>
 		n57qDP4tZfLD1rCS43W0B4LQjzE=
+		</data>
+		<key>cert.der</key>
+		<data>
+		P2x6n0KDnXaFLeCzjd/al/ZJDfQ=
 		</data>
 		<key>embedded.mobileprovision</key>
 		<data>
@@ -135,7 +126,7 @@
 		</data>
 		<key>html/chats.html</key>
 		<data>
-		3m0/9kaHPDLG9J+ePEGJ20IZQWc=
+		/0D2bWDRl/nwR3FLUWAnnPEclgk=
 		</data>
 		<key>html/custom.css</key>
 		<data>
@@ -143,7 +134,7 @@
 		</data>
 		<key>html/gatekeeper.html</key>
 		<data>
-		5imp8JRKBohQd8yea1dui/2pttI=
+		SEpQZpfFi+tLMiE7sLkLeHazF0w=
 		</data>
 		<key>html/light_theme.css</key>
 		<data>
@@ -155,7 +146,11 @@
 		</data>
 		<key>html/style.css</key>
 		<data>
-		ENGdqEfP9yvuyW6hGwIKztGB+q4=
+		yA5KJMya6D9qgU0TYPGQYvCaNJ4=
+		</data>
+		<key>identity.pfx</key>
+		<data>
+		sWX91/kAkhouzW/8D4JY0Fm1B8Q=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -178,14 +173,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			CwlKIiTjtV5YtsL8q9s8L5AxNB/9gPIaI0nXVEaQBsk=
+			dxNCri6i3DMVcWSG0Fw+kTS5jNI0iKuoa0DWNxJqI2I=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			LOIQtv/trHeiXKsdqU+C4gIeRua0ZgIyI61eCDN5RcI=
+			c5/aBXZmmxKCkNLzFrUjagKazFnJoGADu6Qpzxh9Ejk=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
@@ -199,14 +194,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			KOxVig0DDshsno4Hf4nhqVzh+NXAJqTugi2up96P7tg=
+			fq9sROC5TrWOL7oL2VKStVoiQi7Yqnyg8zzcQbcVfdw=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			bkb+kVs+EO/sluXWY9EYbDtLNNNeJtNAUjTtREC9sUo=
+			LPKRLxBJU4dH8hJiz4mLJAtIE9k+9p5u0+FqD0UfQwE=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
@@ -223,48 +218,32 @@
 			IcRtCTU4vIqhpaL7LcBqJ3GsOZcLj9UC6EiNqP1OXPI=
 			</data>
 		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebServer</key>
+		<key>Frameworks/Criollo.framework/Criollo</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			ExcXfUOVZ9A6f+RSBLJQPYEu17Acg90VqlwGFQaS++8=
+			9geEII/eQu2Lu+IBi5T202yryE2Y9IO2BJYwhr/uHwQ=
 			</data>
 		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Info.plist</key>
+		<key>Frameworks/Criollo.framework/Info.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			AfSq5vmWgRSGIo4tHYXn9YzHwIKAplnfLDAyx6tKPRU=
+			SRFY1pGQIbajUxUjWql7OI+Ip/5TGKKF8og150NGzZY=
 			</data>
 		</dict>
-		<key>Frameworks/GCDWebServer.framework/GCDWebUploader.bundle/Contents/Resources/en.lproj/Localizable.strings</key>
+		<key>Frameworks/Criollo.framework/_CodeSignature/CodeResources</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			1kQcUYastnLP9JW7aH28mQjJ9gh18kdRdnzoxKbrdNM=
-			</data>
-			<key>optional</key>
-			<true/>
-		</dict>
-		<key>Frameworks/GCDWebServer.framework/Info.plist</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			q2pSxHaPZUTDeV78jdBkcVSMzBWxU9ZXVFN8KnCZAEI=
-			</data>
-		</dict>
-		<key>Frameworks/GCDWebServer.framework/_CodeSignature/CodeResources</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			npeYYeRCLqL02sc2kvbVJ+MPrGvphDxQwg7P8YuOXHw=
+			Aaour5EFWrCB38XfbAvoaSQ48o7YmrqGeaOHiexKvDo=
 			</data>
 		</dict>
 		<key>Frameworks/HTTPParserC.framework/HTTPParserC</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			RcO7k+QsPJ7kboDZHQ+sY/B/rs3SvcFLHFpVn3SkPnY=
+			XzAnuJi8xvsA7libj29YBR9UuFvaPmWmYwhS4r3Huwg=
 			</data>
 		</dict>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
@@ -327,7 +306,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			yVZ3Dqtmahr4iUDQuLXSUtUwbHCWWRGCf3WI6B7VeE8=
+			nZsiPdjrPkk5W4wtcGlukQwaH6/Da/NSG1RAhbuULOU=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
@@ -341,7 +320,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			XV1SeHt9DVtCe3wBtuzOFujUtmwoVCxUieDYH2Fd+co=
+			nJ9zpBBlb9ZZIy4RYgLP6jabmvVk3Y8qeUBnk5efWPI=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
@@ -355,7 +334,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			7A2W4uF81a4xEzg/tTydKlutwKwSsmoU/gttSrFkx/M=
+			sXWLI+jc76T5hr2zW81wgoBtHjzzJdklxDNuF9f2MiQ=
+			</data>
+		</dict>
+		<key>cert.der</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Bj1RvYZyOTTXDNfTP2VxCbCrXwtIyxCJSh5jhAOJP64=
 			</data>
 		</dict>
 		<key>embedded.mobileprovision</key>
@@ -369,7 +355,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			GsivvILZJNwy97VcLZzbWRQN9UucUJJlpBVii+0jz08=
+			kxH5zUQQdD/5G0TXn6cOQFrTQ2G6WZ4cETsKgTtvb7E=
 			</data>
 		</dict>
 		<key>html/custom.css</key>
@@ -383,7 +369,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			cmy2QP05gsG/argZUSJBmM9di5yGas1CGWTHMj62W6M=
+			ll0P4PAoHWYKZPWLrF9yyP4kCBueTioGfUUyqXx92jQ=
 			</data>
 		</dict>
 		<key>html/light_theme.css</key>
@@ -404,7 +390,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			A4NBfz3Li3aZwVWW6DYFGPKIGrygHeGX2SwU7ryf3pw=
+			Z+V1DfHtJv07fg6z1LvUuRNUzE/oq+LYnnRRA/hPAxY=
+			</data>
+		</dict>
+		<key>identity.pfx</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			U77ohkvlOuU5NoW5uA8gfjoKNmnAA0P0QCsGIJsXcx4=
 			</data>
 		</dict>
 	</dict>
