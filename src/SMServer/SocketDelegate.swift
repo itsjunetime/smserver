@@ -5,7 +5,9 @@ import NetworkExtension
 
 class SocketDelegate : ServerWebSocketDelegate {
 	
-	let server = Server()
+    static let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
+    static let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: "smserver")
+    let server = Server(identity: SocketDelegate.identity!, caCertificates: [SocketDelegate.cert!])
 	var watcher: IPCTextWatcher? = nil
 	var authenticated_addresses = [String]()
 	var verify_auth: (String)->(Bool) = { _ in return false } /// nil init
