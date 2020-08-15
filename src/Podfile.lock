@@ -1,33 +1,29 @@
 PODS:
   - CocoaAsyncSocket (7.6.4)
-  - GCDWebServer (3.5.4):
-    - GCDWebServer/Core (= 3.5.4)
-  - GCDWebServer/Core (3.5.4)
-  - GCDWebServer/WebUploader (3.5.4):
-    - GCDWebServer/Core
+  - Criollo (0.5.5):
+    - CocoaAsyncSocket (~> 7.6)
   - HTTPParserC (2.9.2)
   - Telegraph (0.28):
     - CocoaAsyncSocket (~> 7.5)
     - HTTPParserC (~> 2.7)
 
 DEPENDENCIES:
-  - GCDWebServer
-  - GCDWebServer/WebUploader
+  - Criollo (~> 0.5)
   - Telegraph
 
 SPEC REPOS:
   trunk:
     - CocoaAsyncSocket
-    - GCDWebServer
+    - Criollo
     - HTTPParserC
     - Telegraph
 
 SPEC CHECKSUMS:
   CocoaAsyncSocket: 694058e7c0ed05a9e217d1b3c7ded962f4180845
-  GCDWebServer: 2c156a56c8226e2d5c0c3f208a3621ccffbe3ce4
+  Criollo: 617173837c296ca4248b0b058f36ce9b91e5c25b
   HTTPParserC: 1ed389f80bb57a5b967d87d5358b8a94418394ee
   Telegraph: 6820cf262064f2c15a393fb56401834141d0310e
 
-PODFILE CHECKSUM: 4318e83b2e40258f0edd876701f49aa86aa63c1f
+PODFILE CHECKSUM: 2647e62f0f311913a4510a5d30b74fde4b50c235
 
 COCOAPODS: 1.9.3
