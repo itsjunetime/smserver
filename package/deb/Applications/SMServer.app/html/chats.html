@@ -1,5 +1,6 @@
 <html>
     <head>
+        <meta charset="utf-8" />
         <title>
             Messages
         </title>
@@ -16,6 +17,7 @@
             var printed_chats = 0;
             var has_shown_warning = false;
             var has_shown_camera_roll = false;
+            var notifications = false;
 
             var items = "";
             var new_items = "";
@@ -45,6 +47,18 @@
                 var min = a.getMinutes();
                 var time = date + ' ' + month + ' ' + year + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (min < 10 ? '0' : '') + min;
                 return time;
+            }
+
+            function getTextFromURL(url) {
+                xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange=function() {
+                    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+                        return xmlhttp.responseText;
+                    }
+                }
+                xmlhttp.open("GET", url, false );
+                xmlhttp.send(); 
+                return xmlhttp.responseText;
             }
 
             function getTextElement(text, last = false) {
@@ -80,7 +94,7 @@
                 }
                 
                 /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
-                t.innerHTML += text.text.replace("￼", "");
+                t.innerHTML += text.text.replace("￼", "").replace("￼", "");
 
                 return t;
             }
@@ -93,7 +107,7 @@
                 
                 b.innerHTML = "<img src=\"" + prefix + "/data?chat_id=" + chat.chat_identifier.replace("+", "%2B") + "\">";
                 b.innerHTML += "<div class=\"chat-name\">" + (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name) + "</div>"
-                b.innerHTML += "<div class=\"chat-text\">" + chat.latest_text + "</div>"
+                b.innerHTML += "<div class=\"chat-text\">" + chat.latest_text.replace("￼", "").replace("￼", "") + "</div>"
 
                 let unix_timestamp = (chat.time_marker / 1000000000) + 978307200;
                 b.innerHTML += "<div class=\"chat-date\">" + timeConverter(unix_timestamp) + "</div>";
@@ -438,6 +452,13 @@
                 var hta = document.getElementById("hiddentextarea")
                 hta.value = "text:" + oldval;
 
+                var photos = document.getElementById("hiddenphotobutton");
+                var selected = document.getElementsByClassName("selected-photos");
+                photos.value = "photos:"; /// Just in case
+                for (var i = 0; i < selected.length; ++i) {
+                    photos.value += selected[i].id + (i !== selected.length - 1 ? ":" : "");
+                }
+
                 form.submit();
 
                 await sleep(500);
@@ -450,6 +471,7 @@
                 
                 document.getElementById("attachmentbutton").value = "";
                 document.getElementById("unhiddenbutton").value = '📎';
+                photos.value = "photos:";
 
                 var box = document.getElementById("text-content");
                 var t = document.createElement("p");
@@ -509,7 +531,7 @@
                 pop.style.display = "none";
             }
 
-            let socket = new WebSocket('ws://' + socket_address + ':' + socket_port)
+            let socket = new WebSocket('wss://' + socket_address + ':' + socket_port)
 
             socket.onopen = function() {
                 socket.send("connected")
@@ -517,6 +539,10 @@
 
             socket.onmessage = function(event) {
                 parseMessage(event.data)
+            }
+
+            socket.onerror = function(event) {
+                alert("It appears you have not yet trusted the websocket certificate. Please navigate to https://" + socket_address + ":" + socket_port + "/ and trust the certifiate there");
             }
 
             function parseMessage(msg) {
@@ -545,6 +571,11 @@
 
             async function processNewText(chat) {
                 if (debug) { console.log("received new text from " + chat); }
+
+                if (window.Notification && Notification.permission === "granted") {
+                    var n = new Notification("SMServer", { body: "New text from " + chat, icon: '/favicon.ico'});
+                }
+
                 if (chat.length != 0) {
                     if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
                         if (chat === "any") {
@@ -574,7 +605,7 @@
 
                         var _ = await fetch_newest_text;
 
-                        var btn = document.getElementsByClassName("chats-list").getElementById(chat).getElementsByClassName("chat-text")[0];
+                        var btn = document.getElementsByClassName("chats-list")[0].getElementById(chat).getElementsByClassName("chat-text")[0];
 
                         btn.innerHTML = new_text;
                     }
@@ -605,7 +636,7 @@
                     })
                     .then(json => {
                         new_chat = (json.chats)
-                        return new_chat
+                        return new_chat;
                     })
                     .catch(function () {
                         has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
@@ -646,8 +677,7 @@
                 
                 p.setAttribute("class" , c);
                 
-                var id = photo.URL.split("/")[1];
-                p.setAttribute("id", id);
+                p.setAttribute("id", photo.URL);
                 p.setAttribute("onclick", "setSelectedPhoto(\"" + id + "\");");
                 
                 p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">"
@@ -660,12 +690,12 @@
                 
                 var cr = document.getElementById("camerarollContent")
                 
-                alert("Accessing photos from the camera roll does not work yet; please wait for an update before attempting to use it");
+                alert("Accessing photos from the camera roll does not work yet; please wait for an update before attempting to use it. I take no responsibility if it sends the wrong photos to your recipient.");
                 
                 if (!has_shown_camera_roll) {
                     var photos;
                     
-                    var url = prefix + "/requests?photos=" + num_photos_to_load /// to get last text
+                    var url = prefix + "/requests?photos=" + num_photos_to_load;
                     const fetch_recent_photos = await fetch(url)
                     .then(response => {
                         if (!response.ok) {
@@ -674,8 +704,8 @@
                         return response.json();
                     })
                     .then(json => {
-                        photos = (json.photos)
-                        return photos
+                        photos = (json.photos);
+                        return photos;
                     })
                     .catch(function () {
                         has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
@@ -686,6 +716,7 @@
                     var _ = await fetch_recent_photos
                     if (photos.length === 0) var _ = await fetch_recent_photos;
                     
+
                     for (var i = 0; i < photos.length; i++) {
                         var p = await getPhotoElement(photos[i]);
                         
@@ -700,6 +731,15 @@
             }
                                     
             function hideCameraRoll() {
+                document.getElementById("camerarollpopup").style.display = "none";
+                var p = document.getElementsByClassName("selected-photo");
+
+                for (var i = 0; i < p.length; ++i) {
+                    p[i].setAttribute("class", p[i].getAttribute("class").replace(" selected-photo", ""));
+                }
+            }
+
+            function selectCameraRollPhotos() {
                 document.getElementById("camerarollpopup").style.display = "none";
             }
 
@@ -724,7 +764,7 @@
             }*/
 
             printChats()
-            
+
         </script>
         <link rel="stylesheet" type="text/css" href="style.css">
         <link rel="stylesheet" type="text/css" href="custom.css">
@@ -743,6 +783,7 @@
                 </div>
                 <div class="chats-search">
                     Search
+                    <button onclick="Notification.requestPermission()" id="notificationbutton"><p>Notifications</p></button>
                     <button onclick="showPopup();" id="composeShowButton"><p>+ New</p></button>
                 </div>
                 <div class="chats-list">
@@ -758,9 +799,10 @@
                 </div>
                 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
                 <form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
-		    <input value="&#128247" onclick="displayCameraRoll();" type="button" id="camerarollbutton"></input>
+		            <input value="&#128247" onclick="displayCameraRoll();" type="button" id="camerarollbutton"></input>
                     <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
+                    <input type="text" name="photos" id="hiddenphotobutton" value="photos:" style="display: none;">
                     <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
                     <textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
@@ -789,12 +831,12 @@
 	    <div class="camerarollpopup" id="camerarollpopup">
 		<div class="cameraroll" id="cameraroll">
 		    <div id="camerarollTitle">
-			<button onclick="hideCameraRoll();" id="camerarollHideButton">Cancel</button>
-			<span id="camerarollTitleBoxTitle">Choose Camera Roll Images</span>
-			<button onclick="selectCameraRollPhotos();" id="camerarollSelectButton">Select</button>
+			    <button onclick="hideCameraRoll();" id="camerarollHideButton">Cancel</button>
+			    <span id="camerarollTitleBoxTitle">Choose Camera Roll Images</span>
+			    <button onclick="selectCameraRollPhotos();" id="camerarollSelectButton">Select</button>
 		    </div>
 		    <div id="camerarollContent">
-			<button class="photo" value="+ More">
+			    <button class="photo" id="morephotosbutton" value="+ More">
 		    </div>
 		</div>
 	    </div>

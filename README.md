@@ -8,7 +8,8 @@
 ## Features
 - Viewing all texts & iMessages from another device
 - Viewing image attachments in browser
-- Saving image attachments to device
+- HTTPS
+- Desktop Notifications upon new text arrival
 - Sending iMessages remotely, without on-device interaction
 - Sending all types of attachments from desktop 
 - Authentication to protect against spying eyes
@@ -49,13 +50,14 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 - [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
 - [x] Convenient Custom CSS Loading
+- [x] HTTPS
+- [x] Desktop notifications
 - [ ] Subject lines for texts on web interface
 - [ ] Information on web page about battery life, wifi connection, etc - This is nearly done.
 - [ ] Access to camera roll - This is nearly done
 
 ### Future plans
 - [ ] Search through messages from browser - This has been implemented in the API
-- [ ] HTTPS
 - [ ] Notification when other party starts typing
 - [ ] Web interface emoji picker
 - [ ] Graphic display for reactions (as opposed to plain text)
@@ -63,8 +65,8 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
-### Acknowledged current issues:
-- Retrieving a list of photos always fails the first time after the app has been restarted, but succeeds every time after that.
+## Acknowledged Issues
+- Occasionally, after sending a text, the wrong conversation will move to the top of the conversation list in the web interface.
 
 ### To file an issue:
 Please include the following information:
