@@ -362,8 +362,15 @@ class ChatDelegate {
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         if db == nil || contact_db == nil { return [[String:String]]() }
         
+        /// Create a custom condition string based on whether its an address
+        let new_num = num.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        
+        /// if address or group chat: 'chat_identifier is "email@email.org"'
+        /// if phone: 'chat_identifier like "_10000000000" or chat_identifier is "10000000000"'
+        let check_string = "chat_identifier " + (num.contains("@") || num.prefix(4) == "chat" ? "is \"\(num)\"" : "like \"_\(new_num)\" or chat_identifier is \"\(new_num)\"")
+        
         /// Get the most recent messages and all their relevant metadata from $num
-        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE \(check_string)) ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
         
         /// check if it's a group chat
         let is_group = num.prefix(4) == "chat"
