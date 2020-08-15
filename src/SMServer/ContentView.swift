@@ -1,14 +1,17 @@
 import SwiftUI
-import GCDWebServer
+import Criollo
 import Telegraph
+import Photos
 import os
 
 struct ContentView: View {
-    let server = GCDWebUploader(uploadDirectory: FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.path)
+    let server = CRHTTPServer()
 	let socket = SocketDelegate()
     let prefix = "SMServer_app: "
     let geo_width: CGFloat = 0.6
     let font_size: CGFloat = 25
+    let identity = Bundle.main.path(forResource: "identity", ofType: "pfx")
+    let cert_pass = "smserver"
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? Array<String> ?? [String]()
@@ -74,13 +77,13 @@ struct ContentView: View {
 		
 		let num = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
 		let country = UserDefaults.standard.object(forKey: "country_code") as? String ?? ""
-		
+        
 		if country.count == 0 || num.count == 0 {
 			self.show_phone_alert = true /// Make them put in their number first
 			return
 		}
         
-        if server.isRunning {
+        if server.isListening {
             self.stopServer()
             self.debug ? self.log("Server was already running, stopped.") : nil
         }
@@ -89,25 +92,29 @@ struct ContentView: View {
         self.s.launchMobileSMS()
         
         if self.debug {
-            self.log("launched mobilesms")
+            self.log("launched MobileSMS")
         }
         
-        server.addDefaultHandler(forMethod: "GET", request: GCDWebServerRequest.self, processBlock: { request in
-            /// This handler manages the main chats page.
-            let ip = request.remoteAddressString
+        server.isSecure = true
+        server.identityPath = identity
+        server.password = cert_pass
+        
+        server.add("/") { (req, res, next) in
+            let ip = req.connection?.remoteAddress ?? ""
+            res.setValue("text/html", forHTTPHeaderField: "Content-type")
             
             if self.debug {
                 self.log("GET main: " + ip)
             }
             
-            if self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
-                return GCDWebServerDataResponse(html: self.main_page)
+            if self.checkIfAuthenticated(ras: ip) {
+                res.send(self.main_page)
             } else {
-                return GCDWebServerDataResponse(html: self.gatekeeper_page)
+                res.send(self.gatekeeper_page)
             }
-        })
+        }
         
-        server.addHandler(forMethod: "GET", path: "/requests", request: GCDWebServerRequest.self, processBlock: { request in
+        server.add("/requests") { (req, res, next) in
             /// There is no authentication handler here 'cause it handles that within parseAndReturn()
             /// since they send the password auth request to this subdirectory
             
@@ -117,211 +124,243 @@ struct ContentView: View {
                 self.log("Getting requests..")
             }
             
-            let query = request.query
+            let query = req.query
             
-            if query != nil && query?.count == 0 {
+            if query.count == 0 {
                 /// If there are no parameters, return default blank page
-                return GCDWebServerDataResponse(html: self.requests_page)
+                
+                res.setValue("text/html", forHTTPHeaderField: "Content-type")
+                res.send(self.requests_page)
             } else {
                 
-                let address = String(request.remoteAddressString.prefix(upTo: request.remoteAddressString.firstIndex(of: ":") ?? request.remoteAddressString.endIndex))
+                let address = req.connection?.remoteAddress ?? ""
                 
                 if self.debug {
                     self.log("GET /requests: \(address)")
                 }
                 
                 /// parseAndReturn() manages retrieving info for the API
-                let response = self.parseAndReturn(params: query ?? [String:String](), address: address)
+                let response = self.parseAndReturn(params: query, address: address)
                 
                 if self.debug {
                     self.log("Returning from /requests")
                 }
                 
-                return GCDWebServerDataResponse(text: response)
+                res.send(response)
             }
-        })
+        }
+        //})
 		
-		server.addHandler(forMethod: "GET", path: "/data", request: GCDWebServerRequest.self, processBlock: { request in
+        server.add("/data") { (req, res, next) in
             /// This handler returns attachment data and profile/attachment/photo images.
-			let ip = request.remoteAddressString
+            let ip = req.connection?.remoteAddress ?? ""
    
 			if self.debug {
-				self.log("GET profile: " + ip)
+				self.log("GET data: " + ip)
 			}
 			
-			if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
+			if !self.checkIfAuthenticated(ras: ip) {
                 /// Return nil if they haven't authenticated
-				return GCDWebServerDataResponse(text: "")
+                res.send("")
+                return
 			}
 			
 			if self.debug {
 				self.log("returning data")
 			}
 			
-			let f = request.query?.keys.first
+            let f = req.query.keys.first
 			
             /// Handle different types of requests
 			if f == "chat_id" {
-				return GCDWebServerDataResponse(data: ContentView.chat_delegate.returnImageData(chat_id: request.query?["chat_id"] ?? ""), contentType: "image/jpeg")
+                
+                res.setValue("image/jpeg", forHTTPHeaderField: "Content-type")
+                res.send(ContentView.chat_delegate.returnImageData(chat_id: req.query["chat_id"] ?? ""))
 			} else if f == "path" {
 				
-				let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: request.query?["path"] ?? "")
-				let type = ContentView.chat_delegate.getAttachmentType(path: request.query?["path"] ?? "")
+                let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
+                let type = ContentView.chat_delegate.getAttachmentType(path: req.query["path"] ?? "")
 				
-				return GCDWebServerDataResponse(data: dataResponse, contentType: type)
+                res.setValue(type, forHTTPHeaderField: "Content-type")
+                res.send(dataResponse)
 			} else if f == "photo" {
-				return GCDWebServerDataResponse(data: ContentView.chat_delegate.getPhotoDatafromPath(path: request.query?["photo"] ?? ""), contentType: "image/png")
-			}
+
+                res.setValue("image/png", forHTTPHeaderField: "Content-type")
+                res.send(ContentView.chat_delegate.getPhotoDatafromPath(path: req.query["photo"] ?? ""))
+            } else {
 			
-            //if they don't have any of the above parameters, return nothing.
-			return GCDWebServerDataResponse(data: Data.init(capacity: 0), contentType: "")
-		})
+                //if they don't have any of the above parameters, return nothing.
+                res.send("")
+            }
+        }
         
-        server.addHandler(forMethod: "POST", path: "/send", request: GCDWebServerMultiPartFormRequest.self, processBlock: { request in
+        server.add("/send") { (req, res, next) in
             /// This handles a post request to send a text
-            let ip = request.remoteAddressString
+            let ip = req.connection?.remoteAddress ?? ""
             
             if self.debug {
                 self.log("POST uploads: " + ip)
             }
             
-            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
-                return GCDWebServerDataResponse(text: "")
+            if !self.checkIfAuthenticated(ras: ip) {
+                res.send("")
+                return
             }
             
             /// send text
-            let send = self.sendText(req: (request as! GCDWebServerMultiPartFormRequest))
+            let params = req.body as! Dictionary<String, Any> /// That's what is
+            var files_to_fix = [CRUploadedFile]()
+            var files = [String]()
+            
+            if let f = req.files?["attachments"] as? [CRUploadedFile] {
+                for i in f {
+                    files_to_fix.append(i)
+                }
+            } else if let f = req.files?["attachments"] as? CRUploadedFile {
+                files_to_fix.append(f)
+            }
+            
+            let fm = FileManager.default
+            
+            for file in files_to_fix {
+                do {
+                    /// get info about uploaded file
+                    let attr = try fm.attributesOfItem(atPath: file.temporaryFileURL.path)
+                    let fileSize = attr[FileAttributeKey.size] as! UInt64
+                    
+                    /// Don't send file if it is empty; fixes an issue where it would sometimes think null files were being uploaded?
+                    if fileSize == 0 { continue }
+                } catch {
+                    self.log("couldn't get filesize")
+                }
+                
+                let temp = file.temporaryFileURL.path
+                let newFilePath = temp.prefix(upTo: temp.lastIndex(of: "/") ?? temp.endIndex) + "/" + file.name.replacingOccurrences(of: " ", with: "_")
+                
+                /// Move file from temporary path to new type so that it displays original name and extension when sent
+                if fm.fileExists(atPath: newFilePath) {
+                    do {
+                        try fm.removeItem(atPath: newFilePath)
+                    } catch {
+                        self.log("Couldn't remove file from path: \(newFilePath), for whatever reason")
+                    }
+                }
+                do {
+                    try fm.moveItem(at: file.temporaryFileURL, to: URL(fileURLWithPath: newFilePath))
+                } catch {
+                    self.log("failed to move file; won't send text")
+                }
+                
+                /// Append to files array
+                files.append(newFilePath)
+            }
+            
+            let send = self.sendText(params: params, new_files: files)
             
             if self.debug {
                 self.log("Returning from sending text")
             }
             
-			return GCDWebServerDataResponse(text: send ? "true" : "false")
-        })
+            res.send(send ? "true" : "false")
+        }
         
-        server.addHandler(forMethod: "GET", path: "/style.css", request: GCDWebServerRequest.self, processBlock: { request in
+        server.add("/style.css") { (req, res, next) in
             /// Returns the style.css file as text
-            let ip = request.remoteAddressString
+            let ip = req.connection?.remoteAddress ?? ""
             
             if self.debug {
                 self.log("GET style.css: \(ip)")
             }
             
-            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
-                return GCDWebServerDataResponse(text: "")
+            if !self.checkIfAuthenticated(ras: ip) {
+                res.send("")
+                return
             }
             
-            return GCDWebServerDataResponse(text: self.main_page_style)
-        })
+            res.send(self.main_page_style)
+        }
         
-        server.addHandler(forMethod: "GET", path: "/custom.css", request: GCDWebServerRequest.self, processBlock: { request in
+        server.add("/custom.css") { (req, res, next) in
             /// Returns the custom css file as text
-            let ip = request.remoteAddressString
+            let ip = req.connection?.remoteAddress ?? ""
             
             if self.debug {
                 self.log("GET /custom.css: \(ip)")
             }
             
-            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
-                return GCDWebServerDataResponse(text: "")
+            if !self.checkIfAuthenticated(ras: ip) {
+                res.send("")
+                return
             }
             
-            return GCDWebServerDataResponse(text: self.custom_style)
-        })
+            res.send(self.custom_style)
+        }
         
-        server.addHandler(forMethod: "GET", path: "/light.css", request: GCDWebServerRequest.self, processBlock: { request in
+        server.add("/light.css") { (req, res, next) in
             /// returns the light theme css file as text
-            let ip = request.remoteAddressString
+            let ip = req.connection?.remoteAddress ?? ""
             
             if self.debug {
                 self.log("GET /light.css: \(ip)")
             }
             
-            if !self.checkIfAuthenticated(ras: String(ip.prefix(upTo: ip.firstIndex(of: ":") ?? ip.endIndex))) {
-                return GCDWebServerDataResponse(text: "")
+            if !self.checkIfAuthenticated(ras: ip) {
+                res.send("")
+                return
             }
             
-            return GCDWebServerDataResponse(text: self.light_style)
-        })
+            res.send(self.light_style)
+        }
         
-        server.addHandler(forMethod: "GET", path: "/favicon.ico", request: GCDWebServerRequest.self, processBlock: { request in
+        server.add("/favicon.ico") { (req, res, next) in
             /// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
-            let photo = UIImage(named: "icon")
-            let data = photo?.pngData()            
-            return GCDWebServerDataResponse(data: data ?? Data.init(capacity: 0), contentType: "image/png")
-        })
+            let data = UIImage(named: "icon")?.pngData()
+            res.setValue("image/png", forHTTPHeaderField: "Content-type")
+            res.send(data)
+        }
         
         if self.debug {
             self.log("Got past adding all the handlers.")
         }
         
-        do {
-            /// Start the server
-            let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-            try server.start(options: ["Port": UInt(port) ?? UInt(8741), "BonjourName": "GCD Web Server", "AutomaticallySuspendInBackground": false])
-        } catch {
-            self.log("failed to start server. Try again or try reinstalling.")
-        }
+        let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
+        server.startListening(nil, portNumber: UInt(port) ?? 8741)
 		
         /// Start the websocket
 		socket.startServer(port: self.socket_port)
 		
-        self.server_running = server.isRunning
+        self.server_running = server.isListening
         
         if self.debug {
             self.log("Successfully started server and launched MobileSMS")
         }
     }
     
-    func sendText(req: GCDWebServerMultiPartFormRequest) -> Bool {
+    func sendText(params: [String:Any], new_files: [String]) -> Bool {
         
         var body = ""
         var address = ""
-        var files = [String]()
+        var subject = ""
+        var files = new_files
         
         /// Get text and body of the text
-        for i in Array(req.arguments) {
-            if (i.string?.prefix(5) == "text:") {
-				body = String(i.string?.suffix(i.string!.count - 5) ?? "")
-            } else if (i.string?.prefix(5) == "chat:") {
-				address = String(i.string?.suffix(i.string!.count - 5) ?? "")
-            }
-        }
-        
-        let fm = FileManager.default
-        
-        for i in req.files {
-            do {
-                /// get info about uploaded file
-                let attr = try fm.attributesOfItem(atPath: i.temporaryPath)
-                let fileSize = attr[FileAttributeKey.size] as! UInt64
-                
-                /// Don't send file if it is empty; fixes an issue where it would sometimes think null files were being uploaded?
-                if fileSize == 0 { continue }
-            } catch {
-                self.log("couldn't get filesize")
-            }
-            
-            /// newFilePath = same directory, but with original file name + original file extension.
-            let newFilePath = String(i.temporaryPath.prefix(upTo: i.temporaryPath.lastIndex(of: "/") ?? i.temporaryPath.endIndex) + "/" + i.fileName).replacingOccurrences(of: " ", with: "_") /// I don't like spaces in file names. Also could cause bad behavior (I think?)
-            
-            /// Move file from temporary path to new type so that it displays original name and extension when sent
-            if fm.fileExists(atPath: newFilePath) {
-                do {
-                    try fm.removeItem(atPath: newFilePath)
-                } catch {
-                    self.log("Couldn't remove file from path: \(newFilePath), for whatever reason")
+        for (key, value) in params {
+            if let val = value as? String {
+                if key == "text" {
+                    body = String(val.suffix(val.count - 5))
+                } else if key == "chat" {
+                    address = String(val.suffix(val.count - 5))
+                } else if key == "subject" {
+                    subject = val
+                } else if key == "photos" {
+                    let ph = val.split(separator: ":")
+                    if ph.count > 0 {
+                        for i in ph {
+                            if i != "photos" { files.append(String(val)) }
+                        }
+                    }
                 }
             }
-            do {
-                try FileManager.default.moveItem(at: URL(fileURLWithPath: i.temporaryPath), to: URL(fileURLWithPath: newFilePath))
-            } catch {
-                self.log("failed to move file; won't send text")
-                return false
-            }
-            
-            /// Append to files array
-            files.append(newFilePath)
         }
 		
 		if !(address.contains("@") || address.prefix(1) == "+" || address.prefix(4) == "chat") {
@@ -351,7 +390,6 @@ struct ContentView: View {
         if !(body == "" && files.count == 0) {
             /// Send text!!
             self.s.sendIPCText(body, toAddress: address, withAttachments: files)
-			//self.setNewestTexts(address)
 			
             return true
         } else {
@@ -540,6 +578,10 @@ struct ContentView: View {
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
             }
+            
+            if !(person.contains("@") || person.prefix(4) == "chat" || person.prefix(1) == "+") { /// Add plus at the beginning 'cause the server doesn't seem to be able to parse them.
+                person = "+" + person.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
 			
             let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
             let texts = encodeToJson(object: texts_array, title: "texts")
@@ -563,9 +605,7 @@ struct ContentView: View {
             
             let chats_array = ContentView.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
             let chats = encodeToJson(object: chats_array, title: "chats")
-            /*DispatchQueue.main.async {
-                ContentView.chat_delegate.setFirstTexts(address: address);
-            }*/
+            
             return chats
             
         } else if f == "name" {
@@ -619,20 +659,19 @@ struct ContentView: View {
     func stopServer() {
         /// Stops the server & and de-authenticates all ip addresses
         
-        self.server.stop()
+        self.server.stopListening()
 		socket.stopServer()
         if self.debug {
             self.log("Stopped Server")
         }
         self.authenticated_addresses = [String]()
-        server_running = server.isRunning
+        server_running = server.isListening
     }
 	
 	func loadFuncs() {
 		/// All the functions that run on scene load
 		
 		self.loadFiles()
-		//(UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false && !self.server.isRunning) ? self.loadServer(port_num: UInt16(self.port) ?? UInt16(8741)) : nil
 		
 		self.has_root = self.s.setUID() == uid_t(0)
         
@@ -648,6 +687,14 @@ struct ContentView: View {
 		
 		show_phone_alert = !shown_phone_alert
 		UserDefaults.standard.setValue(true, forKey: "shown_phone_alert")
+        
+        if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
+            PHPhotoLibrary.requestAuthorization({ auth in
+                if auth != PHAuthorizationStatus.authorized {
+                    self.log("App is not authorized to view photos. Please grant access.")
+                }
+            })
+        }
 	}
     
     func getWiFiAddress() -> String? {
