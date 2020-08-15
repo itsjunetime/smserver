@@ -1,5 +1,11 @@
 # Changelog
 
+0.3.0-1+debug -> 0.3.1
+ - Change api specifications for sending text
+ - Removed requirement for inputting phone numbers
+ - Added option to disable SSL/HTTPS
+ - Better parsing of phone numbers for sending and checking texts
+
 0.2.0-20+debug -> 0.3.0-1+debug
  - Changed from GCDWebServer framework to my forked branch of Criollo
  - Implemented HTTPS
