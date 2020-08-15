@@ -21,6 +21,7 @@ struct ContentView: View {
 	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
 	@State var shown_phone_alert: Bool = UserDefaults.standard.object(forKey: "shown_phone_alert")  as? Bool ?? false
     @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
+    @State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
 	
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -95,9 +96,11 @@ struct ContentView: View {
             self.log("launched MobileSMS")
         }
         
-        server.isSecure = true
-        server.identityPath = identity
-        server.password = cert_pass
+        if UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true {
+            server.isSecure = true
+            server.identityPath = identity
+            server.password = cert_pass
+        }
         
         server.add("/") { (req, res, next) in
             let ip = req.connection?.remoteAddress ?? ""
@@ -149,7 +152,6 @@ struct ContentView: View {
                 res.send(response)
             }
         }
-        //})
 		
         server.add("/data") { (req, res, next) in
             /// This handler returns attachment data and profile/attachment/photo images.
@@ -347,9 +349,9 @@ struct ContentView: View {
         for (key, value) in params {
             if let val = value as? String {
                 if key == "text" {
-                    body = String(val.suffix(val.count - 5))
+                    body = val
                 } else if key == "chat" {
-                    address = String(val.suffix(val.count - 5))
+                    address = val
                 } else if key == "subject" {
                     subject = val
                 } else if key == "photos" {
@@ -362,27 +364,8 @@ struct ContentView: View {
                 }
             }
         }
-		
-		if !(address.contains("@") || address.prefix(1) == "+" || address.prefix(4) == "chat") {
-			/// This is the only area where your phone number is actually used
-			/// It checks the phone number that the text is being sent to and adds the '+'/country code/area code onto it if they are not included
-			
-			let full_number: String = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
-			let area_code: String = UserDefaults.standard.object(forKey: "area_code") as? String ?? "" /// NYC?
-			let country_code: String = UserDefaults.standard.object(forKey: "country_code") as? String ?? "" /// US
-			
-			address = address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-			
-			if !(address.count < full_number.count) {
-				if address.count == full_number.count {
-					address = "+" + country_code + area_code + address
-				} else if address.count == (area_code + full_number).count {
-					address = "+" + country_code + address
-				} else if address.count == (country_code + area_code + full_number).count {
-					address = "+" + address
-				}
-			}
-		} else if address.prefix(1) == "+" { /// Make sure there are no unnecessary characters like parenthesis
+        
+        if address.prefix(1) == "+" { /// Make sure there are no unnecessary characters like parenthesis
 			address = "+" + address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
 		}
         
@@ -476,7 +459,7 @@ struct ContentView: View {
     
     func setNewestTexts(_ chat_id: String) -> Void {
         /// Is called when you receive a new text; basically stores it so it can let you know when you ping and also tells the socket to ping all clients
-        //ContentView.chat_delegate.setNewTexts(chat_id)
+        
 		socket.sendNewText(info: chat_id)
     }
     
@@ -577,10 +560,6 @@ struct ContentView: View {
             
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
-            }
-            
-            if !(person.contains("@") || person.prefix(4) == "chat" || person.prefix(1) == "+") { /// Add plus at the beginning 'cause the server doesn't seem to be able to parse them.
-                person = "+" + person.trimmingCharacters(in: .whitespacesAndNewlines)
             }
 			
             let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
@@ -832,7 +811,7 @@ struct ContentView: View {
             .padding(.top, 14)
             
             if self.getWiFiAddress() != nil {
-                Text("Visit \(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
+                Text("Visit http\(secure ? "s" : "")://\(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
                     .font(Font.custom("smallTitle", size: 22))
                     .padding()
             } else {

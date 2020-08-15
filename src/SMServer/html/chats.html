@@ -18,6 +18,7 @@
             var has_shown_warning = false;
             var has_shown_camera_roll = false;
             var notifications = false;
+            var has_shown_new_warning = false;
 
             var items = "";
             var new_items = "";
@@ -271,7 +272,8 @@
                 }
 
                 var hiddenchatbox = document.getElementById("hiddenchatbox");
-                hiddenchatbox.setAttribute("value", "chat:" + chat_id);
+                //hiddenchatbox.setAttribute("value", "chat:" + chat_id);
+                hiddenchatbox.setAttribute("value", chat_id);
 
                 var orig_btn = document.getElementById(chat_id);
                 orig_btn.setAttribute("class", "selected");
@@ -450,7 +452,8 @@
                 var oldval = tbox.value;
 
                 var hta = document.getElementById("hiddentextarea")
-                hta.value = "text:" + oldval;
+                ///hta.value = "text:" + oldval;
+                hta.value = oldval;
 
                 var photos = document.getElementById("hiddenphotobutton");
                 var selected = document.getElementsByClassName("selected-photos");
@@ -494,11 +497,13 @@
                 var oldval = tbox.value;
 
                 var hta = document.getElementById("hiddenComposeTextArea");
-                hta.value = "text:" + oldval;
+                //hta.value = "text:" + oldval;
+                hta.value = oldval;
 
                 var cbox = document.getElementById("composeAddressBox");
                 var coldval = cbox.value;
-                cbox.value = "chat:" + coldval;
+                //cbox.value = "chat:" + coldval;
+                cbox.value = coldval
 
                 form.submit();
 
@@ -524,6 +529,11 @@
 
             function showPopup() {
                 document.getElementById("popup").style.display = "block";
+
+                if (!has_shown_new_warning) {
+                    alert("IMPORTANT: When using the compose box, you must type in the full phone number of the recipient, including a plus sign (+) before the country code. See hint for example.")
+                    self.has_shown_new_warning = true;
+                }
             }
 
             function hidePopup() {
@@ -531,7 +541,8 @@
                 pop.style.display = "none";
             }
 
-            let socket = new WebSocket('wss://' + socket_address + ':' + socket_port)
+            let socket_prefix = location.protocol === 'https:' ? "wss://" : "ws://";
+            let socket = new WebSocket(socket_prefix + socket_address + ':' + socket_port)
 
             socket.onopen = function() {
                 socket.send("connected")

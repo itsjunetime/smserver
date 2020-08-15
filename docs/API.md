@@ -127,13 +127,11 @@ At least one file needs to be sent with each request, or the app crashes. This i
 
 ### text
 
-This argument contains the body of the text you want to send, with the string 'text:' prepended onto it. For example, if you wanted to send 'Hello world!', you'd need to make this value of this argument be 'text:Hello world!'
-
-This parameter is not necessary for every request
+This argument contains the body of the text you want to send. This parameter is not necessary for every request
 
 ## chat
 
-This argument contains the chat_identifier of the recipient, specified as in the `person` parameter above, with the string 'chat:' prepended onto it. For example, if I wanted to send a text to the phone number '+15001001000', the value for this parameter would need to be 'chat:+15001001000'. Before +debug77, these could only be an address for an existing conversation, but with version +debug77 of SMServer (and +debug85 of libsmserver), you can post requests for new conversations; new conversations do not yet support attachments, though.
+This argument contains the chat_identifier of the recipient, specified as in the `person` parameter above. Before 0.1.0+debug77, these could only be an address for an existing conversation, but with version 0.1.0+debug77 of SMServer (and 0.1.0-85+debug of libsmserver), you can post requests for new conversations; new conversations do not yet support attachments, though.
 
 This parameter is necessary for every request, or else the app won't know who to send the text to. Also, plus signs should not be replaced with an escape character for these requests; they should stay plus signs.
 
@@ -149,7 +147,7 @@ Sending a text with no attachments:
 ```python
 from requests import post
 
-vals = {'text': 'text:Hello world!', 'chat': 'chat:email@email.org'}
+vals = {'text': 'Hello world!', 'chat': 'email@email.org'}
 url = 'http://192.168.0.127:8741/send'
 
 # The files is still included in the next line 'cause the app crashes if the files parameter is null/empty (dunno why). No files are actually sent with this example, though.
@@ -160,7 +158,7 @@ Sending an attachment with no text:
 ```python
 from requests import post
 
-vals = {'chat': 'chat:+13020499949'}
+vals = {'chat': '+13020499949'}
 
 # file is a tuple, with the first val being the file name, the second being an open operator on the file, and the third being the mimetype.
 file = ('image.jpeg', open('/home/user/Pictures/image.jpeg', 'rb'), 'image/jpeg')
