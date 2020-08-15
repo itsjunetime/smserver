@@ -7,7 +7,8 @@ class SocketDelegate : ServerWebSocketDelegate {
 	
     static let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
     static let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: "smserver")
-    let server = Server(identity: SocketDelegate.identity!, caCertificates: [SocketDelegate.cert!])
+    //let server = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true ? Server(identity: SocketDelegate.identity!, caCertificates: [SocketDelegate.cert!]) : Server()
+    var server: Server? = nil
 	var watcher: IPCTextWatcher? = nil
 	var authenticated_addresses = [String]()
 	var verify_auth: (String)->(Bool) = { _ in return false } /// nil init
@@ -20,17 +21,23 @@ class SocketDelegate : ServerWebSocketDelegate {
 	}
 	
 	func startServer(port: Int) {
-		server.webSocketDelegate = self
+        if UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true {
+            self.server = Server(identity: SocketDelegate.identity!, caCertificates: [SocketDelegate.cert!])
+        } else {
+            self.server = Server()
+        }
+        
+        server?.webSocketDelegate = self
 		
-		try! server.start(port: port)
+        try! server?.start(port: port)
 	}
 	
 	func stopServer() {
-		server.stop()
+        server?.stop()
 	}
 	
 	func sendTyping(chat: String) {
-		for i in server.webSockets {
+        for i in server!.webSockets {
 			i.send(text: "typing:" + chat)
 		}
 	}
@@ -38,14 +45,14 @@ class SocketDelegate : ServerWebSocketDelegate {
 	func sendNewBattery(notification: NSNotification) {
 		let percent = UIDevice.current.batteryLevel * 100
 		
-		for i in server.webSockets {
+        for i in server!.webSockets {
 			i.send(text: "battery:" + String(percent))
 		}
 	}
 	
 	func sendNewText(info: String) {
         /// If we received a new text
-		for i in server.webSockets {
+        for i in server!.webSockets {
 			i.send(text: "text:" + info)
 		}
 	}
@@ -56,14 +63,17 @@ class SocketDelegate : ServerWebSocketDelegate {
 	
 	func server(_ server: Server, webSocketDidConnect webSocket: WebSocket, handshake: HTTPRequest) {
 		// A web socket connected, you can extract additional information from the handshake request
+        
+        self.log("\(webSocket.remoteEndpoint?.host ?? "") is trying to connect...")
 		
 		if !verify_auth(webSocket.remoteEndpoint?.host ?? "") {
+            self.log("\(webSocket.remoteEndpoint?.host ?? "") is not verified. Disconnecting.")
 			webSocket.close(immediately: true)
 		}
 		
-		let battery_level = UIDevice.current.batteryLevel * 100
+		/*let battery_level = UIDevice.current.batteryLevel * 100
 		
-		webSocket.send(text: "battery:\(String(battery_level))")
+		webSocket.send(text: "battery:\(String(battery_level))")*/
 
 		/// Backgrounding doesn't work with the next line uncommented
 		//NotificationCenter.default.addObserver(self, selector: Selector(("sendNewBattery:")), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
@@ -71,14 +81,14 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
 		// One of our web sockets disconnected
+        self.log("Socket disconnected")
 	}
 
 	func server(_ server: Server, webSocket: WebSocket, didReceiveMessage message: WebSocketMessage) {
 		// One of our web sockets sent us a message
-	}
-
-	func server(_ server: Server, webSocket: WebSocket, didSendMessage message: WebSocketMessage) {
-		// We sent one of our web sockets a message (often you won't need to implement this one)
+        if message.payload.data != nil {
+            self.log("Received message: \(String(describing: message.payload.data))")
+        }
 	}
 }
 
