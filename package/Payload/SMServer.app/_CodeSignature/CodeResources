@@ -14,11 +14,11 @@
 		</data>
 		<key>Assets.car</key>
 		<data>
-		ARdQ/n3A7K3HhLRHe9iGEoCxIq8=
+		/9cjCfjYv+HM4H8Sxgmf0RaXahw=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<data>
-		i/dHqY8ZoDq/vC7UxjJL3iwMk2M=
+		LfBthr5q4O1hY950p2XNKvsWZS0=
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
 		<data>
@@ -26,11 +26,11 @@
 		</data>
 		<key>Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib</key>
 		<data>
-		swYUSDDC3p4v8THtL3/qX6gfn30=
+		mGxsKvcDylIXwnjF8bGRyEJ4LvE=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<data>
-		TcYr54XCFgU3Lklh7C6Wchvk5s4=
+		IU17vZ+op63Zi68oLluh8i8Q+4M=
 		</data>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
 		<data>
@@ -42,7 +42,7 @@
 		</data>
 		<key>Frameworks/Criollo.framework/Criollo</key>
 		<data>
-		Abjs147skT0U9Lym7rybX4XnUgg=
+		smSOs2yTqvPXtFErUeJ9JOXE4W8=
 		</data>
 		<key>Frameworks/Criollo.framework/Info.plist</key>
 		<data>
@@ -54,7 +54,7 @@
 		</data>
 		<key>Frameworks/HTTPParserC.framework/HTTPParserC</key>
 		<data>
-		QT3OeOHh1QDH8dhtjUAXcGx6gf4=
+		lOu+25aCwzG3WM7O0d9M7qyAzqs=
 		</data>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
 		<data>
@@ -90,7 +90,7 @@
 		</data>
 		<key>Frameworks/Pods_SMServer.framework/_CodeSignature/CodeSignature</key>
 		<data>
-		fgOWUaloKhW/EJZSSUEhI+SexMk=
+		vKwaZmfLpEkcaMRdOHmxImmIu3o=
 		</data>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
 		<data>
@@ -98,7 +98,7 @@
 		</data>
 		<key>Frameworks/Telegraph.framework/Telegraph</key>
 		<data>
-		CQgElIR6k/+2Cta3t8NJLAvmPQw=
+		Uhs3MkqJv4oyYE5Jd4iNhIqAp9s=
 		</data>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
 		<data>
@@ -106,7 +106,7 @@
 		</data>
 		<key>Frameworks/libmryipce.dylib</key>
 		<data>
-		OTBAG6fT5t5SRLCLc8Kvb0Hl8Pw=
+		yJMeMSsOLywBwhe9pl4Q6sDWcqk=
 		</data>
 		<key>Info.plist</key>
 		<data>
@@ -126,7 +126,7 @@
 		</data>
 		<key>html/chats.html</key>
 		<data>
-		f8bjJrAzVw2tJ1Vg6qwL8u39uvU=
+		glovOBcpUUBkDJq8Y+0BC/K6W2Y=
 		</data>
 		<key>html/custom.css</key>
 		<data>
@@ -134,7 +134,7 @@
 		</data>
 		<key>html/gatekeeper.html</key>
 		<data>
-		SEpQZpfFi+tLMiE7sLkLeHazF0w=
+		Db2NrsilQCYRpn4L1oVOksEjn8U=
 		</data>
 		<key>html/light_theme.css</key>
 		<data>
@@ -173,14 +173,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			mt6AbhB/FUOqm3T52BYpCH4m7w+rYnucu6xuUbK+BgA=
+			e1N5NgaKPw+9Ua/PazHPMt6C4YodIWncQW5gEN9+wdA=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			330S7qte6Rmzx/9HUNdI+lvJFRlaxD/r0JXhyYpktvk=
+			KZ7B7RED5GSmWJ67oOObW7GBZuLpE8oI/UteI7BeGqE=
 			</data>
 		</dict>
 		<key>Base.lproj/LaunchScreen.storyboardc/Info.plist</key>
@@ -194,14 +194,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			evmz1JOSos9u7nEGzpGj15qVSnUWJYw9NJsjU7MgipM=
+			m9kwrSh762R+y80S+f+XPpj/0fvMGIls3gdb0HhN5Wk=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			AXdS6nKj/Jgfdk212Wuf7LP8RNDne+Y7gmNwPikzRJ4=
+			lbuP8v1X1374fP8zKHpqDMZhSTS2G8UbzUeh51X/Qxg=
 			</data>
 		</dict>
 		<key>Frameworks/CocoaAsyncSocket.framework/Info.plist</key>
@@ -222,7 +222,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			p5KN7LyPUXihFTJXmOqnLBchOho17wkiOHbqTfLq6Hg=
+			oDEcSrZ+BwD6epG5RkYB1V+FIY3Z0V4HhvM/1NE0a4w=
 			</data>
 		</dict>
 		<key>Frameworks/Criollo.framework/Info.plist</key>
@@ -243,7 +243,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			hR+0Lfk29jv+1ZjLJNYwnYX5XyxFcSHGUtLUXcSljcQ=
+			RqLihkAdezq3YcVGBbEQPPU6OehCtEVFgTnIltv0qvw=
 			</data>
 		</dict>
 		<key>Frameworks/HTTPParserC.framework/Info.plist</key>
@@ -306,7 +306,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			FBSkO33jXp/dwDXf6I9vZ4DQEoAueS8Ry9POS6VV0fU=
+			1/q/UbJYEy9NdiZxWxYog7JpG9KwF9Iw2jF0ZNN3mQA=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/Info.plist</key>
@@ -320,7 +320,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			t9SUkOqHfXdFOjTJxm6b0WWMwky98eocz3u1enJYZl8=
+			RCBVwcMNGX5/5e9qXNGpLd9GYylEiWt5XPtTVI6GG20=
 			</data>
 		</dict>
 		<key>Frameworks/Telegraph.framework/_CodeSignature/CodeResources</key>
@@ -334,7 +334,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			6djHWRd0nqdHS9tWRHctgOs9/mymLqpoCY3RDSO2EoY=
+			aNF7gTzaKWWrX0WGvPU1LDo0LRpq/jVCqE4ygipWAbw=
 			</data>
 		</dict>
 		<key>cert.der</key>
@@ -355,7 +355,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			8qhPu9SnG+8YOE3oSim6CeAMX2bX2D4zfM7YfdT80+I=
+			VfuYnzJr77iUD2cXyR366NQnvA6PhlhNTNMyk8f9PRQ=
 			</data>
 		</dict>
 		<key>html/custom.css</key>
@@ -369,7 +369,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ll0P4PAoHWYKZPWLrF9yyP4kCBueTioGfUUyqXx92jQ=
+			PrxCYp9/t85rnNsdgUAwirS2Lk4plXNY4/Wa8xh+go4=
 			</data>
 		</dict>
 		<key>html/light_theme.css</key>

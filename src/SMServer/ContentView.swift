@@ -19,7 +19,6 @@ struct ContentView: View {
     @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
     @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
 	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
-	@State var shown_phone_alert: Bool = UserDefaults.standard.object(forKey: "shown_phone_alert")  as? Bool ?? false
     @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
     @State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
 	
@@ -30,7 +29,6 @@ struct ContentView: View {
     @State var alert_connected = false
     @State var has_root = false
     @State var show_picker = false
-	@State var show_phone_alert = false
     
     static let chat_delegate = ChatDelegate()
     @State var s = Sender()
@@ -75,14 +73,6 @@ struct ContentView: View {
         /// This starts the server at port $port_num
         
         self.debug ? self.log("Loading server at port \(String(port_num))") : nil
-		
-		let num = UserDefaults.standard.object(forKey: "full_number") as? String ?? ""
-		let country = UserDefaults.standard.object(forKey: "country_code") as? String ?? ""
-        
-		if country.count == 0 || num.count == 0 {
-			self.show_phone_alert = true /// Make them put in their number first
-			return
-		}
         
         if server.isListening {
             self.stopServer()
@@ -279,6 +269,7 @@ struct ContentView: View {
                 return
             }
             
+            res.setValue("text/css", forHTTPHeaderField: "Content-type")
             res.send(self.main_page_style)
         }
         
@@ -295,6 +286,7 @@ struct ContentView: View {
                 return
             }
             
+            res.setValue("text/css", forHTTPHeaderField: "Content-type")
             res.send(self.custom_style)
         }
         
@@ -311,12 +303,13 @@ struct ContentView: View {
                 return
             }
             
+            res.setValue("text/css", forHTTPHeaderField: "Content-type")
             res.send(self.light_style)
         }
         
         server.add("/favicon.ico") { (req, res, next) in
             /// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
-            let data = UIImage(named: "icon")?.pngData()
+            let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
             res.setValue("image/png", forHTTPHeaderField: "Content-type")
             res.send(data)
         }
@@ -663,9 +656,6 @@ struct ContentView: View {
 		socket.verify_auth = self.checkIfAuthenticated
 		
 		UIDevice.current.isBatteryMonitoringEnabled	= true
-		
-		show_phone_alert = !shown_phone_alert
-		UserDefaults.standard.setValue(true, forKey: "shown_phone_alert")
         
         if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
             PHPhotoLibrary.requestAuthorization({ auth in
@@ -938,9 +928,6 @@ struct ContentView: View {
         }.onAppear() {
             self.loadFuncs()
         }
-		.alert(isPresented: $show_phone_alert, content: {
-			Alert(title: Text("To finish setup"), message: Text("Please enter your phone number in the settings section of this app. This is necessary to add your country/area code onto new conversations if they don't include it."))
-		})
         .background(Color(UIColor.secondarySystemBackground))
         .edgesIgnoringSafeArea(.all)
     }
