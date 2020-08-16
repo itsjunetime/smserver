@@ -1,5 +1,12 @@
 # Changelog
 
+0.3.1 -> 0.3.2
+ - Updated notifications to show more information
+ - Fixed issue with favicon not showing
+ - Fixed issue with app still requiring one to enter phone number
+ - Updated Content-type of CSS pages to `text/css`
+ - Fixed issue with new texts not displaying properly
+
 0.3.0-1+debug -> 0.3.1
  - Change api specifications for sending text
  - Removed requirement for inputting phone numbers
