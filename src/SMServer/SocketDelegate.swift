@@ -52,9 +52,11 @@ class SocketDelegate : ServerWebSocketDelegate {
 	
 	func sendNewText(info: String) {
         /// If we received a new text
-        for i in server!.webSockets {
-			i.send(text: "text:" + info)
-		}
+        if server != nil && server!.webSockets.count > 0 {
+            for i in server!.webSockets {
+                i.send(text: "text:" + info)
+            }
+        }
 	}
 	
 	func sendNewWifi() {
