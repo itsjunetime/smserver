@@ -1,6 +1,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?" />
         <title>
             Messages
         </title>
@@ -19,12 +20,14 @@
             var has_shown_camera_roll = false;
             var notifications = false;
             var has_shown_new_warning = false;
+            var window_is_focused = true;
 
             var items = "";
             var new_items = "";
             var shown_name = "";
             var texts = "";
             var image_string = "";
+            var current_chat_id = "";
 
             var doc_url = window.location.href.split('/')[2].split(':')[0];
             var socket_address = doc_url
@@ -120,7 +123,7 @@
                 return b;
             }
 
-            async function getLatestText(chat = document.getElementsByClassName("title-content")[0].id) {
+            async function getLatestText(chat = current_chat_id) {
                 if (debug) { console.log("Getting latest text for chat " + chat); }
                 var text;
                 var fixed_chat = chat.replace("+", "%2B");
@@ -300,7 +303,9 @@
                 var chat_title = document.getElementById(chat_id).getElementsByClassName("chat-name")[0];
                 var title_doc = document.getElementsByClassName("title-content")[0];
                 title_doc.innerHTML = "<p>" + chat_title.innerHTML + "</p>"
-                title_doc.setAttribute("id", chat_id);
+                //title_doc.setAttribute("id", chat_id);
+
+                current_chat_id = chat_id
 
                 var img = document.createElement("img");
                 img.src = prefix + "/data?chat_id=" + chat_id.replace("+", "%2B");
@@ -356,7 +361,8 @@
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
                 if (debug) { console.log("called getMoreText; num == " + num_texts); }
-                var chat_id = document.getElementsByClassName("title-content")[0].id
+                //var chat_id = document.getElementsByClassName("title-content")[0].id
+                var chat_id = current_chat_id;
                 
                 var new_chat_id = chat_id.replace("+", "%2B");
                 let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts;
@@ -485,7 +491,8 @@
                 box.appendChild(t);
                 t.scrollIntoView();
                 
-                setChatAsTop(document.getElementsByClassName("title-content")[0].id, oldval);
+                //setChatAsTop(document.getElementsByClassName("title-content")[0].id, oldval);
+                setChatAsTop(current_chat_id, oldval);
             }
 
             async function sendComposeForm() {
@@ -583,8 +590,32 @@
             async function processNewText(chat) {
                 if (debug) { console.log("received new text from " + chat); }
 
-                if (window.Notification && Notification.permission === "granted") {
-                    var n = new Notification("SMServer", { body: "New text from " + chat, icon: '/favicon.ico'});
+                var new_text = "";
+                var name = "";
+
+                if (window.Notification && Notification.permission === "granted" && !window_is_focused) {
+                    var url = prefix + "/requests?person=" + chat.replace("+", "%2B") + "&num=1";
+                    const fetch_newest_text = await fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("HTTP error " + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(json => {
+                        new_text = (json.texts)[0].text
+                        return new_text
+                    })
+                    .catch(function () {
+                        has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                        has_shown_warning = true
+                        this.dataError = true;
+                    }) 
+
+                    var _ = await fetch_newest_text;
+                    name = getTextFromURL(prefix + '/requests?name=' + chat.replace("+", "%2B"))
+
+                    var n = new Notification(name, { body: new_text, icon: '/favicon.ico'});
                 }
 
                 if (chat.length != 0) {
@@ -595,32 +626,34 @@
                             setChatAsTop(chat)
                         }
                     } else {
-                        var new_text;
-                        var url = prefix + "/requests?person=" + chat.replace("+", "%2B") + "&num=1";
-                        const fetch_newest_text = await fetch(url)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error("HTTP error " + response.status);
-                            }
-                            return response.json();
-                        })
-                        .then(json => {
-                            new_text = (json.texts)
-                            return new_text
-                        })
-                        .catch(function () {
-                            has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
-                            has_shown_warning = true
-                            this.dataError = true;
-                        })
 
-                        var _ = await fetch_newest_text;
+                        if (new_text === "") {
+                            var url = prefix + "/requests?person=" + chat.replace("+", "%2B") + "&num=1";
+                            const fetch_newest_text = await fetch(url)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error("HTTP error " + response.status);
+                                }
+                                return response.json();
+                            })
+                            .then(json => {
+                                new_text = (json.texts)[0].text
+                                return new_text
+                            })
+                            .catch(function () {
+                                has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                                has_shown_warning = true
+                                this.dataError = true;
+                            })
 
-                        var btn = document.getElementsByClassName("chats-list")[0].getElementById(chat).getElementsByClassName("chat-text")[0];
+                            var _ = await fetch_newest_text;
+                        }
+
+                        var btn = document.getElementById(chat).getElementsByClassName("chat-text")[0];
 
                         btn.innerHTML = new_text;
                     }
-                    if (chat === document.getElementsByClassName("title-content")[0].id || chat === "any") {
+                    if (chat === current_chat_id || chat === "any") {
                         getLatestText();
                         //printNewTexts;
                     }
@@ -753,6 +786,9 @@
             function selectCameraRollPhotos() {
                 document.getElementById("camerarollpopup").style.display = "none";
             }
+
+            window.onfocus = function() { self.window_is_focused = true; }
+            window.onblur = function() { self.window_is_focused = false; }
 
             /*function setNewBatteryLevel(level) {
                 var batt = document.getElementById("battery");
