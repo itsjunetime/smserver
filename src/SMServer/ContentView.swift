@@ -35,6 +35,7 @@ struct ContentView: View {
     @State var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
     
     let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
+    let photos_prefix = "/private/var/mobile/Media/DCIM/"
     
     var requests_page = """
     <!DOCTYPE html>
@@ -117,7 +118,7 @@ struct ContentView: View {
                 self.log("Getting requests..")
             }
             
-            let query = req.query
+            var query = req.query
             
             if query.count == 0 {
                 /// If there are no parameters, return default blank page
@@ -130,6 +131,18 @@ struct ContentView: View {
                 
                 if self.debug {
                     self.log("GET /requests: \(address)")
+                }
+                
+                /*print(req.connection?.localAddress)
+                print(req.env)*/
+                
+                if ((req.env["QUERY_STRING"]?.contains("%2B") ?? false || req.env["QUERY_STRING"]?.contains("+") ?? false) && (query["name"] != nil || query["person"] != nil)) {
+                    for i in req.env["QUERY_STRING"]!.split(separator: "&") {
+                        let p = String(String(i).split(separator: "=")[0])
+                        let index = String(i).index(String(i).firstIndex(of: "=") ?? String(i).startIndex, offsetBy: 1)
+                        let v = String(String(i).suffix(from: index))
+                        query[p]? = v.replacingOccurrences(of: "%2B", with: "+")
+                    } /// So that `%2B` in the URL turns to `+` for the right parameters
                 }
                 
                 /// parseAndReturn() manages retrieving info for the API
@@ -166,8 +179,19 @@ struct ContentView: View {
             /// Handle different types of requests
 			if f == "chat_id" {
                 
+                var q = req.query
+                
+                if (req.env["QUERY_STRING"]?.contains("%2B") ?? false || req.env["QUERY_STRING"]?.contains("+") ?? false) {
+                    for i in req.env["QUERY_STRING"]!.split(separator: "&") {
+                        let p = String(String(i).split(separator: "=")[0])
+                        let index = String(i).index(String(i).firstIndex(of: "=") ?? String(i).startIndex, offsetBy: 1)
+                        let v = String(String(i).suffix(from: index))
+                        q[p]? = v.replacingOccurrences(of: "%2B", with: "+")
+                    }
+                }
+                
                 res.setValue("image/jpeg", forHTTPHeaderField: "Content-type")
-                res.send(ContentView.chat_delegate.returnImageData(chat_id: req.query["chat_id"] ?? ""))
+                res.send(ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? ""))
 			} else if f == "path" {
 				
                 let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
@@ -351,7 +375,7 @@ struct ContentView: View {
                     let ph = val.split(separator: ":")
                     if ph.count > 0 {
                         for i in ph {
-                            if i != "photos" { files.append(String(val)) }
+                            files.append(self.photos_prefix + String(i))
                         }
                     }
                 }
@@ -650,6 +674,9 @@ struct ContentView: View {
 		self.watcher.setTexts = { value in
 			self.setNewestTexts(value ?? "None")
 		}
+        self.watcher.setBattery = {
+            self.socket.sendNewBattery()
+        }
 		
 		socket.watcher = self.watcher
 		socket.authenticated_addresses = self.authenticated_addresses

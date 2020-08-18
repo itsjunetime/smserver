@@ -4,10 +4,12 @@
 @interface IPCTextWatcher : NSObject
 
 @property (copy) void(^setTexts)(NSString *);
+@property (copy) void(^setBattery)(void);
 +(void)load;
 +(instancetype)sharedInstance;
 -(instancetype)init;
 -(void)handleReceivedTextWithCallback:(NSString *)chat_id;
+-(void)handleBatteryChanged;
 
 @end
 
