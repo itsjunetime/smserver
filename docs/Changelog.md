@@ -1,5 +1,13 @@
 # Changelog
 
+0.3.2 -> 0.3.3
+ - Implemented better `chat_identifier` parsing to get name & image (see issue #9);
+ - Enabled interacting with and selecting photos from the camera roll in the web interface
+ - Remove unnecessary `parsePhoneNum()` function
+ - Fixed issue with images failing to load
+ - Introduced custom query parsing to allow for plus signs (or replacements like `%2B`) in the URL
+ - Fixed issues with app crashing if a text was received before the server had started
+
 0.3.1 -> 0.3.2
  - Updated notifications to show more information
  - Fixed issue with favicon not showing

@@ -16,6 +16,7 @@
             
             var printed_texts = 0;
             var printed_chats = 0;
+            var printed_photos = 0;
             var has_shown_warning = false;
             var has_shown_camera_roll = false;
             var notifications = false;
@@ -72,12 +73,7 @@
                 var classes = "text";
                 if (last) classes += " more_texts";
                 
-                if (text.is_from_me === "0") { /// I know that I could use ternary; it just doesn't play nice if i do that, for some reason
-                    classes += " is_from_them";
-                } else {
-                    classes += " is_from_me";
-                }
-                classes += " " + text.service;
+                classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service
 
                 t.setAttribute("class", classes);
                 t.setAttribute("id", "texts-" + text.ROWID);
@@ -98,7 +94,7 @@
                 }
                 
                 /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
-                t.innerHTML += text.text.replace("￼", "").replace("￼", "");
+                t.innerHTML += text.text.replace("￼", "").replace("￼", ""); 
 
                 return t;
             }
@@ -109,9 +105,22 @@
 
                 b.setAttribute("id", chat.chat_identifier);
                 
-                b.innerHTML = "<img src=\"" + prefix + "/data?chat_id=" + chat.chat_identifier.replace("+", "%2B") + "\">";
-                b.innerHTML += "<div class=\"chat-name\">" + (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name) + "</div>"
-                b.innerHTML += "<div class=\"chat-text\">" + chat.latest_text.replace("￼", "").replace("￼", "") + "</div>"
+                var i = document.createElement("img");
+                i.src = prefix + "/data?chat_id=" + chat.chat_identifier.replace("+", "%2B");
+                b.appendChild(i);
+
+                var n = document.createElement("div");
+                n.setAttribute("class", "chat-name");
+                n.innerHTML = (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name) 
+                if (chat.chat_identifier.substring(0, 4) !== "chat" && chat.display_name.length !== 0) { 
+                    n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
+                }
+                b.appendChild(n);
+
+                var t = document.createElement("div");
+                t.setAttribute("class", "chat-text");
+                t.innerHTML = chat.latest_text.replace("￼", "").replace("￼", "")
+                b.appendChild(t);
 
                 let unix_timestamp = (chat.time_marker / 1000000000) + 978307200;
                 b.innerHTML += "<div class=\"chat-date\">" + timeConverter(unix_timestamp) + "</div>";
@@ -198,6 +207,13 @@
                 const num_texts = num_texts_to_load;
                 var doc = document.getElementsByClassName("chats-list")[0];
                 var old_button = document.getElementById("morechatsbutton");
+                
+                var selected_id = "";
+                var selecteds = document.getElementsByClassName("selected")
+                if (selecteds.length > 0) {
+                    selected_id = selecteds[0].id
+                }
+                
                 doc.innerHTML = "";
                 doc.appendChild(old_button);
 
@@ -206,6 +222,10 @@
                 for(var i = 0; i < items.length; i++) {
 
                     var b = getChatElement(items[i], num_texts);
+                    
+                    if (items[i].chat_identifier == selected_id) {
+                        b.setAttribute("class", b.getAttribute("class") + " selected")
+                    }
                     
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
                 }
@@ -275,7 +295,6 @@
                 }
 
                 var hiddenchatbox = document.getElementById("hiddenchatbox");
-                //hiddenchatbox.setAttribute("value", "chat:" + chat_id);
                 hiddenchatbox.setAttribute("value", chat_id);
 
                 var orig_btn = document.getElementById(chat_id);
@@ -303,7 +322,6 @@
                 var chat_title = document.getElementById(chat_id).getElementsByClassName("chat-name")[0];
                 var title_doc = document.getElementsByClassName("title-content")[0];
                 title_doc.innerHTML = "<p>" + chat_title.innerHTML + "</p>"
-                //title_doc.setAttribute("id", chat_id);
 
                 current_chat_id = chat_id
 
@@ -361,7 +379,6 @@
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
                 if (debug) { console.log("called getMoreText; num == " + num_texts); }
-                //var chat_id = document.getElementsByClassName("title-content")[0].id
                 var chat_id = current_chat_id;
                 
                 var new_chat_id = chat_id.replace("+", "%2B");
@@ -458,12 +475,10 @@
                 var oldval = tbox.value;
 
                 var hta = document.getElementById("hiddentextarea")
-                ///hta.value = "text:" + oldval;
                 hta.value = oldval;
 
                 var photos = document.getElementById("hiddenphotobutton");
-                var selected = document.getElementsByClassName("selected-photos");
-                photos.value = "photos:"; /// Just in case
+                var selected = document.getElementsByClassName("selected-photo");
                 for (var i = 0; i < selected.length; ++i) {
                     photos.value += selected[i].id + (i !== selected.length - 1 ? ":" : "");
                 }
@@ -480,7 +495,7 @@
                 
                 document.getElementById("attachmentbutton").value = "";
                 document.getElementById("unhiddenbutton").value = '📎';
-                photos.value = "photos:";
+                hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
 
                 var box = document.getElementById("text-content");
                 var t = document.createElement("p");
@@ -491,7 +506,6 @@
                 box.appendChild(t);
                 t.scrollIntoView();
                 
-                //setChatAsTop(document.getElementsByClassName("title-content")[0].id, oldval);
                 setChatAsTop(current_chat_id, oldval);
             }
 
@@ -504,12 +518,10 @@
                 var oldval = tbox.value;
 
                 var hta = document.getElementById("hiddenComposeTextArea");
-                //hta.value = "text:" + oldval;
                 hta.value = oldval;
 
                 var cbox = document.getElementById("composeAddressBox");
                 var coldval = cbox.value;
-                //cbox.value = "chat:" + coldval;
                 cbox.value = coldval
 
                 form.submit();
@@ -655,7 +667,6 @@
                     }
                     if (chat === current_chat_id || chat === "any") {
                         getLatestText();
-                        //printNewTexts;
                     }
                 }
             }
@@ -722,7 +733,9 @@
                 p.setAttribute("class" , c);
                 
                 p.setAttribute("id", photo.URL);
-                p.setAttribute("onclick", "setSelectedPhoto(\"" + id + "\");");
+                p.setAttribute("onclick", "setSelectedPhoto(\"" + photo.URL + "\");");
+                p.setAttribute("width", "160");
+                p.setAttribute("height", "160");
                 
                 p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">"
                 return p;
@@ -733,8 +746,6 @@
                 document.getElementById("camerarollpopup").style.display = "block";
                 
                 var cr = document.getElementById("camerarollContent")
-                
-                alert("Accessing photos from the camera roll does not work yet; please wait for an update before attempting to use it. I take no responsibility if it sends the wrong photos to your recipient.");
                 
                 if (!has_shown_camera_roll) {
                     var photos;
@@ -753,18 +764,19 @@
                     })
                     .catch(function () {
                         has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
-                        has_shown_warning = true
+                        has_shown_warning = true;
                         this.dataError = true;
                     })
                     
                     var _ = await fetch_recent_photos
                     if (photos.length === 0) var _ = await fetch_recent_photos;
-                    
+
+                    printed_photos += photos.length;
 
                     for (var i = 0; i < photos.length; i++) {
                         var p = await getPhotoElement(photos[i]);
                         
-                        cr.insertBefore(p, cr.lastChild);
+                        cr.insertBefore(p, cr.children[cr.children.length - 1]); /// I should just do cr.lastChild but it doesn't work
                     }
                     has_shown_camera_roll = true;
                 }
@@ -772,19 +784,51 @@
 
             async function loadMoreCameraRoll() {
                 var cr = document.getElementById("camerarollContent");
+                var new_photos;
+
+                var url = prefix + "/requests?photos=" + num_photos_to_load + "&photo_offset=" + printed_photos;
+                const fetch_new_photos = await fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    new_photos = (json.photos);
+                    return new_photos;
+                })
+                .catch(function () {
+                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
+                    has_shown_warning = true;
+                    this.dataError = true;
+                }) 
+
+                var _ = await fetch_new_photos;
+                printed_photos += new_photos.length;
+
+                for (var i = 0; i < new_photos.length; i++) { 
+                    var p = await getPhotoElement(new_photos[i]);
+
+                    cr.insertBefore(p, cr.children[cr.children.length - 1]);
+                }
             }
                                     
             function hideCameraRoll() {
                 document.getElementById("camerarollpopup").style.display = "none";
                 var p = document.getElementsByClassName("selected-photo");
 
-                for (var i = 0; i < p.length; ++i) {
-                    p[i].setAttribute("class", p[i].getAttribute("class").replace(" selected-photo", ""));
+                for (var i = p.length - 1; i >= 0; --i) {
+                    p[i].setAttribute("class", p[i].getAttribute("class").replace("selected-photo", ""));
                 }
+
+                document.getElementById("camerarollbutton").value = "📷";
             }
 
             function selectCameraRollPhotos() {
                 document.getElementById("camerarollpopup").style.display = "none";
+
+                document.getElementById("camerarollbutton").value = document.getElementsByClassName("selected-photo").length;
             }
 
             window.onfocus = function() { self.window_is_focused = true; }
@@ -849,7 +893,7 @@
 		            <input value="&#128247" onclick="displayCameraRoll();" type="button" id="camerarollbutton"></input>
                     <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
                     <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
-                    <input type="text" name="photos" id="hiddenphotobutton" value="photos:" style="display: none;">
+                    <input type="text" name="photos" id="hiddenphotobutton" style="display: none;">
                     <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
                     <textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
                     <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
@@ -883,7 +927,7 @@
 			    <button onclick="selectCameraRollPhotos();" id="camerarollSelectButton">Select</button>
 		    </div>
 		    <div id="camerarollContent">
-			    <button class="photo" id="morephotosbutton" value="+ More">
+                <button class="photo" id="morephotosbutton" onclick="loadMoreCameraRoll();">+ More</button>
 		    </div>
 		</div>
 	    </div>

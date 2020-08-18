@@ -27,7 +27,7 @@
 - To install the ipa: some signing service/bypass -- Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign it, but if that doesn't work for you, then feel free to sign & install the .ipa. The .deb does not require signing or any sort of bypass, since it install as a system application.
 
 ## To Install
-Use the provided .ipa or .deb package under the `package` subdirectory, or read `docs/INSTALL.md` for information on how to build from source
+Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.md` for information on how to build from source
 
 ## To run
 1. Open the SMServer app, and click the green 'play' button in the bottom left.
@@ -52,9 +52,9 @@ Use the provided .ipa or .deb package under the `package` subdirectory, or read 
 - [x] Convenient Custom CSS Loading
 - [x] HTTPS
 - [x] Desktop notifications
+- [x] Access to camera roll on web interface
 - [ ] Subject lines for texts on web interface
 - [ ] Information on web page about battery life, wifi connection, etc - This is nearly done.
-- [ ] Access to camera roll - This is nearly done
 
 ### Future plans
 - [ ] Search through messages from browser - This has been implemented in the API
@@ -75,6 +75,7 @@ Please include the following information:
  - iOS Version
  - How you installed the app
  - A detailed description of what failed
+ - What version of SMServer & libsmserver you're running
  - And if the app crashed & you can get it, a crash log
 
 Also, if the app did not crash on startup, but rather crashed after it was already up and running, I would appreciate if you could do the following: 
