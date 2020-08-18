@@ -29,4 +29,4 @@
 1. Copy the entire 'deb' folder over to an iDevice that is jailbroken
 1. SSH into the idevice (or open a terminal app), and cd into the directory where the 'deb' folder is located
 1. Run `dpkg -b deb`, assuming that the 'deb' folder is still named 'deb'. This will produce a package named 'deb.deb'. You can rename it to whatever you want.
-1. Install the package that the last step created just as you would install a tweak.
+1. Install the package that the last step created (`deb.deb`) just as you would install a tweak.

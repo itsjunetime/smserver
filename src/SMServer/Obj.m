@@ -24,12 +24,17 @@
     if ((self = [super init])) {
         _center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
         [_center addTarget:self action:@selector(handleReceivedTextWithCallback:)];
+        [_center addTarget:self action:@selector(handleBatteryChanged)];
     }
     return self;
 }
 
 -(void)handleReceivedTextWithCallback:(NSString *)chat_id {
     _setTexts(chat_id);
+}
+
+-(void)handleBatteryChanged {
+    _setBattery();
 }
 
 @end
