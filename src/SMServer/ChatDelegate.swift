@@ -6,8 +6,6 @@ import os
 
 class ChatDelegate {
     var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-    var past_latest_texts = [String:String]()
-    var newest_texts = [String]()
     let prefix = "SMServer_app: "
     
     static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
@@ -247,20 +245,6 @@ class ChatDelegate {
         return checker.count != 0
     }
     
-    func parsePhoneNum(num: String) -> String {
-        /// This used to do something larger but now just filters out everything but numbers and places wildcards on both sides
-        
-        if self.debug {
-            self.log("parsing phone number for \(num)")
-        }
-        
-        /// remove everything but numbers
-        let new_num = num.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-        
-        /// Place wildcards
-        return "%" + new_num + "%"
-    }
-    
     func getDisplayName(chat_id: String) -> String {
         /// This does the same thing as getDisplayName, but doesn't take db as an argument. This allows for fetching of a single name,
         /// when you don't need to get a lot of names at once.
@@ -301,11 +285,11 @@ class ChatDelegate {
         
         if chat_id.contains("@") { /// if an email
             display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
-        } else {
-            /// parse phone number for better compatibility
-            let parsed_num = parsePhoneNum(num: chat_id)
+        } else if chat_id.contains("+") {
             /// get first name and last name
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(parsed_num)\"", num_items: 1)
+            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
+        } else {
+            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"")
         }
         
         if display_name_array.count == 0 { return "" }
@@ -604,11 +588,13 @@ class ChatDelegate {
         var docid = [[String:String]]()
         
         /// get docid. docid is the identifier that corresponds to each contact, allowing for us to get their image
-        if chat_id.contains("@") {
-            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"", num_items: 1)
+        
+        if chat_id.contains("@") { /// if an email
+            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
+        } else if chat_id.contains("+") {
+            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
         } else {
-            let parsed_num = parsePhoneNum(num: chat_id)
-            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"\(parsed_num)\"", num_items: 1)
+            docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"")
         }
         
         /// Use default profile if you don't have them in your contacts
@@ -881,7 +867,6 @@ class ChatDelegate {
 		let total = result.countOfAssets(with: PHAssetMediaType.image)
         
         for i in offset..<total {
-            var timeout = 0;
             var next = false;
 			let dispatchGroup = DispatchGroup()
 			
@@ -908,10 +893,7 @@ class ChatDelegate {
 			}
             
             /// This is hacky and kinda hurts performance but it seems the most reliable way to load images in order + with the amount requested.
-            while next == false && timeout < 10 {
-                timeout += 1
-                usleep(100000)
-            }
+            while next == false {}
 		}
         
 		return ret_val
@@ -925,15 +907,12 @@ class ChatDelegate {
 		}
 		
 		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "") /// To prevent LFI
-		
-		do {
-            /// get and return photo data
-			let photo_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.photoStoragePrefix + parsed_path))
-			return photo_data
-		} catch {
-			self.log("WARNING: failed to load photo for path \(ChatDelegate.photoStoragePrefix + path)")
-			return Data.init(capacity: 0)
-		}
+        
+        /// get and return photo data
+        let image = UIImage(contentsOfFile: ChatDelegate.photoStoragePrefix + parsed_path)
+        /// Compress image to a jpeg with horrible quality since they're only thumbnails; don't think it actually improves web interface performance much tho
+        let photo_data = image?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
+        return photo_data
 	}
 }
 
