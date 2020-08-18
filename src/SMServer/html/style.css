@@ -235,9 +235,6 @@ p {
 .unread img {
 	box-shadow: 0 0 10px dodgerblue;
 }
-.selected {
-	box-shadow: 0 0 10px black inset;
-}
 .text-content p img {
 	max-width: 100%;
 	border-radius: 10px;
@@ -256,8 +253,10 @@ p {
 	transition: all linear 0.1s;
 }
 .selected {
-	color: rgb(78, 150, 223);
-	background-color: #444;
+	background-color: #252525 !important;
+}
+.selected div {
+    color: rgb(115, 170, 226);
 }
 .text {
 	font-family: var(--main-font);
@@ -549,4 +548,10 @@ p {
 .photo.selected-photo img {
 	filter: opacity(0.5);
 	box-shadow: 0 0 6px aliceblue;
+}
+#morephotosbutton {
+	background-color: transparent;
+	border: none;
+	color: white;
+	font-size: 28px;
 }
