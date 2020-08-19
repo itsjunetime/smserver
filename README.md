@@ -61,6 +61,7 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 - [ ] Notification when other party starts typing
 - [ ] Web interface emoji picker
 - [ ] Graphic display for reactions (as opposed to plain text)
+- [ ] Support for read receipts
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
