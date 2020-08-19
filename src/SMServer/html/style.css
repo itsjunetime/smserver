@@ -555,3 +555,9 @@ p {
 	color: white;
 	font-size: 28px;
 }
+.favorite-heart {
+	position:  absolute;
+	margin: 17% 0 0 17%;
+	opacity: 0.6;
+	display: none;
+}

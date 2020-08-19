@@ -35,17 +35,11 @@ This is the port that the webSocket runs on; must not be the same as the server 
 ### Toggle debug
 This will log basically every thing that happens, and may slow down the server considerably. Unless you're actually debugging or logging with the app, I'd highly recommend leaving this off. This does not require a server restart to take effect.
 
-### Start server on load:
-Toggling this on will make the server start automatically whenever the app is opened. It requires a full app restart to take effect, since that's the only thing that it does affect.
-
 ### Requre Authentication to view messages:
 Toggling this on will prevent anyone from querying the host if they have not already authenticated with the main page. I'd highly recommend leaving it on; without it, anyone can send and view texts from your device without restriction.
 
 ### Enable backgrounding
 Toggling this on will prevent the server from shutting off when the app goes into the background, given that the server is already running. Even if this is on, though, the server will shut down when the app is forcibly killed from the multitasking screen. This does not require anything to take effect, simply a toggle.
 
-### Phone number
-This should be your country code, area code, and phone number, with no extra characters. For example, the phone number +1 (239) 388-0209 should be typed in as:
-- Country code: 1
-- Area code: 239
-- Phone number: 3880209
+### Enable SSL
+Toggling this will require you to connect to the `https://` site, instead of the `http://` site. It also encrypts everything sent to your phone for the server, preventing anyone from listening in on your messages.
