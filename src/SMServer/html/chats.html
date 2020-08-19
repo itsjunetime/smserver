@@ -76,7 +76,8 @@
                 classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service
 
                 t.setAttribute("class", classes);
-                t.setAttribute("id", "texts-" + text.ROWID);
+                //t.setAttribute("id", "texts-" + text.ROWID);
+                t.setAttribute("id", text.guid);
                 t.innerHTML = ''
                 
                 if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
@@ -728,7 +729,9 @@
                 var p = document.createElement("span");
                 
                 var c = "photo";
-                if (photo.is_favorite === "true") c += " is_favorite";
+                if (photo.is_favorite === "true")  {
+                    c += " is_favorite";
+                }
                 
                 p.setAttribute("class" , c);
                 
@@ -738,6 +741,13 @@
                 p.setAttribute("height", "160");
                 
                 p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">"
+
+                if (photo.is_favorite === "true") {
+                    var h = document.createElement("span");
+                    h.setAttribute("class", "favorite-heart");
+                    h.innerHTML = "❤";
+                    p.appendChild(h);
+                }
                 return p;
             }
 
