@@ -1,5 +1,11 @@
 # Changelog
 
+0.3.3 -> 0.3.4
+ - Rewrote function to fetch texts to use sql joins instead of multiple queries; is significantly faster now
+ - Almost now shows favorite images in interface
+ - Fixed issue #14 (correctly parses chat_ids when retrieving messages)
+ - Improved name retrieval to match SMS Sender IDs
+
 0.3.2 -> 0.3.3
  - Implemented better `chat_identifier` parsing to get name & image (see issue #9);
  - Enabled interacting with and selecting photos from the camera roll in the web interface

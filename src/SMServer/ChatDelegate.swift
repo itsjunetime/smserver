@@ -254,18 +254,25 @@ class ChatDelegate {
         }
         
         /// Connect to contact database
-        var db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
-        if db == nil { return "" }
+        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var sms_db = createConnection()
+        if contact_db == nil || sms_db == nil { return "" }
         
         /// get name
-        let name = getDisplayNameWithDb(db: db, chat_id: chat_id)
+        let name = getDisplayNameWithDb(sms_db: sms_db, contact_db: contact_db, chat_id: chat_id)
         
         /// close
-        if sqlite3_close(db) != SQLITE_OK {
+        if sqlite3_close(sms_db) != SQLITE_OK {
             self.log("WARNING: error closing database")
         }
 
-        db = nil
+        sms_db = nil
+        
+        if sqlite3_close(contact_db) != SQLITE_OK {
+            self.log("WARNING: error closing database")
+        }
+        
+        contact_db = nil
         
         if self.debug {
             self.log("destroyed db")
@@ -274,7 +281,7 @@ class ChatDelegate {
         return name
     }
     
-    func getDisplayNameWithDb(db: OpaquePointer?, chat_id: String) -> String {
+    func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String) -> String {
         /// Gets the first + last name of a contact with the phone number or email of $chat_id
         
         if self.debug {
@@ -284,15 +291,23 @@ class ChatDelegate {
         var display_name_array = [[String:String]]()
         
         if chat_id.contains("@") { /// if an email
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
+            display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
         } else if chat_id.contains("+") {
             /// get first name and last name
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
+            display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
         } else {
-            display_name_array = selectFromSql(db: db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"")
+            display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"")
         }
         
-        if display_name_array.count == 0 { return "" }
+        if display_name_array.count == 0 {
+            let unc = selectFromSql(db: sms_db, columns: ["uncanonicalized_id"], table: "handle", condition: "WHERE id is \"\(chat_id)\"")
+            
+            guard let ret = unc[0]["uncanonicalized_id"] else {
+                return ""
+            }
+            
+            return ret
+        }
         
             /// combine first name and last name
         let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
@@ -323,7 +338,7 @@ class ChatDelegate {
             }
             
             /// get name for person
-            let ds = getDisplayNameWithDb(db: contact_db, chat_id: i["id"] ?? "")
+            let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["id"] ?? "")
             ret_val.append((ds == "" ? i["id"] : ds) ?? "")
         }
         
@@ -346,15 +361,8 @@ class ChatDelegate {
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         if db == nil || contact_db == nil { return [[String:String]]() }
         
-        /// Create a custom condition string based on whether its an address
-        let new_num = num.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-        
-        /// if address or group chat: 'chat_identifier is "email@email.org"'
-        /// if phone: 'chat_identifier like "_10000000000" or chat_identifier is "10000000000"'
-        let check_string = "chat_identifier " + (num.contains("@") || num.prefix(4) == "chat" ? "is \"\(num)\"" : "like \"_\(new_num)\" or chat_identifier is \"\(new_num)\"")
-        
         /// Get the most recent messages and all their relevant metadata from $num
-        var messages = selectFromSql(db: db, columns: ["ROWID", "text", "is_from_me", "date", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE \(check_string)) ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+        var messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "is_from_me", "date", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
         
         /// check if it's a group chat
         let is_group = num.prefix(4) == "chat"
@@ -385,7 +393,7 @@ class ChatDelegate {
                 let handle = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID is \(messages[i]["handle_id"]!)", num_items: 1)
                 
                 if handle.count > 0 {
-                    let name = getDisplayNameWithDb(db: contact_db, chat_id: handle[0]["id"]!)
+                    let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: handle[0]["id"]!)
                     
                     messages[i]["sender"] = name
                 }
@@ -428,77 +436,41 @@ class ChatDelegate {
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         if db == nil || contacts_db == nil { return [[String:String]]() }
         
-        /// Get relevant information to construct most recent chats
-        let messages = selectFromSqlWithId(db: db, columns: ["ROWID", "is_read", "is_from_me", "text", "item_type", "date_read", "date", "cache_has_attachments"], table: "message", identifier: "ROWID", condition: "WHERE ROWID in (select message_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc)")
-        let chat_ids_ordered = selectFromSql(db: db, columns: ["chat_id", "message_id"], table: "chat_message_join", condition: "where message_date in (select max(message_date) from chat_message_join group by chat_id) order by message_date desc", num_items: num_to_load, offset: offset)
-        let chats = selectFromSqlWithId(db: db, columns: ["ROWID", "chat_identifier", "display_name"], table: "chat", identifier: "ROWID", condition: "WHERE ROWID in (select chat_id from chat_message_join where message_date in (select max(message_date) from chat_message_join group by chat_id))")
+        let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name", "h.uncanonicalized_id"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id inner join chat_handle_join hj on hj.chat_id = c.ROWID inner join handle h on h.ROWID = hj.handle_id where j.message_date in (select  max(message_date) from chat_message_join group by chat_id) group by c.chat_identifier order by j.message_date desc", num_items: num_to_load, offset: offset)
+        var return_array = [[String:String]]()
         
-        var chats_array = [[String:String]]()
-        var already_selected = [String:Int]() /// Just making it a dictionary so I have O(1) access instead of iterating through, as with an array
-        
-        if self.debug {
-            self.log("len messages: \(messages.count), len chat_ids_ordered: \(chat_ids_ordered.count), len chats: \(chats.count)")
-        }
-        
-        /*let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        formatter.dateTimeStyle = .numeric*/
-        
-        /// chat_ids_ordered has a list of the most recent chat_ids that you have talked with (and their most recent message), ordered by most recent
-        for i in chat_ids_ordered {
-            
-            if chats[i["chat_id"] ?? ""] == nil { continue }
-            
-            /// get the chat information for the current chat_id
-            var new_chat = chats[i["chat_id"] ?? ""] // I guess just in case?
-            
-            /// get chat_identifier. Should be also equal to i["chat_id"]
-            let ci = new_chat?["chat_identifier"]
-            
+        for i in chats {
             if self.debug {
-                self.log("Beginning to iterate through chats for \(String(describing: ci))")
+                self.log("Beginning to iterate through chats for \(i["c.chat_identifier"]!)")
             }
             
-            /// If we've already got the information for this conversation, continue
-            if already_selected[ci ?? "no_chat"] != nil || ci == nil { continue }
+            var new_chat = [String:String]()
             
-            /// message information of the most recent message message between you and this conversation
-            let mwid = messages[i["message_id"] ?? "nil"]
-            
-            new_chat!["has_unread"] = "false"
-            
-            /// If all these specific parameters are true, then it is unread. Yeah, I wish it was just mwid?["is_read"], too.
-            if mwid?["is_from_me"] == "0" && mwid?["date_read"] == "0" && mwid?["text"] != nil && mwid?["is_read"] == "0" && mwid?["item_type"] == "0" {
-                new_chat!["has_unread"] = "true"
+            /// Check for if it has unread. It has to fit all these specific things.
+            if i["m.is_from_me"] == "0" && i["m.date_read"] == "0" && i["m.text"] != nil && i["m.is_read"] == "0" && i["m.item_type"] == "0" {
+                new_chat["has_unread"] = "true"
+            } else {
+                new_chat["has_unread"] = "false"
             }
             
-            /// Content of the most recent text. If a text has attachments, mwid?["text"] will look like '\u{ef}'. this checks for that.
-            if mwid?["text"]?.replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil)
-                             .trimmingCharacters(in: .whitespacesAndNewlines).count != 0 {
-                new_chat?["latest_text"] = mwid?["text"]
-            } else if mwid?["cache_has_attachments"] != "0" {
-                let att = getAttachmentFromMessage(mid: mwid?["ROWID"] ?? "")
+            /// Content of the most recent text. If a text has attachments, `i["m.text"]` will look like `\u{ef}`. this checks for that.
+            if i["m.text"]?.replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil).trimmingCharacters(in: .whitespacesAndNewlines).count != 0 {
+                new_chat["latest_text"] = i["m.text"]
+            } else if i["m.cache_has_attachments"] != "0" {
+                let att = getAttachmentFromMessage(mid: i["m.ROWID"] ?? "")
                 
+                /// Make it say like `Attachment: Image` if there's no text
                 if att.count != 0 && att[0].count == 2 {
-                    new_chat?["latest_text"] = "Attachment: " + att[0][1].prefix(upTo: att[0][1].firstIndex(of: "/") ?? att[0][1].endIndex)
+                    new_chat["latest_text"] = "Attachment: " + att[0][1].prefix(upTo: att[0][1].firstIndex(of: "/") ?? att[0][1].endIndex)
                 }
+            } else {
+                new_chat["latest_text"] = ""
             }
             
-            /// Time when the most recent text was sent
-            new_chat?["time_marker"] = mwid?["date"]
-            
-            /*let temp_int = Double(Int(mwid?["date"] ?? "0") ?? 0 / 1000000000)
-            let ts: Double = temp_int + 978307200.0
-            
-            let date = Date(timeIntervalSince1970: ts)
-            
-            new_chat?["relative_time"] = formatter.string(for: date)*/ /// Will soon get relative date as opposed to explicit date
-            
-            /// Some group chats have a display name, no one-on-one conversations do. So just checking if it does have one.
-            if new_chat?["display_name"]!.count == 0 {
-                if ci?.prefix(4) == "chat" && !((ci?.contains("@")) ?? true) { /// Making sure it's a group chat
-                    /// get recipients
-                    let recipients = getGroupRecipientsWithDb(contact_db: contacts_db, db: db, ci: ci!)
+            /// Get name for chat
+            if i["c.display_name"]!.count == 0 {
+                if i["c.room_name"]?.count != 0 {
+                    let recipients = getGroupRecipientsWithDb(contact_db: contacts_db, db: db, ci: i["c.chat_identifier"]!)
                     
                     var display_val = ""
                     
@@ -509,22 +481,19 @@ class ChatDelegate {
                         }
                     }
                     
-                    new_chat?["display_name"] = display_val
+                    new_chat["display_name"] = display_val
                 } else {
-                    /// get person's name
-                    new_chat?["display_name"] = getDisplayNameWithDb(db: contacts_db, chat_id: ci ?? "")
+                    new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"]!)
                 }
+            } else {
+                new_chat["display_name"] = i["c.display_name"]
             }
             
-            /// Append new chat to return array
-            chats_array.append(new_chat ?? [String:String]())
+            /// Cause `i["h.id"]` is just the `chat_identifier` of one of the members of the group if it's a group chat.
+            new_chat["chat_identifier"] = i["c.chat_identifier"]
+            new_chat["time_marker"] = i["m.date"]
             
-            /// append chat_id to already_selected so that we know we don't have to check this chat_id again
-            already_selected[ci ?? "no_chat"] = 0
-            
-            if self.debug {
-                self.log("Finished iterating through chats for \(String(describing: ci))")
-            }
+            return_array.append(new_chat)
         }
         
         /// close
@@ -544,7 +513,7 @@ class ChatDelegate {
             self.log("destroyed db")
         }
         
-        return chats_array
+        return return_array
     }
     
     func returnImageData(chat_id: String) -> Data {
@@ -805,7 +774,7 @@ class ChatDelegate {
         /// Replace Group name with list of recipients
 		for i in Array(return_texts.keys) {
 			if i.prefix(7) != "Group: " {
-				let name = getDisplayNameWithDb(db: contact_db, chat_id: i)
+                let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i)
 				
 				if name.count != 0 {
 					return_texts[name] = return_texts[i]
