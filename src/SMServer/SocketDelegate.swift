@@ -1,13 +1,11 @@
 import Foundation
 import Telegraph
 import os
-import NetworkExtension
 
 class SocketDelegate : ServerWebSocketDelegate {
 	
     static let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
     static let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: "smserver")
-    //let server = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true ? Server(identity: SocketDelegate.identity!, caCertificates: [SocketDelegate.cert!]) : Server()
     var server: Server? = nil
 	var watcher: IPCTextWatcher? = nil
 	var authenticated_addresses = [String]()

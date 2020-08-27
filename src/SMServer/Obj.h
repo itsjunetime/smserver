@@ -5,11 +5,10 @@
 
 @property (copy) void(^setTexts)(NSString *);
 @property (copy) void(^setBattery)(void);
-+(void)load;
-+(instancetype)sharedInstance;
--(instancetype)init;
--(void)handleReceivedTextWithCallback:(NSString *)chat_id;
--(void)handleBatteryChanged;
++ (instancetype)sharedInstance;
+- (instancetype)init;
+- (void)handleReceivedTextWithCallback:(NSString *)chat_id;
+- (void)handleBatteryChanged;
 
 @end
 
@@ -19,6 +18,7 @@
 - (void)relaunchApp;
 - (uid_t)setUID;
 - (void)sendIPCText:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths;
+- (void)markConvoAsRead:(NSString *)chat_id;
 
 @end
 

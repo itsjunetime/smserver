@@ -223,6 +223,10 @@ p {
 	white-space: nowrap;
 	padding-right: 10px
 }
+.chat-date {
+	padding-right: 6px;
+	text-align: right;
+}
 #morechatsbutton {
 	display: flex;
 	padding: auto;

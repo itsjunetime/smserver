@@ -21,7 +21,8 @@ struct ContentView: View {
 	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
     @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
     @State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
-	
+    @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
+    
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
     @State var view_settings = false
@@ -133,9 +134,6 @@ struct ContentView: View {
                     self.log("GET /requests: \(address)")
                 }
                 
-                /*print(req.connection?.localAddress)
-                print(req.env)*/
-                
                 if ((req.env["QUERY_STRING"]?.contains("%2B") ?? false || req.env["QUERY_STRING"]?.contains("+") ?? false) && (query["name"] != nil || query["person"] != nil)) {
                     for i in req.env["QUERY_STRING"]!.split(separator: "&") {
                         let p = String(String(i).split(separator: "=")[0])
@@ -187,7 +185,7 @@ struct ContentView: View {
                         let index = String(i).index(String(i).firstIndex(of: "=") ?? String(i).startIndex, offsetBy: 1)
                         let v = String(String(i).suffix(from: index))
                         q[p]? = v.replacingOccurrences(of: "%2B", with: "+")
-                    }
+                    } /// So that `%2B` in the URL turns to `+` for the right parameters instead of just being filtered out
                 }
                 
                 res.setValue("image/jpeg", forHTTPHeaderField: "Content-type")
@@ -388,7 +386,7 @@ struct ContentView: View {
         
         /// Make sure there's actually some content
         if !(body == "" && files.count == 0) {
-            /// Send text!!
+            /// Send the information the obj-c function
             self.s.sendIPCText(body, toAddress: address, withAttachments: files)
 			
             return true
@@ -411,7 +409,7 @@ struct ContentView: View {
                         self.log("relaunching app...")
                     }
                     /// this is the completion handler, so whenever the background task is killed,
-                    /// it just calls an IPC function to restart the app, so it's never actually killed.
+                    /// it just calls an IPC function in libsmserver to restart the app, so it's never actually killed.
                     self.s.relaunchApp()
                 } else {
                     if self.debug {
@@ -435,7 +433,10 @@ struct ContentView: View {
         
         let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 200
         let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 60
+        let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 30
+        
         self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+        self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
         
         self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
         
@@ -448,6 +449,7 @@ struct ContentView: View {
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
                     .replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(default_num_messages);")
                     .replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
+                    .replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(default_num_photos);")
 					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
                     .replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"light.css\">" : "")
                     .replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
@@ -460,7 +462,7 @@ struct ContentView: View {
             }
         }
         
-        /// Have to do custom style in a different do {} block, since it'll fail if the file doesn't exist/is empty
+        /// Have to do custom style in a different do {} block, since it'll fail everything if the file doesn't exist/is empty
         do {
             self.custom_style = try String(contentsOf: self.custom_css_path, encoding: .utf8)
         } catch {
@@ -469,14 +471,8 @@ struct ContentView: View {
         }
     }
     
-    func checkIfConnected() -> Bool {
-        /// checks if you can interface with the sms.db
-        return ContentView.chat_delegate.checkIfConnected()
-    }
-    
     func setNewestTexts(_ chat_id: String) -> Void {
-        /// Is called when you receive a new text; basically stores it so it can let you know when you ping and also tells the socket to ping all clients
-        
+        /// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
 		socket.sendNewText(info: chat_id)
     }
     
@@ -579,6 +575,11 @@ struct ContentView: View {
                 person = person.replacingOccurrences(of: "\"", with: "")
             }
 			
+            /// This really doesn't look right but I think that's just what it is
+            if self.mark_when_read {
+                self.s.markConvo(asRead: person)
+            }
+            
             let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
             let texts = encodeToJson(object: texts_array, title: "texts")
             return texts
@@ -736,18 +737,12 @@ struct ContentView: View {
 					HStack {
 						Button(action: {
 							self.loadFiles()
-							self.alert_connected = self.debug
 							self.s.launchMobileSMS()
 						}) {
 							Image(systemName: "goforward")
 								.font(.system(size: self.font_size))
 								.foregroundColor(Color.purple)
-						}.alert(isPresented: $alert_connected, content: {
-							Alert(title: Text("Checking connection to sms.db"),
-									message: Text( self.checkIfConnected() ? "You can connect to the database." :
-									"You cannot connect to the database; you are still sandboxed. This will prevent the app from working at all. Contact the developer about this issue."
-							))
-						})
+						}
 				
 						Spacer().frame(width: 24)
 				
