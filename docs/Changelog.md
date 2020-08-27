@@ -1,9 +1,15 @@
 # Changelog
 
+0.3.4 -> 0.3.5
+ - Added support for marking conversations as read when viewed in web interface
+ - Added support for relative date displays
+ - Removed unnecessary functions
+ - Added option to change how many photos display by default
+
 0.3.3 -> 0.3.4
  - Rewrote function to fetch texts to use sql joins instead of multiple queries; is significantly faster now
  - Almost now shows favorite images in interface
- - Fixed issue #14 (correctly parses chat_ids when retrieving messages)
+ - Fixed issue #14 (correctly parses `chat_id`s when retrieving messages)
  - Improved name retrieval to match SMS Sender IDs
 
 0.3.2 -> 0.3.3

@@ -132,119 +132,6 @@ class ChatDelegate {
         return main_return
     }
     
-    func selectFromSqlWithId(db: OpaquePointer?, columns: [String], table: String, identifier: String, condition: String = "", num_items: Int = 0) -> [String: [String:String]] {
-        /// This does the same thing as selectFromSql, but returns a dictionary, for O(1) access, instead of an array, for when it doesn't need to be sorted.
-        /// Just look at the selectFromSql function to see what each line does 'cause they're basically identical.
-        
-        var sqlString = "SELECT "
-        for i in columns {
-            sqlString += i
-            if columns.count > 0 && i != columns[columns.count - 1] {
-                sqlString += ", "
-            }
-        }
-        sqlString += " from " + table
-        if condition != "" {
-            sqlString += " " + condition
-        }
-        if num_items != 0 {
-            sqlString += " LIMIT \(String(num_items))"
-        }
-        sqlString += ";"
-        
-        if self.debug {
-            self.log("full sql query: " + sqlString)
-        }
-        
-        var statement: OpaquePointer?
-        
-        if self.debug {
-            self.log("opened statement")
-        }
-        
-        if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
-            let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log("WARNING: error preparing select: \(errmsg)")
-        }
-        
-        var main_return = [String: [String:String]]()
-        
-        if num_items != 0 {
-            var i = 0
-            while sqlite3_step(statement) == SQLITE_ROW && i < num_items {
-                var minor_return = [String:String]()
-                var minor_identifier = ""
-                for j in 0..<columns.count {
-                    var tiny_return = ""
-                    if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
-                        tiny_return = String(cString: tiny_return_cstring)
-                    }
-                    minor_return[columns[j]] = tiny_return
-                    if columns[j] == identifier {
-                        minor_identifier = tiny_return
-                    }
-                }
-                main_return[minor_identifier] = minor_return
-                i += 1
-            }
-        } else {
-            while sqlite3_step(statement) == SQLITE_ROW {
-                var minor_return = [String:String]()
-                var minor_identifier = ""
-                for j in 0..<columns.count {
-                    var tiny_return = ""
-                    if let tiny_return_cstring = sqlite3_column_text(statement, Int32(j)) {
-                        tiny_return = String(cString: tiny_return_cstring)
-                    }
-                    minor_return[columns[j]] = tiny_return
-                    if columns[j] == identifier {
-                        minor_identifier = tiny_return
-                    }
-                }
-                main_return[minor_identifier] = minor_return
-            }
-        }
-        
-        if sqlite3_finalize(statement) != SQLITE_OK {
-            let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log("WARNING: error finalizing prepared statement: \(errmsg)")
-        }
-
-        statement = nil
-        
-        if self.debug {
-            self.log("destroyed statement")
-        }
-        
-        return main_return
-    }
-    
-    func checkIfConnected() -> Bool {
-        /// Simple function to check if you can read values from the database.
-        
-        if self.debug {
-            self.log("Checking if connected")
-        }
-        
-        var db = createConnection()
-        if db == nil { return false }
-        
-        let checker = selectFromSql(db: db, columns: ["ROWID"], table: "chat", num_items: 1)
-        
-        /// Close; prevents memory leaks
-        if sqlite3_close(db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        db = nil
-        
-        if self.debug {
-            self.log(checker.count != 0 ? "You're connected" : "You're not connected. You won't be able to view any chats or messages until this is resolved.")
-        }
-        
-        return checker.count != 0
-    }
-    
     func getDisplayName(chat_id: String) -> String {
         /// This does the same thing as getDisplayName, but doesn't take db as an argument. This allows for fetching of a single name,
         /// when you don't need to get a lot of names at once.
@@ -367,6 +254,9 @@ class ChatDelegate {
         /// check if it's a group chat
         let is_group = num.prefix(4) == "chat"
         
+        let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .named
+        
         /// for each message
         for i in 0..<messages.count {
             /// if it has attachments
@@ -378,10 +268,10 @@ class ChatDelegate {
                     print(prefix)
                     print(a)
                 }
-                for i in 0..<a.count {
+                for l in 0..<a.count {
                     /// use ':' as separater between attachments 'cause you can't have a filename in iOS that contains it (I think?)
-                    file_string += a[i][0] + (i != a.count ? ":" : "")
-                    type_string += a[i][1] + (i != a.count ? ":" : "")
+                    file_string += a[l][0] + (l != a.count ? ":" : "")
+                    type_string += a[l][1] + (l != a.count ? ":" : "")
                 }
                 messages[i]["attachment_file"] = file_string
                 messages[i]["attachment_type"] = type_string
@@ -401,6 +291,12 @@ class ChatDelegate {
                 /// if it's not a group chat, or it's from me, or it doesn't have information on who sent it
                 messages[i]["sender"] = "nil"
             }
+            
+            /// Don't think I like showing relative time for messages, so I'll just leave this commented out for now.
+            /*let t: Double = ((Double(messages[i]["date"] ?? "0") ?? 0.0) / 1000000000.0) + 978307200.0
+            let d = Date(timeIntervalSince1970: t)
+            
+            messages[i]["relative_time"] = formatter.localizedString(for: d, relativeTo: Date())*/
         }
         
         /// close dbs
@@ -438,6 +334,9 @@ class ChatDelegate {
         
         let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name", "h.uncanonicalized_id"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id inner join chat_handle_join hj on hj.chat_id = c.ROWID inner join handle h on h.ROWID = hj.handle_id where j.message_date in (select  max(message_date) from chat_message_join group by chat_id) group by c.chat_identifier order by j.message_date desc", num_items: num_to_load, offset: offset)
         var return_array = [[String:String]]()
+        
+        let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .numeric
         
         for i in chats {
             if self.debug {
@@ -492,6 +391,11 @@ class ChatDelegate {
             /// Cause `i["h.id"]` is just the `chat_identifier` of one of the members of the group if it's a group chat.
             new_chat["chat_identifier"] = i["c.chat_identifier"]
             new_chat["time_marker"] = i["m.date"]
+            
+            let t: Double = ((Double(i["m.date"] ?? "0") ?? 0.0) / 1000000000.0) + 978307200.0
+            let d = Date(timeIntervalSince1970: t)
+            
+            new_chat["relative_time"] = formatter.localizedString(for: d, relativeTo: Date())
             
             return_array.append(new_chat)
         }
@@ -657,7 +561,6 @@ class ChatDelegate {
                 
                 /// get the path of the attachment minus the attachment storage prefix ("/private/var/mobile/Library/SMS/Attachments/")
                 let suffixed = String(i["filename"]?.dropFirst(ChatDelegate.imageStoragePrefix.count - ChatDelegate.userHomeString.count + 2) ?? "")
-                //suffixed = suffixed.replacingOccurrences(of: "/", with: "._.")
                 let type = i["mime_type"] ?? ""
                 
                 /// Append to return array
@@ -680,9 +583,6 @@ class ChatDelegate {
         if self.debug {
             self.log("Getting attachment type for @ \(path)")
         }
-        
-        //let new_path = path.replacingOccurrences(of: "._.", with: "/")
-		//let new_path = path
         
         var db = createConnection()
         if db == nil { return "" }
@@ -723,7 +623,7 @@ class ChatDelegate {
         }
     }
 	
-	func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]]{
+	func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]] {
         /// This gets all texts with $term in them; case_sensitive and bridge_gaps are customization options
         
         /// Create Connections
