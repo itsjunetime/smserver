@@ -4,14 +4,11 @@
 #import "Obj.h"
 
 @implementation IPCTextWatcher {
+    /// This is a MCRYIPC center that libsmserver contacts whenever a new text is received.
     MRYIPCCenter* _center;
 }
 
-+(void)load {
-    [self sharedInstance];
-}
-
-+(instancetype)sharedInstance {
++ (instancetype)sharedInstance {
     static dispatch_once_t onceToken = 0;
     __strong static IPCTextWatcher* sharedInstance = nil;
     dispatch_once(&onceToken, ^{
@@ -20,7 +17,7 @@
     return sharedInstance;
 }
 
--(instancetype)init {
+- (instancetype)init {
     if ((self = [super init])) {
         _center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
         [_center addTarget:self action:@selector(handleReceivedTextWithCallback:)];
@@ -29,11 +26,13 @@
     return self;
 }
 
--(void)handleReceivedTextWithCallback:(NSString *)chat_id {
+- (void)handleReceivedTextWithCallback:(NSString *)chat_id {
+    /// This is the function that is called when a new text is received.
+    /// _setTexts is a block that is set somewhere around line 677 in ContentView.swift, in loadFuncs(). 
     _setTexts(chat_id);
 }
 
--(void)handleBatteryChanged {
+- (void)handleBatteryChanged {
     _setBattery();
 }
 
@@ -71,6 +70,11 @@
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
     [center callExternalVoidMethod:@selector(sendText:) withArguments:@{@"body": body, @"address": address, @"attachment": paths}];
     
+}
+
+- (void)markConvoAsRead:(NSString *)chat_id {
+    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
+    [center callExternalMethod:@selector(setAllAsRead:) withArguments:chat_id];
 }
 
 @end

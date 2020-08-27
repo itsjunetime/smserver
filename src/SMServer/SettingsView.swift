@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
     @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
     @State var is_secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
+    @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
     
     let picker_options = ["Dark", "Light"]
 	
@@ -42,12 +43,12 @@ struct SettingsView: View {
             UserDefaults.standard.setValue(Int($0), forKey: "num_messages")
         })
 		
-		/*let photos_binding = Binding<Int>(get: {
+		let photos_binding = Binding<Int>(get: {
 			self.default_num_photos
 		}, set: {
 			self.default_num_photos = Int($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_photos")
-		})*/
+		})
         
         let theme_binding = Binding<Int>(get: {
             self.light_theme ? 1 : 0
@@ -83,6 +84,13 @@ struct SettingsView: View {
         }, set: {
             self.background = $0
             UserDefaults.standard.setValue($0, forKey: "enable_backgrounding")
+        })
+        
+        let read_binding = Binding<Bool>(get: {
+            self.mark_when_read
+        }, set: {
+            self.mark_when_read = $0
+            UserDefaults.standard.setValue($0, forKey: "mark_when_read")
         })
 		
 		let socket_binding = Binding<Int>(get: {
@@ -120,13 +128,13 @@ struct SettingsView: View {
 							.frame(width: 60)
 					}
 					
-					/*HStack {
+					HStack {
 						Text("Initial number of photos to load")
 						Spacer()
 						TextField("Photos", value: photos_binding, formatter: NumberFormatter())
 							.textFieldStyle(RoundedBorderTextFieldStyle())
 							.frame(width: 60)
-					}*/
+					}
 					
 					HStack {
 						Text("Websocket port")
@@ -163,6 +171,8 @@ struct SettingsView: View {
 					Toggle("Enable backgrounding", isOn: background_binding)
                     
                     Toggle("Enable SSL", isOn: secure_binding)
+                    
+                    Toggle("Mark conversations as read when viewed on web interface", isOn: read_binding)
                 }.alert(isPresented: $display_ssl_alert, content: {
                     Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
                 })
