@@ -35,15 +35,17 @@
             var prefix = "";
 
             if (doc_url === "127.0.0.1" || doc_url === "localhost") { /// when I'm debugging on local computer
-                prefix = "http://192.168.50.10:8741";
+                prefix = "http://10.37.27.19:8741";
                 num_texts_to_load = 100;
                 num_chats_to_load = 60;
                 socket_port = 8740;
-                socket_address = "192.168.50.10";
+                socket_address = "10.37.27.19";
             }
     
-            function timeConverter(UNIX_timestamp){
-                var a = new Date(UNIX_timestamp * 1000);
+            function timeConverter(t) {
+		var ts = (t / 1000000000) + 978307200;
+
+                var a = new Date(ts * 1000);
                 var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 var year = a.getFullYear();
                 var month = months[a.getMonth()];
@@ -76,8 +78,8 @@
                 classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service
 
                 t.setAttribute("class", classes);
-                //t.setAttribute("id", "texts-" + text.ROWID);
                 t.setAttribute("id", text.guid);
+		t.setAttribute("title", timeConverter(text.date));
                 t.innerHTML = ''
                 
                 if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
@@ -110,22 +112,33 @@
                 i.src = prefix + "/data?chat_id=" + chat.chat_identifier.replace("+", "%2B");
                 b.appendChild(i);
 
+		var nonpic = document.createElement("div");
+		nonpic.setAttribute("class", "chat-nonpic");
+
+		var top = document.createElement("div");
+		top.setAttribute("class", "chat-toprow");
+
                 var n = document.createElement("div");
                 n.setAttribute("class", "chat-name");
                 n.innerHTML = (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name) 
                 if (chat.chat_identifier.substring(0, 4) !== "chat" && chat.display_name.length !== 0) { 
                     n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
                 }
-                b.appendChild(n);
+		top.appendChild(n);
+
+		var d = document.createElement("div");
+		d.setAttribute("class", "chat-date");
+		d.innerHTML = chat.relative_time;
+		top.appendChild(d);
+
+		nonpic.appendChild(top);
 
                 var t = document.createElement("div");
                 t.setAttribute("class", "chat-text");
                 t.innerHTML = chat.latest_text.replace("￼", "").replace("￼", "")
-                b.appendChild(t);
+		nonpic.appendChild(t);
+		b.appendChild(nonpic);
 
-                //let unix_timestamp = (chat.time_marker / 1000000000) + 978307200;
-                //b.innerHTML += "<div class=\"chat-date\">" + timeConverter(unix_timestamp) + "</div>";
-		b.innerHTML += "<div class=\"chat-date\">" + chat.relative_time + "</div>";
                 
                 if (chat.has_unread === "true") b.setAttribute("class", "unread");
                 var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
@@ -351,13 +364,11 @@
 
                     var t = getTextElement(texts[i], i === 0);
                     
-                    /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
                     if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
                         var time = document.createElement("div");
                         time.setAttribute("class", "time-display");
 
-                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200
-                        var formattedTime = timeConverter(unix_timestamp)
+                        var formattedTime = timeConverter(texts[i].date);
                                                 
                         time.innerHTML = "<p>" + formattedTime + "</p>"
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
@@ -415,14 +426,11 @@
 
                     var t = getTextElement(texts[i], i === 0);
 
-                    /// So uh do ((date/1000000000) + 978307200) == unix timestamp.
                     if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
                         var time = document.createElement("div");
                         time.setAttribute("class", "time-display");
 
-                        let unix_timestamp = (texts[i].date / 1000000000) + 978307200
-
-                        var formattedTime = timeConverter(unix_timestamp)
+                        var formattedTime = timeConverter(texts[i].date)
                         
                         time.innerHTML = "<p>" + formattedTime + "</p>"
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)

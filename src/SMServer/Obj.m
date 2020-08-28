@@ -38,24 +38,22 @@
 
 @end
 
-@implementation Sender
-
+@implementation IWSSender
 
 - (void)relaunchApp {
     
+    NSLog(@"SMServer_app: Relaunching app in objc");
+    
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
-    [center callExternalVoidMethod:@selector(relaunchSMServer) withArguments:nil];
+    [center callExternalVoidMethod:@selector(launchSMS:) withArguments:@"YES"];
     
 }
 
 - (void)launchMobileSMS {
-    
     NSLog(@"SMServer_app: Entered obj-c func, launching MobileSMS");
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
-    [center callExternalVoidMethod:@selector(launchSMS) withArguments:nil];
-    
-    NSLog(@"SMServer_app: Called IPC to launch MobileSMS");
+    [center callExternalVoidMethod:@selector(launchSMS:) withArguments:@"NO"];
 }
 
 - (uid_t)setUID {
@@ -73,8 +71,10 @@
 }
 
 - (void)markConvoAsRead:(NSString *)chat_id {
+    
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
-    [center callExternalMethod:@selector(setAllAsRead:) withArguments:chat_id];
+    [center callExternalVoidMethod:@selector(setAllAsRead:) withArguments:chat_id];
+    
 }
 
 @end
