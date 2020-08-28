@@ -254,8 +254,8 @@ class ChatDelegate {
         /// check if it's a group chat
         let is_group = num.prefix(4) == "chat"
         
-        let formatter = RelativeDateTimeFormatter()
-        formatter.dateTimeStyle = .named
+        /*let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .named*/
         
         /// for each message
         for i in 0..<messages.count {
@@ -332,11 +332,14 @@ class ChatDelegate {
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         if db == nil || contacts_db == nil { return [[String:String]]() }
         
-        let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name", "h.uncanonicalized_id"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id inner join chat_handle_join hj on hj.chat_id = c.ROWID inner join handle h on h.ROWID = hj.handle_id where j.message_date in (select  max(message_date) from chat_message_join group by chat_id) group by c.chat_identifier order by j.message_date desc", num_items: num_to_load, offset: offset)
+        let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(message_date) from chat_message_join group by chat_id) group by c.chat_identifier order by j.message_date desc", num_items: num_to_load, offset: offset)
         var return_array = [[String:String]]()
         
+        let locale = Locale.current
+        
         let formatter = RelativeDateTimeFormatter()
-        formatter.dateTimeStyle = .numeric
+        formatter.locale = locale
+        formatter.dateTimeStyle = .named
         
         for i in chats {
             if self.debug {
@@ -346,11 +349,7 @@ class ChatDelegate {
             var new_chat = [String:String]()
             
             /// Check for if it has unread. It has to fit all these specific things.
-            if i["m.is_from_me"] == "0" && i["m.date_read"] == "0" && i["m.text"] != nil && i["m.is_read"] == "0" && i["m.item_type"] == "0" {
-                new_chat["has_unread"] = "true"
-            } else {
-                new_chat["has_unread"] = "false"
-            }
+            new_chat["has_unread"] = (i["m.is_from_me"] == "0" && i["m.date_read"] == "0" && i["m.text"] != nil && i["m.is_read"] == "0" && i["m.item_type"] == "0") ? "true" : "false"
             
             /// Content of the most recent text. If a text has attachments, `i["m.text"]` will look like `\u{ef}`. this checks for that.
             if i["m.text"]?.replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil).trimmingCharacters(in: .whitespacesAndNewlines).count != 0 {

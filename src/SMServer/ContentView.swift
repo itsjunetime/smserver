@@ -32,7 +32,7 @@ struct ContentView: View {
     @State var show_picker = false
     
     static let chat_delegate = ChatDelegate()
-    @State var s = Sender()
+    @State var s = IWSSender()
     @State var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
     
     let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
@@ -404,7 +404,7 @@ struct ContentView: View {
             }
             
             self.backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-                if UIApplication.shared.applicationState == .background {
+                if UIApplication.shared.applicationState != .active {
                     if self.debug {
                         self.log("relaunching app...")
                     }

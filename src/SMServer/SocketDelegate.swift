@@ -92,7 +92,6 @@ class SocketDelegate : ServerWebSocketDelegate {
 		webSocket.send(text: "battery:\(String(battery_level))")*/
 
 		/// Backgrounding doesn't work with the next line uncommented
-		//NotificationCenter.default.addObserver(self, selector: Selector(("sendNewBattery:")), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
 	}
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
@@ -105,7 +104,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 	func server(_ server: Server, webSocket: WebSocket, didReceiveMessage message: WebSocketMessage) {
 		// One of our web sockets sent us a message
         if message.payload.data != nil && self.debug {
-            self.log("Received message: \(String(describing: message.payload.data))")
+            self.log("Received message: \(message.payload.data)")
         }
 	}
 }
