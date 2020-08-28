@@ -12,7 +12,7 @@
 
 @end
 
-@interface Sender : NSObject
+@interface IWSSender : NSObject
 
 - (void)launchMobileSMS;
 - (void)relaunchApp;
