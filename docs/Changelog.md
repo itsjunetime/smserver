@@ -1,5 +1,12 @@
 # Changelog
 
+0.3.5 -> 0.3.6
+ - Maybe fixed Cydia never-ending update issue?
+ - Fixed styling issues with css grid noncompatible browsers
+ - Fixed weird colors on light theme
+ - Fixed crashing issue when marking conversation as read
+ - Optimized chat retrieval SQL Query
+
 0.3.4 -> 0.3.5
  - Added support for marking conversations as read when viewed in web interface
  - Added support for relative date displays
