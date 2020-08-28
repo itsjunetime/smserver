@@ -84,7 +84,6 @@ p {
 	height: calc(var(--messages-send-height) - 20px);
 	resize: vertical;
 }
-
 @supports (backdrop-filter: blur(50px)) or (-webkit-backdrop-filter: blur(50px)) {
 	.messages .title, .textbox,
     .compose, #cameraroll {
@@ -182,9 +181,7 @@ p {
 	border-top: 1px solid var(--chats-border);
 	border-bottom: 1px solid var(--chats-border);
 	background-color: #111;
-	display: grid;
-	grid-template-columns: calc((var(--chats-button-height) * 0.76) + 10px) 1fr 140px; /* looks groovy, ya know? */
-	grid-template-rows: 2fr 3fr;
+	display: flex;
 	width: var(--chats-width);
 	transition: all linear 0.1s;
 	color: #dae3f0;
@@ -192,36 +189,36 @@ p {
 	height: var(--chats-button-height);
 }
 .chats button img {
-	grid-row: 1/3;
-	grid-column: 1;
 	max-height: calc(var(--chats-button-height) * 0.76);
 	max-width: calc(var(--chats-button-height) * 0.76);
     border-radius: 100%;
 }
+.chat-nonpic {
+	padding-left: 14px;
+	width: calc(var(--chats-width) - (var(--chats-button-height) * 1.1)); /* This doesn't make any sense but it seems to work */
+}
+.chat-toprow {
+	display: flex;
+}
 .chat-name {
 	font-size: 16px;
-	grid-column: 2;
-	grid-row: 1;
-	margin-top: 10px;
 	line-height: 18px;
 	max-height: 18px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	text-align: start;
 	font-weight: 500;
+	margin-right: auto;
+	margin-bottom: 10px;
 }
 .chat-text {
-	grid-column: 2/4;
-	grid-row: 2;
 	color: #ddd;
 	font-size: 12px;
-	margin-bottom: 10px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	text-align: start;
 	max-height: calc(var(--chats-button-height) - 45px);
 	white-space: nowrap;
-	padding-right: 10px
 }
 .chat-date {
 	padding-right: 6px;
@@ -245,7 +242,6 @@ p {
 	padding-bottom: 5px;
 }
 .chats p {
-	padding-left: 10px;
 	transition: all linear 0.1s;
 }
 .chats button:hover {
@@ -483,16 +479,15 @@ p {
 }
 #composeShowButton {
 	width: 60px;
+	padding: 0px 8px 0px 8px;
 }
 #notificationbutton {
 	width: 90px;
-	padding-left: 8px
+	padding: 0px 0px 0px 8px;
 }
 #composeShowButton p, #notificationbutton p {
-	padding: 0;
 	margin: 0 0 0 0;
 	font-size: 14px;
-	font-weight: 500;
 }
 #camerarollbutton {
 	background-color: gray;

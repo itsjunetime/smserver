@@ -1,45 +1,28 @@
 :root {
-  --chats-border: #e5e5e5;
-  --font-color: #070707;
+	--chats-border: #e5e5e5;
+	--font-color: #070707;
+	--text-box-gradient: linear-gradient(to bottom right, #ccc, #bbb);
 }
-body, html {
-  background-color: #fff;
+body, html, .messages, .chats button:hover {
+	background-color: #fff;
 }
 .messages {
-  background-color: #fff;
-  border-color: var(--chats-border);
+	border-color: var(--chats-border);
 }
-.chats button {
-  background-color: #ddd;
-}
-.chats button:hover {
-  background-color: #fff;
-}
-.messages .title {
-  background-color: #ddd;
-}
-.is_from_them {
-  background-color: #ddd;
+.chats button, .messages .title, .is_from_them, #sendbox 
+#unhiddenbutton, #camerarollbutton, #composeShowButton, #notificationbutton {
+	background-color: #ddd;
 }
 .is_from_me {
-  background-color: #58f;
-  background-image: none;
-  color: #fff;
-}
-#sendbox {
-  background-color: #ddd;
-}
-#unhiddenbutton {
-  background-color: #ddd
+	background-color: #58f;
+	background-image: none;
+	color: #fff;
 }
 #sendbutton {
-  font-size: 16px;
-  color: #fff;
-  padding-left: 6px;
-  padding-top: 2px;
-}
-#composeShowButton {
-	background-color: #ddd;
+	font-size: 16px;
+	color: #fff;
+	padding-left: 6px;
+	padding-top: 2px;
 }
 .centered {
 	text-shadow: -2px 2px #e5e5e5;
@@ -55,5 +38,14 @@ body, html {
 	color: rgba(0, 0, 100, 0.6);
 }
 #morechatsbutton {
-  border: none;
+	border: none;
+}
+#composeShowingAttachmentButton {
+	box-shadow: 0px 0px 6px #858585;	
+}
+#composeHideButton, #camerarollHideButton, #composeSendBox {
+	background-color: #ddd4;
+}
+#composeSendBox {
+	color: white;
 }
