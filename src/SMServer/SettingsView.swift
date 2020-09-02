@@ -16,13 +16,11 @@ struct SettingsView: View {
     @State var is_secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
     @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
     
-    let picker_options = ["Dark", "Light"]
-	
-	@ObservedObject private var keyWatcher = KeyboardWatcher()
+    private let picker_options: [String] = ["Dark", "Light"]
     
-    @State var display_ssl_alert = false
+    @State private var display_ssl_alert: Bool = false
 	
-	func resetDefaults() {
+	private func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
 		UserDefaults.standard.removePersistentDomain(forName: domain)
 	}
@@ -195,34 +193,9 @@ struct SettingsView: View {
 				Spacer()
 				
 			}.padding()
-			.offset(y: -1 * keyWatcher.currentHeight)
 			.animation(.easeOut(duration: 0.16))
 		}
     }
-}
-
-final class KeyboardWatcher : ObservableObject {
-	private var notificationCenter = NotificationCenter.default
-	@Published private(set) var currentHeight: CGFloat = 0
-	
-	init() {
-		notificationCenter.addObserver(self, selector: #selector(keyBoardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-		notificationCenter.addObserver(self, selector: #selector(keyBoardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-	}
-	
-	deinit {
-		notificationCenter.removeObserver(self)
-	}
-
-	@objc func keyBoardWillShow(notification: Notification) {
-		if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
-			currentHeight = keyboardSize.height
-		}
-	}
-
-	@objc func keyBoardWillHide(notification: Notification) {
-		currentHeight = 0
-	}
 }
 
 struct SettingsView_Previews: PreviewProvider {

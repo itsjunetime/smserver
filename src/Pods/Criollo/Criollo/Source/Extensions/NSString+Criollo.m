@@ -13,7 +13,6 @@
 
 - (NSString *)stringByDecodingURLEncodedString {
 	NSString* returnString = self.stringByRemovingPercentEncoding;
-    returnString = [returnString stringByReplacingOccurrencesOfString:@"+" withString:@" "];
     return returnString;
 }
 

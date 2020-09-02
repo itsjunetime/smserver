@@ -10,7 +10,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 	var watcher: IPCTextWatcher? = nil
 	var authenticated_addresses = [String]()
 	var verify_auth: (String)->(Bool) = { _ in return false } /// nil init
-	let prefix = "SMServer_app: "
+    let prefix: String = "SMServer_app: "
     
     var debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	var sendTypingNotifs = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
@@ -104,7 +104,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 	func server(_ server: Server, webSocket: WebSocket, didReceiveMessage message: WebSocketMessage) {
 		// One of our web sockets sent us a message
         if message.payload.data != nil && self.debug {
-            self.log("Received message: \(message.payload.data)")
+            self.log("Received message: \(message.payload.data ?? Data.init(capacity: 0))")
         }
 	}
 }
