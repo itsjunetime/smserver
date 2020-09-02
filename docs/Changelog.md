@@ -1,5 +1,13 @@
 # Changelog
 
+0.3.6 -> 0.3.7
+ - Introduced general optimizations
+ - Specifically optimized message and searching retrieval functions
+ - Introduced viewing of read receipts
+ - Fixed issues of plus signs being filtered out with query parsing
+ - Removed postinst script
+ - Decreased code footprint
+
 0.3.5 -> 0.3.6
  - Maybe fixed Cydia never-ending update issue?
  - Fixed styling issues with css grid noncompatible browsers
