@@ -50,7 +50,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
-        if contentView.server.isListening && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true && contentView.backgroundTask == .invalid {
+        if contentView.server.isListening && UserDefaults.standard.object(forKey: "backgrounding_enabled") as? Bool ?? true {
             os_log("%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, "SMServer_app: sceneDidEnterBackground, starting background task")
             contentView.startBackgroundTask()
         }

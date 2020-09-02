@@ -4,20 +4,20 @@ import SwiftUI
 import Photos
 import os
 
-class ChatDelegate {
+final class ChatDelegate {
     var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-    let prefix = "SMServer_app: "
+    let prefix: String = "SMServer_app: "
     
-    static let imageStoragePrefix = "/private/var/mobile/Library/SMS/Attachments/"
-	static let photoStoragePrefix = "/var/mobile/Media/DCIM/"
-    static let userHomeString = "/private/var/mobile/"
+    static let imageStoragePrefix: String = "/private/var/mobile/Library/SMS/Attachments/"
+    static let photoStoragePrefix: String = "/var/mobile/Media/DCIM/"
+    static let userHomeString: String = "/private/var/mobile/"
     
-    func log(_ s: String) {
+    final func log(_ s: String) {
         /// Logs to syslog/console
         os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
-    func createConnection(connection_string: String = "/private/var/mobile/Library/SMS/sms.db") -> OpaquePointer? {
+    final func createConnection(connection_string: String = "/private/var/mobile/Library/SMS/sms.db") -> OpaquePointer? {
         /// This simply returns an opaque pointer to the database at $connection_string, allowing for sqlite connections.
         
         var db: OpaquePointer?
@@ -40,7 +40,15 @@ class ChatDelegate {
         return db
     }
     
-	func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0) -> [[String:String]] {
+    final func closeDatabase(_ db: inout OpaquePointer?) {
+        let close_code = sqlite3_close(db)
+        if close_code != SQLITE_OK {
+            self.log("WARNING: error closing database. Errror: \(close_code)")
+        }
+        db = nil
+    }
+    
+	final func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0) -> [[String:String]] {
         /// This executes an SQL query, specifically 'SELECT $columns from $table $condition LIMIT $offset, $num_items', on $db
         
         /// Construct the query
@@ -132,7 +140,7 @@ class ChatDelegate {
         return main_return
     }
     
-    func getDisplayName(chat_id: String) -> String {
+    final func getDisplayName(chat_id: String) -> String {
         /// This does the same thing as getDisplayName, but doesn't take db as an argument. This allows for fetching of a single name,
         /// when you don't need to get a lot of names at once.
         
@@ -149,26 +157,17 @@ class ChatDelegate {
         let name = getDisplayNameWithDb(sms_db: sms_db, contact_db: contact_db, chat_id: chat_id)
         
         /// close
-        if sqlite3_close(sms_db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        sms_db = nil
-        
-        if sqlite3_close(contact_db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-        
-        contact_db = nil
+        closeDatabase(&sms_db)
+        closeDatabase(&contact_db)
         
         if self.debug {
-            self.log("destroyed db")
+            self.log("destroyed dbs")
         }
         
         return name
     }
     
-    func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String) -> String {
+    final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String) -> String {
         /// Gets the first + last name of a contact with the phone number or email of $chat_id
         
         if self.debug {
@@ -189,7 +188,7 @@ class ChatDelegate {
         if display_name_array.count == 0 {
             let unc = selectFromSql(db: sms_db, columns: ["uncanonicalized_id"], table: "handle", condition: "WHERE id is \"\(chat_id)\"")
             
-            guard let ret = unc[0]["uncanonicalized_id"] else {
+            guard unc.count > 0, let ret = unc[0]["uncanonicalized_id"] else {
                 return ""
             }
             
@@ -206,7 +205,7 @@ class ChatDelegate {
         return full_name
     }
     
-    func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
+    final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
         
         if self.debug {
             self.log("Getting group chat recipients for \(ci)")
@@ -236,7 +235,7 @@ class ChatDelegate {
         return ret_val
     }
     
-    func loadMessages(num: String, num_items: Int, offset: Int = 0) -> [[String:String]] {
+    final func loadMessages(num: String, num_items: Int, offset: Int = 0) -> [[String:String]] {
         /// This loads the latest $num_items messages from/to $num, offset by $offset.
         
         if self.debug {
@@ -248,79 +247,75 @@ class ChatDelegate {
         var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         if db == nil || contact_db == nil { return [[String:String]]() }
         
-        /// Get the most recent messages and all their relevant metadata from $num
-        var messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "is_from_me", "date", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
-        
         /// check if it's a group chat
         let is_group = num.prefix(4) == "chat"
+        var return_messages = [[String:String]]()
         
-        /*let formatter = RelativeDateTimeFormatter()
-        formatter.dateTimeStyle = .named*/
-        
-        /// for each message
-        for i in 0..<messages.count {
-            /// if it has attachments
-            if messages[i]["cache_has_attachments"] == "1" && messages[i]["ROWID"] != nil {
-                let a = getAttachmentFromMessage(mid: messages[i]["ROWID"]!) /// get list of attachments
-                var file_string = ""
-                var type_string = ""
-                if self.debug {
-                    print(prefix)
-                    print(a)
+        if !is_group {
+            var messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+            
+            for i in 0..<messages.count {
+                /// get the attachments
+                if messages[i]["cache_has_attachments"] == "1" && messages[i]["ROWID"] != nil {
+                    let a = getAttachmentFromMessage(mid: messages[i]["ROWID"]!) /// get list of attachments
+                    var file_string = ""
+                    var type_string = ""
+                    for l in 0..<a.count {
+                        /// use ':' as separater between attachments 'cause you can't have a filename in iOS that contains it (I think?)
+                        file_string += a[l][0] + (l != a.count ? ":" : "")
+                        type_string += a[l][1] + (l != a.count ? ":" : "")
+                    }
+                    messages[i]["attachment_file"] = file_string
+                    messages[i]["attachment_type"] = type_string
                 }
-                for l in 0..<a.count {
-                    /// use ':' as separater between attachments 'cause you can't have a filename in iOS that contains it (I think?)
-                    file_string += a[l][0] + (l != a.count ? ":" : "")
-                    type_string += a[l][1] + (l != a.count ? ":" : "")
-                }
-                messages[i]["attachment_file"] = file_string
-                messages[i]["attachment_type"] = type_string
             }
             
-            /// get names for each message's sender if it's a group chat
-            if is_group && messages[i]["is_from_me"] == "0" && messages[i]["handle_id"] != nil {
+            return_messages = messages
+        } else {
+            var messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "h.id"], table: "message m", condition: "inner join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset)
+            
+            for i in 0..<messages.count {
+                var new_msg = [String:String]()
                 
-                let handle = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID is \(messages[i]["handle_id"]!)", num_items: 1)
-                
-                if handle.count > 0 {
-                    let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: handle[0]["id"]!)
-                    
-                    messages[i]["sender"] = name
+                if messages[i]["m.cache_has_attachments"] == "1" && messages[i]["m.ROWID"] != nil {
+                    let a = getAttachmentFromMessage(mid: messages[i]["m.ROWID"] ?? "") /// get list of attachments
+                    var file_string = ""
+                    var type_string = ""
+                    for l in 0..<a.count {
+                        /// use ':' as separater between attachments 'cause you can't have a filename in iOS that contains it (I think?)
+                        file_string += a[l][0] + (l != a.count ? ":" : "")
+                        type_string += a[l][1] + (l != a.count ? ":" : "")
+                    }
+                    messages[i]["m.attachment_file"] = file_string
+                    messages[i]["m.attachment_type"] = type_string
                 }
-            } else {
-                /// if it's not a group chat, or it's from me, or it doesn't have information on who sent it
-                messages[i]["sender"] = "nil"
+                
+                if messages[i]["m.is_from_me"] == "0" && messages[i]["h.id"]?.count != 0 {
+                    let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: messages[i]["h.id"] ?? "")
+                    messages[i]["m.sender"] = name
+                }
+                
+                for l in Array(messages[i].keys) {
+                    new_msg[String(l.split(separator: ".")[1])] = messages[i][l]
+                }
+                
+                return_messages.append(new_msg)
             }
-            
-            /// Don't think I like showing relative time for messages, so I'll just leave this commented out for now.
-            /*let t: Double = ((Double(messages[i]["date"] ?? "0") ?? 0.0) / 1000000000.0) + 978307200.0
-            let d = Date(timeIntervalSince1970: t)
-            
-            messages[i]["relative_time"] = formatter.localizedString(for: d, relativeTo: Date())*/
         }
         
         /// close dbs
-        if sqlite3_close(db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        db = nil
-        
-        if sqlite3_close(contact_db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        contact_db = nil
+        closeDatabase(&db)
+        closeDatabase(&contact_db)
         
         if self.debug {
             self.log("destroyed db")
             self.log("returning messages!")
         }
         
-        return messages
+        return return_messages
     }
     
-    func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:String]] {
+    final func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:String]] {
         /// This loads the most recent $num_to_load conversations, offset by $offset
         
         if self.debug {
@@ -400,17 +395,8 @@ class ChatDelegate {
         }
         
         /// close
-        if sqlite3_close(contacts_db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        contacts_db = nil
-        
-        if sqlite3_close(db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        db = nil
+        closeDatabase(&contacts_db)
+        closeDatabase(&db)
         
         if self.debug {
             self.log("destroyed db")
@@ -419,7 +405,7 @@ class ChatDelegate {
         return return_array
     }
     
-    func returnImageData(chat_id: String) -> Data {
+    final func returnImageData(chat_id: String) -> Data {
         /// This does the same thing as returnImageDataDB, but without the contact_db and image_db as arguments, if you just need to get like 1 image
         
         if self.debug {
@@ -435,22 +421,13 @@ class ChatDelegate {
         let return_val = returnImageDataDB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!)
         
         /// close
-        if sqlite3_close(contact_db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        contact_db = nil
-        
-        if sqlite3_close(image_db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        image_db = nil
+        closeDatabase(&contact_db)
+        closeDatabase(&image_db)
         
         return return_val
     }
     
-    func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
+    final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
         /// This returns the profile picture for someone with the phone number or email $chat_id as pure image data
         
         if self.debug {
@@ -536,7 +513,7 @@ class ChatDelegate {
         return pngdata
     }
     
-    func getAttachmentFromMessage(mid: String) -> [[String]] {
+    final func getAttachmentFromMessage(mid: String) -> [[String]] {
         /// This returns the file path for all attachments associated with a certain message with the message_id of $mid
         
         if self.debug {
@@ -567,16 +544,12 @@ class ChatDelegate {
             }
         }
         
-        if sqlite3_close(db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        db = nil
+        closeDatabase(&db)
         
         return return_val
     }
     
-    func getAttachmentType(path: String) -> String {
+    final func getAttachmentType(path: String) -> String {
         /// This gets the file type of the attachment at $path
         
         if self.debug {
@@ -593,16 +566,12 @@ class ChatDelegate {
             return_val = file_type_array[0]["mime_type"]!
         }
         
-        if sqlite3_close(db) != SQLITE_OK {
-            self.log("WARNING: error closing database")
-        }
-
-        db = nil
+        closeDatabase(&db)
         
         return return_val
     }
     
-    func getAttachmentDataFromPath(path: String) -> Data {
+    final func getAttachmentDataFromPath(path: String) -> Data {
         /// This returns the pure data of a file (attachment) at $path
         
         if self.debug {
@@ -622,7 +591,7 @@ class ChatDelegate {
         }
     }
 	
-	func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]] {
+	final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]] {
         /// This gets all texts with $term in them; case_sensitive and bridge_gaps are customization options
         
         /// Create Connections
@@ -637,30 +606,32 @@ class ChatDelegate {
 		if bridge_gaps { upperTerm = upperTerm.split(separator: " ").joined(separator: "%") }
 		
 		var return_texts = [String:[[String:String]]]()
+        var names = [String:String]()
+        
+        var texts = selectFromSql(db: db, columns: ["c.chat_identifier", "c.display_name", "m.ROWID", "m.text", "m.service", "m.date", "m.cache_has_attachments"], table: "message m", condition: "inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID WHERE text like \"%\(upperTerm)\" order by m.date desc")
 		
-		let texts = selectFromSql(db: db, columns: ["ROWID", "text", "service", "date", "cache_has_attachments"], table: "message", condition: "WHERE text like \"%\(upperTerm)%\"")
-		
+        if case_sensitive { texts.removeAll(where: { !($0["m.text"]?.contains(term) ?? true) })}
+        
 		for var i in texts {
-			if case_sensitive && !(i["text"]?.contains(term) ?? true) { continue } /// Sqlite3 library can't set like to be case-sensitive. Must manually check.
 			
-			if i["date"] != nil {
-				let date: Int = Int(String(i["date"] ?? "0")) ?? 0
-				let new_date: Int = date / 1000000000
-				let timestamp: Int = new_date + 978307200
-				i["date"] = String(timestamp) /// Turns it into unix timestamp for easier use
-			}
+			/*if i["m.date"] != nil {
+				let date: Int = Int(String(i["m.date"] ?? "0")) ?? 0
+				let timestamp: Int = (date / 1000000000) + 978307200
+				i["m.date"] = String(timestamp) /// Turns it into unix timestamp for easier use
+			}*/
 			
             /// get sender for this text
-			let handle = selectFromSql(db: db, columns: ["chat_identifier", "display_name"], table: "chat", condition: "WHERE ROWID in (SELECT chat_id from chat_message_join WHERE message_id is \(i["ROWID"] ?? ""))", num_items: 1)
-			var chat = ""
-			
-			if handle.count > 0 {
-				if handle[0]["display_name"]?.count == 0 {
-					chat = handle[0]["chat_identifier"] ?? "(null)"
-				} else {
-					chat = "Group: " + (handle[0]["display_name"] ?? "(null)")
-				}
-			}
+			let chat = i["c.chat_identifier"] ?? "(null)"
+            
+            if i["c.display_name"]?.count == 0 {
+                if names[i["c.chat_identifier"] ?? ""] == nil {
+                    let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["c.chat_identifier"] ?? "")
+                    names[i["c.chat_identifier"] ?? ""] = name
+                    i["c.display_name"] = name
+                } else {
+                    i["c.display_name"] = names[i["c.chat_identifier"] ?? ""]
+                }
+            }
 			
             /// Add this text onto the list of texts from this person that match term
 			if return_texts[chat] == nil {
@@ -670,35 +641,14 @@ class ChatDelegate {
 			}
 		}
 		
-        /// Replace Group name with list of recipients
-		for i in Array(return_texts.keys) {
-			if i.prefix(7) != "Group: " {
-                let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i)
-				
-				if name.count != 0 {
-					return_texts[name] = return_texts[i]
-					return_texts.removeValue(forKey: i)
-				}
-			}
-		}
-		
         /// close
-		if sqlite3_close(db) != SQLITE_OK {
-			self.log("WARNING: error closing database")
-		}
-
-		db = nil
-		
-		if sqlite3_close(contact_db) != SQLITE_OK {
-			self.log("WARNING: error closing database")
-		}
-
-		contact_db = nil
+        closeDatabase(&db)
+        closeDatabase(&contact_db)
 		
 		return return_texts
 	}
 	
-	func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] { /// Gotta include stuff like favorite
+	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] { /// Gotta include stuff like favorite
 		/// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
 		
         self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
@@ -743,7 +693,8 @@ class ChatDelegate {
 			let image = result.object(at: i)
 			var img_url = ""
 			
-			dispatchGroup.enter() /// This whole dispatchGroup this is necessary to get the completion handler to run synchronously with the rest
+            /// This whole dispatchGroup this is necessary to get the completion handler to run synchronously with the rest... theoretically
+			dispatchGroup.enter()
 			
 			image.getURL(completionHandler: { url in
                 /// get url of each image
@@ -767,7 +718,7 @@ class ChatDelegate {
 		return ret_val
 	}
 	
-	func getPhotoDatafromPath(path: String) -> Data {
+	final func getPhotoDatafromPath(path: String) -> Data {
 		/// This returns the pure data of a photo at $path
 		
 		if self.debug {
@@ -786,7 +737,7 @@ class ChatDelegate {
 
 extension PHAsset {
 
-	func getURL(completionHandler : @escaping ((_ responseURL : URL?) -> Void)){
+	final func getURL(completionHandler : @escaping ((_ responseURL : URL?) -> Void)){
         /// This allows for retrieval of a PHAsset's URL in the filesystem.
         
 		if self.mediaType == .image {
@@ -795,7 +746,7 @@ extension PHAsset {
 				return true
 			}
 			self.requestContentEditingInput(with: options, completionHandler: {(contentEditingInput: PHContentEditingInput?, info: [AnyHashable : Any]) -> Void in
-				completionHandler(contentEditingInput!.fullSizeImageURL as URL?)
+				completionHandler(contentEditingInput?.fullSizeImageURL as URL?)
 			})
 		} else if self.mediaType == .video {
 			let options: PHVideoRequestOptions = PHVideoRequestOptions()
