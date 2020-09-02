@@ -1,5 +1,0 @@
-#!/bin/sh
-
-echo ""
-echo "Thanks for using SMServer! Please run an ldrestart after installing to make sure everything works fine :)"
-echo ""
