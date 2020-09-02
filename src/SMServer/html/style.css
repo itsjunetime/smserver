@@ -560,3 +560,10 @@ p {
 	opacity: 0.6;
 	display: none;
 }
+.readreceipt {
+    color: #a6a6a6;
+    font-size: 14px;
+    float: right;
+    padding-right: 10px;
+    margin-top: -10px;
+}

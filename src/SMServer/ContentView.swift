@@ -1,6 +1,5 @@
 import SwiftUI
 import Criollo
-import Telegraph
 import Photos
 import os
 
@@ -14,7 +13,7 @@ struct ContentView: View {
     let cert_pass = "smserver"
     
     @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-    @State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? Array<String> ?? [String]()
+    @State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
     @State var custom_css = UserDefaults.standard.object(forKey: "custom_css") as? String ?? ""
     @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
     @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
@@ -40,8 +39,8 @@ struct ContentView: View {
     
     var requests_page = """
     <!DOCTYPE html>
-        <body style="background-color: #222;">
-            <p style="color: #DDD; font-family: Verdana; font-size: 24px; padding: 20px;">
+        <body style="background-color: #000;">
+            <p style="color: #fff; font-family: Verdana; font-size: 24px; padding: 20px;">
                 This is the requests page! Thanks for visiting :)
             </p>
         </body>
@@ -119,7 +118,7 @@ struct ContentView: View {
                 self.log("Getting requests..")
             }
             
-            var query = req.query
+            let query = req.query
             
             if query.count == 0 {
                 /// If there are no parameters, return default blank page
@@ -132,15 +131,6 @@ struct ContentView: View {
                 
                 if self.debug {
                     self.log("GET /requests: \(address)")
-                }
-                
-                if ((req.env["QUERY_STRING"]?.contains("%2B") ?? false || req.env["QUERY_STRING"]?.contains("+") ?? false) && (query["name"] != nil || query["person"] != nil)) {
-                    for i in req.env["QUERY_STRING"]!.split(separator: "&") {
-                        let p = String(String(i).split(separator: "=")[0])
-                        let index = String(i).index(String(i).firstIndex(of: "=") ?? String(i).startIndex, offsetBy: 1)
-                        let v = String(String(i).suffix(from: index))
-                        query[p]? = v.replacingOccurrences(of: "%2B", with: "+")
-                    } /// So that `%2B` in the URL turns to `+` for the right parameters
                 }
                 
                 /// parseAndReturn() manages retrieving info for the API
@@ -177,16 +167,7 @@ struct ContentView: View {
             /// Handle different types of requests
 			if f == "chat_id" {
                 
-                var q = req.query
-                
-                if (req.env["QUERY_STRING"]?.contains("%2B") ?? false || req.env["QUERY_STRING"]?.contains("+") ?? false) {
-                    for i in req.env["QUERY_STRING"]!.split(separator: "&") {
-                        let p = String(String(i).split(separator: "=")[0])
-                        let index = String(i).index(String(i).firstIndex(of: "=") ?? String(i).startIndex, offsetBy: 1)
-                        let v = String(String(i).suffix(from: index))
-                        q[p]? = v.replacingOccurrences(of: "%2B", with: "+")
-                    } /// So that `%2B` in the URL turns to `+` for the right parameters instead of just being filtered out
-                }
+                let q = req.query
                 
                 res.setValue("image/jpeg", forHTTPHeaderField: "Content-type")
                 res.send(ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? ""))
@@ -682,8 +663,6 @@ struct ContentView: View {
 		socket.watcher = self.watcher
 		socket.authenticated_addresses = self.authenticated_addresses
 		socket.verify_auth = self.checkIfAuthenticated
-		
-		UIDevice.current.isBatteryMonitoringEnabled	= true
         
         if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
             PHPhotoLibrary.requestAuthorization({ auth in
