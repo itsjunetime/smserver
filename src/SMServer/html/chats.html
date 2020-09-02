@@ -80,6 +80,7 @@
                 t.setAttribute("class", classes);
                 t.setAttribute("id", text.guid);
 		t.setAttribute("title", timeConverter(text.date));
+		t.setAttribute("date_read", text.date_read);
                 t.innerHTML = ''
                 
                 if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
@@ -382,9 +383,24 @@
                         from.innerHTML = "<p>" + texts[i].sender + "</p>";
                         from.setAttribute("class", "sender");
                                                 
-                        doc.insertBefore(from, document.getElementById("moretextsbutton").nextSibling)
+                        doc.insertBefore(from, document.getElementById("moretextsbutton").nextSibling);
                     }
                 }
+
+		var my_texts = document.getElementsByClassName("is_from_me")
+		var my_last_text = my_texts[my_texts.length - 1];
+
+		if (!is_group && my_last_text.getAttribute("date_read") !== "0" && my_last_text.getAttribute("class").includes("iMessage")) {
+		    var rr = document.createElement("span");
+		    rr.setAttribute("class", "readreceipt");
+		    rr.innerHTML = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")));
+
+		    if (my_last_text === doc.lastChild) {
+			doc.appendChild(rr);
+		    } else {
+			doc.insertBefore(rr, my_last_text.nextSibling);
+		    }
+		}
 											  
                 document.getElementsByClassName("more_texts")[0].scrollIntoView()
             }
