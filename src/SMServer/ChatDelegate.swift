@@ -9,7 +9,7 @@ final class ChatDelegate {
     let prefix: String = "SMServer_app: "
     
     static let imageStoragePrefix: String = "/private/var/mobile/Library/SMS/Attachments/"
-    static let photoStoragePrefix: String = "/var/mobile/Media/DCIM/"
+    static let photoStoragePrefix: String = "/var/mobile/Media/"
     static let userHomeString: String = "/private/var/mobile/"
     
     final func log(_ s: String) {
@@ -216,12 +216,6 @@ final class ChatDelegate {
         var ret_val = [String]()
         
         for i in recipients {
-            /// Ok this is super lazy but I don't actually return all the group recipients, I just get the first two, then add '...' onto the end
-            /// Maybe I'll improve this in the future when I get better at JS & CSS and can display it nicely on the web interface
-            if recipients.count > 2 && i == recipients[2] {
-                ret_val.append("...")
-                break
-            }
             
             /// get name for person
             let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["id"] ?? "")
@@ -437,7 +431,6 @@ final class ChatDelegate {
         var docid = [[String:String]]()
         
         /// get docid. docid is the identifier that corresponds to each contact, allowing for us to get their image
-        
         if chat_id.contains("@") { /// if an email
             docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
         } else if chat_id.contains("+") {
@@ -578,7 +571,6 @@ final class ChatDelegate {
             self.log("Getting attachment data from path \(path)")
         }
         
-        //let parsed_path = path.replacingOccurrences(of: "._.", with: "/").replacingOccurrences(of: "../", with: "") ///Prevents LFI
 		let parsed_path = path.replacingOccurrences(of: "../", with: "") /// To prevent LFI
         
         do {
@@ -614,12 +606,6 @@ final class ChatDelegate {
         
 		for var i in texts {
 			
-			/*if i["m.date"] != nil {
-				let date: Int = Int(String(i["m.date"] ?? "0")) ?? 0
-				let timestamp: Int = (date / 1000000000) + 978307200
-				i["m.date"] = String(timestamp) /// Turns it into unix timestamp for easier use
-			}*/
-			
             /// get sender for this text
 			let chat = i["c.chat_identifier"] ?? "(null)"
             
@@ -648,10 +634,11 @@ final class ChatDelegate {
 		return return_texts
 	}
 	
-	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] { /// Gotta include stuff like favorite
+	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] {
 		/// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
-		
-        self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
+        if self.debug {
+            self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
+        }
         
         /// make sure that we have access to the photos library
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
@@ -666,8 +653,6 @@ final class ChatDelegate {
             guard con else { return [[String:String]]() }
         }
         
-        print("Has authorization")
-		
 		var ret_val = [[String:String]]()
 		let fetchOptions = PHFetchOptions()
         
@@ -675,44 +660,30 @@ final class ChatDelegate {
 		fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: !most_recent)]
 		fetchOptions.fetchLimit = num + offset
 		
-		let requestOptions = PHImageRequestOptions()
-		requestOptions.isSynchronous = true
-		requestOptions.isNetworkAccessAllowed = true
-		
         /// get images!
 		let result = PHAsset.fetchAssets(with: PHAssetMediaType.image, options: fetchOptions)
-		
 		let total = result.countOfAssets(with: PHAssetMediaType.image)
         
         for i in offset..<total {
-            var next = false;
-			let dispatchGroup = DispatchGroup()
 			
 			var local_result = [String:String]()
             
-			let image = result.object(at: i)
+            let image = result.object(at: i)
 			var img_url = ""
-			
-            /// This whole dispatchGroup this is necessary to get the completion handler to run synchronously with the rest... theoretically
-			dispatchGroup.enter()
 			
 			image.getURL(completionHandler: { url in
                 /// get url of each image
-				img_url = url!.path.replacingOccurrences(of: "/var/mobile/Media/DCIM/", with: "")
-				dispatchGroup.leave()
+                img_url = url!.path.replacingOccurrences(of: ChatDelegate.photoStoragePrefix, with: "")
 			})
-			
-			dispatchGroup.notify(queue: DispatchQueue.main) {
-                /// append vals to return value
-				local_result["URL"] = img_url
-				local_result["is_favorite"] = String(image.isFavorite)
-				
-				ret_val.append(local_result)
-                next = true
-			}
             
             /// This is hacky and kinda hurts performance but it seems the most reliable way to load images in order + with the amount requested.
-            while next == false {}
+            while img_url == "" {}
+            
+            /// append vals to return value
+			local_result["URL"] = img_url
+			local_result["is_favorite"] = String(image.isFavorite)
+			
+			ret_val.append(local_result)
 		}
         
 		return ret_val
@@ -724,12 +695,14 @@ final class ChatDelegate {
 		if self.debug {
 			self.log("Getting photo data from path \(path)")
 		}
-		
-		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "") /// To prevent LFI
+        
+        /// To prevent LFI
+		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "")
         
         /// get and return photo data
         let image = UIImage(contentsOfFile: ChatDelegate.photoStoragePrefix + parsed_path)
-        /// Compress image to a jpeg with horrible quality since they're only thumbnails; don't think it actually improves web interface performance much tho
+        
+        /// Compress image to a jpeg with horrible quality since they're only thumbnails
         let photo_data = image?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
         return photo_data
 	}

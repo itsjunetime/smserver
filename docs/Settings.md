@@ -30,7 +30,7 @@ This is the initial number of photos that will load when retrieving photos from 
 This is the port that the webSocket runs on; must not be the same as the server port or outside of the allowable range, or else the app will crash when launching the server. You must restart the server before this takes effect
 
 ### Theme
-This setting sets the color theme of the web interface; Dark is the default. It is much more polished, and, I think, looks much better than the light theme, but I did make a light theme as well for easy access.
+This setting sets the color theme of the web interface; Dark is the default. It is much more polished, and, I think, looks much better than the light theme, but I did make a light theme as well for easy access. As of version 0.3.8, a `Nord` theme is also available (my favorite).
 
 ### Toggle debug
 This will log basically every thing that happens, and may slow down the server considerably. Unless you're actually debugging or logging with the app, I'd highly recommend leaving this off. This does not require a server restart to take effect.
@@ -46,3 +46,6 @@ Toggling this will require you to connect to the `https://` site, instead of the
 
 ### Mark conversations as read when viewed on web interface
 This should be fairly self explanatory; if this is toggled, whenever you view a conversation on the web interface, it is marked as read on your device as well.
+
+### Override `No Wifi` prevention setting on main interface
+A user reported an issue with the server refusing to start due to thinking that the phone was not connected to wifi, so this allows you to override the section of the app that prevents you from starting the server if it is not connected to wifi.

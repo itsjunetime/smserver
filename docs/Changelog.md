@@ -1,5 +1,15 @@
 # Changelog
 
+0.3.7 -> 0.3.8
+ - Fixed multiple issues with images from camera roll not displaying correctly
+ - Fixed issue with camera roll favorite hearts not showing
+ - Made css routes more dynamic
+ - Added nord web interface theme
+ - Fixed issue with marking conversations as read causing a crash
+ - Added override for if phone doesn't recognize that it is connected to wifi
+ - Almost fixed background issue (it won't crash in the background now, but still doesn't receive connections)
+ - Improved web interface styling
+
 0.3.6 -> 0.3.7
  - Introduced general optimizations
  - Specifically optimized message and searching retrieval functions
