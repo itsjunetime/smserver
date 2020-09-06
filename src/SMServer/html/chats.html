@@ -601,7 +601,7 @@
             }
 
             function parseMessage(msg) {
-                console.log("parsing message '" + msg + "'");
+                if (debug) { console.log("parsing message " + msg); }
                 var split = msg.split(':')
 
                 var prefix = split[0]
@@ -891,10 +891,11 @@
             printChats()
 
         </script>
-        <link rel="stylesheet" type="text/css" href="style.css">
-        <link rel="stylesheet" type="text/css" href="custom.css">
+        <link rel="stylesheet" type="text/css" href="style?main">
+        <link rel="stylesheet" type="text/css" href="style?custom">
         <!--light theme optional section; next line must remain as comment-->
         <!--light-->
+        <!--nord-->
     </head>
     <body>
         <div class="everything">

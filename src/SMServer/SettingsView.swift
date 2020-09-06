@@ -13,10 +13,12 @@ struct SettingsView: View {
     @State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
     @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
     @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
+    @State var nord_theme: Bool = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
     @State var is_secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
     @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
+    @State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
     
-    private let picker_options: [String] = ["Dark", "Light"]
+    private let picker_options: [String] = ["Dark", "Light", "Nord"]
     
     @State private var display_ssl_alert: Bool = false
 	
@@ -49,10 +51,12 @@ struct SettingsView: View {
 		})
         
         let theme_binding = Binding<Int>(get: {
-            self.light_theme ? 1 : 0
+            self.light_theme ? 1 : (self.nord_theme ? 2 : 0)
         }, set: {
-            self.light_theme = $0 == 1 ? true : false
+            self.light_theme = $0 == 1
+            self.nord_theme = $0 == 2
             UserDefaults.standard.setValue(self.light_theme, forKey: "light_theme")
+            UserDefaults.standard.setValue(self.nord_theme, forKey: "nord_theme")
         })
         
         let debug_binding = Binding<Bool>(get: {
@@ -82,6 +86,13 @@ struct SettingsView: View {
         }, set: {
             self.background = $0
             UserDefaults.standard.setValue($0, forKey: "enable_backgrounding")
+        })
+        
+        let override_binding = Binding<Bool>(get: {
+            self.override_no_wifi
+        }, set: {
+            self.override_no_wifi = $0
+            UserDefaults.standard.setValue($0, forKey: "override_no_wifi")
         })
         
         let read_binding = Binding<Bool>(get: {
@@ -171,6 +182,8 @@ struct SettingsView: View {
                     Toggle("Enable SSL", isOn: secure_binding)
                     
                     Toggle("Mark conversations as read when viewed on web interface", isOn: read_binding)
+                    
+                    Toggle("Override 'No Wifi' prevention setting on main interface", isOn: override_binding)
                 }.alert(isPresented: $display_ssl_alert, content: {
                     Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
                 })

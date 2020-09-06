@@ -45,7 +45,7 @@
     NSLog(@"SMServer_app: Relaunching app in objc");
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
-    [center callExternalVoidMethod:@selector(launchSMS:) withArguments:@"YES"];
+    [center callExternalVoidMethod:@selector(relaunchSMServer) withArguments:nil];
     
 }
 
@@ -53,7 +53,7 @@
     NSLog(@"SMServer_app: Entered obj-c func, launching MobileSMS");
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
-    [center callExternalVoidMethod:@selector(launchSMS:) withArguments:@"NO"];
+    [center callExternalVoidMethod:@selector(launchSMS) withArguments:nil];
 }
 
 - (uid_t)setUID {

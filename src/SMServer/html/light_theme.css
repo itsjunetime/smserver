@@ -2,6 +2,7 @@
 	--chats-border: #e5e5e5;
 	--font-color: #070707;
 	--text-box-gradient: linear-gradient(to bottom right, #ccc, #bbb);
+    --selected-background: #cccd;
 }
 body, html, .messages, .chats button:hover {
 	background-color: #fff;
@@ -11,7 +12,7 @@ body, html, .messages, .chats button:hover {
 }
 .chats button, .messages .title, .is_from_them, #sendbox 
 #unhiddenbutton, #camerarollbutton, #composeShowButton, #notificationbutton {
-	background-color: #ddd;
+    background-color: #ddd !important;
 }
 .is_from_me {
 	background-color: #58f;
