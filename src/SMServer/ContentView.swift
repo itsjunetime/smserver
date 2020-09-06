@@ -12,15 +12,18 @@ struct ContentView: View {
     let identity = Bundle.main.path(forResource: "identity", ofType: "pfx")
     let cert_pass = "smserver"
     
-    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
     @State var custom_css = UserDefaults.standard.object(forKey: "custom_css") as? String ?? ""
     @State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
     @State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
 	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
+    
+    @State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     @State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
+    @State var nord_theme: Bool = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
     @State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
     @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
+    @State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -62,6 +65,9 @@ struct ContentView: View {
     """
     """
     @State var light_style =
+    """
+    """
+    @State var nord_style =
     """
     """
     
@@ -259,12 +265,12 @@ struct ContentView: View {
             res.send(send ? "true" : "false")
         }
         
-        server.add("/style.css") { (req, res, next) in
+        server.add("/style") { (req, res, next) in
             /// Returns the style.css file as text
             let ip = req.connection?.remoteAddress ?? ""
             
             if self.debug {
-                self.log("GET style.css: \(ip)")
+                self.log("GET style: \(ip)")
             }
             
             if !self.checkIfAuthenticated(ras: ip) {
@@ -272,42 +278,18 @@ struct ContentView: View {
                 return
             }
             
+            let s = Array(req.query.keys)[0]
             res.setValue("text/css", forHTTPHeaderField: "Content-type")
-            res.send(self.main_page_style)
-        }
-        
-        server.add("/custom.css") { (req, res, next) in
-            /// Returns the custom css file as text
-            let ip = req.connection?.remoteAddress ?? ""
             
-            if self.debug {
-                self.log("GET /custom.css: \(ip)")
+            if s == "main" {
+                res.send(self.main_page_style)
+            } else if s == "custom" {
+                res.send(self.custom_style)
+            } else if s == "light" {
+                res.send(self.light_style)
+            } else if s == "nord" {
+                res.send(self.nord_style)
             }
-            
-            if !self.checkIfAuthenticated(ras: ip) {
-                res.send("")
-                return
-            }
-            
-            res.setValue("text/css", forHTTPHeaderField: "Content-type")
-            res.send(self.custom_style)
-        }
-        
-        server.add("/light.css") { (req, res, next) in
-            /// returns the light theme css file as text
-            let ip = req.connection?.remoteAddress ?? ""
-            
-            if self.debug {
-                self.log("GET /light.css: \(ip)")
-            }
-            
-            if !self.checkIfAuthenticated(ras: ip) {
-                res.send("")
-                return
-            }
-            
-            res.setValue("text/css", forHTTPHeaderField: "Content-type")
-            res.send(self.light_style)
         }
         
         server.add("/favicon.ico") { (req, res, next) in
@@ -420,11 +402,13 @@ struct ContentView: View {
         self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
         
         self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
+        self.nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
         
         if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
         let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
         let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html"),
-        let l = Bundle.main.url(forResource: "light_theme", withExtension: "css", subdirectory: "html") {
+        let l = Bundle.main.url(forResource: "light_theme", withExtension: "css", subdirectory: "html"),
+        let n = Bundle.main.url(forResource: "nord_theme", withExtension: "css", subdirectory: "html") {
             do {
                 /// Set up all the pages as multi-line string variables, set values within them.
                 self.main_page = try String(contentsOf: h, encoding: .utf8)
@@ -432,12 +416,14 @@ struct ContentView: View {
                     .replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
                     .replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(default_num_photos);")
 					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
-                    .replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"light.css\">" : "")
+                    .replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
+                    .replacingOccurrences(of: "<!--nord-->", with: self.nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
                     .replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
 					
                 self.main_page_style = try String(contentsOf: s, encoding: .utf8)
                 self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
                 self.light_style = try String(contentsOf: l, encoding: .utf8)
+                self.nord_style = try String(contentsOf: n, encoding: .utf8)
             } catch {
                 self.log("WARNING: ran into an error with loading the files, try again.")
             }
@@ -726,7 +712,7 @@ struct ContentView: View {
 						Spacer().frame(width: 24)
 				
 						Button(action: {
-							(self.server_running && self.getWiFiAddress() != nil) ? self.stopServer() : nil
+                            if self.server_running { self.stopServer() }
 						}) {
 							Image(systemName: "stop.fill")
 								.font(.system(size: self.font_size))
@@ -736,7 +722,9 @@ struct ContentView: View {
 						Spacer().frame(width: 30)
 				
 						Button(action: {
-							self.server_running || self.getWiFiAddress() == nil ? nil : self.loadServer(port_num: UInt16(self.port)!)
+                            if !self.server_running && (self.getWiFiAddress() != nil || self.override_no_wifi) {
+                                self.loadServer(port_num: UInt16(self.port)!)
+                            }
 							UserDefaults.standard.setValue(true, forKey: "has_run")
 						}) {
 							Image(systemName: "play.fill")
@@ -801,7 +789,7 @@ struct ContentView: View {
             }.padding()
             .padding(.top, 14)
             
-            if self.getWiFiAddress() != nil {
+            if self.getWiFiAddress() != nil || override_no_wifi {
                 Text("Visit http\(secure ? "s" : "")://\(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
                     .font(Font.custom("smallTitle", size: 22))
                     .padding()
@@ -830,9 +818,10 @@ struct ContentView: View {
                 
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .padding(.init(top: geo.size.width * 0.2, leading: geo.size.width * 0.15, bottom: geo.size.width * 0.2, trailing: geo.size.width * 0.15))
+                        .padding(.init(top: geo.size.width * 0.15, leading: geo.size.width * 0.15, bottom: geo.size.width * 0.15, trailing: geo.size.width * 0.15))
                         .foregroundColor(Color(UIColor.tertiarySystemBackground))
                         .shadow(radius: 7)
+                        .frame(height: 300)
                     
                     VStack {
                         HStack {
