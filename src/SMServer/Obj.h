@@ -22,8 +22,4 @@
 
 @end
 
-@interface CPDistributedMessagingCenter
-+ (id)centerNamed:(id)arg1;
-@end
-
 #endif /* Obj_h */
