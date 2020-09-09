@@ -43,7 +43,7 @@
             }
     
             function timeConverter(t) {
-		var ts = (t / 1000000000) + 978307200;
+                var ts = (t / 1000000000) + 978307200;
 
                 var a = new Date(ts * 1000);
                 var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -56,16 +56,15 @@
                 return time;
             }
 
-            function getTextFromURL(url) {
-                xmlhttp = new XMLHttpRequest();
-                xmlhttp.onreadystatechange=function() {
-                    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                        return xmlhttp.responseText;
-                    }
-                }
-                xmlhttp.open("GET", url, false );
-                xmlhttp.send(); 
-                return xmlhttp.responseText;
+            async function getTextFromURL(url) {
+                var return_text = "";
+                await fetch(url).then(response => response.text())
+                .then((response) => {
+                    console.log(response);
+                    return_text = response;
+                })
+
+                return return_text;
             }
 
             function getTextElement(text, last = false) {
@@ -79,8 +78,8 @@
 
                 t.setAttribute("class", classes);
                 t.setAttribute("id", text.guid);
-		t.setAttribute("title", timeConverter(text.date));
-		t.setAttribute("date_read", text.date_read);
+                t.setAttribute("title", timeConverter(text.date));
+                t.setAttribute("date_read", text.date_read);
                 t.innerHTML = ''
                 
                 if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
@@ -97,8 +96,10 @@
                     }
                 }
                 
-                /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
-                t.innerHTML += text.text.replace("￼", "").replace("￼", ""); 
+                if (text.text.replace("￼", "").replace("￼", "").trim().length > 0) {
+                    /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
+                    t.innerHTML += text.text.replace("￼", "").replace("￼", "");
+                }
 
                 return t;
             }
@@ -113,11 +114,11 @@
                 i.src = prefix + "/data?chat_id=" + chat.chat_identifier.replace("+", "%2B");
                 b.appendChild(i);
 
-		var nonpic = document.createElement("div");
-		nonpic.setAttribute("class", "chat-nonpic");
-
-		var top = document.createElement("div");
-		top.setAttribute("class", "chat-toprow");
+                var nonpic = document.createElement("div");
+                nonpic.setAttribute("class", "chat-nonpic");
+                
+                var top = document.createElement("div");
+                top.setAttribute("class", "chat-toprow");
 
                 var n = document.createElement("div");
                 n.setAttribute("class", "chat-name");
@@ -125,21 +126,20 @@
                 if (chat.chat_identifier.substring(0, 4) !== "chat" && chat.display_name.length !== 0) { 
                     n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
                 }
-		top.appendChild(n);
-
-		var d = document.createElement("div");
-		d.setAttribute("class", "chat-date");
-		d.innerHTML = chat.relative_time;
-		top.appendChild(d);
-
-		nonpic.appendChild(top);
+                
+                top.appendChild(n);
+                
+                var d = document.createElement("div");
+                d.setAttribute("class", "chat-date");
+                d.innerHTML = chat.relative_time;
+                top.appendChild(d);
+                nonpic.appendChild(top);
 
                 var t = document.createElement("div");
                 t.setAttribute("class", "chat-text");
                 t.innerHTML = chat.latest_text.replace("￼", "").replace("￼", "")
-		nonpic.appendChild(t);
-		b.appendChild(nonpic);
-
+                nonpic.appendChild(t);
+                b.appendChild(nonpic);
                 
                 if (chat.has_unread === "true") b.setAttribute("class", "unread");
                 var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
@@ -281,24 +281,6 @@
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
                 }
             }
-    
-            function fetchName(name) {
-                if (debug) { console.log("fetching name for " + name); }
-                name = name.replace("+", "%2B")
-                
-                var url = prefix + '/requests?name=' + name
-                var return_name = ""
-                xmlhttp = new XMLHttpRequest();
-                xmlhttp.onreadystatechange=function() {
-                    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-                        return xmlhttp.responseText;
-                    }
-                }
-                xmlhttp.open("GET", url, false );
-                xmlhttp.send(); 
-                this.shown_name = xmlhttp.responseText;
-                return String(return_name)
-            }
 
             const getTexts = async (chat_id, num_texts) => {
                 if (debug) { console.log("getting " + num_texts + " for chat " + chat_id); } 
@@ -369,7 +351,7 @@
                         var time = document.createElement("div");
                         time.setAttribute("class", "time-display");
 
-                        var formattedTime = timeConverter(texts[i].date);
+                        var formattedTime = timeConverter(texts[i - 1].date);
                                                 
                         time.innerHTML = "<p>" + formattedTime + "</p>"
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
@@ -385,22 +367,26 @@
                                                 
                         doc.insertBefore(from, document.getElementById("moretextsbutton").nextSibling);
                     }
+
+                    document.getElementById("sendbox").focus();
                 }
 
-		var my_texts = document.getElementsByClassName("is_from_me")
-		var my_last_text = my_texts[my_texts.length - 1];
-
-		if (!is_group && my_last_text.getAttribute("date_read") !== "0" && my_last_text.getAttribute("class").includes("iMessage")) {
-		    var rr = document.createElement("span");
-		    rr.setAttribute("class", "readreceipt");
-		    rr.innerHTML = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")));
-
-		    if (my_last_text === doc.lastChild) {
-			doc.appendChild(rr);
-		    } else {
-			doc.insertBefore(rr, my_last_text.nextSibling);
-		    }
-		}
+                var my_texts = document.getElementsByClassName("is_from_me")
+                if (my_texts.length > 0) {
+                    var my_last_text = my_texts[my_texts.length - 1]
+                    
+                    if (!is_group && my_last_text.getAttribute("date_read") !== "0" && my_last_text.getAttribute("class").includes("iMessage")) {
+                        var rr = document.createElement("span");
+                        rr.setAttribute("class", "readreceipt");
+                        rr.innerHTML = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")))
+                        
+                        if (my_last_text === doc.lastChild) {
+                            doc.appendChild(rr);
+                        } else {
+                            doc.insertBefore(rr, my_last_text.nextSibling);
+                        }
+                    }
+                }
 											  
                 document.getElementsByClassName("more_texts")[0].scrollIntoView()
             }
@@ -446,7 +432,7 @@
                         var time = document.createElement("div");
                         time.setAttribute("class", "time-display");
 
-                        var formattedTime = timeConverter(texts[i].date)
+                        var formattedTime = timeConverter(texts[i - 1].date)
                         
                         time.innerHTML = "<p>" + formattedTime + "</p>"
                         doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
@@ -650,7 +636,7 @@
                     }) 
 
                     var _ = await fetch_newest_text;
-                    name = getTextFromURL(prefix + '/requests?name=' + chat.replace("+", "%2B"))
+                    name = await getTextFromURL(prefix + '/requests?name=' + chat.replace("+", "%2B"))
 
                     var n = new Notification(name, { body: new_text, icon: '/favicon.ico'});
                 }
@@ -707,7 +693,7 @@
                 } else {
                     var new_chat;
                     var url = prefix + "/requests?chat=0&num_chats=1" /// to get last text
-                    const fetch_recent_texts = await fetch(url)
+                    const fetch_recent_chat = await fetch(url)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error("HTTP error " + response.status);
@@ -723,8 +709,10 @@
                         has_shown_warning = true
                         this.dataError = true;
                     })
+
+                    sleep(100); /// So it actually gets the most recent chat
                     
-                    var _ = fetch_recent_texts;
+                    var _ = fetch_recent_chat;
 
                     var new_box = getChatElement(new_chat[0]);
 
@@ -888,7 +876,18 @@
                 wifi.innerHTML = "wifi: " + String(level) + "%";
             }*/
 
+	    function showReactions(textId) {
+			
+	    }
+
             printChats()
+                
+            document.addEventListener("DOMContentLoaded", () => {
+                if (!window.Notification || Notification.permission === "granted") {
+                    document.getElementById("notificationbutton").style.display = "none";
+                    document.getElementById("composeShowButton").style.marginLeft = "auto";
+                }
+            });
 
         </script>
         <link rel="stylesheet" type="text/css" href="style?main">

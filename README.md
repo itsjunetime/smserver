@@ -17,6 +17,8 @@
 - Background operation of server for unlimited time, with screen on or off.
 - Ability to set custom css rules for easy web interface customization
 - More-than-stock accurate search API
+- Sending and viewing of read receipts
+- Easy switching between Light, Dark, and Nord themes.
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
@@ -64,9 +66,6 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
-
-## Acknowledged Issues
-- Occasionally, after sending a text, the wrong conversation will move to the top of the conversation list in the web interface.
 
 ### To file an issue:
 Please include the following information:
