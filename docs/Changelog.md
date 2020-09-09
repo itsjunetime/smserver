@@ -1,5 +1,13 @@
 # Changelog
 
+0.3.8 -> 0.4.0
+ - Added extra UIBackgroundModes to app `Info.plist` to allow for truly unlimited background time (screen on/off)
+ - Fixed countless styling issues on all themes
+ - Rewrote light theme
+ - Removed XMLHTTP requests from web interface
+ - Fixed issue with not all chats being returned
+ - (Probably) fixed issue with wrong chat button displaying on top of list in web interface
+
 0.3.7 -> 0.3.8
  - Fixed multiple issues with images from camera roll not displaying correctly
  - Fixed issue with camera roll favorite hearts not showing

@@ -321,14 +321,10 @@ final class ChatDelegate {
         var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
         if db == nil || contacts_db == nil { return [[String:String]]() }
         
-        let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(message_date) from chat_message_join group by chat_id) group by c.chat_identifier order by j.message_date desc", num_items: num_to_load, offset: offset)
+        let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
         var return_array = [[String:String]]()
         
-        let locale = Locale.current
-        
         let formatter = RelativeDateTimeFormatter()
-        formatter.locale = locale
-        formatter.dateTimeStyle = .named
         
         for i in chats {
             if self.debug {
@@ -472,9 +468,7 @@ final class ChatDelegate {
                 let len: Int32 = sqlite3_column_bytes(statement, 0)
                 let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
                 
-                /// Putting it into UIImage format, then grabbing the image from that
-                let image_w_dat = UIImage(data: Data(dat))
-                pngdata = (image_w_dat?.pngData())!
+                pngdata = dat as Data
                 
             } else {
                 if self.debug {
