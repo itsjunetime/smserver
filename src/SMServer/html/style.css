@@ -46,6 +46,9 @@ p, h2, a, button {
 	text-decoration: none;
 	font-weight: 300;
 }
+:focus {
+    outline: none !important;
+}
 p {
 	font-size: 20px;
 }
@@ -69,15 +72,17 @@ p {
 	grid-column: 1;
 	z-index: 1;
 	background-color: var(--grayblue-background);
+    border-bottom: 1px solid var(--light-button-background);
 }
 .title-content {
 	display: grid;
-	grid-template-columns: max-content 1fr;
-	grid-template-rows: 1fr;
-	width: max-content;
 	margin: auto;
+    width: max-content;
 	grid-gap: 10px;
 	transform: translateY(calc(var(--messages-title-height) / 8));
+    white-space: nowrap;
+    padding-left: 20px;
+    max-width: calc(100vw - var(--chats-width) - 40px);
 }
 .textbox {
 	display: grid;
@@ -101,12 +106,16 @@ p {
 	grid-column: 2;
 	grid-row: 1;
 	margin: auto;
+    padding: 0;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
+    max-width: 100%;
 }
 .title img {
 	max-height: calc(var(--messages-title-height) * 0.72);
 	grid-column: 1;
 	grid-row: 1;
-	align-self: center;
+	/*align-self: center;*/
 	border-radius: 100%;
 }
 .messages .text-content {
@@ -165,10 +174,10 @@ p {
 	grid-row: 2;
 	padding: 10px;
 	border-top: 1px solid var(--chats-border);
-	display: grid;
-	grid-template-columns: 1fr 90px 60px;
+	display: flex;
+	/*grid-template-columns: 1fr 90px 60px;
 	grid-template-rows: 1fr;
-	grid-gap: 10px
+	grid-gap: 10px*/
 }
 .chats-list {
 	grid-row: 3;
@@ -209,6 +218,7 @@ p {
 	font-weight: 500;
 	margin-right: auto;
 	margin-bottom: 10px;
+    white-space: nowrap;
 }
 .chat-text {
 	color: #ddd;
@@ -222,6 +232,8 @@ p {
 .chat-date {
 	padding-right: 6px;
 	text-align: right;
+    min-width: max-content;
+    margin-left: 5px;
 }
 #morechatsbutton {
 	display: flex;
@@ -265,6 +277,7 @@ p {
 	margin: 0px 10px 20px 10px;
 	font-weight: 300;
 	font-size: 18px;
+    word-break: break-word;
 }
 .text + .text {
 	margin-top: -12px;
@@ -311,11 +324,17 @@ p {
 	border-radius: 20px;
 	background-color: cornflowerblue;
     align-self: center;
-    margin-bottom: 20px;
+    margin: 20px 0;
     min-height: 46px;
+    box-shadow: 0px 0px 10px #222;
+    transition: linear 0.2s;
 }
 #moretextsbutton p {
 	margin: 10px 0
+}
+#moretextsbutton:hover {
+    box-shadow: none;
+    transition: linear 0.2s;
 }
 #sendbutton {
 	grid-column: 4;
@@ -326,7 +345,7 @@ p {
 	outline: none;
 	border: none;
 	border-radius: calc(var(--send-button-size) / 2);
-	margin-top: calc(((var(--messages-send-height) - var(--send-button-size)) / 2) + 1px);
+	margin-top: calc((var(--messages-send-height) - var(--send-button-size)) / 2);
 	padding: 5px;
 	margin-left: -4px;
 	z-index: 1;
@@ -480,6 +499,7 @@ p {
 #notificationbutton {
 	width: 90px;
 	padding: 0px 0px 0px 8px;
+    margin-left: auto;
 }
 #composeShowButton p, #notificationbutton p {
 	margin: 0 0 0 0;

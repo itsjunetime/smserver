@@ -4,7 +4,7 @@
     --font-color: #eceff4;
     --chats-border: #434c5e;
     --selected-background: #d8dee930;
-    --text-box-gradient: linear-gradient(to bottom right, #2e3440, #3b4252)
+    --text-box-gradient: linear-gradient(to bottom right, #2e3440, #3b4252);
     --light-button-background: #4c566a;
 }
 .chats button:hover {
@@ -27,9 +27,6 @@
 .is_from_them, #camerarollbutton, #unhiddenbutton {
     background-color: #4c566a;
 }
-.selected {
-    background-color: #4c566a !important;
-}
 #composeShowingAttachmentButton {
     box-shadow: none !important;
     background-color: var(--main-background);
@@ -40,7 +37,7 @@
 .centered {
     text-shadow: -4px 4px #2E3440;
 }
-#composeShowButton, #notificationbutton {
+#composeShowButton, #notificationbutton, .selected {
     background-color: #4c566a !important;
 }
 #sendbutton {
