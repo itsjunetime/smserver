@@ -52,3 +52,12 @@
 #sendbutton {
     color: #eee;
 }
+.from_me .reaction {
+    background-color: #cacacac0;
+}
+.from_them .reaction {
+    background-color: rgba(119, 155, 255, 0.5);
+}
+.reaction {
+    box-shadow: 0px 0px 6px #aaa;
+}
