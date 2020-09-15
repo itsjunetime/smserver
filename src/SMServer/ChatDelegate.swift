@@ -17,6 +17,10 @@ final class ChatDelegate {
         os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
     }
     
+    final func refreshVars() {
+        self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+    }
+    
     final func createConnection(connection_string: String = "/private/var/mobile/Library/SMS/sms.db") -> OpaquePointer? {
         /// This simply returns an opaque pointer to the database at $connection_string, allowing for sqlite connections.
         
@@ -242,11 +246,11 @@ final class ChatDelegate {
         if db == nil || contact_db == nil { return [[String:String]]() }
         
         /// check if it's a group chat
-        let is_group = num.prefix(4) == "chat"
+        let is_group = num.prefix(4) == "chat" && !num.contains("@")
         var return_messages = [[String:String]]()
         
         if !is_group {
-            var messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+            var messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
             
             for i in 0..<messages.count {
                 /// get the attachments
@@ -262,11 +266,15 @@ final class ChatDelegate {
                     messages[i]["attachment_file"] = file_string
                     messages[i]["attachment_type"] = type_string
                 }
+                
+                if messages[i]["balloon_bundle_id"] == "com.apple.messages.URLBalloonProvider" && messages[i]["ROWID"] != nil {
+                    messages[i]["link_title"] = getLinkTitle(messages[i]["ROWID"]!, db: db)
+                }
             }
             
             return_messages = messages
         } else {
-            var messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "h.id"], table: "message m", condition: "inner join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset)
+            var messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset)
             
             for i in 0..<messages.count {
                 var new_msg = [String:String]()
@@ -459,7 +467,7 @@ final class ChatDelegate {
             self.log("WARNING: error preparing select: \(errmsg)")
         }
         
-        var pngdata: Data;
+        var pngdata: Data
         
         if sqlite3_step(statement) == SQLITE_ROW {
             if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
@@ -700,6 +708,56 @@ final class ChatDelegate {
         let photo_data = image?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
         return photo_data
 	}
+    
+    final func getLinkTitle(_ mid: String, db: OpaquePointer?) -> String {
+        /// This get a Rich Link's title text from the sql database. Was quite the pain to get working.
+        /// I'll expland it in the future to get like the subtitle and other stuff too
+        let sqlString = "SELECT payload_data from message where ROWID is \(mid);"
+        
+        var statement: OpaquePointer?
+        
+        if self.debug {
+            self.log("Opened statement in getLinkTitle")
+        }
+        
+        /// Prepare sql statement
+        var ret_code = sqlite3_prepare_v2(db, sqlString, -1, &statement, nil)
+        if ret_code != SQLITE_OK {
+            self.log("WARNING: error preparing select: \(ret_code)")
+        }
+        
+        var data: NSData = NSData.init()
+        
+        /// Get blob data
+        if sqlite3_step(statement) == SQLITE_ROW {
+            if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
+                let len: Int32 = sqlite3_column_bytes(statement, 0)
+                data = NSData(bytes: tiny_return_blob, length: Int(len))
+            }
+        }
+        
+        ret_code = sqlite3_finalize(statement)
+        if ret_code != SQLITE_OK {
+            self.log("WARNING: error finalizing statement: \(ret_code)")
+        }
+        
+        /// Blob data is technically an NSKeyedArchiver plist file. We just gotta serialize it and extract values
+        var propertyListFormat = PropertyListSerialization.PropertyListFormat.xml
+        var plistData: [String: AnyObject] = [:]
+        do {
+            plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as! [String : AnyObject]
+        } catch {
+            print("failed to decode plist")
+        }
+        
+        statement = nil
+        
+        /// Always under object `$objects`
+        let objects: [Any] = plistData["$objects"] as! [Any]
+        
+        /// Always 8th item
+        return objects[8] as? String ?? "No Title Available"
+    }
 }
 
 extension PHAsset {

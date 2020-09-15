@@ -40,15 +40,6 @@
 
 @implementation IWSSender
 
-- (void)relaunchApp {
-    
-    NSLog(@"SMServer_app: Relaunching app in objc");
-    
-    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
-    [center callExternalVoidMethod:@selector(relaunchSMServer) withArguments:nil];
-    
-}
-
 - (void)launchMobileSMS {
     NSLog(@"SMServer_app: Entered obj-c func, launching MobileSMS");
     
@@ -75,6 +66,12 @@
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
     [center callExternalVoidMethod:@selector(setAllAsRead:) withArguments:chat_id];
     
+}
+
+- (void)sendReaction:(NSNumber *)reaction forGuid:(NSString *)guid inChat:(NSString *)chat {
+    
+    MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
+    [center callExternalVoidMethod:@selector(sendReaction:) withArguments:@{@"reaction": reaction, @"guid": guid, @"chat": chat}];
 }
 
 @end

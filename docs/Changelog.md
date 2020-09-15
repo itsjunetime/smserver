@@ -1,5 +1,14 @@
 # Changelog
 
+0.4.0 -> 0.4.1
+ - Fixed up displays of Rich Links to look okay
+ - Fixed issue with document not scrolling to bottom if all texts.date_read attributes === "0".
+ - Added graphical display for reactions
+ - Fixed issue with user's texts not displaying in group chats
+ - Fixed issue with attachments & camera roll images not sending
+ - Laid groundwork for sending reactions
+ - Removed unnecessary restarting functions
+
 0.3.8 -> 0.4.0
  - Added extra UIBackgroundModes to app `Info.plist` to allow for truly unlimited background time (screen on/off)
  - Fixed countless styling issues on all themes
