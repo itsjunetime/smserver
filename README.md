@@ -56,13 +56,14 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 - [x] Desktop notifications
 - [x] Access to camera roll on web interface
 - [x] Viewing and sending of read receipts
-- [ ] Subject lines for texts on web interface
+- [x] Graphic displays for reactions
+- [ ] Ability to send reactions from web interface - This is nearly done
 - [ ] Information on web page about battery life, wifi connection, etc - This is nearly done.
 
 ### Future plans
 - [ ] Search through messages from browser - This has been implemented in the API
+- [ ] Subject lines for texts on web interface
 - [ ] Notification when other party starts typing
-- [ ] Graphic display for reactions (as opposed to plain text)
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
@@ -79,7 +80,7 @@ Please include the following information:
 
 Also, if the app did not crash on startup, but rather crashed after it was already up and running, I would appreciate if you could do the following: 
  - Install the package 'oslog' from your package manager
- - ssh into your device or open a terminal app, and run (as root): `oslog --debug | grep -i -e "SMServer_app" -e "mryipc"`; do not redirect the output into a file.
+ - ssh into your device and run (as root): `oslog --debug | grep -i -e "SMServer_app" -e "mryipc"`; do not redirect the output into a file.
  - Enable debug on the app, then kill the app in app switcher
  - Start the app and let it reach the error point
  - Manually copy the output from the above command (as much as you can get) into a text file.

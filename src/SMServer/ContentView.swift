@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import Criollo
 import Photos
@@ -32,13 +33,14 @@ struct ContentView: View {
     @State var alert_connected = false
     @State var has_root = false
     @State var show_picker = false
+    @State var kill_app = false
     
     static let chat_delegate = ChatDelegate()
     @State var s = IWSSender()
     @State var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
     
     let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
-    let photos_prefix = "/private/var/mobile/Media/DCIM/"
+    let photos_prefix = "/var/mobile/Media/"
     
     var requests_page = """
     <!DOCTYPE html>
@@ -358,38 +360,22 @@ struct ContentView: View {
         }
     }
     
-    func startBackgroundTask() {
-        /// This starts the background task
-        
-        DispatchQueue.global().async {
-            if self.debug {
-                self.log("started background task...")
+    /*func startKillTimer() {
+        kill_app = true
+        print("starting kill timer")
+        /// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
+        Timer.init(fire: Date(timeIntervalSinceNow: 60), interval: 0, repeats: false, block: { _ in
+            print("kill_app is \(kill_app)")
+            if kill_app {
+                let proc = Process()
             }
-            
-            self.backgroundTask = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-                if UIApplication.shared.applicationState != .active {
-                    if self.debug {
-                        self.log("relaunching app...")
-                    }
-                    /// this is the completion handler, so whenever the background task is killed,
-                    /// it just calls an IPC function in libsmserver to restart the app, so it's never actually killed.
-                    self.s.relaunchApp()
-                } else {
-                    if self.debug {
-                        self.log("Not in background, invalidating background task.")
-                    }
-                    self.backgroundTask = .invalid
-                }
-            })
-        }
+        })
     }
     
-    func endBackgroundTask() {
-        if self.debug {
-            self.log("Called endBackgroundTask()")
-        }
-        UIApplication.shared.endBackgroundTask(self.backgroundTask)
-    }
+    func cancelKillTimer() {
+        print("cancelling kill timer")
+        kill_app = false
+    }*/
     
     func loadFiles() {
         /// This sets the website page files to local variables
@@ -613,7 +599,31 @@ struct ContentView: View {
 			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 			
 			return encodeToJson(object: ret_val, title: "photos")
-		}
+        } /*else if f == "reaction" || f == "toGUID" || f == "inChat" || f == "remove" {
+            /// Haven't got the `libsmserver` side of this to work yet, so I'm disabling it for this version.
+            /// Hopefully I'll have it good and done by next version
+            
+            var reaction: Int
+            var textGuid: String
+            var chat: String
+            var remove = false
+            
+            guard params["reaction"] != nil && params["toGUID"] != nil && params["inChat"] != nil else {
+                return "Please include parameters 'reaction', 'toGUID', and 'inChat' in your request"
+            }
+            
+            reaction = (Int(params["reaction"] ?? "0") ?? 0) + 2000 /// reactions are 2000 - 2005
+            textGuid = params["toGUID"] ?? "0"
+            chat = params["inChat"] ?? "0"
+            
+            if params["remove"] != nil {
+                remove = params["remove"] == "true"
+            }
+            
+            if remove { reaction += 1000 }
+            
+            s.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
+        }*/
         
         self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
         
@@ -703,6 +713,7 @@ struct ContentView: View {
 						Button(action: {
 							self.loadFiles()
 							self.s.launchMobileSMS()
+                            ContentView.chat_delegate.refreshVars()
 						}) {
 							Image(systemName: "goforward")
 								.font(.system(size: self.font_size))

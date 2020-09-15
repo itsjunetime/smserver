@@ -22,6 +22,7 @@
             var notifications = false;
             var has_shown_new_warning = false;
             var window_is_focused = true;
+            var faLoaded = false;
 
             var items = "";
             var new_items = "";
@@ -58,50 +59,105 @@
 
             async function getTextFromURL(url) {
                 var return_text = "";
-                await fetch(url).then(response => response.text())
+                await fetch(url, {
+                    mode: 'no-cors',
+                }).then(response => response.text())
                 .then((response) => {
-                    console.log(response);
                     return_text = response;
                 })
 
                 return return_text;
             }
 
+            function setFALoaded() {
+                faLoaded = true;
+            }
+
             function getTextElement(text, last = false) {
                 if (debug) { console.log("Getting text element for text " + text + (last ? ", last" : ", not last")); }
-                var t = document.createElement("p");
 
-                var classes = "text";
-                if (last) classes += " more_texts";
-                
-                classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service
+                if (Number(text.associated_message_type) < 2000 || text.associated_message_type === undefined) {
 
-                t.setAttribute("class", classes);
-                t.setAttribute("id", text.guid);
-                t.setAttribute("title", timeConverter(text.date));
-                t.setAttribute("date_read", text.date_read);
-                t.innerHTML = ''
-                
-                if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
+                    var t = document.createElement("p");
+
+                    var classes = "text";
+                    if (last) classes += " more_texts";
                     
-                    var files = text.attachment_file.split(":");
-                    var types = text.attachment_type.split(":");
+                    classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service
+
+                    t.setAttribute("class", classes);
+                    t.setAttribute("id", text.guid);
+                    t.setAttribute("title", timeConverter(text.date));
+                    t.setAttribute("date_read", text.date_read);
+                    t.innerHTML = ''
                     
-                    for (var l = 0; l < files.length; ++l) {
-                        if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-                            t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>"
-                        } else if (files[l].length != 0) {
-                            t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                    if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider") {
+                        var img = document.createElement("img");
+                        img.src = "/data?path=" + text.attachment_file.split(":")[1];
+                        t.appendChild(img);
+                        t.appendChild(document.createElement("br"));
+                        
+                        var link = document.createElement("a");
+                        link.href = text.text;
+                        link.innerHTML = text.link_title;
+                        t.appendChild(link);
+                        
+                        return t;
+                    }
+                    
+                    if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
+                        
+                        var files = text.attachment_file.split(":");
+                        var types = text.attachment_type.split(":");
+                        
+                        for (var l = 0; l < files.length; ++l) {
+                            if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
+                                t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>"
+                            } else if (files[l].length != 0) {
+                                t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
+                            }
                         }
                     }
-                }
-                
-                if (text.text.replace("￼", "").replace("￼", "").trim().length > 0) {
-                    /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
-                    t.innerHTML += text.text.replace("￼", "").replace("￼", "");
+                    
+                    if (text.text.replace("￼", "").replace("￼", "").trim().length > 0) {
+                        /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
+                        t.innerHTML += text.text.replace("￼", "").replace("￼", "");
+                    }
+
+                    return t;
+                } else if (Number(text.associated_message_type) < 2006) {
+                    var guid = text.associated_message_guid.split('/')[1];
+
+                    var original = document.getElementById(guid);
+
+                    if (original === null || original === undefined) return document.createElement("span");
+
+                    var next = original.nextElementSibling;
+                    var copy = original.cloneNode(true);
+                    original.outerHTML = "";
+
+                    var area = document.createElement("span");
+                    var new_class = "text-area";
+                    new_class += copy.getAttribute("class").includes("is_from_them") ? " from_them" : " from_me"; 
+                    area.setAttribute("class", new_class);
+
+                    var reac = document.createElement("span");
+                    reac.setAttribute("class", "reaction");
+
+                    var icons = ["Love", "Thumbs up", "Thumbs down", "Haha", "!!", "??"];
+
+                    if (faLoaded) icons = ["<i class=\"fas fa-heart\"></i>", "<i class=\"fas fa-thumbs-up\"></i>", "<i class=\"fas fa-thumbs-down\"></i>", 
+                    "<i class=\"fas fa-grin-tears\"></i>", "<i class=\"fas fa-exclamation\"></i><i class=\"fas fa-exclamation\"></i>", "<i class=\"fas fa-question\"></i>"];
+
+                    reac.innerHTML = icons[Number(text.associated_message_type) - 2000];
+
+                    area.appendChild(reac);
+                    area.appendChild(copy);
+
+                    document.getElementById("text-content").insertBefore(area, next);
                 }
 
-                return t;
+                return document.createElement("span");
             }
 
             function getChatElement(chat, num_texts) {
@@ -338,57 +394,73 @@
                 more.innerHTML = "<p>+ More Texts</p>"
                 myNode.appendChild(more)
                 
-                printed_texts = texts.length
+                printed_texts = texts.length;
+                texts = texts.reverse();
                 
                 var is_group = chat_id.substring(0, 4) === "chat";
                 var doc = document.getElementsByClassName("text-content")[0];
                 
                 for (var i = 0; i < texts.length; i++) {
 
-                    var t = getTextElement(texts[i], i === 0);
+                    var t = getTextElement(texts[i], i === texts.length - 1);
                     
-                    if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
-                        var time = document.createElement("div");
-                        time.setAttribute("class", "time-display");
+                    if (t.innerHTML.length > 0) {
+                        if (i === 0 || texts[i].date - texts[i - 1].date > 3600000000000) {
+                            var time = document.createElement("div");
+                            time.setAttribute("class", "time-display");
 
-                        var formattedTime = timeConverter(texts[i - 1].date);
-                                                
-                        time.innerHTML = "<p>" + formattedTime + "</p>"
-                        doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling)
+                            var formattedTime = timeConverter(texts[i].date);
+                                                    
+                            time.innerHTML = "<p>" + formattedTime + "</p>"
+                            doc.appendChild(time);
+                        }
+                                                    
+                        if (is_group && texts[i].is_from_me === "0" && (i === 0 || texts[i].sender !== texts[i - 1].sender)) {
+                            var from = document.createElement("div");
+
+                            from.innerHTML = "<p>" + texts[i].sender + "</p>";
+                            from.setAttribute("class", "sender");
+                                                    
+                            doc.appendChild(from);
+                        }
                     }
-                                                
-                    doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling)
-
-                    if (is_group && texts[i].is_from_me === "0" && ((i !== texts.length - 1 && texts[i].sender !== texts[i + 1].sender) || (i === texts.length - 1))){
-                        var from = document.createElement("div");
-
-                        from.innerHTML = "<p>" + texts[i].sender + "</p>";
-                        from.setAttribute("class", "sender");
-                                                
-                        doc.insertBefore(from, document.getElementById("moretextsbutton").nextSibling);
-                    }
-
-                    document.getElementById("sendbox").focus();
+                    
+                    doc.appendChild(t);
                 }
 
-                var my_texts = document.getElementsByClassName("is_from_me")
+                document.getElementById("sendbox").focus();
+
+                var my_texts = document.getElementsByClassName("is_from_me");
+
                 if (my_texts.length > 0) {
-                    var my_last_text = my_texts[my_texts.length - 1]
+                    var my_last_text;
                     
-                    if (!is_group && my_last_text.getAttribute("date_read") !== "0" && my_last_text.getAttribute("class").includes("iMessage")) {
-                        var rr = document.createElement("span");
-                        rr.setAttribute("class", "readreceipt");
-                        rr.innerHTML = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")))
-                        
-                        if (my_last_text === doc.lastChild) {
-                            doc.appendChild(rr);
-                        } else {
-                            doc.insertBefore(rr, my_last_text.nextSibling);
+                    for (var i = my_texts.length - 1; i > 0 && my_texts[0].getAttribute("date_read") !== "0"; i--) {
+                        if (my_texts[i].getAttribute("date_read") !== "0") {
+                            my_last_text = my_texts[i];
+                            break;
+                        }
+                    }
+                    
+                    if (my_last_text !== undefined) {
+
+                        var isimsg = (my_last_text.getAttribute("class").includes("text-area") ? my_last_text.lastChild : my_last_text).getAttribute("class").includes("iMessage");
+
+                        if (!is_group && my_last_text.getAttribute("date_read") !== "0" && isimsg) {
+                            var rr = document.createElement("span");
+                            rr.setAttribute("class", "readreceipt");
+                            rr.innerHTML = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")))
+                            
+                            if (my_last_text === doc.lastChild) {
+                                doc.appendChild(rr);
+                            } else {
+                                doc.insertBefore(rr, my_last_text.nextSibling);
+                            }
                         }
                     }
                 }
 											  
-                document.getElementsByClassName("more_texts")[0].scrollIntoView()
+                document.getElementById("text-content").lastChild.scrollIntoView();
             }
         
             const getMoreTexts = async (num_texts = num_texts_to_load) => {
@@ -507,6 +579,7 @@
                 document.getElementById("attachmentbutton").value = "";
                 document.getElementById("unhiddenbutton").value = '📎';
                 hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
+                photos.value = "";
 
                 var box = document.getElementById("text-content");
                 var t = document.createElement("p");
@@ -552,9 +625,8 @@
                 var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
                 element.style.height = sh;
                 element.style.height = (element.scrollHeight)+"px";
-            
-                var m = document.getElementsByClassName("messages")[0];
-                m.style.gridTemplateRows = "var(--messages-title-height) auto min-content";
+                
+                document.getElementById("text-content").lastChild.scrollIntoView()
             }
 
             function showPopup() {
@@ -876,10 +948,6 @@
                 wifi.innerHTML = "wifi: " + String(level) + "%";
             }*/
 
-	    function showReactions(textId) {
-			
-	    }
-
             printChats()
                 
             document.addEventListener("DOMContentLoaded", () => {
@@ -890,6 +958,8 @@
             });
 
         </script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="setFALoaded();">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/fontawesome.css">
         <link rel="stylesheet" type="text/css" href="style?main">
         <link rel="stylesheet" type="text/css" href="style?custom">
         <!--light theme optional section; next line must remain as comment-->
