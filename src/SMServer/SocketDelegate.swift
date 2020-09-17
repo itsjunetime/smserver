@@ -50,15 +50,19 @@ class SocketDelegate : ServerWebSocketDelegate {
         }
 	}
 	
-	func sendNewBattery() {
-		let percent = UIDevice.current.batteryLevel * 100
-		
+    @objc func sendNewBatteryFromNotification(notification: NSNotification) {
+        sendNewBattery()
+	}
+    
+    func sendNewBattery() {
+        let percent = UIDevice.current.batteryLevel * 100
+        
         if server != nil {
             for i in server!.webSockets {
                 i.send(text: "battery:" + String(percent))
             }
         }
-	}
+    }
 	
 	func sendNewText(info: String) {
         /// If we received a new text
@@ -79,6 +83,8 @@ class SocketDelegate : ServerWebSocketDelegate {
         if self.debug {
             self.log("\(webSocket.remoteEndpoint?.host ?? "") is trying to connect...")
         }
+        
+        UIDevice.current.isBatteryMonitoringEnabled = true
 		
 		if !verify_auth(webSocket.remoteEndpoint?.host ?? "") {
             if self.debug {
@@ -87,11 +93,12 @@ class SocketDelegate : ServerWebSocketDelegate {
 			webSocket.close(immediately: true)
 		}
 		
-		/*let battery_level = UIDevice.current.batteryLevel * 100
+		let battery_level = UIDevice.current.batteryLevel * 100
 		
-		webSocket.send(text: "battery:\(String(battery_level))")*/
+		webSocket.send(text: "battery:\(String(battery_level))")
 
 		/// Backgrounding doesn't work with the next line uncommented
+        NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
 	}
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {

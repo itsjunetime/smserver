@@ -25,6 +25,7 @@ struct ContentView: View {
     @State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
     @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
     @State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
+    @State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
     
     @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     
@@ -352,7 +353,7 @@ struct ContentView: View {
         /// Make sure there's actually some content
         if !(body == "" && files.count == 0) {
             /// Send the information the obj-c function
-            self.s.sendIPCText(body, toAddress: address, withAttachments: files)
+            self.s.sendIPCText(body, withSubject: subjects_enabled ? subject : "", toAddress: address, withAttachments: files)
 			
             return true
         } else {
@@ -386,6 +387,7 @@ struct ContentView: View {
         
         self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
         self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
+        self.subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? true
         
         self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
         self.nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
@@ -622,10 +624,14 @@ struct ContentView: View {
             
             if remove { reaction += 1000 }
             
-            s.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
+            if chat != "0" && textGuid != "0" {
+                s.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
+            }
         }*/
         
-        self.debug ? print("We haven't implemented this functionality yet, sorry :/") : nil
+        if self.debug {
+            self.log("WARNING: We haven't implemented this functionality yet, sorry :/")
+        }
         
         return ""
     }
@@ -652,9 +658,6 @@ struct ContentView: View {
 		self.watcher.setTexts = { value in
 			self.setNewestTexts(value ?? "None")
 		}
-        self.watcher.setBattery = {
-            self.socket.sendNewBattery()
-        }
 		
 		socket.watcher = self.watcher
 		socket.authenticated_addresses = self.authenticated_addresses
@@ -752,7 +755,7 @@ struct ContentView: View {
 							self.view_settings.toggle()
 						}) {
 							Image(systemName: "gear")
-								.font(.system(size: 24))
+                                .font(.system(size: self.font_size))
 						}.sheet(isPresented: $view_settings) {
 							SettingsView()
 						}

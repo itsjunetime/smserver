@@ -47,7 +47,6 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 - [x] View all attachments in browser
 - [x] Send images/attachments from browser
 - [x] Websockets for instant communication
-- [x] Automatic checking for new messages
 - [x] Display for which conversations have unread messages
 - [x] Persistent settings
 - [x] Allow the server to run in the background for unlimited time
