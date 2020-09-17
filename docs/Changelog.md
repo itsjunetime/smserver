@@ -1,5 +1,14 @@
 # Changelog
 
+0.4.1 -> 0.4.2
+ - Rich Links look very nice now
+ - Added support for battery percentage display
+ - Fixed issue with notification button placement
+ - Removed unnecessary background functions
+ - Added extra error checking to prevent crashing when retrieving photo list
+ - Added subject functionality to API (+ setting to toggle on/off)
+ - Added support for viewing text subjects in web interface 
+
 0.4.0 -> 0.4.1
  - Fixed up displays of Rich Links to look okay
  - Fixed issue with document not scrolling to bottom if all texts.date_read attributes === "0".

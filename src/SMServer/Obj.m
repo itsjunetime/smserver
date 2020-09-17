@@ -32,16 +32,11 @@
     _setTexts(chat_id);
 }
 
-- (void)handleBatteryChanged {
-    _setBattery();
-}
-
 @end
 
 @implementation IWSSender
 
 - (void)launchMobileSMS {
-    NSLog(@"SMServer_app: Entered obj-c func, launching MobileSMS");
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverLaunch"];
     [center callExternalVoidMethod:@selector(launchSMS) withArguments:nil];
@@ -54,18 +49,16 @@
     return getuid() + getgid();
 }
 
-- (void)sendIPCText:(NSString *)body toAddress:(NSString *)address withAttachments:(NSArray *)paths {
+- (void)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths {
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
-    [center callExternalVoidMethod:@selector(sendText:) withArguments:@{@"body": body, @"address": address, @"attachment": paths}];
-    
+    [center callExternalVoidMethod:@selector(sendText:) withArguments:@{@"body": body, @"subject": subject, @"address": address, @"attachment": paths}];
 }
 
 - (void)markConvoAsRead:(NSString *)chat_id {
     
     MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
     [center callExternalVoidMethod:@selector(setAllAsRead:) withArguments:chat_id];
-    
 }
 
 - (void)sendReaction:(NSNumber *)reaction forGuid:(NSString *)guid inChat:(NSString *)chat {
