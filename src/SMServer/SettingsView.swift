@@ -17,6 +17,7 @@ struct SettingsView: View {
     @State var is_secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
     @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
     @State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
+    @State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
     
     private let picker_options: [String] = ["Dark", "Light", "Nord"]
     
@@ -58,20 +59,19 @@ struct SettingsView: View {
             UserDefaults.standard.setValue(self.light_theme, forKey: "light_theme")
             UserDefaults.standard.setValue(self.nord_theme, forKey: "nord_theme")
         })
+		
+		let socket_binding = Binding<Int>(get: {
+			self.socket_port
+		}, set: {
+			self.socket_port = Int($0)
+			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
+		})
         
         let debug_binding = Binding<Bool>(get: {
             self.debug
         }, set: {
             self.debug = $0
             UserDefaults.standard.setValue($0, forKey: "debug")
-        })
-        
-        let secure_binding = Binding<Bool>(get: {
-            self.is_secure
-        }, set: {
-            self.is_secure = $0
-            UserDefaults.standard.setValue($0, forKey: "is_secure")
-            self.display_ssl_alert = true
         })
         
         let auth_binding = Binding<Bool>(get: {
@@ -88,11 +88,12 @@ struct SettingsView: View {
             UserDefaults.standard.setValue($0, forKey: "enable_backgrounding")
         })
         
-        let override_binding = Binding<Bool>(get: {
-            self.override_no_wifi
+        let secure_binding = Binding<Bool>(get: {
+            self.is_secure
         }, set: {
-            self.override_no_wifi = $0
-            UserDefaults.standard.setValue($0, forKey: "override_no_wifi")
+            self.is_secure = $0
+            UserDefaults.standard.setValue($0, forKey: "is_secure")
+            self.display_ssl_alert = true
         })
         
         let read_binding = Binding<Bool>(get: {
@@ -101,13 +102,20 @@ struct SettingsView: View {
             self.mark_when_read = $0
             UserDefaults.standard.setValue($0, forKey: "mark_when_read")
         })
-		
-		let socket_binding = Binding<Int>(get: {
-			self.socket_port
-		}, set: {
-			self.socket_port = Int($0)
-			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
-		})
+        
+        let override_binding = Binding<Bool>(get: {
+            self.override_no_wifi
+        }, set: {
+            self.override_no_wifi = $0
+            UserDefaults.standard.setValue($0, forKey: "override_no_wifi")
+        })
+        
+        let subject_binding = Binding<Bool>(get: {
+            self.subjects_enabled
+        }, set: {
+            self.subjects_enabled = $0
+            UserDefaults.standard.setValue($0, forKey: "subjects_enabled")
+        })
         
 		return ScrollView {
 			VStack(spacing: 16) {
@@ -184,6 +192,8 @@ struct SettingsView: View {
                     Toggle("Mark conversations as read when viewed on web interface", isOn: read_binding)
                     
                     Toggle("Override 'No Wifi' prevention setting on main interface", isOn: override_binding)
+                    
+                    Toggle("Enable subject functionality in API", isOn: subject_binding)
                 }.alert(isPresented: $display_ssl_alert, content: {
                     Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
                 })

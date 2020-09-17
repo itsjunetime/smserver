@@ -6,8 +6,6 @@ All post requests are directed to /send. In the latest version, this is the only
 
 All request parameters require a value, but only some of the values are consequential. However, the app will not interpret a parameter as a parameter unless it has an accompanying value -- For example, to retrieve the list of conversations, one must make a request to /requests with a parameter of 'chat', but 'GET /requests?chat' will return nothing. Something like 'GET /requests?chat=0' will return the correct information.
 
-Lastly, every time you see a plus ('+') in a get request, it needs to be replaced with a '%2B'. The server won't handle it correctly if it is a plus.
-
 # `/requests` requests:
 
 All requests to `/requests` return JSON information.
@@ -24,7 +22,7 @@ Retrieves the most recent $num messages to or from $person, offset by $offset.
 
 Example queries:
 - /requests?person=chat192370112946&num=500
-- /requests?person=%2B15202621138
+- /requests?person=+15202621138
 - /requests?person=email@icloud.com&num=50&offset=100
 - /requests?person=person@gmail.com&offset=200
 
@@ -48,16 +46,7 @@ Retrieves the contact name that accompanies chat_identifier $name
   
 Example queries:
 - /requests?name=email@icloud.com
-- /requests?name=%2B12761938272
-
-## `check` -- THIS HAS BEEN DEPRECATED. USE WEBSOCKETS INSTEAD
-
-Simply checks if any new texts have arrived since either 'chats' or 'check' was last called. Will return an array of all conversation chat_identifiers with new texts, or an empty array if there are no new texts.
-
-- check: Parameter is necessary, and value is inconsequential. Simply needs to be sent.
-
-Example queries:
-- /requests?check=0
+- /requests?name=+12761938272
 
 ## `search`, `case_sensitive`, `bridge_gaps`
 
@@ -73,7 +62,7 @@ Example queries:
 
 ## `photos`, `offset`, `most_recent`
 
-if most_recent == "true", this retrieves a list of information about the most recent $photos ($photos is an integer) photos, offset by $offset ($offset is also an integer). if most_recent != "true", this retrieves a list of the oldest $photos photos, offset by $offset.
+if most_recent == "true", this retrieves a list of information about the most recent $photos ($photos is an integer) photos, offset by \$offset ($offset is also an integer). if most_recent != "true", this retrieves a list of the oldest $photos photos, offset by $offset.
 
 - photos: Parameter is necessary, and value is consequential. This must be the number of photos that you want to receive information about, and if it is not an integer, it will be changed to the default number of photos (which is available to set in the settings of the app). Setting this to 0 will retrieve 0 photos, and the only way to retrieve all photos would be to set to $photos to an absurdly large number, such as 999999999. 
 - offset: Parameter is not necessary, and value is consequential. This must be the offset for the list of photos that you want to retrieve. For example, if you already retrieved the most recent 100 photos, but want to retrieve info about the next 100 images, you would set offset to 100, and photos to 100 as well. This must be an integer, or else it will default to 0. 
@@ -105,23 +94,23 @@ This contains the chat_id of the person that the request is trying to get the pr
 
 Example queries:
 
-- /data?chat_id=%2B15204458272
+- /data?chat_id=+15204458272
 
 ## `photo`
 
-This will return an image from the image library, specifically from the `/var/mobile/Media/DCIM/` folder. It it protected against LFI, just like `path` above. It will return whatever is at that address, whether it be a video or image.
+This will return an image from the image library, specifically from the `/var/mobile/Media/` folder. It it protected against LFI, just like `path` above. It will return whatever is at that address, whether it be a video or image.
 
 - photo: Parameter is necessary, and value is consequential. It should be the raw path, excluding the prefix of `/var/mobile/Media/DCIM/`, of the image that you want to retrieve.
 
 Example queries:
 
-- /data?photo=109APPLE/IMG_8273.JPEG
+- /data?photo=DCIM/109APPLE/IMG_8273.JPEG
 
 # `/send` requests
 
 Requests to this url are all sent using `POST`, are what are used to send texts and attachments. There are two arguments that can be sent to this, and it accepts multiple files as well. 
 
-At least one file needs to be sent with each request, or the app crashes. This is simply due to the nature of the web framework that I use; I'm looking into getting it resolved. However, this file can be 0-size, `/dev/null`, `None` (in python), or whever you can use to signify a null file. If the file is one of these, or 0 bytes long, it will not be sent with the message. 
+As with all other requests (besides to the gatekeeper), you musst authenticate before sending any requests to this url, or else nothing will happen.
 
 ## Arguments
 
@@ -147,11 +136,12 @@ Sending a text with no attachments:
 ```python
 from requests import post
 
-vals = {'text': 'Hello world!', 'chat': 'email@email.org'}
+# It's safest to explicitly replace spaces with `%20`, since (last time I tested) python replaced 
+# all spaces with plus signs, which are not filtered out.
+vals = {'text': 'Hello%20world!', 'subject': 'This%20is%20a%20test', 'chat': 'email@email.org'}
 url = 'http://192.168.0.127:8741/send'
 
-# The files is still included in the next line 'cause the app crashes if the files parameter is null/empty (dunno why). No files are actually sent with this example, though.
-post(url, files={'attachments': (None, '0')}, data=vals)
+post(url, data=vals)
 ```
 
 Sending an attachment with no text:
@@ -168,6 +158,6 @@ url = 'http://192.168.0.127:8741/send'
 post(url, files=files_values, data=vals)
 ```
 
-I've read that the value for `attachments` in `files_values` could be a list of tuples (a list of variables like `file`), but doing that has cause python to fail every time I've tried it, so I would recommend just iterating over each attachment and sending them individually. 
+To be able to send a text with a subject, the `subject` variable in `vals` must not be empty, and you must have the option `Enable subject functionality` toggled on in the app
 
-I also don't know for sure if the issue where the app crashes is only exclusive to a request made through the python library, or if it happens regardless of what is making the request. 
+I've read that the value for `attachments` in `files_values` could be a list of tuples (a list of variables like `file`), but doing that has cause python to fail every time I've tried it, so I would recommend just iterating over each attachment and sending them individually. 

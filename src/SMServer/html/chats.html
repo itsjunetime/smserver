@@ -91,16 +91,49 @@
                     t.setAttribute("date_read", text.date_read);
                     t.innerHTML = ''
                     
-                    if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider") {
+                    /// it's a rich link
+                    if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider" && text.attachment_file !== undefined) {
+                        t.setAttribute("class", t.getAttribute("class") + " noPadding richLink");
+                        
                         var img = document.createElement("img");
                         img.src = "/data?path=" + text.attachment_file.split(":")[1];
                         t.appendChild(img);
                         t.appendChild(document.createElement("br"));
                         
-                        var link = document.createElement("a");
-                        link.href = text.text;
-                        link.innerHTML = text.link_title;
-                        t.appendChild(link);
+                        var under = document.createElement("a");
+                        under.href = text.text;
+                        under.setAttribute("class", "richLinkUnder");
+
+                        var desc = document.createElement("div");
+                        desc.setAttribute("class", "richLinkDescription");
+                        
+                        var title = document.createElement("a");
+                        title.innerHTML = text.link_title;
+                        title.setAttribute("class", "richLinkTitle");
+                        desc.appendChild(title);
+                        
+                        var subtitle = document.createElement("div");
+                        subtitle.innerHTML = text.link_subtitle
+                        subtitle.setAttribute("class", "richLinkSubtitle");
+                        desc.appendChild(subtitle);
+                        
+                        under.appendChild(desc);
+                        
+                        var nav = document.createElement("div");
+                        var nav1 = document.createElement("div");
+                        var nav2 = document.createElement("div");
+                        var nav3 = document.createElement("div");
+                        
+                        nav.setAttribute("class", "richLinkNavigator");
+                        nav1.setAttribute("class", "firstNav");
+                        nav2.setAttribute("class", "secondNav");
+                        nav3.setAttribute("class", "thirdNav");
+                        
+                        nav2.innerHTML = faLoaded ? "<i class=\"fas fa-angle-right\"></i>" : ">";
+                        
+                        nav.innerHTML = nav1.outerHTML + nav2.outerHTML + nav3.outerHTML;
+                        under.appendChild(nav)
+                        t.appendChild(under);
                         
                         return t;
                     }
@@ -121,6 +154,11 @@
                     
                     if (text.text.replace("￼", "").replace("￼", "").trim().length > 0) {
                         /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
+                        var subject = document.createElement("div");
+                        subject.setAttribute("class", "subject");
+                        subject.innerHTML = text.subject;
+                        
+                        t.appendChild(subject);
                         t.innerHTML += text.text.replace("￼", "").replace("￼", "");
                     }
 
@@ -671,7 +709,7 @@
                         processNewText(content)
                         break
                     case "battery":
-                        //setNewBatteryLevel(content)
+                        setNewBatteryLevel(content)
                         break
                     case "wifi":
                         //setNewWifiLevel(content)
@@ -928,11 +966,28 @@
             window.onfocus = function() { self.window_is_focused = true; }
             window.onblur = function() { self.window_is_focused = false; }
 
-            /*function setNewBatteryLevel(level) {
+            function setNewBatteryLevel(level) {
+                if (debug) { console.log("new battery level: " + level); }
                 var batt = document.getElementById("battery");
-                batt.innerHTML = "battery: " + String(level) + "%";
-
-                var dbl = Number(level)
+                
+                var symbol = "";
+                var dbl = Number(level);
+                
+                if (faLoaded) {
+                    if (dbl < 5) {
+                        symbol = "<i class=\"fas fa-battery-empty\"></i>"
+                    } else if (dbl < 25) {
+                        symbol = "<i class=\"fas fa-battery-quarter\"></i>"
+                    } else if (dbl < 50) {
+                        symbol = "<i class=\"fas fa-battery-half\"></i>"
+                    } else if (dbl < 75) {
+                        symbol = "<i class=\"fas fa-battery-three-quarters\"></i>"
+                    } else {
+                        symbol = "<i class=\"fas fa-battery-full\"></i>"
+                    }
+                }
+                
+                batt.innerHTML = String(level) + (faLoaded ? "" : "%") + " " + symbol;
 
                 if (dbl > 35) {
                     batt.setAttribute("class", "fullEnough")
@@ -943,7 +998,7 @@
                 }
             }
 
-            function setNewWifiLevel(level) {
+            /*function setNewWifiLevel(level) {
                 var wifi = document.getElementById("wifi");
                 wifi.innerHTML = "wifi: " + String(level) + "%";
             }*/
@@ -972,7 +1027,7 @@
                 <div class="chats-title">
                     <h1>Messages</h1>
                     <div id="stats">
-                        <!--<div id="battery">battery: 0%</div>--> <!-- Needs implementations in libsmserver; will do later -->
+                        <div id="battery">battery: 0%</div>
                         <!--<div id="wifi">wifi: 0%</div>-->
                     </div>
                 </div>
