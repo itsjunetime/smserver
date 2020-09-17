@@ -250,7 +250,7 @@ final class ChatDelegate {
         var return_messages = [[String:String]]()
         
         if !is_group {
-            var messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+            var messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
             
             for i in 0..<messages.count {
                 /// get the attachments
@@ -268,13 +268,16 @@ final class ChatDelegate {
                 }
                 
                 if messages[i]["balloon_bundle_id"] == "com.apple.messages.URLBalloonProvider" && messages[i]["ROWID"] != nil {
-                    messages[i]["link_title"] = getLinkTitle(messages[i]["ROWID"]!, db: db)
+                    let link_info = getLinkInfo(messages[i]["ROWID"]!, db: db)
+                    
+                    messages[i]["link_title"] = link_info["title"]
+                    messages[i]["link_subtitle"] = link_info["subtitle"]
                 }
             }
             
             return_messages = messages
         } else {
-            var messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset)
+            var messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset)
             
             for i in 0..<messages.count {
                 var new_msg = [String:String]()
@@ -295,6 +298,13 @@ final class ChatDelegate {
                 if messages[i]["m.is_from_me"] == "0" && messages[i]["h.id"]?.count != 0 {
                     let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: messages[i]["h.id"] ?? "")
                     messages[i]["m.sender"] = name
+                }
+                
+                if messages[i]["m.balloon_bundle_id"] == "com.apple.messages.URLBalloonProvider" && messages[i]["m.ROWID"] != nil {
+                    let link_info = getLinkInfo(messages[i]["m.ROWID"]!, db: db)
+                    
+                    messages[i]["m.link_title"] = link_info["title"]
+                    messages[i]["m.link_subtitle"] = link_info["subtitle"]
                 }
                 
                 for l in Array(messages[i].keys) {
@@ -673,9 +683,13 @@ final class ChatDelegate {
             let image = result.object(at: i)
 			var img_url = ""
 			
-			image.getURL(completionHandler: { url in
+            image.getURL(completionHandler: { url in
                 /// get url of each image
-                img_url = url!.path.replacingOccurrences(of: ChatDelegate.photoStoragePrefix, with: "")
+                if url != nil {
+                    img_url = url!.path.replacingOccurrences(of: ChatDelegate.photoStoragePrefix, with: "")
+                } else {
+                    img_url = "nil" /// Cause it has to be something to continue
+                }
 			})
             
             /// This is hacky and kinda hurts performance but it seems the most reliable way to load images in order + with the amount requested.
@@ -709,7 +723,7 @@ final class ChatDelegate {
         return photo_data
 	}
     
-    final func getLinkTitle(_ mid: String, db: OpaquePointer?) -> String {
+    final func getLinkInfo(_ mid: String, db: OpaquePointer?) -> [String:String] {
         /// This get a Rich Link's title text from the sql database. Was quite the pain to get working.
         /// I'll expland it in the future to get like the subtitle and other stuff too
         let sqlString = "SELECT payload_data from message where ROWID is \(mid);"
@@ -736,6 +750,7 @@ final class ChatDelegate {
             }
         }
         
+        /// finalize sqlite statement
         ret_code = sqlite3_finalize(statement)
         if ret_code != SQLITE_OK {
             self.log("WARNING: error finalizing statement: \(ret_code)")
@@ -747,7 +762,8 @@ final class ChatDelegate {
         do {
             plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as! [String : AnyObject]
         } catch {
-            print("failed to decode plist")
+            self.log("WARNING: failed to decode plist")
+            return ["title": "", "subtitle": ""]
         }
         
         statement = nil
@@ -755,8 +771,15 @@ final class ChatDelegate {
         /// Always under object `$objects`
         let objects: [Any] = plistData["$objects"] as! [Any]
         
-        /// Always 8th item
-        return objects[8] as? String ?? "No Title Available"
+        guard objects.count > 9 else {
+            return ["title": "", "subtitle": ""]
+        }
+        
+        /// Always under these indices when it's a full rich link (with images and such)
+        var ret_dict = ["title": objects[8] as? String ?? "No Title Available"]
+        ret_dict["subtitle"] = objects[9] as? String ?? "No subtitle available"
+        
+        return ret_dict
     }
 }
 

@@ -149,16 +149,19 @@ p {
 	padding: 10px 0px 0px 10px;
 	vertical-align: bottom;
 	display: grid;
-	grid-template-columns: 1fr 28%;
+	grid-template-columns: 1fr max-content;
 }
-#battery.low {
+#battery.low i {
 	color: red;
 }
-#battery.risky {
+#battery.risky i {
 	color: gold;
 }
-#battery.fullEnough {
+#battery.fullEnough i {
 	color: limegreen;
+}
+#stats {
+    padding-right: 10px;
 }
 #wifi {
 	color: dodgerblue;
@@ -175,9 +178,6 @@ p {
 	padding: 10px;
 	border-top: 1px solid var(--chats-border);
 	display: flex;
-	/*grid-template-columns: 1fr 90px 60px;
-	grid-template-rows: 1fr;
-	grid-gap: 10px*/
 }
 .chats-list {
 	grid-row: 3;
@@ -282,12 +282,14 @@ p {
 .text + .text {
 	margin-top: -12px;
 }
+.text .subject {
+    font-weight: 500;
+}
 .is_from_them a {
 	color: dodgerblue;
 }
 .is_from_me a {
     color: lightblue;
-    text-decoration: underline;
 }
 .sender {
 	margin-left: 14px;
@@ -497,13 +499,14 @@ p {
 	height: 24px;
 }
 #composeShowButton {
-	width: 60px;
+	width: max-content;
 	padding: 0px 8px 0px 8px;
 }
 #notificationbutton {
-	width: 90px;
-	padding: 0px 0px 0px 8px;
+	width: max-content;
+	padding: 0px 8px 0px 8px;
     margin-left: auto;
+    margin-right: 10px;
 }
 #composeShowButton p, #notificationbutton p {
 	margin: 0 0 0 0;
@@ -585,8 +588,8 @@ p {
     font-size: 14px;
     float: right;
     padding-right: 10px;
-	margin-top: -10px;
 	align-self: flex-end;
+    margin: -10px 0 10px 0;
 }
 .reaction {
 	top: -5px;
@@ -615,4 +618,31 @@ p {
 	right: -16px;
 	border-radius: 4px 4px 4px 1px;
     background-color: rgba(71, 71, 80, 0.7);
+}
+.noPadding {
+    padding: 0 !important;
+}
+.richLink img {
+    border-radius: 10px 10px 0 0 !important;
+    width: 100%;
+}
+.richLinkUnder {
+    display: grid;
+    grid-template-columns: 1fr 14%;
+    padding: 8px;
+}
+.richLinkTitle {
+    font-size: 22px;
+}
+.richLinkSubtitle {
+    padding: 5px;
+}
+.richLinkNavigator {
+    display: grid;
+    grid-template-rows: 1fr max-content 1fr;
+}
+.secondNav {
+    font-size: 40px;
+    padding: 16px 0 16px 36%;
+    border-left: 1px solid #aaa5;
 }
