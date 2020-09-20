@@ -1,5 +1,13 @@
 # Changelog
 
+0.4.2 -> 0.4.3
+ - Fixed issue with new texts in group chats sometimes not showing immediately
+ - Fixed issue where text box in web interface would not automatically resize after text was sent
+ - Texts sent with images now show images immediately after being sent
+ - Texts with no images and no text no longer appear to send in the web interface
+ - Prevented conversations from being marked as read when webpage/conversation was not selected
+ - Added option to manually (not) mark conversation as read through API
+
 0.4.1 -> 0.4.2
  - Rich Links look very nice now
  - Added support for battery percentage display
