@@ -510,8 +510,13 @@ struct ContentView: View {
         
         let f = Array(params.keys)[0]
         
-        if f == "person" || f == "num" || f == "offset" {
+        if f == "person" || f == "num" || f == "offset" || f == "read" {
             /// requesting messages from a specific person
+            
+            if (params["read"] == nil && self.mark_when_read) || (params["read"] != nil && params["read"] == "true") {
+                self.s.markConvo(asRead: person)
+            }
+            
             person = params["person"] ?? ""
             
             num_texts = default_num_messages
@@ -528,11 +533,6 @@ struct ContentView: View {
             
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
-            }
-			
-            /// This really doesn't look right but I think that's just what it is
-            if self.mark_when_read {
-                self.s.markConvo(asRead: person)
             }
             
             let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
@@ -644,6 +644,7 @@ struct ContentView: View {
         if self.debug {
             self.log("Stopped Server")
         }
+        
         self.authenticated_addresses = [String]()
         server_running = server.isListening
     }

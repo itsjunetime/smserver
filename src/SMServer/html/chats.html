@@ -184,7 +184,7 @@
 
                     var icons = ["Love", "Thumbs up", "Thumbs down", "Haha", "!!", "??"];
 
-                    if (faLoaded) icons = ["<i class=\"fas fa-heart\"></i>", "<i class=\"fas fa-thumbs-up\"></i>", "<i class=\"fas fa-thumbs-down\"></i>", 
+                    if (faLoaded) icons = ["<i class=\"fas fa-heart\"></i>", "<i class=\"fas fa-thumbs-up\"></i>", "<i class=\"fas fa-thumbs-down\"></i>",
                     "<i class=\"fas fa-grin-tears\"></i>", "<i class=\"fas fa-exclamation\"></i><i class=\"fas fa-exclamation\"></i>", "<i class=\"fas fa-question\"></i>"];
 
                     reac.innerHTML = icons[Number(text.associated_message_type) - 2000];
@@ -205,7 +205,7 @@
                 b.setAttribute("id", chat.chat_identifier);
                 
                 var i = document.createElement("img");
-                i.src = prefix + "/data?chat_id=" + chat.chat_identifier.replace("+", "%2B");
+                i.src = prefix + "/data?chat_id=" + chat.chat_identifier;
                 b.appendChild(i);
 
                 var nonpic = document.createElement("div");
@@ -245,9 +245,9 @@
             async function getLatestText(chat = current_chat_id) {
                 if (debug) { console.log("Getting latest text for chat " + chat); }
                 var text;
-                var fixed_chat = chat.replace("+", "%2B");
+                var fixed_chat = chat;
 
-                let url = prefix + "/requests?person=" + fixed_chat + "&num=1";
+                let url = prefix + "/requests?person=" + fixed_chat + "&num=1&read=false";
                 const fetch_one_text = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -278,12 +278,12 @@
                 var senders = document.getElementsByClassName("sender");
 
                 if (is_group && senders.length > 0 && text.is_from_me === "0" && text.sender !== senders[senders.length - 1].firstChild.innerHTML) {
-                    var from = document.createElement("div");
+                    var name = document.createElement("div");
 
-                    from.innerHTML = "<p>" + text.sender + "</p>";
-                    from.setAttribute("class", "sender");
+                    name.innerHTML = "<p>" + text.sender + "</p>";
+                    name.setAttribute("class", "sender");
                     
-                    doc.appendChild(from);
+                    content.appendChild(name);
                 }                   
                                             
                 content.appendChild(t);
@@ -392,8 +392,8 @@
                 var orig_btn = document.getElementById(chat_id);
                 orig_btn.setAttribute("class", "selected");
                 
-                var new_chat_id = chat_id.replace("+", "%2B")
-                let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts
+                var new_chat_id = chat_id;
+                let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
                 const fetch_texts = await fetch(url)
                 .then(response => {
                     if (!response.ok) {
@@ -418,7 +418,7 @@
                 current_chat_id = chat_id
 
                 var img = document.createElement("img");
-                img.src = prefix + "/data?chat_id=" + chat_id.replace("+", "%2B");
+                img.src = prefix + "/data?chat_id=" + chat_id;
 
                 title_doc.insertBefore(img, title_doc.firstChild);
 
@@ -505,7 +505,7 @@
                 if (debug) { console.log("called getMoreText; num == " + num_texts); }
                 var chat_id = current_chat_id;
                 
-                var new_chat_id = chat_id.replace("+", "%2B");
+                var new_chat_id = chat_id;
                 let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts;
                 const fetch_texts = await fetch(url)
                 .then(response => {
@@ -564,7 +564,6 @@
             const getImage = async (chat_id) => {
                 if (debug) { console.log("calling getImage for chat " + chat_id); }
 
-                chat_id = chat_id.replace("+", "%2B")
                 var url = prefix + '/requests?image=' + chat_id
                 const fetch_image = await fetch(url)
                 .then(response => {
@@ -606,27 +605,20 @@
 
                 form.submit();
 
-                await sleep(500);
-
                 tbox.value = "";
                 hta.value = "";
-                hta.style.height = (hta.scrollHeight)+"px";
-                var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
-                hta.style.height = sh;
                 
                 document.getElementById("attachmentbutton").value = "";
                 document.getElementById("unhiddenbutton").value = '📎';
                 hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
                 photos.value = "";
-
-                var box = document.getElementById("text-content");
-                var t = document.createElement("p");
-                t.setAttribute("class", "text more_texts is_from_me iMessage");
-                t.setAttribute("id", "texts-nil");
-
-                t.innerHTML = oldval;
-                box.appendChild(t);
-                t.scrollIntoView();
+                
+                auto_grow(document.getElementById("sendbox"));
+                auto_grow(hta);
+                
+                await sleep(500);
+                
+                getLatestText();
                 
                 setChatAsTop(current_chat_id, oldval);
             }
@@ -711,9 +703,6 @@
                     case "battery":
                         setNewBatteryLevel(content)
                         break
-                    case "wifi":
-                        //setNewWifiLevel(content)
-                        break
                     default:
                         console.log("cannot handle request: '" + msg + "'")
                         break
@@ -726,8 +715,8 @@
                 var new_text = "";
                 var name = "";
 
-                if (window.Notification && Notification.permission === "granted" && !window_is_focused) {
-                    var url = prefix + "/requests?person=" + chat.replace("+", "%2B") + "&num=1";
+                if (window.Notification && Notification.permission === "granted" && (!window_is_focused || chat !== current_chat_id)) {
+                    var url = prefix + "/requests?person=" + chat + "&num=1";
                     const fetch_newest_text = await fetch(url)
                     .then(response => {
                         if (!response.ok) {
@@ -746,7 +735,7 @@
                     }) 
 
                     var _ = await fetch_newest_text;
-                    name = await getTextFromURL(prefix + '/requests?name=' + chat.replace("+", "%2B"))
+                    name = await getTextFromURL(prefix + '/requests?name=' + chat)
 
                     var n = new Notification(name, { body: new_text, icon: '/favicon.ico'});
                 }
@@ -761,7 +750,7 @@
                     } else {
 
                         if (new_text === "") {
-                            var url = prefix + "/requests?person=" + chat.replace("+", "%2B") + "&num=1";
+                            var url = prefix + "/requests?person=" + chat + "&num=1";
                             const fetch_newest_text = await fetch(url)
                             .then(response => {
                                 if (!response.ok) {
@@ -786,7 +775,7 @@
 
                         btn.innerHTML = new_text;
                     }
-                    if (chat === current_chat_id || chat === "any") {
+                    if (chat === current_chat_id) {
                         getLatestText();
                     }
                 }
@@ -799,6 +788,9 @@
                 if (chat === chatsList.firstChild.id) {
                     if (new_text !== "") {
                         chatsList.firstChild.getElementsByClassName("chat-text")[0].innerHTML = new_text;
+                    }
+                    if (!window_is_focused || current_chat_id !== chat) {
+                        chatsList.firstChild.setAttribute("class", "unread")
                     }
                 } else {
                     var new_chat;
@@ -867,7 +859,10 @@
                 if (photo.is_favorite === "true") {
                     var h = document.createElement("span");
                     h.setAttribute("class", "favorite-heart");
-                    h.innerHTML = "❤";
+                    h.innerHTML = faLoaded ? "<i class=\"fas fa-heart\"></i>" : "❤";
+                    if (faLoaded) {
+                        h.setAttribute("style", "padding-right: 24px") /// It's annoyingly specific, 1px off from using unicode
+                    }
                     p.appendChild(h);
                 }
                 return p;
@@ -998,11 +993,6 @@
                 }
             }
 
-            /*function setNewWifiLevel(level) {
-                var wifi = document.getElementById("wifi");
-                wifi.innerHTML = "wifi: " + String(level) + "%";
-            }*/
-
             printChats()
                 
             document.addEventListener("DOMContentLoaded", () => {
@@ -1013,6 +1003,7 @@
             });
 
         </script>
+        <!-- These next links are for fontawesome; it's how I display the reactions. It's safe to remove them, but then the reactions will just appear as text instead of icons-->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="setFALoaded();">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/fontawesome.css">
         <link rel="stylesheet" type="text/css" href="style?main">
@@ -1028,7 +1019,6 @@
                     <h1>Messages</h1>
                     <div id="stats">
                         <div id="battery">battery: 0%</div>
-                        <!--<div id="wifi">wifi: 0%</div>-->
                     </div>
                 </div>
                 <div class="chats-search">
