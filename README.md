@@ -29,7 +29,7 @@
 - To install the ipa: some signing service/bypass -- Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign it, but if that doesn't work for you, then feel free to sign & install the .ipa. The .deb does not require signing or any sort of bypass, since it install as a system application.
 
 ## To Install
-Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.md` for information on how to build from source
+Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.md` for information on how to build from source.
 
 ## To run
 1. Open the SMServer app, and click the green 'play' button in the bottom left.
@@ -56,13 +56,13 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 - [x] Access to camera roll on web interface
 - [x] Viewing and sending of read receipts
 - [x] Graphic displays for reactions
+- [x] Information on web page about battery life
 - [ ] Ability to send reactions from web interface - This is nearly done
-- [ ] Information on web page about battery life, wifi connection, etc - This is nearly done.
 
 ### Future plans
 - [ ] Search through messages from browser - This has been implemented in the API
 - [ ] Subject lines for texts on web interface
-- [ ] Notification when other party starts typing
+- [ ] Display when other party starts typing
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
@@ -86,4 +86,4 @@ Also, if the app did not crash on startup, but rather crashed after it was alrea
  - DM me the file at u/Janshai on reddit. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information. 
 
 ## Companion App
-There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, much more customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
+There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
