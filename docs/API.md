@@ -20,10 +20,12 @@ Retrieves the most recent $num messages to or from $person, offset by $offset.
 
 - offset: Parameter is not necessary, but value is consequential. The value of this parameter must be an integer, and will be the offset off the messages that you want to receive. Say, for example, that you already retrieved the latest 100 messages, and wnated to receive the 100 before those, your offset would be 100. If unspecified, this value will default to 0.
 
+- read: Parameter is not necessary, but value is consequential. The value of this parameter must be a string, either `true` or `false`. If it is `true`, or the parameter is not included but the 'mark conversation as read when viewed on web interface' option is checked in the app's settings, the conversation whose messages are being requested will be marked as read on the host device. 
+
 Example queries:
 - /requests?person=chat192370112946&num=500
 - /requests?person=+15202621138
-- /requests?person=email@icloud.com&num=50&offset=100
+- /requests?person=email@icloud.com&num=50&offset=100&read=false
 - /requests?person=person@gmail.com&offset=200
 
 ## `chat`, `num_chats`
