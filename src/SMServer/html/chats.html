@@ -3,7 +3,7 @@
         <meta charset="utf-8" />
         <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?" />
         <title>
-            Messages
+            SMServer
         </title>
         <script>
             var new_chats = "";
@@ -17,12 +17,15 @@
             var printed_texts = 0;
             var printed_chats = 0;
             var printed_photos = 0;
+
             var has_shown_warning = false;
             var has_shown_camera_roll = false;
             var notifications = false;
             var has_shown_new_warning = false;
             var window_is_focused = true;
             var faLoaded = false;
+			var currently_typing = false;
+			var called_typing_wait = false;
 
             var items = "";
             var new_items = "";
@@ -30,17 +33,19 @@
             var texts = "";
             var image_string = "";
             var current_chat_id = "";
+            var sleep_time = 400;
+			var typing_sleep = 10000;
 
-            var doc_url = window.location.href.split('/')[2].split(':')[0];
+            var doc_url = window.location.href.split("/")[2].split(":")[0];
             var socket_address = doc_url
             var prefix = "";
 
             if (doc_url === "127.0.0.1" || doc_url === "localhost") { /// when I'm debugging on local computer
-                prefix = "http://10.37.27.19:8741";
+                prefix = "http://192.168.0.180:8741";
                 num_texts_to_load = 100;
                 num_chats_to_load = 60;
                 socket_port = 8740;
-                socket_address = "10.37.27.19";
+                socket_address = prefix.split("/")[2].split(":")[0];
             }
     
             function timeConverter(t) {
@@ -71,6 +76,10 @@
 
             function setFALoaded() {
                 faLoaded = true;
+                document.addEventListener("DOMContentLoaded", () => {
+                    document.getElementById("camerarollbutton").innerHTML = "<i class=\"fas fa-camera\"></i>";
+                    document.getElementById("unhiddenbutton").innerHTML = "<i class=\"fas fa-paperclip\"></i>";
+                });
             }
 
             function getTextElement(text, last = false) {
@@ -89,82 +98,95 @@
                     t.setAttribute("id", text.guid);
                     t.setAttribute("title", timeConverter(text.date));
                     t.setAttribute("date_read", text.date_read);
-                    t.innerHTML = ''
+                    t.innerHTML = "";
                     
                     /// it's a rich link
                     if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider" && text.attachment_file !== undefined) {
                         t.setAttribute("class", t.getAttribute("class") + " noPadding richLink");
                         
                         var img = document.createElement("img");
-                        img.src = "/data?path=" + text.attachment_file.split(":")[1];
-                        t.appendChild(img);
-                        t.appendChild(document.createElement("br"));
-                        
+						var attachment_splits = text.attachment_file.split(":");
+						img.src = "/data?path=" + (attachment_splits[1].length > 0 ? attachment_splits[1] : attachment_splits[0]);
+
                         var under = document.createElement("a");
                         under.href = text.text;
                         under.setAttribute("class", "richLinkUnder");
+
+						if (attachment_splits[1].length > 0) {
+                        	t.appendChild(img); 
+                        	t.appendChild(document.createElement("br"));
+						} else {
+							under.appendChild(img);	
+							under.setAttribute("class", under.getAttribute("class") + " richLinkSmall");
+						}
 
                         var desc = document.createElement("div");
                         desc.setAttribute("class", "richLinkDescription");
                         
                         var title = document.createElement("a");
-                        title.innerHTML = text.link_title;
+                        title.innerText = text.link_title;
                         title.setAttribute("class", "richLinkTitle");
                         desc.appendChild(title);
                         
-                        var subtitle = document.createElement("div");
-                        subtitle.innerHTML = text.link_subtitle
-                        subtitle.setAttribute("class", "richLinkSubtitle");
-                        desc.appendChild(subtitle);
+						if (attachment_splits[1].length > 0) {
+							var subtitle = document.createElement("div");
+							subtitle.innerText = text.link_subtitle
+							subtitle.setAttribute("class", "richLinkSubtitle");
+							desc.appendChild(subtitle);
+						}
                         
                         under.appendChild(desc);
                         
-                        var nav = document.createElement("div");
-                        var nav1 = document.createElement("div");
-                        var nav2 = document.createElement("div");
-                        var nav3 = document.createElement("div");
-                        
-                        nav.setAttribute("class", "richLinkNavigator");
-                        nav1.setAttribute("class", "firstNav");
-                        nav2.setAttribute("class", "secondNav");
-                        nav3.setAttribute("class", "thirdNav");
-                        
-                        nav2.innerHTML = faLoaded ? "<i class=\"fas fa-angle-right\"></i>" : ">";
-                        
-                        nav.innerHTML = nav1.outerHTML + nav2.outerHTML + nav3.outerHTML;
-                        under.appendChild(nav)
+						if (attachment_splits[1].length > 0) {
+							var nav = document.createElement("div");
+							var nav1 = document.createElement("div");
+							var nav2 = document.createElement("div");
+							var nav3 = document.createElement("div");
+							
+							nav.setAttribute("class", "richLinkNavigator");
+							nav1.setAttribute("class", "firstNav");
+							nav2.setAttribute("class", "secondNav");
+							nav3.setAttribute("class", "thirdNav");
+							
+							nav2.innerHTML = faLoaded ? "<i class=\"fas fa-angle-right\"></i>" : ">";
+							
+							nav.innerHTML = nav1.outerHTML + nav2.outerHTML + nav3.outerHTML;
+							under.appendChild(nav)
+						}
+
                         t.appendChild(under);
-                        
                         return t;
                     }
                     
-                    if (text.hasOwnProperty('attachment_file') && text.attachment_file.length != 0) {
+                    if (text.hasOwnProperty("attachment_file") && text.attachment_file.length != 0) {
                         
                         var files = text.attachment_file.split(":");
                         var types = text.attachment_type.split(":");
                         
                         for (var l = 0; l < files.length; ++l) {
-                            if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-                                t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>"
-                            } else if (files[l].length != 0) {
-                                t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(" ", "%20") + "\">Attachment: " + types[l] + "</a><br>"
-                            }
+                            if (types[l].length != 0 && types[l].substring(0, 5) === "image")
+                                t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>";
+                            else if (files[l].length != 0)
+                                t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(/ /g, "%20") + "\">Attachment: " + types[l] + "</a><br>";
                         }
                     }
                     
-                    if (text.text.replace("￼", "").replace("￼", "").trim().length > 0) {
+                    if (text.text.replace(/￼/g, "").trim().length > 0) {
                         /// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
                         var subject = document.createElement("div");
                         subject.setAttribute("class", "subject");
-                        subject.innerHTML = text.subject;
+                        subject.innerText = text.subject;
+                        
+                        var inner = document.createElement("span");
+                        inner.innerText += text.text.replace(/￼/g, "");
                         
                         t.appendChild(subject);
-                        t.innerHTML += text.text.replace("￼", "").replace("￼", "");
+                        t.appendChild(inner);
                     }
 
                     return t;
                 } else if (Number(text.associated_message_type) < 2006) {
-                    var guid = text.associated_message_guid.split('/')[1];
+                    var guid = text.associated_message_guid.split("/")[1];
 
                     var original = document.getElementById(guid);
 
@@ -199,85 +221,106 @@
             }
 
             function getChatElement(chat, num_texts) {
-                if (debug) { console.log("Getting chat element for " + chat + ", num: " + num_texts); }
-                var b = document.createElement('button');
+                if (debug) { console.log("Getting chat element for " + chat.chat_identifier + ", num: " + num_texts); }
+                var b = document.createElement("button");
 
                 b.setAttribute("id", chat.chat_identifier);
                 
                 var i = document.createElement("img");
                 i.src = prefix + "/data?chat_id=" + chat.chat_identifier;
-                b.appendChild(i);
 
-                var nonpic = document.createElement("div");
-                nonpic.setAttribute("class", "chat-nonpic");
-                
-                var top = document.createElement("div");
-                top.setAttribute("class", "chat-toprow");
+				var classes = chat.has_unread === "true" ? "unread" : "";
 
                 var n = document.createElement("div");
                 n.setAttribute("class", "chat-name");
-                n.innerHTML = (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name) 
-                if (chat.chat_identifier.substring(0, 4) !== "chat" && chat.display_name.length !== 0) { 
-                    n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
+                n.innerText = (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name);
+
+                if (chat.pinned === "false") {
+					b.appendChild(i);
+                    
+                    var nonpic = document.createElement("div");
+                    nonpic.setAttribute("class", "chat-nonpic");
+                    
+                    var top = document.createElement("div");
+                    top.setAttribute("class", "chat-toprow");
+                    
+                    if (chat.chat_identifier.substring(0, 4) !== "chat" && chat.display_name.length !== 0)
+                        n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
+                    
+                    top.appendChild(n);
+                    
+                    var d = document.createElement("div");
+                    d.setAttribute("class", "chat-date");
+                    d.innerText = chat.relative_time;
+                    top.appendChild(d);
+                    nonpic.appendChild(top);
+                    
+                    var t = document.createElement("div");
+                    t.setAttribute("class", "chat-text");
+                    t.innerText = chat.latest_text.replace(/￼/g, "");
+                    nonpic.appendChild(t);
+                    b.appendChild(nonpic);
+                    
+					classes += " unpinned";
+                } else {
+					var t = document.createElement("div");
+					t.setAttribute("class", "chat-top");
+					t.appendChild(i);
+
+					if (chat.has_unread === "true") {
+						var ct = document.createElement("div");
+						ct.setAttribute("class", "chat-text");
+						ct.innerText = chat.latest_text.replace(/￼/g, "");
+
+						t.appendChild(ct);
+					}
+
+					b.appendChild(t);
+                    b.appendChild(n);
+					classes += " pinned";
                 }
                 
-                top.appendChild(n);
+				b.setAttribute("class", classes);
                 
-                var d = document.createElement("div");
-                d.setAttribute("class", "chat-date");
-                d.innerHTML = chat.relative_time;
-                top.appendChild(d);
-                nonpic.appendChild(top);
-
-                var t = document.createElement("div");
-                t.setAttribute("class", "chat-text");
-                t.innerHTML = chat.latest_text.replace("￼", "").replace("￼", "")
-                nonpic.appendChild(t);
-                b.appendChild(nonpic);
-                
-                if (chat.has_unread === "true") b.setAttribute("class", "unread");
                 var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
                 b.setAttribute("onclick", get_texts_string);
 
                 return b;
             }
 
-            async function getLatestText(chat = current_chat_id) {
+            async function getLatestText(chat = current_chat_id, read = false) {
                 if (debug) { console.log("Getting latest text for chat " + chat); }
                 var text;
-                var fixed_chat = chat;
 
-                let url = prefix + "/requests?person=" + fixed_chat + "&num=1&read=false";
+                let url = prefix + "/requests?person=" + chat + "&num=1&read=" + (read ? "true" : "false");
+
                 const fetch_one_text = await fetch(url)
                 .then(response => {
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error("HTTP error " + response.status);
-                    }
                     return response.json();
                 })
                 .then(json => {
                     text = (json.texts)[0];
                     return text;
                 })
-                .catch(function () {
-                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_one_text func)')
-                    has_shown_warning = true
-                    this.dataError = true;
+		        .catch(error => {
+                    if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_one_text func)");
+                    has_shown_warning = true;
                 })
 
-                var _ = await fetch_one_text;
-
+                var text = await fetch_one_text;
                 var content = document.getElementById("text-content");
+
                 var more = document.getElementsByClassName("more_texts")
                 if (more.length > 0) more[0].setAttribute("class", more[0].getAttribute("class").replace(" more_texts", ""));
-                    
+
                 var is_group = chat.substring(0, 4) === "chat";
 
                 var t = getTextElement(text, true);
-
                 var senders = document.getElementsByClassName("sender");
 
-                if (is_group && senders.length > 0 && text.is_from_me === "0" && text.sender !== senders[senders.length - 1].firstChild.innerHTML) {
+                if (is_group && senders.length > 0 && text.is_from_me === "0" && text.sender !== senders[senders.length - 1].firstChild.innerText) {
                     var name = document.createElement("div");
 
                     name.innerHTML = "<p>" + text.sender + "</p>";
@@ -295,9 +338,8 @@
                 let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
                 const fetch_val = await fetch(url)
                 .then(response => {
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error("HTTP error " + response.status);
-                    }
                     return response.json();
                 })
                 .then(json => {
@@ -305,9 +347,8 @@
                     return items
                 })
                 .catch(function () {
-                    if (!has_shown_warning) alert('The server restarted, you need to reload and re-authenticate. (getChats func)');
-                    has_shown_warning = true
-                    this.dataError = true;
+                    if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (getChats func)");
+                    has_shown_warning = true;
                 })
             }
     
@@ -320,9 +361,8 @@
                 
                 var selected_id = "";
                 var selecteds = document.getElementsByClassName("selected")
-                if (selecteds.length > 0) {
+                if (selecteds.length > 0)
                     selected_id = selecteds[0].id
-                }
                 
                 doc.innerHTML = "";
                 doc.appendChild(old_button);
@@ -333,12 +373,38 @@
 
                     var b = getChatElement(items[i], num_texts);
                     
-                    if (items[i].chat_identifier == selected_id) {
+                    if (items[i].chat_identifier == selected_id)
                         b.setAttribute("class", b.getAttribute("class") + " selected")
-                    }
                     
-                    doc.insertBefore(b, document.getElementById("morechatsbutton"));
+                    if (b.getAttribute("class").includes("unpinned")) {
+                        doc.insertBefore(b, document.getElementById("morechatsbutton"));
+                    } else {
+                        var pinRows = document.getElementsByClassName("pinRow");
+                        
+                        if (pinRows.length > 0 && pinRows[pinRows.length - 1].firstChild.children.length < 3) {
+                            pinRows[pinRows.length - 1].firstChild.appendChild(b);
+                        } else {
+                            var row = document.createElement("div");
+                            row.setAttribute("class", "pinRow");
+                            
+                            var inner = document.createElement("div");
+                            inner.setAttribute("class", "innerRow");
+                            
+                            inner.appendChild(b);
+                            row.appendChild(inner);
+                            
+                            if (doc.children.length === 0)
+                                doc.appendChild(row);
+                        	else if (pinRows.length === 0)
+                                doc.insertBefore(row, doc.firstChild);
+                            else if (pinRows.length > 0)
+                                doc.insertBefore(row, pinRows[pinRows.length - 1].nextSibling);
+                        }
+                    }
                 }
+
+				var unread_chats = document.getElementsByClassName("unread").length;
+				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
             }
         
             const moreJsonChats = async (offset = 0) => {
@@ -346,9 +412,8 @@
                 let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
                 const fetch_val = await fetch(url)
                 .then(response => {
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error("HTTP error " + response.status);
-                    }
                     return response.json();
                 })
                 .then(json => {
@@ -356,9 +421,8 @@
                     return new_items
                 })
                 .catch(function () {
-                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (moreJsonChats func)')
-                    has_shown_warning = true
-                    this.dataError = true;
+                    has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (moreJsonChats func)")
+                    has_shown_warning = true;
                 })
             }
         
@@ -371,7 +435,6 @@
                 for(var i = 0; i < new_items.length; i++) {
 
                     var b = getChatElement(new_items[i], num_texts_to_load);
-                    
                     doc.insertBefore(b, document.getElementById("morechatsbutton"));
                 }
             }
@@ -382,23 +445,26 @@
                 var myNode = document.getElementsByClassName("text-content")[0];
 
                 var selected = document.getElementsByClassName("selected");
-                if (selected.length > 0) {
-                    selected[0].setAttribute("class", "");
-                }
+                if (selected.length > 0)
+                    selected[0].setAttribute("class", selected[0].getAttribute("class").replace("selected", ""));
 
                 var hiddenchatbox = document.getElementById("hiddenchatbox");
                 hiddenchatbox.setAttribute("value", chat_id);
 
                 var orig_btn = document.getElementById(chat_id);
-                orig_btn.setAttribute("class", "selected");
+                orig_btn.setAttribute("class", orig_btn.getAttribute("class").replace(/unread/g, "") + " selected");
+				var unread_chats = document.getElementsByClassName("unread").length;
+				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
+
+				if (!orig_btn.getAttribute("class").includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
+					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
                 
                 var new_chat_id = chat_id;
                 let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
                 const fetch_texts = await fetch(url)
                 .then(response => {
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error("HTTP error " + response.status);
-                    }
                     return response.json();
                 })
                 .then(json => {
@@ -406,9 +472,8 @@
                     return texts
                 })
                 .catch(function () {
-                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_texts func)')
-                    has_shown_warning = true
-                    this.dataError = true;
+                    has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (fetch_texts func)")
+                    has_shown_warning = true;
                 })
 
                 var chat_title = document.getElementById(chat_id).getElementsByClassName("chat-name")[0];
@@ -424,7 +489,7 @@
 
                 var _ = await fetch_texts
 
-                myNode.innerHTML = '';
+                myNode.innerHTML = "";
                 
                 var more = document.createElement("button")
                 more.setAttribute("onclick", "getMoreTexts()")
@@ -487,13 +552,12 @@
                         if (!is_group && my_last_text.getAttribute("date_read") !== "0" && isimsg) {
                             var rr = document.createElement("span");
                             rr.setAttribute("class", "readreceipt");
-                            rr.innerHTML = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")))
+                            rr.innerText = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")))
                             
-                            if (my_last_text === doc.lastChild) {
+                            if (my_last_text === doc.lastChild)
                                 doc.appendChild(rr);
-                            } else {
+                            else
                                 doc.insertBefore(rr, my_last_text.nextSibling);
-                            }
                         }
                     }
                 }
@@ -509,9 +573,8 @@
                 let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts;
                 const fetch_texts = await fetch(url)
                 .then(response => {
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error("HTTP error " + response.status);
-                    }
                     return response.json();
                 })
                 .then(json => {
@@ -519,20 +582,19 @@
                     return texts
                 })
                 .catch(function () {
-                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
-                    has_shown_warning = true
-                    this.dataError = true;
+                    if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
+                    has_shown_warning = true;
                 })
 
-                var _ = await fetch_texts
+                var _ = await fetch_texts;
 
-                printed_texts += texts.length
+                printed_texts += texts.length;
                 
-                var last_item = document.createElement("br")
-                var first_item = document.getElementsByClassName("text-content")[0]
+                var last_item = document.createElement("br");
+                var first_item = document.getElementsByClassName("text-content")[0];
                 
                 var is_group = chat_id.substring(0, 4) === "chat";
-                var doc = document.getElementsByClassName("text-content")[0]
+                var doc = document.getElementsByClassName("text-content")[0];
 
                 for (var i = 0; i < texts.length; i++) {
 
@@ -564,12 +626,11 @@
             const getImage = async (chat_id) => {
                 if (debug) { console.log("calling getImage for chat " + chat_id); }
 
-                var url = prefix + '/requests?image=' + chat_id
+                var url = prefix + "/requests?image=" + chat_id
                 const fetch_image = await fetch(url)
                 .then(response => {
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error("HTTP error " + response.status);
-                    }
                     return response.text();
                 })
                 .then(text => {
@@ -577,9 +638,8 @@
                     return image_string
                 })
                 .catch(function () {
-                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_image func)')
-                    has_shown_warning = true
-                    this.dataError = true;
+                    has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (fetch_image func)")
+                    has_shown_warning = true;
                 })
             }
 
@@ -590,6 +650,8 @@
             async function sendForm() {
                 if (debug) { console.log("sending form"); }
                 var form = document.getElementById("sendform");
+
+				typing_sleep = 0;
 
                 var tbox = document.getElementById("sendbox")
                 var oldval = tbox.value;
@@ -602,25 +664,44 @@
                 for (var i = 0; i < selected.length; ++i) {
                     photos.value += selected[i].id + (i !== selected.length - 1 ? ":" : "");
                 }
+                
+                var submit = (oldval.length > 0 || selected.length > 0 || document.getElementById("attachmentbutton").files.length > 0);
+                var has_attachments = (selected.length > 0 || document.getElementById("attachmentbutton").files.length > 0);
+                
+                if (submit) {
+                    form.submit();
 
-                form.submit();
+                    tbox.value = "";
+                    hta.value = "";
+                    
+                    document.getElementById("attachmentbutton").value = "";
+                    document.getElementById("unhiddenbutton").innerHTML = faLoaded ? "<i class=\"fas fa-paperclip\"></i>" : "📎";
+                    hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
+                    photos.value = "";
+                    
+                    autoGrow();
 
-                tbox.value = "";
-                hta.value = "";
-                
-                document.getElementById("attachmentbutton").value = "";
-                document.getElementById("unhiddenbutton").value = '📎';
-                hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
-                photos.value = "";
-                
-                auto_grow(document.getElementById("sendbox"));
-                auto_grow(hta);
-                
-                await sleep(500);
-                
-                getLatestText();
-                
-                setChatAsTop(current_chat_id, oldval);
+                    if (has_attachments) {
+                        await sleep(sleep_time);
+                        
+                        getLatestText();
+                    } else {
+                        var omt = document.getElementsByClassName("more_texts")[0]
+                        omt.setAttribute("class", omt.getAttribute("class").replace("more_texts", ""));
+                        
+                        var nt = document.createElement("p")
+                        var im = document.getElementById("text-content").lastChild.getAttribute("class").includes("iMessage");
+                        nt.setAttribute("class", "text more_texts is_from_me" + (im ? " iMessage" : " SMS"));
+                        nt.innerText = oldval;
+                        
+                        document.getElementById("text-content").appendChild(nt);
+                        nt.scrollIntoView();
+                        
+                        await sleep(sleep_time);
+                    }
+                    
+                    setChatAsTop(current_chat_id, oldval);
+                }
             }
 
             async function sendComposeForm() {
@@ -650,11 +731,44 @@
                 document.getElementById("composeShowingAttachmentButton").value = "";
                 document.getElementById("composeAttachmentButton").value = "";
             }
+
+			function inputKeyDown() {
+				autoGrow();
+				if (current_chat_id !== "") {
+					if (document.getElementById("sendbox").value.length > 0) {
+						typing_sleep = 10000;
+						if (!currently_typing) socket.send("typing:" + current_chat_id);
+						currently_typing = true;
+						typingWait();
+					} else {
+						typing_sleep = 0;
+					}
+				}
+			}
+
+			async function typingWait() {
+				if (!called_typing_wait) {
+					called_typing_wait = true;
+					while (typing_sleep > 0) {
+						typing_sleep -= 200;
+						await sleep(200);
+					}
+					if (currently_typing) {
+						currently_typing = false;
+						socket.send("idle:" + current_chat_id);
+					}
+					called_typing_wait = false;
+				}
+			}
         
-            function auto_grow(element) {
-                var sh = getComputedStyle(document.documentElement).getPropertyValue('--send-button-size');
-                element.style.height = sh;
-                element.style.height = (element.scrollHeight)+"px";
+            function autoGrow() {
+				var elem = document.getElementById("sendbox");
+				elem.style.height = getComputedStyle(document.documentElement).getPropertyValue("--send-button-size");
+				var scroll_height = elem.scrollHeight;
+                elem.style.height = scroll_height + "px";
+
+				var form = document.getElementById("sendform");
+				form.style.height = String(scroll_height + 10) + "px";
                 
                 document.getElementById("text-content").lastChild.scrollIntoView()
             }
@@ -673,36 +787,35 @@
                 pop.style.display = "none";
             }
 
-            let socket_prefix = location.protocol === 'https:' ? "wss://" : "ws://";
-            let socket = new WebSocket(socket_prefix + socket_address + ':' + socket_port)
-
-            socket.onopen = function() {
-                socket.send("connected")
-            }
+            let socket_prefix = location.protocol === "https:" ? "wss://" : "ws://";
+            let socket = new WebSocket(socket_prefix + socket_address + ":" + socket_port);
 
             socket.onmessage = function(event) {
                 parseMessage(event.data)
             }
 
             socket.onerror = function(event) {
-                alert("It appears you have not yet trusted the websocket certificate. Please navigate to https://" + socket_address + ":" + socket_port + "/ and trust the certifiate there");
+                alert("It appears you have not yet trusted the websocket certificate. Please navigate to https://" + socket_address + ":" + socket_port + "/ and trust the certificate there");
             }
 
             function parseMessage(msg) {
                 if (debug) { console.log("parsing message " + msg); }
-                var split = msg.split(':')
+                var split = msg.split(":");
 
-                var prefix = split[0]
-                var content = ''
+                var prefix = split[0];
+                var content = "";
                 if (split.length > 0) content = split[1];
                 
                 switch (prefix) {
-                    case 'text':
+                    case "text":
                         processNewText(content)
                         break
                     case "battery":
                         setNewBatteryLevel(content)
                         break
+					case "typing":
+						setChatAsTyping(content);
+						break
                     default:
                         console.log("cannot handle request: '" + msg + "'")
                         break
@@ -714,92 +827,123 @@
 
                 var new_text = "";
                 var name = "";
+				var notif_text;
 
                 if (window.Notification && Notification.permission === "granted" && (!window_is_focused || chat !== current_chat_id)) {
                     var url = prefix + "/requests?person=" + chat + "&num=1";
                     const fetch_newest_text = await fetch(url)
                     .then(response => {
-                        if (!response.ok) {
+                        if (!response.ok)
                             throw new Error("HTTP error " + response.status);
-                        }
                         return response.json();
                     })
                     .then(json => {
-                        new_text = (json.texts)[0].text
+                        notif_text = (json.texts)[0]
                         return new_text
                     })
                     .catch(function () {
-                        has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                        if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
                         has_shown_warning = true
-                        this.dataError = true;
                     }) 
 
                     var _ = await fetch_newest_text;
-                    name = await getTextFromURL(prefix + '/requests?name=' + chat)
+                    name = await getTextFromURL(prefix + "/requests?name=" + chat);
 
-                    var n = new Notification(name, { body: new_text, icon: '/favicon.ico'});
+                    new_text = notif_text.text;
+
+                    if (notif_text.sender !== undefined && notif_text.sender !== "nil")
+                        new_text = notif_text.sender + ": " + new_text;
+
+					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
+						new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
+
+                    var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
                 }
 
-                if (chat.length != 0) {
-                    if (chat !== document.getElementsByClassName("chats-list")[0].firstChild.id || chat === "any") {
-                        if (chat === "any") {
-                            printChats()
-                        } else {
-                            setChatAsTop(chat)
-                        }
+                if (chat.length !== 0) {
+					if (document.getElementById(chat) === undefined || chat == "any") {
+						printChats();
+					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && document.getElementById(chat).getAttribute("class").includes("unpinned")) {
+                        if (new_text !== "")
+                            setChatAsTop(chat, new_text);
+			            else
+			                setChatAsTop(chat);
                     } else {
+						var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
+						const fetch_newest_text = await fetch(url)
+						.then(response => {
+							if (!response.ok)
+								throw new Error("HTTP error " + response.status);
+							return response.json();
+						})
+						.then(json => {
+							notif_text = (json.texts)[0];
+							return new_text;
+						})
+						.catch(function () {
+							if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
+							has_shown_warning = true
+						})
 
-                        if (new_text === "") {
-                            var url = prefix + "/requests?person=" + chat + "&num=1";
-                            const fetch_newest_text = await fetch(url)
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error("HTTP error " + response.status);
-                                }
-                                return response.json();
-                            })
-                            .then(json => {
-                                new_text = (json.texts)[0].text
-                                return new_text
-                            })
-                            .catch(function () {
-                                has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
-                                has_shown_warning = true
-                                this.dataError = true;
-                            })
+						var _ = await fetch_newest_text;
 
-                            var _ = await fetch_newest_text;
-                        }
+                        var btn = document.getElementById(chat);
 
-                        var btn = document.getElementById(chat).getElementsByClassName("chat-text")[0];
+						new_text = notif_text.text;
 
-                        btn.innerHTML = new_text;
+						if (notif_text.sender !== undefined && notif_text.sender !== "nil")
+							new_text = notif_text.sender + ": " + new_text;
+
+						if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
+							new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
+
+                        if (btn !== undefined) {
+							if (chat !== current_chat_id) btn.setAttribute("class", btn.getAttribute("class") + " unread");
+							if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
+								var text = btn.getElementsByClassName("chat-text")[0];
+
+								if (text !== undefined) text.innerText = new_text;
+							} else if (chat !== current_chat_id) {
+								var text = document.createElement("div");
+								text.setAttribute("class", "chat-text");
+								text.innerText = new_text;
+
+								var tb = btn.getElementsByClassName("chat-top")[0];
+								tb.appendChild(text);
+							}
+						} 
                     }
                     if (chat === current_chat_id) {
-                        getLatestText();
+                        getLatestText(current_chat_id, window_is_focused);
+						var typ = document.getElementById("typingIndicator");
+						if (typ !== undefined && typ !== null) typ.outerHTML = "";
                     }
                 }
+
+				var unread_chats = document.getElementsByClassName("unread").length;
+				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
             }
 
             async function setChatAsTop(chat, new_text = "") {
                 if (debug) { console.log("Setting chat as top: " + chat + ", new: " + new_text); }
 
                 var chatsList = document.getElementsByClassName("chats-list")[0];
-                if (chat === chatsList.firstChild.id) {
-                    if (new_text !== "") {
-                        chatsList.firstChild.getElementsByClassName("chat-text")[0].innerHTML = new_text;
-                    }
-                    if (!window_is_focused || current_chat_id !== chat) {
-                        chatsList.firstChild.setAttribute("class", "unread")
-                    }
+                var unpins = document.getElementsByClassName("unpinned");
+                var current_box = document.getElementById(chat);
+                
+                if ((current_box && !current_box.getAttribute("class").includes("unpinned")) || (unpins.length > 0 && chat === unpins[0].id)) {
+                    if (new_text !== "" && current_box.getAttribute("class").includes("unpinned"))
+                        current_box.getElementsByClassName("chat-text")[0].innerText = new_text;
+
+                    if (!window_is_focused || current_chat_id !== chat)
+                        current_box.setAttribute("class", current_box.getAttribute("class") + " unread")
                 } else {
                     var new_chat;
-                    var url = prefix + "/requests?chat=0&num_chats=1" /// to get last text
+                    var url = prefix + "/requests?chat=0&num_chats=1"; /// to get last text
                     const fetch_recent_chat = await fetch(url)
                     .then(response => {
-                        if (!response.ok) {
+                        if (!response.ok)
                             throw new Error("HTTP error " + response.status);
-                        }
                         return response.json();
                     })
                     .then(json => {
@@ -807,23 +951,25 @@
                         return new_chat;
                     })
                     .catch(function () {
-                        has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)')
+                        has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)")
                         has_shown_warning = true
-                        this.dataError = true;
                     })
-
-                    sleep(100); /// So it actually gets the most recent chat
                     
-                    var _ = fetch_recent_chat;
+                    var _ = await fetch_recent_chat;
 
                     var new_box = getChatElement(new_chat[0]);
 
-                    if (new_text.length > 0) new_box.getElementsByClassName("chat-text")[0].innerHTML = new_text;
+                    if (new_text.length > 0) new_box.getElementsByClassName("chat-text")[0].innerText = new_text;
 
                     var existingButton = document.getElementById(chat);
                     if (existingButton) existingButton.outerHTML = "";
+                    
+                    var pinRows = document.getElementsByClassName("pinRow");
 
-                    chatsList.insertBefore(new_box, chatsList.firstChild);
+                    if (pinRows.length === 0)
+                        chatsList.insertBefore(new_box, chatsList.firstChild);
+                    else
+                        chatsList.insertBefore(new_box, pinRows[pinRows.length - 1].nextSibling);
                 }
 
             }
@@ -831,11 +977,10 @@
             function setSelectedPhoto(url) {
                 if (debug) { console.log("setting selected photo for " + url); }
                 var p = document.getElementById(url);
-                if (p.getAttribute("class").includes("selected-photo")) {
+                if (p.getAttribute("class").includes("selected-photo"))
                     p.setAttribute("class", "photo");
-                } else {
+                else
                     p.setAttribute("class", p.getAttribute("class") + " selected-photo");
-                }
             }
 
             function getPhotoElement(photo) {
@@ -843,9 +988,8 @@
                 var p = document.createElement("span");
                 
                 var c = "photo";
-                if (photo.is_favorite === "true")  {
+                if (photo.is_favorite === "true")
                     c += " is_favorite";
-                }
                 
                 p.setAttribute("class" , c);
                 
@@ -860,9 +1004,8 @@
                     var h = document.createElement("span");
                     h.setAttribute("class", "favorite-heart");
                     h.innerHTML = faLoaded ? "<i class=\"fas fa-heart\"></i>" : "❤";
-                    if (faLoaded) {
+                    if (faLoaded)
                         h.setAttribute("style", "padding-right: 24px") /// It's annoyingly specific, 1px off from using unicode
-                    }
                     p.appendChild(h);
                 }
                 return p;
@@ -880,9 +1023,8 @@
                     var url = prefix + "/requests?photos=" + num_photos_to_load;
                     const fetch_recent_photos = await fetch(url)
                     .then(response => {
-                        if (!response.ok) {
+                        if (!response.ok)
                             throw new Error("HTTP error " + response.status);
-                        }
                         return response.json();
                     })
                     .then(json => {
@@ -890,9 +1032,8 @@
                         return photos;
                     })
                     .catch(function () {
-                        has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
+                        has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)")
                         has_shown_warning = true;
-                        this.dataError = true;
                     })
                     
                     var _ = await fetch_recent_photos
@@ -916,9 +1057,8 @@
                 var url = prefix + "/requests?photos=" + num_photos_to_load + "&photo_offset=" + printed_photos;
                 const fetch_new_photos = await fetch(url)
                 .then(response => {
-                    if (!response.ok) {
+                    if (!response.ok)
                         throw new Error("HTTP error " + response.status);
-                    }
                     return response.json();
                 })
                 .then(json => {
@@ -926,9 +1066,8 @@
                     return new_photos;
                 })
                 .catch(function () {
-                    has_shown_warning ? 0 : alert('The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)')
+                    has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)")
                     has_shown_warning = true;
-                    this.dataError = true;
                 }) 
 
                 var _ = await fetch_new_photos;
@@ -949,17 +1088,14 @@
                     p[i].setAttribute("class", p[i].getAttribute("class").replace("selected-photo", ""));
                 }
 
-                document.getElementById("camerarollbutton").value = "📷";
+                document.getElementById("camerarollbutton").innerHTML = faLoaded ? "<i class=\"fas fa-camera\"></i>" : "📷";
             }
 
             function selectCameraRollPhotos() {
                 document.getElementById("camerarollpopup").style.display = "none";
 
-                document.getElementById("camerarollbutton").value = document.getElementsByClassName("selected-photo").length;
+                document.getElementById("camerarollbutton").innerHTML = document.getElementsByClassName("selected-photo").length;
             }
-
-            window.onfocus = function() { self.window_is_focused = true; }
-            window.onblur = function() { self.window_is_focused = false; }
 
             function setNewBatteryLevel(level) {
                 if (debug) { console.log("new battery level: " + level); }
@@ -969,29 +1105,52 @@
                 var dbl = Number(level);
                 
                 if (faLoaded) {
-                    if (dbl < 5) {
-                        symbol = "<i class=\"fas fa-battery-empty\"></i>"
-                    } else if (dbl < 25) {
-                        symbol = "<i class=\"fas fa-battery-quarter\"></i>"
-                    } else if (dbl < 50) {
-                        symbol = "<i class=\"fas fa-battery-half\"></i>"
-                    } else if (dbl < 75) {
-                        symbol = "<i class=\"fas fa-battery-three-quarters\"></i>"
-                    } else {
-                        symbol = "<i class=\"fas fa-battery-full\"></i>"
-                    }
+                    if (dbl < 5)
+                        symbol = "<i class=\"fas fa-battery-empty\"></i>";
+                    else if (dbl < 25)
+                        symbol = "<i class=\"fas fa-battery-quarter\"></i>";
+                    else if (dbl < 50)
+                        symbol = "<i class=\"fas fa-battery-half\"></i>";
+                    else if (dbl < 75)
+                        symbol = "<i class=\"fas fa-battery-three-quarters\"></i>";
+                    else
+                        symbol = "<i class=\"fas fa-battery-full\"></i>";
                 }
                 
                 batt.innerHTML = String(level) + (faLoaded ? "" : "%") + " " + symbol;
 
-                if (dbl > 35) {
-                    batt.setAttribute("class", "fullEnough")
-                } else if (dbl > 20) {
-                    batt.setAttribute("class", "risky")
-                } else {
-                    batt.setAttribute("class", "low")
-                }
+                if (dbl > 35)
+                    batt.setAttribute("class", "fullEnough");
+                else if (dbl > 20)
+                    batt.setAttribute("class", "risky");
+                else
+                    batt.setAttribute("class", "low");
             }
+
+			function setChatAsTyping(chat) {
+				if (chat === current_chat_id) {
+					var d = document.createElement("div");
+					d.setAttribute("class", "text is_from_them iMessage");
+					d.setAttribute("id", "typingIndicator");
+
+					d.innerHTML = "<span class=\"dot flashing\">• </span><span class=\"dot\">• </span><span class=\"dot\">•</span>";
+
+					document.getElementById("text-content").appendChild(d);
+					d.scrollIntoView();
+
+					var c = 0;
+					var typing = window.setInterval(() => {
+						var i = document.getElementById("typingIndicator");
+						if (i === null) clearInterval(typing);
+						i.children[c].setAttribute("class", "dot");
+						c = (c + 1) % 3;
+						i.children[c].setAttribute("class", "dot flashing");
+					}, 400);
+				}
+			}
+
+            window.onfocus = function() { self.window_is_focused = true; }
+            window.onblur = function() { self.window_is_focused = false; }
 
             printChats()
                 
@@ -1016,14 +1175,14 @@
         <div class="everything">
             <div class="chats">
                 <div class="chats-title">
-                    <h1>Messages</h1>
+                    <h1>SMServer</h1>
                     <div id="stats">
                         <div id="battery">battery: 0%</div>
                     </div>
                 </div>
                 <div class="chats-search">
                     Search
-                    <button onclick="Notification.requestPermission()" id="notificationbutton"><p>Notifications</p></button>
+                    <button onclick="Notification.requestPermission();" id="notificationbutton"><p>Notifications</p></button>
                     <button onclick="showPopup();" id="composeShowButton"><p>+ New</p></button>
                 </div>
                 <div class="chats-list">
@@ -1039,14 +1198,14 @@
                 </div>
                 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
                 <form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
-		            <input value="&#128247" onclick="displayCameraRoll();" type="button" id="camerarollbutton"></input>
-                    <input value="&#128206" onclick="document.getElementById('attachmentbutton').click();" type="button" id="unhiddenbutton"></input>
-                    <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').value = document.getElementById('attachmentbutton').files.length.toString();"></input>
+					<button type="button" onclick="displayCameraRoll();" id="camerarollbutton">&#128247</button>
+					<button type="button" onclick="document.getElementById('attachmentbutton').click();" id="unhiddenbutton">&#128206</button>
+                    <input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').innerHTML = document.getElementById('attachmentbutton').files.length;"></input>
                     <input type="text" name="photos" id="hiddenphotobutton" style="display: none;">
-                    <textarea id="sendbox" oninput="if (event.keyCode !== 13) auto_grow(this);" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
+                    <textarea id="sendbox" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
                     <textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
-                    <input name="chat" id="hiddenchatbox" form="sendform" style="display: none">
-                    <button id="sendbutton" onclick="sendForm();">↑</button>
+                    <input type="text" name="chat" id="hiddenchatbox" form="sendform" style="display: none">
+                    <button type="button" id="sendbutton" onclick="sendForm();">↑</button>
                 </form>
             </div>
             <div class="popup" id="popup">
@@ -1071,12 +1230,12 @@
 	    <div class="camerarollpopup" id="camerarollpopup">
 		<div class="cameraroll" id="cameraroll">
 		    <div id="camerarollTitle">
-			    <button onclick="hideCameraRoll();" id="camerarollHideButton">Cancel</button>
-			    <span id="camerarollTitleBoxTitle">Choose Camera Roll Images</span>
-			    <button onclick="selectCameraRollPhotos();" id="camerarollSelectButton">Select</button>
+			<button onclick="hideCameraRoll();" id="camerarollHideButton">Cancel</button>
+			<span id="camerarollTitleBoxTitle">Choose Camera Roll Images</span>
+			<button onclick="selectCameraRollPhotos();" id="camerarollSelectButton">Select</button>
 		    </div>
 		    <div id="camerarollContent">
-                <button class="photo" id="morephotosbutton" onclick="loadMoreCameraRoll();">+ More</button>
+			<button class="photo" id="morephotosbutton" onclick="loadMoreCameraRoll();">+ More</button>
 		    </div>
 		</div>
 	    </div>
