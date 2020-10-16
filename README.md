@@ -14,11 +14,12 @@
 - Sending all types of attachments from desktop 
 - Authentication to protect against spying eyes
 - Ability to permanently change passwords and default values
-- Background operation of server for unlimited time, with screen on or off.
+- Background operation of server for unlimited time, with screen on or off
 - Ability to set custom css rules for easy web interface customization
 - More-than-stock accurate search API
 - Sending and viewing of read receipts
-- Easy switching between Light, Dark, and Nord themes.
+- Easy switching between Light, Dark, and Nord themes
+- Typing indicators when other party starts composing
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
@@ -57,15 +58,18 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 - [x] Viewing and sending of read receipts
 - [x] Graphic displays for reactions
 - [x] Information on web page about battery life
+- [x] Display when other party starts typing
+- [x] Ability to send chat indicators when you start typing
 - [ ] Ability to send reactions from web interface - This is nearly done
-
-### Future plans
 - [ ] Search through messages from browser - This has been implemented in the API
-- [ ] Subject lines for texts on web interface
-- [ ] Display when other party starts typing
+- [ ] Subject lines for texts on web interface - This has been implemented in the API
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
+
+### Acknowledged issues:
+- As of version 0.5.0, sending attachments has a very low success rate (~20%?). This is being worked on.
+- Although typing indicators do appear when the other party starts typing, they don't always disappear when they stop typing. This is also being worked on.
 
 ### To file an issue:
 Please include the following information:
