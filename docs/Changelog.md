@@ -1,5 +1,24 @@
 # Changelog
 
+0.4.3 -> 0.5.0
+ - Added basic suport for iOS 14+
+ - Added support for displaying pinned conversations
+ - Added support for group chat names in `/requests?name` API
+ - Added typing indicators when other party starts typing
+ - Added support for sending typing indicators when you start typing (and settings to disable)
+ - App now dies in background if Server is off or backgrounding is disabled
+ - Completely rewrote libSMServer for better performance and to be more future-proof
+ - Improved logging system to significantly decrease code footprint
+ - Improved quality of information on notifications for group chats
+ - Fixed issues with notifications not showing in web interface
+ - Fixed styling issues with fonts sometimes being too small
+ - Fixed issues with no conversations being marked as read
+ - Fixed issue with blank texts appearing in web interface when `submit` hit while no text was set or attachments were selected
+ - Fixed displays of smaller rich links
+ - Fixed issue where notifications would show no text if message was an attachment
+ - Fixed issue with textbox overflowing messages area when typing a long message
+ - Changed some glyphs in web interface
+
 0.4.2 -> 0.4.3
  - Fixed issue with new texts in group chats sometimes not showing immediately
  - Fixed issue where text box in web interface would not automatically resize after text was sent

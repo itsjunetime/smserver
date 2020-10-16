@@ -8,13 +8,16 @@ final class ChatDelegate {
     var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
     let prefix: String = "SMServer_app: "
     
+    static let addressBookAddress: String = "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb"
     static let imageStoragePrefix: String = "/private/var/mobile/Library/SMS/Attachments/"
     static let photoStoragePrefix: String = "/var/mobile/Media/"
     static let userHomeString: String = "/private/var/mobile/"
     
-    final func log(_ s: String) {
+    final func log(_ s: String, warning: Bool = false) {
         /// Logs to syslog/console
-        os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
+        if self.debug || warning {
+            os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
+        }
     }
     
     final func refreshVars() {
@@ -36,9 +39,7 @@ final class ChatDelegate {
             return db
         }
         
-        if self.debug {
-            self.log("opened database")
-        }
+        self.log("opened database")
         
         /// Return pointer to the database
         return db
@@ -47,7 +48,7 @@ final class ChatDelegate {
     final func closeDatabase(_ db: inout OpaquePointer?) {
         let close_code = sqlite3_close(db)
         if close_code != SQLITE_OK {
-            self.log("WARNING: error closing database. Errror: \(close_code)")
+            self.log("WARNING: error closing database. Errror: \(close_code)", warning: true)
         }
         db = nil
     }
@@ -72,20 +73,16 @@ final class ChatDelegate {
         }
         sqlString += ";"
         
-        if self.debug {
-            self.log("full sql query: " + sqlString)
-        }
+        self.log("full sql query: " + sqlString)
         
         var statement: OpaquePointer?
         
-        if self.debug {
-            self.log("opened statement")
-        }
+        self.log("opened statement")
         
         /// Prepare the database for querying $sqlString
         if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log("WARNING: error preparing select: \(errmsg)")
+            self.log("WARNING: error preparing select: \(errmsg)", warning: true)
         }
         
         var main_return = [[String:String]]()
@@ -131,14 +128,11 @@ final class ChatDelegate {
         /// Finalize; has to be done after getting info.
         if sqlite3_finalize(statement) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(db)!)
-            self.log("WARNING: error finalizing prepared statement: \(errmsg)")
+            self.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
         }
 
         statement = nil
-        
-        if self.debug {
-            self.log("destroyed statement")
-        }
+        self.log("destroyed statement")
         
         /// Since we passed $db in as a parameter, we don't close the database here, but rather in the function where $db was constructed
         return main_return
@@ -147,13 +141,10 @@ final class ChatDelegate {
     final func getDisplayName(chat_id: String) -> String {
         /// This does the same thing as getDisplayName, but doesn't take db as an argument. This allows for fetching of a single name,
         /// when you don't need to get a lot of names at once.
-        
-        if self.debug {
-            self.log("Getting display name for \(chat_id)")
-        }
+        self.log("Getting display name for \(chat_id)")
         
         /// Connect to contact database
-        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
         var sms_db = createConnection()
         if contact_db == nil || sms_db == nil { return "" }
         
@@ -164,9 +155,7 @@ final class ChatDelegate {
         closeDatabase(&sms_db)
         closeDatabase(&contact_db)
         
-        if self.debug {
-            self.log("destroyed dbs")
-        }
+        self.log("destroyed dbs")
         
         return name
     }
@@ -174,16 +163,35 @@ final class ChatDelegate {
     final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String) -> String {
         /// Gets the first + last name of a contact with the phone number or email of $chat_id
         
-        if self.debug {
-            self.log("Getting display name for \(chat_id) with db")
-        }
+        self.log("Getting display name for \(chat_id) with db")
         
         var display_name_array = [[String:String]]()
+        
+        /// Support for group chats
+        if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count > 20 {
+            let check_name = selectFromSql(db: sms_db, columns: ["display_name"], table: "chat", condition: "where chat_identifier is \"\(chat_id)\"", num_items: 1)
+            
+            if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
+                let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
+                
+                var display_val = ""
+                
+                for r in recipients {
+                    display_val += r
+                    if recipients.count > 0 && r != recipients[recipients.count - 1] {
+                        display_val += ", "
+                    }
+                }
+                
+                return display_val;
+            } else {
+                return check_name[0]["display_name"]!
+            }
+        }
         
         if chat_id.contains("@") { /// if an email
             display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
         } else if chat_id.contains("+") {
-            /// get first name and last name
             display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
         } else {
             display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"")
@@ -202,18 +210,14 @@ final class ChatDelegate {
             /// combine first name and last name
         let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
         
-        if self.debug {
-            self.log("full name for \(chat_id) is \(full_name)")
-        }
+        self.log("full name for \(chat_id) is \(full_name)")
         
         return full_name
     }
     
     final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
         
-        if self.debug {
-            self.log("Getting group chat recipients for \(ci)")
-        }
+        self.log("Getting group chat recipients for \(ci)")
         
         let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is \"\(ci)\"))")
         
@@ -226,9 +230,7 @@ final class ChatDelegate {
             ret_val.append((ds == "" ? i["id"] : ds) ?? "")
         }
         
-        if self.debug {
-            self.log("Finished retrieving recipients for \(ci)")
-        }
+        self.log("Finished retrieving recipients for \(ci)")
         
         return ret_val
     }
@@ -236,13 +238,11 @@ final class ChatDelegate {
     final func loadMessages(num: String, num_items: Int, offset: Int = 0) -> [[String:String]] {
         /// This loads the latest $num_items messages from/to $num, offset by $offset.
         
-        if self.debug {
-            self.log("getting messages for \(num)")
-        }
+        self.log("getting messages for \(num)")
         
         /// Create connection to text and contact databases
         var db = createConnection()
-        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
         if db == nil || contact_db == nil { return [[String:String]]() }
         
         /// check if it's a group chat
@@ -319,10 +319,7 @@ final class ChatDelegate {
         closeDatabase(&db)
         closeDatabase(&contact_db)
         
-        if self.debug {
-            self.log("destroyed db")
-            self.log("returning messages!")
-        }
+        self.log("destroyed db; returning messages")
         
         return return_messages
     }
@@ -330,13 +327,20 @@ final class ChatDelegate {
     final func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:String]] {
         /// This loads the most recent $num_to_load conversations, offset by $offset
         
-        if self.debug {
-            self.log("Getting chats")
+        self.log("Getting chats")
+        
+        var pinned_chats: [String] = [""]
+        
+        if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
+            DispatchQueue.global(qos: .default).async {
+                let center = MRYIPCCenter.init(named: "com.ianwelker.smserver")
+                pinned_chats = center?.callExternalMethod(Selector(("getPinnedChats")), withArguments: nil) as? [String] ?? [String]()
+            }
         }
         
         /// Create connections
         var db = createConnection()
-        var contacts_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var contacts_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
         if db == nil || contacts_db == nil { return [[String:String]]() }
         
         let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
@@ -344,10 +348,16 @@ final class ChatDelegate {
         
         let formatter = RelativeDateTimeFormatter()
         
-        for i in chats {
-            if self.debug {
-                self.log("Beginning to iterate through chats for \(i["c.chat_identifier"]!)")
+        if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
+            DispatchQueue.main.sync {
+                while pinned_chats == [""] {
+                    usleep(20000)
+                }
             }
+        }
+        
+        for i in chats {
+            self.log("Beginning to iterate through chats for \(i["c.chat_identifier"]!)")
             
             var new_chat = [String:String]()
             
@@ -370,22 +380,7 @@ final class ChatDelegate {
             
             /// Get name for chat
             if i["c.display_name"]!.count == 0 {
-                if i["c.room_name"]?.count != 0 {
-                    let recipients = getGroupRecipientsWithDb(contact_db: contacts_db, db: db, ci: i["c.chat_identifier"]!)
-                    
-                    var display_val = ""
-                    
-                    for r in recipients {
-                        display_val += r
-                        if recipients.count > 0 && r != recipients[recipients.count - 1] {
-                            display_val += ", "
-                        }
-                    }
-                    
-                    new_chat["display_name"] = display_val
-                } else {
-                    new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"]!)
-                }
+                new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"]!)
             } else {
                 new_chat["display_name"] = i["c.display_name"]
             }
@@ -393,6 +388,15 @@ final class ChatDelegate {
             /// Cause `i["h.id"]` is just the `chat_identifier` of one of the members of the group if it's a group chat.
             new_chat["chat_identifier"] = i["c.chat_identifier"]
             new_chat["time_marker"] = i["m.date"]
+            new_chat["pinned"] = "false"
+            
+            for c in 0..<pinned_chats.count {
+                if i["c.chat_identifier"] == pinned_chats[c] {
+                    new_chat["pinned"] = "true"
+                    pinned_chats.remove(at: c)
+                    break
+                }
+            }
             
             let t: Double = ((Double(i["m.date"] ?? "0") ?? 0.0) / 1000000000.0) + 978307200.0
             let d = Date(timeIntervalSince1970: t)
@@ -402,13 +406,22 @@ final class ChatDelegate {
             return_array.append(new_chat)
         }
         
+        /// Just in case your pinned chats aren't in your most recent texts
+        if offset == 0 {
+            for i in pinned_chats {
+                var new_chat = [String:String]()
+                new_chat["pinned"] = "true"
+                new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i)
+                
+                return_array.append(new_chat)
+            }
+        }
+        
         /// close
         closeDatabase(&contacts_db)
         closeDatabase(&db)
         
-        if self.debug {
-            self.log("destroyed db")
-        }
+        self.log("destroyed db")
         
         return return_array
     }
@@ -416,12 +429,10 @@ final class ChatDelegate {
     final func returnImageData(chat_id: String) -> Data {
         /// This does the same thing as returnImageDataDB, but without the contact_db and image_db as arguments, if you just need to get like 1 image
         
-        if self.debug {
-            self.log("Getting image data for chat_id \(chat_id)")
-        }
+        self.log("Getting image data for chat_id \(chat_id)")
         
         /// Make connections
-        var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
         var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
         if contact_db == nil || image_db == nil { return Data.init(capacity: 0) }
         
@@ -438,9 +449,7 @@ final class ChatDelegate {
     final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
         /// This returns the profile picture for someone with the phone number or email $chat_id as pure image data
         
-        if self.debug {
-            self.log("Getting image data with db for chat_id \(chat_id)")
-        }
+        self.log("Getting image data with db for chat_id \(chat_id)")
         
         var docid = [[String:String]]()
         
@@ -468,13 +477,11 @@ final class ChatDelegate {
         
         var statement: OpaquePointer?
         
-        if self.debug {
-            self.log("opened statement")
-        }
+        self.log("opened statement")
         
         if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-            self.log("WARNING: error preparing select: \(errmsg)")
+            self.log("WARNING: error preparing select: \(errmsg)", warning: true)
         }
         
         var pngdata: Data
@@ -489,9 +496,7 @@ final class ChatDelegate {
                 pngdata = dat as Data
                 
             } else {
-                if self.debug {
-                    self.log("No profile picture found. Using default.")
-                }
+                self.log("No profile picture found. Using default.")
                 
                 /// Use default profile if you don't have a profile image set for them
                 let image_dat = UIImage(named: "profile")
@@ -506,14 +511,11 @@ final class ChatDelegate {
         
         if sqlite3_finalize(statement) != SQLITE_OK {
             let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-            self.log("WARNING: error finalizing prepared statement: \(errmsg)")
+            self.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
         }
 
         statement = nil
-        
-        if self.debug {
-            self.log("destroyed statement")
-        }
+        self.log("destroyed statement")
         
         return pngdata
     }
@@ -521,9 +523,7 @@ final class ChatDelegate {
     final func getAttachmentFromMessage(mid: String) -> [[String]] {
         /// This returns the file path for all attachments associated with a certain message with the message_id of $mid
         
-        if self.debug {
-            self.log("Gettig attachment for mid \(mid)")
-        }
+        self.log("Gettig attachment for mid \(mid)")
         
         /// create connection, get attachments information
         var db = createConnection()
@@ -532,10 +532,7 @@ final class ChatDelegate {
         let file = selectFromSql(db: db, columns: ["filename", "mime_type", "hide_attachment"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
         
         var return_val = [[String]]()
-        
-        if self.debug {
-            self.log("attachment file length: \(String(file.count))")
-        }
+        self.log("attachment file length: \(String(file.count))")
         
         if file.count > 0 {
             for i in file {
@@ -557,9 +554,7 @@ final class ChatDelegate {
     final func getAttachmentType(path: String) -> String {
         /// This gets the file type of the attachment at $path
         
-        if self.debug {
-            self.log("Getting attachment type for @ \(path)")
-        }
+        self.log("Getting attachment type for @ \(path)")
         
         var db = createConnection()
         if db == nil { return "" }
@@ -579,9 +574,7 @@ final class ChatDelegate {
     final func getAttachmentDataFromPath(path: String) -> Data {
         /// This returns the pure data of a file (attachment) at $path
         
-        if self.debug {
-            self.log("Getting attachment data from path \(path)")
-        }
+        self.log("Getting attachment data from path \(path)")
         
 		let parsed_path = path.replacingOccurrences(of: "../", with: "") /// To prevent LFI
         
@@ -590,7 +583,7 @@ final class ChatDelegate {
             let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.imageStoragePrefix + parsed_path))
             return attachment_data
         } catch {
-            self.log("WARNING: failed to load image for path \(ChatDelegate.imageStoragePrefix + path)")
+            self.log("WARNING: failed to load image for path \(ChatDelegate.imageStoragePrefix + path)", warning: true)
             return Data.init(capacity: 0)
         }
     }
@@ -600,7 +593,7 @@ final class ChatDelegate {
         
         /// Create Connections
 		var db = createConnection()
-		var contact_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb")
+        var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
         if db == nil || contact_db == nil { return [String:[[String:String]]]() }
 		
         /// Replacing percentages with escaped so that they don't act as wildcard characters
@@ -648,9 +641,7 @@ final class ChatDelegate {
 	
 	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] {
 		/// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
-        if self.debug {
-            self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
-        }
+        self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
         
         /// make sure that we have access to the photos library
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
@@ -659,7 +650,7 @@ final class ChatDelegate {
             PHPhotoLibrary.requestAuthorization({ auth in
                 if auth != PHAuthorizationStatus.authorized {
                     con = false
-                    self.log("App is not authorized to view photos. Please grant access.")
+                    self.log("App is not authorized to view photos. Please grant access.", warning: true)
                 }
             })
             guard con else { return [[String:String]]() }
@@ -708,9 +699,7 @@ final class ChatDelegate {
 	final func getPhotoDatafromPath(path: String) -> Data {
 		/// This returns the pure data of a photo at $path
 		
-		if self.debug {
-			self.log("Getting photo data from path \(path)")
-		}
+        self.log("Getting photo data from path \(path)")
         
         /// To prevent LFI
 		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "")
@@ -730,14 +719,12 @@ final class ChatDelegate {
         
         var statement: OpaquePointer?
         
-        if self.debug {
-            self.log("Opened statement in getLinkTitle")
-        }
+        self.log("Opened statement in getLinkTitle")
         
         /// Prepare sql statement
         var ret_code = sqlite3_prepare_v2(db, sqlString, -1, &statement, nil)
         if ret_code != SQLITE_OK {
-            self.log("WARNING: error preparing select: \(ret_code)")
+            self.log("WARNING: error preparing select: \(ret_code)", warning: true)
         }
         
         var data: NSData = NSData.init()
@@ -753,7 +740,7 @@ final class ChatDelegate {
         /// finalize sqlite statement
         ret_code = sqlite3_finalize(statement)
         if ret_code != SQLITE_OK {
-            self.log("WARNING: error finalizing statement: \(ret_code)")
+            self.log("WARNING: error finalizing statement: \(ret_code)", warning: true)
         }
         
         /// Blob data is technically an NSKeyedArchiver plist file. We just gotta serialize it and extract values
@@ -762,7 +749,7 @@ final class ChatDelegate {
         do {
             plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as! [String : AnyObject]
         } catch {
-            self.log("WARNING: failed to decode plist")
+            self.log("WARNING: failed to decode plist", warning: true)
             return ["title": "", "subtitle": ""]
         }
         
