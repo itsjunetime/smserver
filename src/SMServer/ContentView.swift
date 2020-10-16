@@ -26,24 +26,22 @@ struct ContentView: View {
     @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
     @State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
     @State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
-    
-    @State var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+    @State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
     
     @State var view_settings = false
     @State var server_running = false
     @State var alert_connected = false
     @State var has_root = false
     @State var show_picker = false
-    @State var kill_app = false
     
     static let chat_delegate = ChatDelegate()
-    @State var s = IWSSender()
+    static let sender: IWSSender = IWSSender.init()
     @State var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
     
     let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
     let photos_prefix = "/var/mobile/Media/"
     
-    var requests_page = """
+    let requests_page = """
     <!DOCTYPE html>
         <body style="background-color: #000;">
             <p style="color: #fff; font-family: Verdana; font-size: 24px; padding: 20px;">
@@ -74,27 +72,27 @@ struct ContentView: View {
     """
     """
     
-    func log(_ s: String) {
+    func log(_ s: String, warning: Bool = false) {
         /// This logs to syslog
-        os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
+        if self.debug || warning {
+            os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
+        }
     }
     
     func loadServer(port_num: UInt16) {
         /// This starts the server at port $port_num
         
-        self.debug ? self.log("Loading server at port \(String(port_num))") : nil
+        self.log("Loading server at port \(String(port_num))")
         
         if server.isListening {
             self.stopServer()
-            self.debug ? self.log("Server was already running, stopped.") : nil
+            self.log("Server was already running, stopped.")
         }
         
         /// The mobileSMS App must be running to send texts in the background, so we start it with this.
-        self.s.launchMobileSMS()
+        ContentView.sender.launchMobileSMS()
         
-        if self.debug {
-            self.log("launched MobileSMS")
-        }
+        self.log("launched MobileSMS")
         
         if UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true {
             server.isSecure = true
@@ -106,9 +104,7 @@ struct ContentView: View {
             let ip = req.connection?.remoteAddress ?? ""
             res.setValue("text/html", forHTTPHeaderField: "Content-type")
             
-            if self.debug {
-                self.log("GET main: " + ip)
-            }
+            self.log("GET main: " + ip)
             
             if self.checkIfAuthenticated(ras: ip) {
                 res.send(self.main_page)
@@ -123,9 +119,7 @@ struct ContentView: View {
             
             /// This handler is part of the API, and returns JSON info.
             
-            if self.debug {
-                self.log("Getting requests..")
-            }
+            self.log("Getting requests..")
             
             let query = req.query
             
@@ -138,17 +132,12 @@ struct ContentView: View {
                 
                 let address = req.connection?.remoteAddress ?? ""
                 
-                if self.debug {
-                    self.log("GET /requests: \(address)")
-                }
+                self.log("GET /requests: \(address)")
                 
                 /// parseAndReturn() manages retrieving info for the API
                 let response = self.parseAndReturn(params: query, address: address)
                 
-                if self.debug {
-                    self.log("Returning from /requests")
-                }
-                
+                self.log("Returning from /requests")
                 res.send(response)
             }
         }
@@ -156,20 +145,15 @@ struct ContentView: View {
         server.add("/data") { (req, res, next) in
             /// This handler returns attachment data and profile/attachment/photo images.
             let ip = req.connection?.remoteAddress ?? ""
-   
-			if self.debug {
-				self.log("GET data: " + ip)
-			}
+            self.log("GET data: " + ip)
 			
 			if !self.checkIfAuthenticated(ras: ip) {
                 /// Return nil if they haven't authenticated
                 res.send("")
                 return
 			}
-			
-			if self.debug {
-				self.log("returning data")
-			}
+            
+            self.log("returning data")
 			
             let f = req.query.keys.first
 			
@@ -192,7 +176,6 @@ struct ContentView: View {
                 res.setValue("image/png", forHTTPHeaderField: "Content-type")
                 res.send(ContentView.chat_delegate.getPhotoDatafromPath(path: req.query["photo"] ?? ""))
             } else {
-			
                 //if they don't have any of the above parameters, return nothing.
                 res.send("")
             }
@@ -201,10 +184,7 @@ struct ContentView: View {
         server.add("/send") { (req, res, next) in
             /// This handles a post request to send a text
             let ip = req.connection?.remoteAddress ?? ""
-            
-            if self.debug {
-                self.log("POST uploads: " + ip)
-            }
+            self.log("POST uploads: " + ip)
             
             if !self.checkIfAuthenticated(ras: ip) {
                 res.send("")
@@ -235,7 +215,7 @@ struct ContentView: View {
                     /// Don't send file if it is empty; fixes an issue where it would sometimes think null files were being uploaded?
                     if fileSize == 0 { continue }
                 } catch {
-                    self.log("couldn't get filesize")
+                    self.log("couldn't get filesize", warning: true)
                 }
                 
                 let temp = file.temporaryFileURL.path
@@ -246,13 +226,13 @@ struct ContentView: View {
                     do {
                         try fm.removeItem(atPath: newFilePath)
                     } catch {
-                        self.log("Couldn't remove file from path: \(newFilePath), for whatever reason")
+                        self.log("Couldn't remove file from path: \(newFilePath), for whatever reason", warning: true)
                     }
                 }
                 do {
                     try fm.moveItem(at: file.temporaryFileURL, to: URL(fileURLWithPath: newFilePath))
                 } catch {
-                    self.log("failed to move file; won't send text")
+                    self.log("failed to move file; won't send text", warning: true)
                 }
                 
                 /// Append to files array
@@ -261,9 +241,7 @@ struct ContentView: View {
             
             let send = self.sendText(params: params, new_files: files)
             
-            if self.debug {
-                self.log("Returning from sending text")
-            }
+            self.log("Returning from sending text")
             
             res.send(send ? "true" : "false")
         }
@@ -272,9 +250,7 @@ struct ContentView: View {
             /// Returns the style.css file as text
             let ip = req.connection?.remoteAddress ?? ""
             
-            if self.debug {
-                self.log("GET style: \(ip)")
-            }
+            self.log("GET style: \(ip)")
             
             if !self.checkIfAuthenticated(ras: ip) {
                 res.send("")
@@ -302,9 +278,7 @@ struct ContentView: View {
             res.send(data)
         }
         
-        if self.debug {
-            self.log("Got past adding all the handlers.")
-        }
+        self.log("Got past adding all the handlers.")
         
         let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
         server.startListening(nil, portNumber: UInt(port) ?? 8741)
@@ -314,9 +288,7 @@ struct ContentView: View {
 		
         self.server_running = server.isListening
         
-        if self.debug {
-            self.log("Successfully started server and launched MobileSMS")
-        }
+        self.log("Successfully started server and launched MobileSMS")
     }
     
     func sendText(params: [String:Any], new_files: [String]) -> Bool {
@@ -351,32 +323,27 @@ struct ContentView: View {
 		}
         
         /// Make sure there's actually some content
-        if !(body == "" && files.count == 0) {
+        if body != "" || files.count > 0 {
             /// Send the information the obj-c function
-            self.s.sendIPCText(body, withSubject: subjects_enabled ? subject : "", toAddress: address, withAttachments: files)
+            ContentView.sender.sendIPCText(body, withSubject: subjects_enabled ? subject : "", toAddress: address, withAttachments: files)
 			
             return true
         } else {
             return false
         }
+        
     }
     
-    /*func startKillTimer() {
-        kill_app = true
-        print("starting kill timer")
+    func enteredBackground() {
         /// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
-        Timer.init(fire: Date(timeIntervalSinceNow: 60), interval: 0, repeats: false, block: { _ in
-            print("kill_app is \(kill_app)")
-            if kill_app {
-                let proc = Process()
-            }
-        })
+        if !background || !self.server.isListening {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: {
+                if UIApplication.shared.applicationState == .background {
+                    exit(0)
+                }
+            })
+        }
     }
-    
-    func cancelKillTimer() {
-        print("cancelling kill timer")
-        kill_app = false
-    }*/
     
     func loadFiles() {
         /// This sets the website page files to local variables
@@ -388,6 +355,7 @@ struct ContentView: View {
         self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
         self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
         self.subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? true
+        self.background = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
         
         self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
         self.nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
@@ -421,14 +389,19 @@ struct ContentView: View {
         do {
             self.custom_style = try String(contentsOf: self.custom_css_path, encoding: .utf8)
         } catch {
-            self.log("Could not load custom css file")
+            self.log("Could not load custom css file", warning: true)
             self.custom_style = ""
         }
     }
     
-    func setNewestTexts(_ chat_id: String) -> Void {
+    func setNewestTexts(_ chat_id: String) {
         /// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
 		socket.sendNewText(info: chat_id)
+    }
+    
+    func setPartyTyping(_ chat_id: String) {
+        /// Theoretically called when someone else starts typing. Theoretically.
+        socket.sendTyping(chat: chat_id)
     }
     
     func checkIfAuthenticated(ras: String) -> Bool {
@@ -473,9 +446,8 @@ struct ContentView: View {
             /// If they're sending over the password to authenticate
             let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
         
-            if self.debug {
-                self.log("comparing " + Array(params.values)[0] + " to " + password)
-            }
+            self.log("comparing " + Array(params.values)[0] + " to " + password)
+            
             /// If they sent the correct password
             if Array(params.values)[0] == password {
                 var already_in = false;
@@ -513,11 +485,11 @@ struct ContentView: View {
         if f == "person" || f == "num" || f == "offset" || f == "read" {
             /// requesting messages from a specific person
             
-            if (params["read"] == nil && self.mark_when_read) || (params["read"] != nil && params["read"] == "true") {
-                self.s.markConvo(asRead: person)
-            }
-            
             person = params["person"] ?? ""
+            
+            if (params["read"] == nil && self.mark_when_read) || (params["read"] != nil && params["read"] == "true") {
+                ContentView.sender.markConvo(asRead: person)
+            }
             
             num_texts = default_num_messages
             if params["num"] != nil {
@@ -527,9 +499,7 @@ struct ContentView: View {
                 offset = Int(params["offset"] ?? "0") ?? 0
             }
             
-            if self.debug {
-                self.log( "selecting person: " + person + ", num: " + String(num_texts))
-            }
+            self.log( "selecting person: " + person + ", num: " + String(num_texts))
             
             if person.contains("\"") { /// Just in case, I guess?
                 person = person.replacingOccurrences(of: "\"", with: "")
@@ -550,10 +520,8 @@ struct ContentView: View {
                 chats_offset = Int(params["chats_offset"] ?? "0") ?? 0
             }
             
-            if self.debug {
-                self.log("num chats: \(num_texts)")
-                self.log("chats offset: \(chats_offset)")
-            }
+            self.log("num chats: \(num_texts)")
+            self.log("chats offset: \(chats_offset)")
             
             let chats_array = ContentView.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
             let chats = encodeToJson(object: chats_array, title: "chats")
@@ -629,9 +597,7 @@ struct ContentView: View {
             }
         }*/
         
-        if self.debug {
-            self.log("WARNING: We haven't implemented this functionality yet, sorry :/")
-        }
+        self.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
         
         return ""
     }
@@ -641,9 +607,7 @@ struct ContentView: View {
         
         self.server.stopListening()
 		socket.stopServer()
-        if self.debug {
-            self.log("Stopped Server")
-        }
+        self.log("Stopped Server")
         
         self.authenticated_addresses = [String]()
         server_running = server.isListening
@@ -654,11 +618,15 @@ struct ContentView: View {
 		
 		self.loadFiles()
 		
-		self.has_root = self.s.setUID() == uid_t(0)
+        self.has_root = ContentView.sender.setUID() == uid_t(0)
         
 		self.watcher.setTexts = { value in
 			self.setNewestTexts(value ?? "None")
 		}
+        
+        self.watcher.setTyping = { value in
+            self.setPartyTyping(value ?? "None")
+        }
 		
 		socket.watcher = self.watcher
 		socket.authenticated_addresses = self.authenticated_addresses
@@ -667,7 +635,7 @@ struct ContentView: View {
         if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
             PHPhotoLibrary.requestAuthorization({ auth in
                 if auth != PHAuthorizationStatus.authorized {
-                    self.log("App is not authorized to view photos. Please grant access.")
+                    self.log("App is not authorized to view photos. Please grant access.", warning: true)
                 }
             })
         }
@@ -716,8 +684,9 @@ struct ContentView: View {
 					HStack {
 						Button(action: {
 							self.loadFiles()
-							self.s.launchMobileSMS()
+                            ContentView.sender.launchMobileSMS()
                             ContentView.chat_delegate.refreshVars()
+                            self.socket.refreshVars()
 						}) {
 							Image(systemName: "goforward")
 								.font(.system(size: self.font_size))
@@ -868,18 +837,14 @@ struct ContentView: View {
                                 let picker = DocPicker(
                                     supportedTypes: ["public.text"],
                                     onPick: { url in
-                                        if self.debug {
-                                            self.log("document chosen")
-                                        }
+                                        self.log("document chosen")
                                         do {
                                             try FileManager.default.copyItem(at: url, to: self.custom_css_path)
                                         } catch {
-                                            self.log("Couldn't move custom css")
+                                            self.log("Couldn't move custom css", warning: true)
                                         }
                                     }, onDismiss: {
-                                        if self.debug {
-                                            self.log("picker dismissed")
-                                        }
+                                        self.log("picker dismissed")
                                     }
                                 )
                                 UIApplication.shared.windows.first?.rootViewController?.present(picker, animated: true)
@@ -896,11 +861,9 @@ struct ContentView: View {
                             Button(action: {
                                 do {
                                     try FileManager.default.removeItem(at: self.custom_css_path)
-                                    if self.debug {
-                                        self.log("Removed custom css file")
-                                    }
+                                    self.log("Removed custom css file")
                                 } catch {
-                                    self.log("Failed to remove custom css file")
+                                    self.log("Failed to remove custom css file", warning: true)
                                 }
                             }) {
                                 Image(systemName: "trash")
