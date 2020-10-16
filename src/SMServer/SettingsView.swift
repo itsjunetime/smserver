@@ -18,6 +18,7 @@ struct SettingsView: View {
     @State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
     @State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
     @State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
+    @State var send_typing: Bool = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
     
     private let picker_options: [String] = ["Dark", "Light", "Nord"]
     
@@ -117,6 +118,13 @@ struct SettingsView: View {
             UserDefaults.standard.setValue($0, forKey: "subjects_enabled")
         })
         
+        let typing_binding = Binding<Bool>(get: {
+            self.send_typing
+        }, set: {
+            self.send_typing = $0
+            UserDefaults.standard.setValue($0, forKey: "send_typing")
+        })
+        
 		return ScrollView {
 			VStack(spacing: 16) {
 				HStack {
@@ -194,6 +202,8 @@ struct SettingsView: View {
                     Toggle("Override 'No Wifi' prevention setting on main interface", isOn: override_binding)
                     
                     Toggle("Enable subject functionality in API", isOn: subject_binding)
+                    
+                    Toggle("Send typing indicator when you type", isOn: typing_binding)
                 }.alert(isPresented: $display_ssl_alert, content: {
                     Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
                 })

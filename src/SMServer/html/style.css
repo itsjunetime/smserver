@@ -66,6 +66,7 @@ p {
 	background-color: var(--main-background);
 	overflow-x: hidden;
 	border-radius: 5px;
+	scrollbar-width: none;
 }
 .messages .title {
 	grid-row: 1;
@@ -90,8 +91,9 @@ p {
 	grid-template-rows: 1fr;
 	padding: 5px 5px;
 	max-width: 100%;
-	height: calc(var(--messages-send-height) - 20px);
+	height: var(--messages-send-height);
 	resize: vertical;
+	margin: 0;
 }
 @supports (backdrop-filter: blur(50px)) or (-webkit-backdrop-filter: blur(50px)) {
 	.messages .title, .textbox,
@@ -125,6 +127,7 @@ p {
 	padding-top: var(--messages-title-height);
 	display: flex;
     flex-direction: column;
+	scrollbar-width: none;
 }
 .centered {
 	margin: auto;
@@ -177,6 +180,7 @@ p {
 	grid-row: 2;
 	padding: 10px;
 	border-top: 1px solid var(--chats-border);
+    border-bottom: 1px solid var(--chats-border);
 	display: flex;
 }
 .chats-list {
@@ -184,8 +188,10 @@ p {
 	grid-column: 1;
 	overflow: auto;
 	overflow-x: hidden;
+	scrollbar-width: none;
 }
-.chats button {
+.chats button.unpinned,
+#morechatsbutton {
 	border: none;
 	border-top: 1px solid var(--chats-border);
 	border-bottom: 1px solid var(--chats-border);
@@ -196,10 +202,55 @@ p {
 	align-items: center;
 	height: var(--chats-button-height);
 }
-.chats button img {
+.chats button.unpinned img {
 	max-height: calc(var(--chats-button-height) * 0.76);
 	max-width: calc(var(--chats-button-height) * 0.76);
     border-radius: 100%;
+}
+.pinRow {
+    display: flex;
+    flex-flow: row;
+    padding: 6px 0;
+}
+.innerRow {
+    margin: auto;
+}
+.chats button.pinned {
+    background-color: transparent;
+    border: none;
+    padding: 5px min(12px, 0.5vw);
+    margin: 0px 0.7vw;
+    border-radius: 8px;
+    max-width: calc(var(--chats-width) * 0.25);
+    width: min-content;
+}
+.chats button.pinned img {
+    max-height: calc(var(--chats-button-height)*1.4);
+    border-radius: 100%;
+    margin-bottom: 10px;
+    height: calc(var(--chats-width) * 0.20);
+}
+.chats button.pinned .chat-top {
+	display: flex;
+	justify-content: center;
+}
+.chats button.pinned .chat-text {
+	position: fixed;
+	background-color: #7776;
+	color: white;
+	padding: 4px;
+	backdrop-filter: blur(30px);
+	border-radius: 8px;
+	width: max-content;
+	vertical-align: middle;
+	max-width: calc(var(--chats-width) * 0.2);
+	margin: 0;
+}
+.pinned .chat-name {
+    font-size: calc(8px + 0.5vw);
+    margin: auto;
+    padding: 0;
+    width: max-content;
 }
 .chat-nonpic {
 	padding-left: 14px;
@@ -285,6 +336,9 @@ p {
 .text .subject {
     font-weight: 500;
 }
+.text span {
+    white-space: pre-wrap;
+}
 .is_from_them a {
 	color: dodgerblue;
 }
@@ -353,7 +407,7 @@ p {
 	border-radius: calc(var(--send-button-size) / 2);
 	margin-top: calc((var(--messages-send-height) - var(--send-button-size)) / 2);
 	padding: 5px;
-	margin-left: -4px;
+	margin-left: -2px;
 	z-index: 1;
 }
 #sendbox {
@@ -641,8 +695,29 @@ p {
     display: grid;
     grid-template-rows: 1fr max-content 1fr;
 }
+.richLinkSmall {
+	display: flex;
+}
+.richLinkUnder.richLinkSmall img {
+	height: max-content;
+	width: max-content;
+	padding: 0;
+	margin-right: 10px;
+	max-height: 32px;
+	max-width: 32px;
+	border-radius: 0 !important;
+}
+.richLinkUnder.richLinkSmall .richLinkDescription {
+	margin: auto 0;
+}
 .secondNav {
     font-size: 40px;
     padding: 16px 0 16px 36%;
     border-left: 1px solid #aaa5;
+}
+.dot {
+	color: #888;
+}
+.dot.flashing {
+	color: #eee;
 }
