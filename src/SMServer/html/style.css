@@ -603,6 +603,7 @@ p {
 #camerarollContent {
 	overflow: auto;
 	max-width: 100%;
+    scrollbar-width: none;
 }
 .photo {
 	min-width: calc(var(--camera-roll-width) * 0.2);
@@ -681,15 +682,17 @@ p {
     width: 100%;
 }
 .richLinkUnder {
-    display: grid;
-    grid-template-columns: 1fr 14%;
+    display: flex;
     padding: 8px;
+	justify-content: space-between;
+	align-items: center;
 }
 .richLinkTitle {
     font-size: 22px;
 }
 .richLinkSubtitle {
     padding: 5px;
+	color: #ccc;
 }
 .richLinkNavigator {
     display: grid;
@@ -710,10 +713,9 @@ p {
 .richLinkUnder.richLinkSmall .richLinkDescription {
 	margin: auto 0;
 }
-.secondNav {
-    font-size: 40px;
-    padding: 16px 0 16px 36%;
-    border-left: 1px solid #aaa5;
+.richLinkIcon {
+	float: right;
+	margin-right: 20px;
 }
 .dot {
 	color: #888;

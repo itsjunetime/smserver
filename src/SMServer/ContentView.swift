@@ -337,6 +337,7 @@ struct ContentView: View {
     func enteredBackground() {
         /// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
         if !background || !self.server.isListening {
+            self.log("sceneDidEnterBackground, starting kill timer")
             DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: {
                 if UIApplication.shared.applicationState == .background {
                     exit(0)
