@@ -272,6 +272,7 @@ final class ChatDelegate {
                     
                     messages[i]["link_title"] = link_info["title"]
                     messages[i]["link_subtitle"] = link_info["subtitle"]
+                    messages[i]["link_type"] = link_info["type"]
                 }
             }
             
@@ -305,6 +306,7 @@ final class ChatDelegate {
                     
                     messages[i]["m.link_title"] = link_info["title"]
                     messages[i]["m.link_subtitle"] = link_info["subtitle"]
+                    messages[i]["link_type"] = link_info["type"]
                 }
                 
                 for l in Array(messages[i].keys) {
@@ -757,14 +759,21 @@ final class ChatDelegate {
         
         /// Always under object `$objects`
         let objects: [Any] = plistData["$objects"] as! [Any]
+        var ret_dict = [String: String]()
         
-        guard objects.count > 9 else {
-            return ["title": "", "subtitle": ""]
+        if let title: String = objects[6] as? String {
+            ret_dict["title"] = title
+            let subtitle = objects[4] as? String ?? "//website/"
+            ret_dict["subtitle"] = String(subtitle.split(separator: "/")[1])
+            ret_dict["type"] = objects[9] as? String ?? "website"
+        } else {
+            guard objects.count > 9 else {
+                return ["title": "", "subtitle": ""]
+            }
+        
+            ret_dict["title"] = objects[8] as? String ?? "No Title Available"
+            ret_dict["subtitle"] = objects[9] as? String ?? "No subtitle available"
         }
-        
-        /// Always under these indices when it's a full rich link (with images and such)
-        var ret_dict = ["title": objects[8] as? String ?? "No Title Available"]
-        ret_dict["subtitle"] = objects[9] as? String ?? "No subtitle available"
         
         return ret_dict
     }
