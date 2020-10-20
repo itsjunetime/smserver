@@ -42,10 +42,14 @@ class SocketDelegate : ServerWebSocketDelegate {
         } catch {
             self.log("WARNING: The websocket failed to start. This will prevent you from receiving new messages.", warning: true)
         }
+        
+        // add observer for name "__kIMChatMessageReceivedNotification"
 	}
 	
 	func stopServer() {
         server?.stop()
+        
+        self.log("Socket stopped")
 	}
 	
 	func sendTyping(chat: String) {
@@ -118,7 +122,9 @@ class SocketDelegate : ServerWebSocketDelegate {
                     ContentView.sender.sendTyping(String(context) == "typing", forChat: String(content))
                 }
             default:
-                log("WARNING: can't handle message: \(message)", warning: true)
+                if message.opcode == WebSocketOpcode.binaryFrame || message.opcode == WebSocketOpcode.textFrame {
+                    log("WARNING: can't handle message: \(message)", warning: true)
+                }
         }
 	}
 }
