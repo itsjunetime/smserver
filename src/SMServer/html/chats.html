@@ -134,26 +134,21 @@
 							subtitle.setAttribute("class", "richLinkSubtitle");
 							desc.appendChild(subtitle);
 						}
-                        
-                        under.appendChild(desc);
-                        
-						if (attachment_splits[1].length > 0) {
-							var nav = document.createElement("div");
-							var nav1 = document.createElement("div");
-							var nav2 = document.createElement("div");
-							var nav3 = document.createElement("div");
-							
-							nav.setAttribute("class", "richLinkNavigator");
-							nav1.setAttribute("class", "firstNav");
-							nav2.setAttribute("class", "secondNav");
-							nav3.setAttribute("class", "thirdNav");
-							
-							nav2.innerHTML = faLoaded ? "<i class=\"fas fa-angle-right\"></i>" : ">";
-							
-							nav.innerHTML = nav1.outerHTML + nav2.outerHTML + nav3.outerHTML;
-							under.appendChild(nav)
-						}
 
+						if (text.link_type !== undefined && text.link_type.split(".")[0] === "music") {
+							var icon = document.createElement("div");
+							icon.setAttribute("class", "richLinkIcon");
+
+							var ii = document.createElement("img");
+							ii.src = "/data?path=" + attachment_splits[0];
+							icon.appendChild(ii);
+
+							under.appendChild(desc);
+							under.appendChild(icon);
+						} else {
+							under.appendChild(desc);
+						}
+                        
                         t.appendChild(under);
                         return t;
                     }
