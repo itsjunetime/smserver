@@ -24,8 +24,8 @@
             var has_shown_new_warning = false;
             var window_is_focused = true;
             var faLoaded = false;
-			var currently_typing = false;
-			var called_typing_wait = false;
+            var currently_typing = false;
+            var called_typing_wait = false;
 
             var items = "";
             var new_items = "";
@@ -34,7 +34,7 @@
             var image_string = "";
             var current_chat_id = "";
             var sleep_time = 400;
-			var typing_sleep = 10000;
+            var typing_sleep = 10000;
 
             var doc_url = window.location.href.split("/")[2].split(":")[0];
             var socket_address = doc_url
@@ -105,20 +105,20 @@
                         t.setAttribute("class", t.getAttribute("class") + " noPadding richLink");
                         
                         var img = document.createElement("img");
-						var attachment_splits = text.attachment_file.split(":");
-						img.src = "/data?path=" + (attachment_splits[1].length > 0 ? attachment_splits[1] : attachment_splits[0]);
+                        var attachment_splits = text.attachment_file.split(":");
+                        img.src = "/data?path=" + (attachment_splits[1].length > 0 ? attachment_splits[1] : attachment_splits[0]);
 
                         var under = document.createElement("a");
                         under.href = text.text;
                         under.setAttribute("class", "richLinkUnder");
-
-						if (attachment_splits[1].length > 0) {
-                        	t.appendChild(img); 
-                        	t.appendChild(document.createElement("br"));
-						} else {
-							under.appendChild(img);	
-							under.setAttribute("class", under.getAttribute("class") + " richLinkSmall");
-						}
+                        
+                        if (attachment_splits[1].length > 0) {
+                            t.appendChild(img);
+                            t.appendChild(document.createElement("br"));
+                        } else {
+                            under.appendChild(img);
+                            under.setAttribute("class", under.getAttribute("class") + " richLinkSmall");
+                        }
 
                         var desc = document.createElement("div");
                         desc.setAttribute("class", "richLinkDescription");
@@ -128,26 +128,24 @@
                         title.setAttribute("class", "richLinkTitle");
                         desc.appendChild(title);
                         
-						if (attachment_splits[1].length > 0) {
-							var subtitle = document.createElement("div");
-							subtitle.innerText = text.link_subtitle
-							subtitle.setAttribute("class", "richLinkSubtitle");
-							desc.appendChild(subtitle);
-						}
-
-						if (text.link_type !== undefined && text.link_type.split(".")[0] === "music") {
-							var icon = document.createElement("div");
-							icon.setAttribute("class", "richLinkIcon");
-
-							var ii = document.createElement("img");
-							ii.src = "/data?path=" + attachment_splits[0];
-							icon.appendChild(ii);
-
-							under.appendChild(desc);
-							under.appendChild(icon);
-						} else {
-							under.appendChild(desc);
-						}
+                        if (attachment_splits[1].length > 0) {
+                            var subtitle = document.createElement("div");
+                            subtitle.innerText = text.link_subtitle;
+                            subtitle.setAttribute("class", "richLinkSubtitle");
+                            desc.appendChild(subtitle);
+                        }
+                        
+                        under.appendChild(desc);
+                        
+                        if (text.link_type !== undefined && text.link_type.split(".")[0] === "music") {
+                            var icon = document.createElement("div");
+                            icon.setAttribute("class", "richLinkIcon");
+                            
+                            var ii = document.createElement("img");
+                            ii.src = "/data?path=" + attachment_splits[0];
+                            icon.appendChild(ii);
+                            under.appendChild(icon);
+                        }
                         
                         t.appendChild(under);
                         return t;
@@ -223,15 +221,15 @@
                 
                 var i = document.createElement("img");
                 i.src = prefix + "/data?chat_id=" + chat.chat_identifier;
-
-				var classes = chat.has_unread === "true" ? "unread" : "";
+                
+                var classes = chat.has_unread === "true" ? "unread" : "";
 
                 var n = document.createElement("div");
                 n.setAttribute("class", "chat-name");
                 n.innerText = (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name);
 
                 if (chat.pinned === "false") {
-					b.appendChild(i);
+                    b.appendChild(i);
                     
                     var nonpic = document.createElement("div");
                     nonpic.setAttribute("class", "chat-nonpic");
@@ -256,26 +254,26 @@
                     nonpic.appendChild(t);
                     b.appendChild(nonpic);
                     
-					classes += " unpinned";
+                    classes += " unpinned";
                 } else {
-					var t = document.createElement("div");
-					t.setAttribute("class", "chat-top");
-					t.appendChild(i);
-
-					if (chat.has_unread === "true") {
-						var ct = document.createElement("div");
-						ct.setAttribute("class", "chat-text");
-						ct.innerText = chat.latest_text.replace(/￼/g, "");
-
-						t.appendChild(ct);
-					}
-
-					b.appendChild(t);
+                    var t = document.createElement("div");
+                    t.setAttribute("class", "chat-top");
+                    t.appendChild(i);
+                    
+                    if (chat.has_unread === "true") {
+                        var ct = document.createElement("div");
+                        ct.setAttribute("class", "chat-text");
+                        ct.innerText = chat.latest_text.replace(/￼/g, "");
+                        
+                        t.appendChild(ct);
+                    }
+                    
+                    b.appendChild(t);
                     b.appendChild(n);
-					classes += " pinned";
+                    classes += " pinned";
                 }
                 
-				b.setAttribute("class", classes);
+                b.setAttribute("class", classes);
                 
                 var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
                 b.setAttribute("onclick", get_texts_string);
@@ -299,7 +297,7 @@
                     text = (json.texts)[0];
                     return text;
                 })
-		        .catch(error => {
+                .catch(error => {
                     if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_one_text func)");
                     has_shown_warning = true;
                 })
@@ -357,7 +355,7 @@
                 var selected_id = "";
                 var selecteds = document.getElementsByClassName("selected")
                 if (selecteds.length > 0)
-                    selected_id = selecteds[0].id
+                    selected_id = selecteds[0].id;
                 
                 doc.innerHTML = "";
                 doc.appendChild(old_button);
@@ -369,7 +367,7 @@
                     var b = getChatElement(items[i], num_texts);
                     
                     if (items[i].chat_identifier == selected_id)
-                        b.setAttribute("class", b.getAttribute("class") + " selected")
+                        b.setAttribute("class", b.getAttribute("class") + " selected");
                     
                     if (b.getAttribute("class").includes("unpinned")) {
                         doc.insertBefore(b, document.getElementById("morechatsbutton"));
@@ -390,16 +388,16 @@
                             
                             if (doc.children.length === 0)
                                 doc.appendChild(row);
-                        	else if (pinRows.length === 0)
+                            else if (pinRows.length === 0)
                                 doc.insertBefore(row, doc.firstChild);
                             else if (pinRows.length > 0)
                                 doc.insertBefore(row, pinRows[pinRows.length - 1].nextSibling);
                         }
                     }
                 }
-
-				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
+                
+                var unread_chats = document.getElementsByClassName("unread").length;
+                document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
             }
         
             const moreJsonChats = async (offset = 0) => {
@@ -416,7 +414,7 @@
                     return new_items
                 })
                 .catch(function () {
-                    has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (moreJsonChats func)")
+                    if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (moreJsonChats func)");
                     has_shown_warning = true;
                 })
             }
@@ -448,11 +446,11 @@
 
                 var orig_btn = document.getElementById(chat_id);
                 orig_btn.setAttribute("class", orig_btn.getAttribute("class").replace(/unread/g, "") + " selected");
-				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
-
-				if (!orig_btn.getAttribute("class").includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
-					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
+                var unread_chats = document.getElementsByClassName("unread").length;
+                document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
+                
+                if (!orig_btn.getAttribute("class").includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
+                    orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
                 
                 var new_chat_id = chat_id;
                 let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
@@ -645,8 +643,8 @@
             async function sendForm() {
                 if (debug) { console.log("sending form"); }
                 var form = document.getElementById("sendform");
-
-				typing_sleep = 0;
+                
+                typing_sleep = 0;
 
                 var tbox = document.getElementById("sendbox")
                 var oldval = tbox.value;
@@ -726,51 +724,51 @@
                 document.getElementById("composeShowingAttachmentButton").value = "";
                 document.getElementById("composeAttachmentButton").value = "";
             }
-
-			function inputKeyDown() {
-				autoGrow();
-				if (current_chat_id !== "") {
-					if (document.getElementById("sendbox").value.length > 0) {
-						typing_sleep = 10000;
-						if (!currently_typing) socket.send("typing:" + current_chat_id);
-						currently_typing = true;
-						typingWait();
-					} else {
-						typing_sleep = 0;
-					}
-				}
-			}
-
-			async function typingWait() {
-				if (!called_typing_wait) {
-					called_typing_wait = true;
-					while (typing_sleep > 0) {
-						typing_sleep -= 200;
-						await sleep(200);
-					}
-					if (currently_typing) {
-						currently_typing = false;
-						socket.send("idle:" + current_chat_id);
-					}
-					called_typing_wait = false;
-				}
-			}
-        
+                          
+            function inputKeyDown() {
+                autoGrow();
+                if (current_chat_id !== "") {
+                    if (document.getElementById("sendbox").value.length > 0) {
+                        typing_sleep = 10000;
+                        if (!currently_typing) socket.send("typing:" + current_chat_id);
+                        currently_typing = true;
+                        typingWait();
+                    } else {
+                        typing_sleep = 0;
+                    }
+                }
+            }
+                          
+            async function typingWait() {
+                if (!called_typing_wait) {
+                    called_typing_wait = true;
+                    while (typing_sleep > 0) {
+                        typing_sleep -= 200;
+                        await sleep(200);
+                    }
+                    if (currently_typing) {
+                        currently_typing = false;
+                        socket.send("idle:" + current_chat_id);
+                    }
+                    called_typing_wait = false;
+                }
+            }
+                          
             function autoGrow() {
-				var elem = document.getElementById("sendbox");
-				elem.style.height = getComputedStyle(document.documentElement).getPropertyValue("--send-button-size");
-				var scroll_height = elem.scrollHeight;
+                var elem = document.getElementById("sendbox");
+                elem.style.height = getComputedStyle(document.documentElement).getPropertyValue("--send-button-size");
+                var scroll_height = elem.scrollHeight;
                 elem.style.height = scroll_height + "px";
-
-				var form = document.getElementById("sendform");
-				form.style.height = String(scroll_height + 10) + "px";
+                
+                var form = document.getElementById("sendform");
+                form.style.height = String(scroll_height + 10) + "px";
                 
                 document.getElementById("text-content").lastChild.scrollIntoView()
             }
-
+                          
             function showPopup() {
                 document.getElementById("popup").style.display = "block";
-
+                
                 if (!has_shown_new_warning) {
                     alert("IMPORTANT: When using the compose box, you must type in the full phone number of the recipient, including a plus sign (+) before the country code. See hint for example.")
                     self.has_shown_new_warning = true;
@@ -808,9 +806,9 @@
                     case "battery":
                         setNewBatteryLevel(content)
                         break
-					case "typing":
-						setChatAsTyping(content);
-						break
+                    case "typing":
+                        setChatAsTyping(content);
+                        break
                     default:
                         console.log("cannot handle request: '" + msg + "'")
                         break
@@ -822,7 +820,7 @@
 
                 var new_text = "";
                 var name = "";
-				var notif_text;
+                var notif_text;
 
                 if (window.Notification && Notification.permission === "granted" && (!window_is_focused || chat !== current_chat_id)) {
                     var url = prefix + "/requests?person=" + chat + "&num=1";
@@ -848,77 +846,77 @@
 
                     if (notif_text.sender !== undefined && notif_text.sender !== "nil")
                         new_text = notif_text.sender + ": " + new_text;
-
-					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-						new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
+                        
+                    if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
+                        new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
 
                     var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
                 }
 
                 if (chat.length !== 0) {
-					if (document.getElementById(chat) === undefined || chat == "any") {
-						printChats();
-					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && document.getElementById(chat).getAttribute("class").includes("unpinned")) {
+                    if (document.getElementById(chat) === undefined || chat == "any") {
+                        printChats();
+                    } else if (chat !== document.getElementsByClassName("unpinned")[0].id && document.getElementById(chat).getAttribute("class").includes("unpinned")) {
                         if (new_text !== "")
                             setChatAsTop(chat, new_text);
-			            else
-			                setChatAsTop(chat);
+                        else
+                            setChatAsTop(chat);
                     } else {
-						var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
-						const fetch_newest_text = await fetch(url)
-						.then(response => {
-							if (!response.ok)
-								throw new Error("HTTP error " + response.status);
-							return response.json();
-						})
-						.then(json => {
-							notif_text = (json.texts)[0];
-							return new_text;
-						})
-						.catch(function () {
-							if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
-							has_shown_warning = true
-						})
-
-						var _ = await fetch_newest_text;
-
+                        var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
+                        const fetch_newest_text = await fetch(url)
+                        .then(response => {
+                            if (!response.ok)
+                            throw new Error("HTTP error " + response.status);
+                            return response.json();
+                        })
+                        .then(json => {
+                            notif_text = (json.texts)[0];
+                            return new_text;
+                        })
+                        .catch(function () {
+                            if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
+                            has_shown_warning = true
+                        })
+                        
+                        var _ = await fetch_newest_text;
+                        
                         var btn = document.getElementById(chat);
-
-						new_text = notif_text.text;
-
-						if (notif_text.sender !== undefined && notif_text.sender !== "nil")
-							new_text = notif_text.sender + ": " + new_text;
-
-						if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-							new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
-
+                        
+                        new_text = notif_text.text;
+                        
+                        if (notif_text.sender !== undefined && notif_text.sender !== "nil")
+                            new_text = notif_text.sender + ": " + new_text;
+                            
+                        if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
+                            new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
+                            
                         if (btn !== undefined) {
-							if (chat !== current_chat_id) btn.setAttribute("class", btn.getAttribute("class") + " unread");
-							if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
-								var text = btn.getElementsByClassName("chat-text")[0];
-
-								if (text !== undefined) text.innerText = new_text;
-							} else if (chat !== current_chat_id) {
-								var text = document.createElement("div");
-								text.setAttribute("class", "chat-text");
-								text.innerText = new_text;
-
-								var tb = btn.getElementsByClassName("chat-top")[0];
-								tb.appendChild(text);
-							}
-						} 
+                            if (chat !== current_chat_id) btn.setAttribute("class", btn.getAttribute("class") + " unread");
+                            if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
+                                var text = btn.getElementsByClassName("chat-text")[0];
+                                
+                                if (text !== undefined) text.innerText = new_text;
+                            } else if (chat !== current_chat_id) {
+                                var text = document.createElement("div");
+                                text.setAttribute("class", "chat-text");
+                                text.innerText = new_text;
+                                
+                                var tb = btn.getElementsByClassName("chat-top")[0];
+                                tb.appendChild(text);
+                            }
+                        }
                     }
                     if (chat === current_chat_id) {
                         getLatestText(current_chat_id, window_is_focused);
-						var typ = document.getElementById("typingIndicator");
-						if (typ !== undefined && typ !== null) typ.outerHTML = "";
+                        var typ = document.getElementById("typingIndicator");
+                        if (typ !== undefined && typ !== null) typ.outerHTML = "";
                     }
                 }
-
-				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
+                
+                var unread_chats = document.getElementsByClassName("unread").length;
+                document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
             }
-
+                          
             async function setChatAsTop(chat, new_text = "") {
                 if (debug) { console.log("Setting chat as top: " + chat + ", new: " + new_text); }
 
@@ -1121,28 +1119,28 @@
                 else
                     batt.setAttribute("class", "low");
             }
-
-			function setChatAsTyping(chat) {
-				if (chat === current_chat_id) {
-					var d = document.createElement("div");
-					d.setAttribute("class", "text is_from_them iMessage");
-					d.setAttribute("id", "typingIndicator");
-
-					d.innerHTML = "<span class=\"dot flashing\">• </span><span class=\"dot\">• </span><span class=\"dot\">•</span>";
-
-					document.getElementById("text-content").appendChild(d);
-					d.scrollIntoView();
-
-					var c = 0;
-					var typing = window.setInterval(() => {
-						var i = document.getElementById("typingIndicator");
-						if (i === null) clearInterval(typing);
-						i.children[c].setAttribute("class", "dot");
-						c = (c + 1) % 3;
-						i.children[c].setAttribute("class", "dot flashing");
-					}, 400);
-				}
-			}
+                          
+            function setChatAsTyping(chat) {
+                if (chat === current_chat_id) {
+                    var d = document.createElement("div");
+                    d.setAttribute("class", "text is_from_them iMessage");
+                    d.setAttribute("id", "typingIndicator");
+                    
+                    d.innerHTML = "<span class=\"dot flashing\">• </span><span class=\"dot\">• </span><span class=\"dot\">•</span>";
+                    
+                    document.getElementById("text-content").appendChild(d);
+                    d.scrollIntoView();
+                    
+                    var c = 0;
+                    var typing = window.setInterval(() => {
+                        var i = document.getElementById("typingIndicator");
+                        if (i === null) clearInterval(typing);
+                        i.children[c].setAttribute("class", "dot");
+                        c = (c + 1) % 3;
+                        i.children[c].setAttribute("class", "dot flashing");
+                    }, 400);
+                }
+            }
 
             window.onfocus = function() { self.window_is_focused = true; }
             window.onblur = function() { self.window_is_focused = false; }
