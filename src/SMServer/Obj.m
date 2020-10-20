@@ -84,7 +84,11 @@
     [convo setLocalUserIsTyping:isTyping];
 }
 
-/// This is not being used, but I am
+/// This is not being used, but I am leaving it here for future versions in case I figure out how to make it work well.
+/// The issue right now is that this code works when I sign it with the com.apple.messages.pinned (or something like that)
+/// entitlement, but I can't have Xcode automatically sign it with that, so I'd have to manually codesign each time that I
+/// want to debug. So yeah that's where we're at
+
 /*- (NSArray *)getPinnedChats {
     NSBundle* imcore = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
     [imcore load];
