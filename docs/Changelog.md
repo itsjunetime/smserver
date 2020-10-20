@@ -6,15 +6,18 @@
  - Added support for group chat names in `/requests?name` API
  - Added typing indicators when other party starts typing
  - Added support for sending typing indicators when you start typing (and settings to disable)
+ - Added icons for music links
+ - Added extensive documentation about how to use IMCore and ChatKit
  - App now dies in background if Server is off or backgrounding is disabled
  - Completely rewrote libSMServer for better performance and to be more future-proof
  - Improved logging system to significantly decrease code footprint
  - Improved quality of information on notifications for group chats
  - Fixed issues with notifications not showing in web interface
- - Fixed styling issues with fonts sometimes being too small
+ - Fixed styling issues with fonts sometimes being too small or the incorrect color
  - Fixed issues with no conversations being marked as read
  - Fixed issue with blank texts appearing in web interface when `submit` hit while no text was set or attachments were selected
  - Fixed displays of smaller rich links
+ - Fixed issue with some links not showing correct subtitles
  - Fixed issue where notifications would show no text if message was an attachment
  - Fixed issue with textbox overflowing messages area when typing a long message
  - Changed some glyphs in web interface

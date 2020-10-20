@@ -144,7 +144,7 @@ vals = {'text': 'Hello%20world!', 'subject': 'This%20is%20a%20test', 'chat': 'em
 url = 'http://192.168.0.127:8741/send'
 
 # The server's certificate is self-signed, so make to include the `verify` parameter in the request
-post(url, data=vals)
+post(url, data=vals, verify=False)
 ```
 
 Sending an attachment with no text:
