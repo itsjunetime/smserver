@@ -158,20 +158,20 @@ struct ContentView: View {
             let f = req.query.keys.first
 			
             /// Handle different types of requests
-			if f == "chat_id" {
+            if f == "chat_id" {
                 
                 let q = req.query
                 
                 res.setValue("image/jpeg", forHTTPHeaderField: "Content-type")
                 res.send(ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? ""))
-			} else if f == "path" {
+            } else if f == "path" {
 				
                 let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
                 let type = ContentView.chat_delegate.getAttachmentType(path: req.query["path"] ?? "")
 				
                 res.setValue(type, forHTTPHeaderField: "Content-type")
                 res.send(dataResponse)
-			} else if f == "photo" {
+            } else if f == "photo" {
 
                 res.setValue("image/png", forHTTPHeaderField: "Content-type")
                 res.send(ContentView.chat_delegate.getPhotoDatafromPath(path: req.query["photo"] ?? ""))
@@ -284,7 +284,7 @@ struct ContentView: View {
         server.startListening(nil, portNumber: UInt(port) ?? 8741)
 		
         /// Start the websocket
-		socket.startServer(port: self.socket_port)
+        socket.startServer(port: self.socket_port)
 		
         self.server_running = server.isListening
         
@@ -319,8 +319,8 @@ struct ContentView: View {
         }
         
         if address.prefix(1) == "+" { /// Make sure there are no unnecessary characters like parenthesis
-			address = "+" + address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-		}
+            address = "+" + address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        }
         
         /// Make sure there's actually some content
         if body != "" || files.count > 0 {
@@ -372,7 +372,7 @@ struct ContentView: View {
                     .replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(default_num_messages);")
                     .replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
                     .replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(default_num_photos);")
-					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
+                    .replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
                     .replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
                     .replacingOccurrences(of: "<!--nord-->", with: self.nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
                     .replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
@@ -397,7 +397,7 @@ struct ContentView: View {
     
     func setNewestTexts(_ chat_id: String) {
         /// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
-		socket.sendNewText(info: chat_id)
+        socket.sendNewText(info: chat_id)
     }
     
     func setPartyTyping(_ chat_id: String) {
@@ -410,17 +410,7 @@ struct ContentView: View {
         
         let require_authentication = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
         
-        if !require_authentication { return true }
-        
-        var clear = false
-        
-        for i in self.authenticated_addresses {
-            if i == ras {
-                clear = true
-            }
-        }
-        
-        return clear
+        return !require_authentication || self.authenticated_addresses.contains(ras)
     }
     
     func encodeToJson(object: Any, title: String) -> String {
@@ -684,7 +674,7 @@ struct ContentView: View {
 				HStack {
 					HStack {
 						Button(action: {
-							self.loadFiles()
+                            self.loadFiles()
                             ContentView.sender.launchMobileSMS()
                             ContentView.chat_delegate.refreshVars()
                             self.socket.refreshVars()
@@ -695,22 +685,22 @@ struct ContentView: View {
 						}
 				
 						Spacer().frame(width: 24)
-				
-						Button(action: {
+                        
+                        Button(action: {
                             if self.server_running { self.stopServer() }
-						}) {
-							Image(systemName: "stop.fill")
-								.font(.system(size: self.font_size))
-								.foregroundColor(self.server_running ? Color.red : Color.gray)
-						}
-				
+                        }) {
+                            Image(systemName: "stop.fill")
+                                .font(.system(size: self.font_size))
+                                .foregroundColor(self.server_running ? Color.red : Color.gray)
+                        }
+                        
 						Spacer().frame(width: 30)
-				
-						Button(action: {
+                        
+                        Button(action: {
                             if !self.server_running && (self.getWiFiAddress() != nil || self.override_no_wifi) {
                                 self.loadServer(port_num: UInt16(self.port)!)
                             }
-							UserDefaults.standard.setValue(true, forKey: "has_run")
+                            UserDefaults.standard.setValue(true, forKey: "has_run")
 						}) {
 							Image(systemName: "play.fill")
 								.font(.system(size: self.font_size))
@@ -720,12 +710,12 @@ struct ContentView: View {
 					}.padding(10)
 				
 					Spacer()
-				
-					HStack {
-						Button(action: {
-							self.view_settings.toggle()
-						}) {
-							Image(systemName: "gear")
+                    
+                    HStack {
+                        Button(action: {
+                            self.view_settings.toggle()
+                        }) {
+                            Image(systemName: "gear")
                                 .font(.system(size: self.font_size))
 						}.sheet(isPresented: $view_settings) {
 							SettingsView()
@@ -754,8 +744,8 @@ struct ContentView: View {
             let new_port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().count > 3 ?
                             $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined() :
                             UserDefaults.standard.object(forKey: "port") as? String ?? "8741" /// To make sure it's an available port
-			self.port = new_port
-			UserDefaults.standard.setValue(new_port, forKey: "port")
+            self.port = new_port
+            UserDefaults.standard.setValue(new_port, forKey: "port")
         })
         
         let pass_binding = Binding<String>(get: {
@@ -876,7 +866,7 @@ struct ContentView: View {
                         }
                     }
                 }
-			}
+            }
             
             Spacer()
             
@@ -886,13 +876,13 @@ struct ContentView: View {
                         .font(.callout)
                     Spacer()
                 }.padding(.leading)
-			} else {
-				Spacer().frame(height: 20)
-			}
+            } else {
+                Spacer().frame(height: 20)
+            }
             
             Spacer()
-			
-			bottom_bar /// created above
+            
+            bottom_bar /// created above
             
         }.onAppear() {
             self.loadFuncs()
