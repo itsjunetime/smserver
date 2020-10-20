@@ -589,12 +589,12 @@ final class ChatDelegate {
             return Data.init(capacity: 0)
         }
     }
-	
-	final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]] {
+    
+    final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]] {
         /// This gets all texts with $term in them; case_sensitive and bridge_gaps are customization options
         
         /// Create Connections
-		var db = createConnection()
+        var db = createConnection()
         var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
         if db == nil || contact_db == nil { return [String:[[String:String]]]() }
 		
@@ -602,19 +602,19 @@ final class ChatDelegate {
         var upperTerm = term.replacingOccurrences(of: "%", with: "\\%")
         
         /// replace spaces with wildcard characters if bridge_gaps == true
-		if bridge_gaps { upperTerm = upperTerm.split(separator: " ").joined(separator: "%") }
-		
-		var return_texts = [String:[[String:String]]]()
+        if bridge_gaps { upperTerm = upperTerm.split(separator: " ").joined(separator: "%") }
+        
+        var return_texts = [String:[[String:String]]]()
         var names = [String:String]()
         
         var texts = selectFromSql(db: db, columns: ["c.chat_identifier", "c.display_name", "m.ROWID", "m.text", "m.service", "m.date", "m.cache_has_attachments"], table: "message m", condition: "inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID WHERE text like \"%\(upperTerm)\" order by m.date desc")
 		
         if case_sensitive { texts.removeAll(where: { !($0["m.text"]?.contains(term) ?? true) })}
         
-		for var i in texts {
+        for var i in texts {
 			
             /// get sender for this text
-			let chat = i["c.chat_identifier"] ?? "(null)"
+            let chat = i["c.chat_identifier"] ?? "(null)"
             
             if i["c.display_name"]?.count == 0 {
                 if names[i["c.chat_identifier"] ?? ""] == nil {
@@ -627,26 +627,26 @@ final class ChatDelegate {
             }
 			
             /// Add this text onto the list of texts from this person that match term
-			if return_texts[chat] == nil {
-				return_texts[chat] = [i]
-			} else {
-				return_texts[chat]?.append(i)
-			}
+            if return_texts[chat] == nil {
+                return_texts[chat] = [i]
+            } else {
+                return_texts[chat]?.append(i)
+            }
 		}
 		
         /// close
         closeDatabase(&db)
         closeDatabase(&contact_db)
-		
-		return return_texts
-	}
-	
-	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] {
-		/// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
+        
+        return return_texts
+    }
+    
+    final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] {
+        /// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
         self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
         
         /// make sure that we have access to the photos library
-		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
+        if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
             var con = true;
             
             PHPhotoLibrary.requestAuthorization({ auth in
@@ -658,23 +658,23 @@ final class ChatDelegate {
             guard con else { return [[String:String]]() }
         }
         
-		var ret_val = [[String:String]]()
-		let fetchOptions = PHFetchOptions()
+        var ret_val = [[String:String]]()
+        let fetchOptions = PHFetchOptions()
         
         /// sort photos by most recent
-		fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: !most_recent)]
-		fetchOptions.fetchLimit = num + offset
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: !most_recent)]
+        fetchOptions.fetchLimit = num + offset
 		
         /// get images!
-		let result = PHAsset.fetchAssets(with: PHAssetMediaType.image, options: fetchOptions)
-		let total = result.countOfAssets(with: PHAssetMediaType.image)
+        let result = PHAsset.fetchAssets(with: PHAssetMediaType.image, options: fetchOptions)
+        let total = result.countOfAssets(with: PHAssetMediaType.image)
         
         for i in offset..<total {
-			
-			var local_result = [String:String]()
+            
+            var local_result = [String:String]()
             
             let image = result.object(at: i)
-			var img_url = ""
+            var img_url = ""
 			
             image.getURL(completionHandler: { url in
                 /// get url of each image
@@ -683,20 +683,20 @@ final class ChatDelegate {
                 } else {
                     img_url = "nil" /// Cause it has to be something to continue
                 }
-			})
+            })
             
             /// This is hacky and kinda hurts performance but it seems the most reliable way to load images in order + with the amount requested.
             while img_url == "" {}
             
             /// append vals to return value
-			local_result["URL"] = img_url
-			local_result["is_favorite"] = String(image.isFavorite)
-			
-			ret_val.append(local_result)
+            local_result["URL"] = img_url
+            local_result["is_favorite"] = String(image.isFavorite)
+            
+            ret_val.append(local_result)
 		}
         
-		return ret_val
-	}
+        return ret_val
+    }
 	
 	final func getPhotoDatafromPath(path: String) -> Data {
 		/// This returns the pure data of a photo at $path
@@ -780,29 +780,29 @@ final class ChatDelegate {
 }
 
 extension PHAsset {
-
-	final func getURL(completionHandler : @escaping ((_ responseURL : URL?) -> Void)){
+    
+    final func getURL(completionHandler : @escaping ((_ responseURL : URL?) -> Void)) {
         /// This allows for retrieval of a PHAsset's URL in the filesystem.
         
-		if self.mediaType == .image {
-			let options: PHContentEditingInputRequestOptions = PHContentEditingInputRequestOptions()
-			options.canHandleAdjustmentData = {(adjustmeta: PHAdjustmentData) -> Bool in
-				return true
-			}
-			self.requestContentEditingInput(with: options, completionHandler: {(contentEditingInput: PHContentEditingInput?, info: [AnyHashable : Any]) -> Void in
-				completionHandler(contentEditingInput?.fullSizeImageURL as URL?)
-			})
-		} else if self.mediaType == .video {
-			let options: PHVideoRequestOptions = PHVideoRequestOptions()
-			options.version = .original
-			PHImageManager.default().requestAVAsset(forVideo: self, options: options, resultHandler: {(asset: AVAsset?, audioMix: AVAudioMix?, info: [AnyHashable : Any]?) -> Void in
-				if let urlAsset = asset as? AVURLAsset {
-					let localVideoUrl: URL = urlAsset.url as URL
-					completionHandler(localVideoUrl)
-				} else {
-					completionHandler(nil)
-				}
-			})
-		}
-	}
+        if self.mediaType == .image {
+            let options: PHContentEditingInputRequestOptions = PHContentEditingInputRequestOptions()
+            options.canHandleAdjustmentData = {(adjustmeta: PHAdjustmentData) -> Bool in
+                return true
+            }
+            self.requestContentEditingInput(with: options, completionHandler: {(contentEditingInput: PHContentEditingInput?, info: [AnyHashable : Any]) -> Void in
+                completionHandler(contentEditingInput?.fullSizeImageURL as URL?)
+            })
+        } else if self.mediaType == .video {
+            let options: PHVideoRequestOptions = PHVideoRequestOptions()
+            options.version = .original
+            PHImageManager.default().requestAVAsset(forVideo: self, options: options, resultHandler: {(asset: AVAsset?, audioMix: AVAudioMix?, info: [AnyHashable : Any]?) -> Void in
+                if let urlAsset = asset as? AVURLAsset {
+                    let localVideoUrl: URL = urlAsset.url as URL
+                    completionHandler(localVideoUrl)
+                } else {
+                    completionHandler(nil)
+                }
+            })
+        }
+    }
 }
