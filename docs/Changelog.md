@@ -12,6 +12,8 @@
  - Completely rewrote libSMServer for better performance and to be more future-proof
  - Improved logging system to significantly decrease code footprint
  - Improved quality of information on notifications for group chats
+ - Significant optimizations in retrieving messages for group chats
+ - Changed gatekeeper to take input as password
  - Fixed issues with notifications not showing in web interface
  - Fixed styling issues with fonts sometimes being too small or the incorrect color
  - Fixed issues with no conversations being marked as read
@@ -20,6 +22,7 @@
  - Fixed issue with some links not showing correct subtitles
  - Fixed issue where notifications would show no text if message was an attachment
  - Fixed issue with textbox overflowing messages area when typing a long message
+ - Fixed issue with wrong conversation showing at top
  - Changed some glyphs in web interface
 
 0.4.2 -> 0.4.3

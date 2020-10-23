@@ -1,75 +1,78 @@
 :root {
-    --text-box-gradient: linear-gradient(to bottom right, #a6a6a6, #989898);
-    --body-background: #fff;
-    --font-color: #111;
-    --main-background: #d9d9d9;
-    --chats-border: #ccc;
-    --light-button-background: #ccc;
-    --selected-background: #c8c8c8;
+	--text-box-gradient: linear-gradient(to bottom right, #a6a6a6, #989898);
+	--body-background: #fff;
+	--font-color: #111;
+	--main-background: #f0f0f0;
+	--chats-border: #ccc;
+	--light-button-background: #ccc;
+	--selected-background: #fff;
 }
 .chat-text {
-    color: #181818;
+	color: #181818;
 }
 .chats-list button:hover {
-    background-color: #c8c8c8;
+	background-color: #d8d8d8;
 }
 .centered {
-    text-shadow: -4px 4px #d6d6d6;
+	text-shadow: -4px 4px #d6d6d6;
 }
 #camerarollbutton, #unhiddenbutton {
-    background-color: var(--selected-background);
+	background-color: var(--light-button-background);
 }
 .is_from_me.iMessage {
-    background-image: linear-gradient(to right, rgb(119 155 255), rgb(90 133 245));
+	background-image: linear-gradient(to right, rgb(119 155 255), rgb(90 133 245));
 }
-.is_from_me {
-    color: #e6e6e6;
+.is_from_me * {
+	color: #e6e6e6;
 }
 .is_from_them {
-    background-color: #cacaca;
-    color: #222;
+	background-color: #cacaca;
+	color: #222;
 }
 .selected div {
-    color: rgb(18, 115, 214);
+	color: rgb(18, 115, 214);
 }
 #composeHideButton, #camerarollHideButton {
-    background-color: #848484;
+	background-color: #848484;
 }
 #composeShowingAttachmentButton {
-    background-color: #999;
-    box-shadow: none;
+	background-color: #999;
+	box-shadow: none;
 }
 #composeSendBox {
-    background-color: #777777ad;
+	background-color: #777777ad;
 }
 #moretextsbutton {
-    box-shadow: 0px 0px 10px #999;
-    border: none;
+	box-shadow: 0px 0px 10px #999;
+	border: none;
 }
 #moretextsbutton p {
-    color: #eee;
+	color: #eee;
 }
 #sendbutton {
-    color: #eee;
+	color: #eee;
+}
+#sendbox {
+	background-color: var(--light-button-background);
 }
 .from_me .reaction {
-    background-color: #cacacac0;
+	background-color: #cacacac0;
 }
 .from_them .reaction {
-    background-color: rgba(119, 155, 255, 0.5);
+	background-color: rgba(119, 155, 255, 0.5);
 }
 .reaction {
-    box-shadow: 0px 0px 6px #aaa;
+	box-shadow: 0px 0px 6px #aaa;
 }
 .is_from_them .richLinkSubtitle {
-    color: #fff;
+	color: #fff;
 }
 .is_from_me .richLinkSubtitle {
-    color: #ddd;
+	color: #ddd;
 }
 .is_from_them .secondNav i {
-    color: #fff;
+	color: #fff;
 }
 .is_from_me .secondNav i {
-    color: #ccc;
+	color: #ccc;
 }
