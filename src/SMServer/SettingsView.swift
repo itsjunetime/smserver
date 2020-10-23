@@ -188,7 +188,6 @@ struct SettingsView: View {
 				Spacer().frame(height: 14)
 				
 				Section {
-					
 					Toggle("Toggle debug", isOn: debug_binding)
 					
 					Toggle("Require Authentication to view messages", isOn: auth_binding)
@@ -228,11 +227,5 @@ struct SettingsView: View {
 			}.padding()
 			.animation(.easeOut(duration: 0.16))
 		}
-	}
-}
-
-struct SettingsView_Previews: PreviewProvider {
-	static var previews: some View {
-		SettingsView()
 	}
 }
