@@ -68,7 +68,6 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged issues:
-- As of version 0.5.0, sending attachments has a very low success rate (~20%?). This is being worked on.
 - Although typing indicators do appear when the other party starts typing, they don't always disappear when they stop typing. This is also being worked on.
 
 ### To file an issue:
@@ -91,3 +90,7 @@ Also, if the app did not crash on startup, but rather crashed after it was alrea
 
 ## Companion App
 There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
+
+## Donations
+If you'd like to support development of this project, I really appreciate that, but I would ask that you instead consider donating to more worthy causes, such as [Save the Children](https://support.savethechildren.org/site/Donation2?df_id=2521&2521.donation=form1), who are helping with the humanitarian crisis in Yemen, or [Diasporans against SARS](https://www.gofundme.com/f/4ppyfs-diasporans-against-sars?utm_source=twitter&utm_medium=social&utm_campaign=m_pd+share-sheet), fighting injustice in Nigeria. \
+Lastly, if you are a supporter of blue lives matter, Donald Trump, or any hateful organization such as the Proud Boys, you are not welcome to use my software. I would not like to shut down conversation, and would really love to discuss these issues with you. However, racism and hatred have festered long enough in the US, and supporting the aforementioned organizations and individual(s) does nothing but exacerbate these problems.
