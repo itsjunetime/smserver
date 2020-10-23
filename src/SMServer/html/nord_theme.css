@@ -1,57 +1,57 @@
 :root {
-    --body-background: #2e3440;
-    --main-background: #3b4252;
-    --font-color: #eceff4;
-    --chats-border: #434c5e;
-    --selected-background: #d8dee930;
-    --text-box-gradient: linear-gradient(to bottom right, #2e3440, #3b4252);
-    --light-button-background: #4c566a;
+	--body-background: #2e3440;
+	--main-background: #3b4252;
+	--font-color: #eceff4;
+	--chats-border: #434c5e;
+	--selected-background: #d8dee930;
+	--text-box-gradient: linear-gradient(to bottom right, #2e3440, #3b4252);
+	--light-button-background: #4c566a;
 }
 .chats button:hover {
-    background-color: #4c566a;
+	background-color: #4c566a;
 }
 .chats button:hover p {
-    color: #81a1c1;
+	color: #81a1c1;
 }
 #moretextsbutton {
-    border: none;
+	border: none;
 }
 .is_from_me.iMessage {
-    background-color: #5381ac;
-    background-image: none;
+	background-color: #5381ac;
+	background-image: none;
 }
 .is_from_me.SMS {
-    background-image: none;
-    background-color: #6fbf9b;
+	background-image: none;
+	background-color: #6fbf9b;
 }
 .is_from_them, #camerarollbutton, #unhiddenbutton {
-    background-color: #4c566a;
+	background-color: #4c566a;
 }
 #composeShowingAttachmentButton {
-    box-shadow: none !important;
-    background-color: var(--main-background);
+	box-shadow: none !important;
+	background-color: var(--main-background);
 }
 #composeSendBox {
-    background-color: #2e3440a0;
+	background-color: #2e3440a0;
 }
 .centered {
-    text-shadow: -4px 4px #2E3440;
+	text-shadow: -4px 4px #2E3440;
 }
 #composeShowButton, #notificationbutton, .selected {
-    background-color: #4c566a !important;
+	background-color: #4c566a !important;
 }
 #sendbutton {
-    background-color: #5e81cc;
+	background-color: #5e81cc;
 }
 .from_me .reaction {
-    background-color: #4c566ac0;
+	background-color: #4c566ac0;
 }
 .from_them .reaction {
-    background-color: #5381aca0;
+	background-color: #5381aca0;
 }
 .reaction {
-    box-shadow: 0px 0px 6px #444;
+	box-shadow: 0px 0px 6px #444;
 }
 .richLinkSubtitle {
-    font-color: #ccc;
+	font-color: #ccc;
 }
