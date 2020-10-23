@@ -14,6 +14,10 @@ If you can answer 'yes' to all the above questions, feel free to file an issue i
 
 Try disabling 'Mark conversations as read when viewed on web interface' in the settings of the app, restarting the app, and try again. If it still crashes, feel free to file an issue.
 
+### How did you make this?
+
+In this same directory, there's a document called `IMCore_and_ChatKit.md` that details how I used ChatKit and IMCore for the backend of this app. It should have most things that you'd be interested in. If there are still other questions you'd like to ask or things you don't understand, feel free to DM me at u/Janshai on reddit, or @Janshaidev on twitter.
+
 ### I'd like to contribute
 
 Feel free to! I wholly welcome pull requests, so if you feel you can implement a feature that you'd like to see included, you're welcome to fork the project and submit a pull request when you feel you've got it working well.
