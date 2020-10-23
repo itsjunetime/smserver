@@ -60,13 +60,13 @@ final class ChatDelegate {
 		/// However, if you set it to true, it will return them without the table identifier, e.g. `attr` and `otherattr`. Be conscious of that.
 		
 		/// Construct the query
-		var sqlString = "SELECT "
-		for i in columns {
+		var sqlString = "SELECT " + columns.joined(separator: ", ")
+		/*for i in columns {
 			sqlString += i
 			if columns.count > 0 && i != columns[columns.count - 1] {
 				sqlString += ", "
 			}
-		}
+		}*/
 		sqlString += " from " + table
 		if condition != "" {
 			sqlString += " " + condition

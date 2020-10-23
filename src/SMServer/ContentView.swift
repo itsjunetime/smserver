@@ -54,22 +54,22 @@ struct ContentView: View {
 		"""
     """
 	@State var main_page_style =
-		"""
+	"""
     """
 	@State var main_page_script =
-		"""
+	"""
     """
 	@State var gatekeeper_page =
-		"""
+	"""
     """
 	@State var custom_style =
-		"""
+	"""
     """
 	@State var light_style =
-		"""
+	"""
     """
 	@State var nord_style =
-		"""
+	"""
     """
 	
 	func log(_ s: String, warning: Bool = false) {
@@ -89,7 +89,7 @@ struct ContentView: View {
 			self.log("Server was already running, stopped.")
 		}
 		
-		/// The mobileSMS App must be running to send texts in the background, so we start it with this.
+		/// The mobileSMS App must be running to hijack receiving texts, so we launch it.
 		ContentView.sender.launchMobileSMS()
 		
 		self.log("launched MobileSMS")
@@ -293,28 +293,15 @@ struct ContentView: View {
 	
 	func sendText(params: [String:Any], new_files: [String]) -> Bool {
 		
-		var body = ""
-		var address = ""
-		var subject = ""
+		let body: String = params["text"] as? String ?? ""
+		var address: String = params["chat"] as? String ?? ""
+		let subject: String = params["subject"] as? String ?? ""
 		var files = new_files
 		
-		/// Get text and body of the text
-		for (key, value) in params {
-			if let val = value as? String {
-				if key == "text" {
-					body = val
-				} else if key == "chat" {
-					address = val
-				} else if key == "subject" {
-					subject = val
-				} else if key == "photos" {
-					let ph = val.split(separator: ":")
-					if ph.count > 0 {
-						for i in ph {
-							files.append(self.photos_prefix + String(i))
-						}
-					}
-				}
+		if params["photos"] != nil {
+			let ph = (params["photos"] as? String ?? "").split(separator: ":")
+			for i in ph {
+				files.append(self.photos_prefix + String(i))
 			}
 		}
 		
@@ -323,14 +310,14 @@ struct ContentView: View {
 		}
 		
 		/// Make sure there's actually some content
-		if body != "" || files.count > 0 {
+		if body != "" || files.count > 0 || subject != "" {
 			/// Send the information the obj-c function
 			ContentView.sender.sendIPCText(body, withSubject: subjects_enabled ? subject : "", toAddress: address, withAttachments: files)
 			
 			return true
-		} else {
-			return false
 		}
+		
+		return false
 		
 	}
 	
@@ -446,9 +433,9 @@ struct ContentView: View {
 					authenticated_addresses.append(address)
 				}
 				return "true"
-			} else { /// if they didn't send the correct password
-				return "false"
 			}
+			/// default
+			return "false"
 		}
 		
 		/// If they're not authenticated
@@ -460,36 +447,22 @@ struct ContentView: View {
 		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
 		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
 		
-		var person = ""
-		var chat_id = ""
-		
-		var num_texts = 0
-		var offset = 0
-		
 		let f = Array(params.keys)[0]
 		
 		if f == "person" || f == "num" || f == "offset" || f == "read" {
 			/// requesting messages from a specific person
-			
-			person = params["person"] ?? ""
+			var person = params["person"] ?? ""
 			
 			if (params["read"] == nil && self.mark_when_read) || (params["read"] != nil && params["read"] == "true") {
 				ContentView.sender.markConvo(asRead: person)
 			}
 			
-			num_texts = default_num_messages
-			if params["num"] != nil {
-				num_texts = Int(params["num"] ?? String(default_num_messages)) ?? default_num_messages
-			}
-			if params["offset"] != nil {
-				offset = Int(params["offset"] ?? "0") ?? 0
-			}
+			let num_texts = Int(params["num"] ?? String(default_num_messages)) ?? default_num_messages
+			let offset = Int(params["offset"] ?? "0") ?? 0
 			
 			self.log( "selecting person: " + person + ", num: " + String(num_texts))
 			
-			if person.contains("\"") { /// Just in case, I guess?
-				person = person.replacingOccurrences(of: "\"", with: "")
-			}
+			person = person.replacingOccurrences(of: "\"", with: "") /// In case they decide to capture it in quotes
 			
 			let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
 			let texts = encodeToJson(object: texts_array, title: "texts")
@@ -497,17 +470,10 @@ struct ContentView: View {
 			
 		} else if f == "chat" || f == "num_chats"  || f == "chats_offset" {
 			/// Requesting most recent conversations
-			num_texts = default_num_chats
-			var chats_offset = 0
-			if params["num_chats"] != nil {
-				num_texts = Int(params["num_chats"] ?? String(default_num_chats)) ?? default_num_chats
-			}
-			if params["chats_offset"] != nil {
-				chats_offset = Int(params["chats_offset"] ?? "0") ?? 0
-			}
+			let chats_offset = Int(params["chats_offset"] ?? "0") ?? 0
+			let num_texts = Int(params["num_chats"] ?? String(default_num_chats)) ?? default_num_chats
 			
-			self.log("num chats: \(num_texts)")
-			self.log("chats offset: \(chats_offset)")
+			self.log("num chats: \(num_texts), offset: \(chats_offset)")
 			
 			let chats_array = ContentView.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
 			let chats = encodeToJson(object: chats_array, title: "chats")
@@ -516,41 +482,27 @@ struct ContentView: View {
 			
 		} else if f == "name" {
 			/// Requesting name for a chat_id
-			chat_id = params["name"] ?? ""
+			let chat_id = params["name"] ?? ""
 			
 			let name = ContentView.chat_delegate.getDisplayName(chat_id: chat_id)
 			return name
 			
 		} else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" {
 			/// Searching for a specific term
-			var case_sensitive = false
-			var bridge_gaps = true
+			let case_sensitive = (params["case_sensitive"] ?? "false") == "true"
+			let bridge_gaps = (params["bridge_gaps"] ?? "true") == "true"
+			let term = params["search"] ?? ""
 			
-			let term = params["search"]
-			if params["case_sensitive"] != nil {
-				case_sensitive = params["case_sensitive"] == "true"
-			}
-			if params["bridge_gaps"] != nil {
-				bridge_gaps = params["bridge_gaps"] == "true"
-			}
-			let responses = ContentView.chat_delegate.searchForString(term: term ?? "", case_sensitive: case_sensitive, bridge_gaps: bridge_gaps)
+			let responses = ContentView.chat_delegate.searchForString(term: term , case_sensitive: case_sensitive, bridge_gaps: bridge_gaps)
 			
-			let return_val = encodeToJson(object: responses, title: "Texts that match '" + (term ?? "nil") + "'")
+			let return_val = encodeToJson(object: responses, title: "matches")
 			
 			return return_val
 		} else if f == "photos" || f == "photo_offset" || f == "most_recent" {
 			/// Retrieving most recent photos
-			var most_recent = true
-			var offset = 0
-			
+			let most_recent = (params["most_recent"] ?? "true") == "true"
+			let offset = Int(params["photo_offset"] ?? "0") ?? 0
 			let num = Int(params["photos"] ?? String(default_num_photos)) ?? default_num_photos
-			
-			if params["photo_offset"] != nil {
-				offset = Int(params["photo_offset"] ?? "0") ?? 0
-			}
-			if params["most_recent"] != nil {
-				most_recent = params["most_recent"] == "true"
-			}
 			
 			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 			
@@ -559,21 +511,13 @@ struct ContentView: View {
 			/// Haven't got the `libsmserver` side of this to work yet, so I'm disabling it for this version.
 			/// Hopefully I'll have it good and done by next version
 			
-			var reaction: Int
-			var textGuid: String
-			var chat: String
-			var remove = false
+			var reaction: Int = (Int(params["reaction"] ?? "0") ?? 0) + 2000 /// reactions are 2000 - 2005
+			var textGuid: String = params["toGUID"] ?? "0"
+			var chat: String = params["inChat"] ?? "0"
+			var remove = (params["remove"] ?? "false") == "true"
 			
 			guard params["reaction"] != nil && params["toGUID"] != nil && params["inChat"] != nil else {
 				return "Please include parameters 'reaction', 'toGUID', and 'inChat' in your request"
-			}
-			
-			reaction = (Int(params["reaction"] ?? "0") ?? 0) + 2000 /// reactions are 2000 - 2005
-			textGuid = params["toGUID"] ?? "0"
-			chat = params["inChat"] ?? "0"
-			
-			if params["remove"] != nil {
-				remove = params["remove"] == "true"
 			}
 			
 			if remove { reaction += 1000 }
@@ -912,11 +856,5 @@ class DocPicker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
 	}
 	func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
 		onDismiss()
-	}
-}
-
-struct ContentView_Previews: PreviewProvider {
-	static var previews: some View {
-		ContentView()
 	}
 }
