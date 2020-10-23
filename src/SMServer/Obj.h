@@ -38,12 +38,12 @@
 - (void)sendQueryWithReply:(BOOL)arg1 query:(void (^)(void))arg2;
 @end
 */
- 
+
 @interface CKConversationList
 + (id)sharedConversationList;
 - (id)conversationForExistingChatWithGroupID:(NSString *)arg1;
 @end
- 
+
 @interface CKConversation
 - (void)setLocalUserIsTyping:(_Bool)arg1;
 @end
