@@ -1,7 +1,7 @@
 # Changelog
 
 0.4.3 -> 0.5.0
- - Added basic suport for iOS 14+
+ - Added full suport for iOS 14+
  - Added support for displaying pinned conversations
  - Added support for group chat names in `/requests?name` API
  - Added typing indicators when other party starts typing

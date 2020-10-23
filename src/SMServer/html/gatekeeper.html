@@ -26,7 +26,7 @@
 				padding: 1px 20px 20px 20px;
 				box-shadow: 10px 10px 5px #080808;
 			}
-			.pass_box {
+			#input {
 				margin-bottom: 20px;
 				width: 300px;
 				border-radius: 5px;
@@ -52,6 +52,13 @@
 			button:hover {
 				background-color: lightskyblue;
 				transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+			}
+			.wrong {
+				background-color: #d85050;
+				color: white;
+			}
+			.wrong::placeholder {
+				color: #383838;
 			}
 		</style>
 		<script>
@@ -79,7 +86,7 @@
 				var _ = await check_pass
 
 				if (response !== "true") {
-					document.getElementById("input").style.backgroundColor = "#d33";
+					document.getElementById("input").setAttribute("class", "wrong");
 					document.getElementById("input").value = "";
 				} else {
 					window.location.reload(true)
