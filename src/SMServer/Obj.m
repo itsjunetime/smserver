@@ -30,13 +30,13 @@
 
 - (void)handleReceivedTextWithCallback:(NSString *)chat_id {
 	/// This is the function that is called when a new text is received.
-	/// _setTexts is a block that is set somewhere around line 625 in ContentView.swift, in loadFuncs().
+	/// _setTexts is a block that is set somewhere around line 554 in ContentView.swift, in loadFuncs().
 	_setTexts(chat_id);
 }
 
 - (void)handlePartyTypingWithCallback:(NSString *)chat_id {
 	/// This is called when someone else starts typing
-	/// _setTyping is a block that is set somewhere around line 629 in ContentView.swift, in loadFuncs().
+	/// _setTyping is a block that is set somewhere around line 559 in ContentView.swift, in loadFuncs().
 	_setTyping(chat_id);
 }
 
@@ -87,7 +87,7 @@
 /// This is not being used, but I am leaving it here for future versions in case I figure out how to make it work well.
 /// The issue right now is that this code works when I sign it with the com.apple.messages.pinned (or something like that)
 /// entitlement, but I can't have Xcode automatically sign it with that, so I'd have to manually codesign each time that I
-/// want to debug. So yeah that's where we're at
+/// want to debug. That would be a massive hassle so I'm not going to do it until I find an easier solution
 
 /*- (NSArray *)getPinnedChats {
  NSBundle* imcore = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
