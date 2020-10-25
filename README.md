@@ -7,19 +7,19 @@
 
 ## Features
 - Viewing all texts & iMessages from another device
-- Viewing image attachments in browser
 - HTTPS
 - Desktop Notifications upon new text arrival
 - Sending iMessages remotely, without on-device interaction
 - Sending all types of attachments from desktop 
 - Authentication to protect against spying eyes
-- Ability to permanently change passwords and default values
 - Background operation of server for unlimited time, with screen on or off
+- Easy and accessible customization options
 - Ability to set custom css rules for easy web interface customization
 - Easy to use and very customizable search API
 - Sending and viewing of read receipts
 - Easy switching between Light, Dark, and Nord themes
-- Typing indicators when other party starts composing
+- Typing indicators when you or other party starts composing
+- Information on web interface about battery level and charging state
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
@@ -31,6 +31,8 @@
 
 ## To Install
 Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.md` for information on how to build from source.
+
+The source code may be updated past the latest released version, so don't be surprised or confused if you see new features listed on the README or under `docs/Changelog.md` that you don't see in the app yet.
 
 ## To run
 1. Open the SMServer app, and click the green 'play' button in the bottom left.
@@ -57,7 +59,7 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 - [x] Access to camera roll on web interface
 - [x] Viewing and sending of read receipts
 - [x] Graphic displays for reactions
-- [x] Information on web page about battery life
+- [x] Information on web page about battery life and charging state
 - [x] Display when other party starts typing
 - [x] Ability to send chat indicators when you start typing
 - [x] Subject lines for texts on web interface

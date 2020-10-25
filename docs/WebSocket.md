@@ -1,9 +1,22 @@
 # WebSocket (API)
 
-As of 0.2.0+debug2, the server supports websockets. This is not used at all to send messages from client to the host, but only to send messages from host to client. It supports sending 3 messages as of right now, all plain text. They are all in the format of `$context:$content`, e.g. `text:+15202583393`
+As of 0.2.0+debug2, the server supports websockets. This is, as of 0.5.0, used to send messages from client to the host, and from host to client. It supports sending/receiving 5 messages as of right now, all plain text. They are all in the format of `$context:$content`, e.g. `text:+15202583393`
 
-## `text`
-Every time that the host receives a new text, a message with the context of `text` is sent to all connected clients with the content of the chat_id that send the message. For example: `text:email@icloud.com` or `text:+19398792093`
+## Messages to client from host
 
-## `battery`
-A message with this context is sent every time the battery level of the host device changes, and will be send as an Int between 0 - 100. For example: `battery:89`
+### `text`
+Every time that the host receives a new text, a message with the context of `text` is sent to all connected clients with the content of the chat_id that send the message. For example: `text:email@icloud.com` or `text:+11231231234`
+
+### `battery`
+A message with this context is sent every time the battery level or battery state of the host device changes, and will either be sent as an Int between 0 - 100 (to show the battery level), or a string that is either `charging` or `unplugged`. For example, to show that the battery level is now 89, it would send: `battery:89`. And to show that the phone is now charging when it previously wasn't, it would send `battery:charging`.
+
+### `typing`
+A message with this context is sent every time that someone in one of their conversations starts typing. The content of this message is a string which is the chat_identifier of the conversation where the other party started typing. It will look something like `typing:+11231231234`.
+
+## Messages sent to host from client
+
+### `typing`
+A message with this context is sent every time you start typing on the web interface, and its content contains a string which is the converation in which you started typing. If you have the 'Send typing indicator when you type' setting enabled on the host device, your device will then notify the other party in that conversation that you are typing (just like if you started typing in the iMessages app)
+
+### `idle`
+A message with this context is sent every time the length of the text you are composing goes down to 0, or you stop typing for 10 straight seconds. The content of this message is a string which is the conversation in which you stopped typing. This will then notify the other party that you stopped typing (just as if you stopped typing in the iMessages app)
