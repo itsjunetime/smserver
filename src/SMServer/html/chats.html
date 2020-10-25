@@ -1134,31 +1134,51 @@
 			function setNewBatteryLevel(level) {
 				if (debug) { console.log("new battery level: " + level); }
 				var batt = document.getElementById("battery");
+				var bat_symbol = document.getElementById("batterySymbol");
 
 				var symbol = "";
-				var dbl = ~~Number(level);
+				if (isNaN(level)) {
 
-				if (faLoaded) {
-					if (dbl < 5)
-						symbol = " <i class=\"fas fa-battery-empty\"></i>";
-					else if (dbl < 25)
-						symbol = " <i class=\"fas fa-battery-quarter\"></i>";
-					else if (dbl < 50)
-						symbol = " <i class=\"fas fa-battery-half\"></i>";
-					else if (dbl < 75)
-						symbol = " <i class=\"fas fa-battery-three-quarters\"></i>";
+					if (level === "charging")
+						symbol = " <i id=\"chargingSymbol\" class=\"fas fa-bolt\"></i>";
+					
+					var cgs = document.getElementById("chargingSymbol");
+					if (cgs !== undefined && cgs !== null)
+						cgs.outerHTML = symbol;
 					else
-						symbol = " <i class=\"fas fa-battery-full\"></i>";
+						bat_symbol.innerHTML = symbol + bat_symbol.innerHTML;
+
+				} else {
+					var dbl = ~~Number(level);
+
+					if (faLoaded) {
+						if (dbl < 5)
+							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-empty\"></i>";
+						else if (dbl < 25)
+							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-quarter\"></i>";
+						else if (dbl < 50)
+							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-half\"></i>";
+						else if (dbl < 75)
+							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-three-quarters\"></i>";
+						else
+							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-full\"></i>";
+					}
+
+					var lvs = document.getElementById("levelSymbol");
+					if (lvs !== undefined && lvs !== null)
+						lvs.outerHTML = symbol;
+					else
+						bat_symbol.innerHTML = bat_symbol.innerHTML + symbol;
+
+					batt.innerHTML = String(level).split(".")[0] + "%" + bat_symbol.outerHTML;
+
+					if (dbl > 35)
+						batt.setAttribute("class", "fullEnough");
+					else if (dbl > 20)
+						batt.setAttribute("class", "risky");
+					else
+						batt.setAttribute("class", "low");
 				}
-
-				batt.innerHTML = String(level).split(".")[0] + "%" + symbol;
-
-				if (dbl > 35)
-					batt.setAttribute("class", "fullEnough");
-				else if (dbl > 20)
-					batt.setAttribute("class", "risky");
-				else
-					batt.setAttribute("class", "low");
 			}
 						  
 			function setChatAsTyping(chat) {
@@ -1212,14 +1232,18 @@
 				document.getElementById("unhiddenbutton").style.margin = "auto 0";
 			}
 
+			function submitSearch() {
+				var term = document.getElementById("searchBox").value;
+				window.location.href = prefix + "/requests?search=" + term; /// uhh simple stuff; use default settings for now
+			}
+
 			window.onfocus = function() { self.window_is_focused = true; }
 			window.onblur = function() { self.window_is_focused = false; }
 
 			document.addEventListener("DOMContentLoaded", () => {
-				if (!window.Notification || Notification.permission === "granted") {
-					document.getElementById("notificationbutton").style.display = "none";
-					document.getElementById("composeShowButton").style.marginLeft = "auto";
-				}
+				if (!window.Notification || Notification.permission === "granted")
+					document.getElementById("notificationbutton").outerHTML = "";
+
 				if (subject) enableSubject();
 			});
 
@@ -1241,11 +1265,14 @@
 				<div class="chats-title">
 					<h1>SMServer</h1>
 					<div id="stats">
-						<div id="battery">battery: 0%</div>
+						<div id="battery">
+							battery: 0%
+							<span id="batterySymbol"></span>
+						</div>
 					</div>
 				</div>
 				<div class="chats-search">
-					Search
+					<input type="text" id="searchBox" placeholder="Search" onkeydown="if (event.keyCode === 13) submitSearch();"></input>
 					<button onclick="Notification.requestPermission();" id="notificationbutton"><p>Notifications</p></button>
 					<button onclick="showPopup();" id="composeShowButton"><p>+ New</p></button>
 				</div>
