@@ -3,6 +3,9 @@
 0.5.0 -> 0.5.1
  - Added more customization options to search API
  - Added subject line option to web interface
+ - Added icon to show if device is charging or not
+ - Added partial functionality for search bar; doesn't show graphic display yet but redirects to JSON API page
+ - Significantly improved documentation on API and websocket
 
 0.4.3 -> 0.5.0
  - Added full suport for iOS 14+
