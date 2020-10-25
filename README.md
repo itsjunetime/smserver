@@ -16,7 +16,7 @@
 - Ability to permanently change passwords and default values
 - Background operation of server for unlimited time, with screen on or off
 - Ability to set custom css rules for easy web interface customization
-- More-than-stock accurate search API
+- Easy to use and very customizable search API
 - Sending and viewing of read receipts
 - Easy switching between Light, Dark, and Nord themes
 - Typing indicators when other party starts composing
@@ -60,9 +60,9 @@ Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.
 - [x] Information on web page about battery life
 - [x] Display when other party starts typing
 - [x] Ability to send chat indicators when you start typing
+- [x] Subject lines for texts on web interface
 - [ ] Ability to send reactions from web interface - This is nearly done
 - [ ] Search through messages from browser - This has been implemented in the API
-- [ ] Subject lines for texts on web interface - This has been implemented in the API
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.

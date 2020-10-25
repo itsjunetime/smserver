@@ -106,17 +106,17 @@ struct ContentView: View {
 			
 			self.log("GET main: " + ip)
 			
-			if self.checkIfAuthenticated(ras: ip) {
+			/*if self.checkIfAuthenticated(ras: ip) {
 				res.send(self.main_page)
 			} else {
 				res.send(self.gatekeeper_page)
-			}
+			}*/
+			res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
 		}
 		
 		server.add("/requests") { (req, res, next) in
 			/// There is no authentication handler here 'cause it handles that within parseAndReturn()
 			/// since they send the password auth request to this subdirectory
-			
 			/// This handler is part of the API, and returns JSON info.
 			
 			self.log("Getting requests..")
@@ -192,14 +192,12 @@ struct ContentView: View {
 			}
 			
 			/// send text
-			let params = req.body as! Dictionary<String, Any> /// That's what is
+			let params = req.body as! Dictionary<String, Any> /// That's what it is... things will be bad if it's not so that's why the `as!`
 			var files_to_fix = [CRUploadedFile]()
 			var files = [String]()
 			
 			if let f = req.files?["attachments"] as? [CRUploadedFile] {
-				for i in f {
-					files_to_fix.append(i)
-				}
+				files_to_fix = f
 			} else if let f = req.files?["attachments"] as? CRUploadedFile {
 				files_to_fix.append(f)
 			}
@@ -342,7 +340,7 @@ struct ContentView: View {
 		
 		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 		self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
-		self.subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? true
+		self.subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
 		self.background = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
 		
 		self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
@@ -360,9 +358,10 @@ struct ContentView: View {
 					.replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
 					.replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(default_num_photos);")
 					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
+					.replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
+					.replacingOccurrences(of: "var subject;", with: "var subject = \(self.subjects_enabled ? "true" : "false");")
 					.replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
 					.replacingOccurrences(of: "<!--nord-->", with: self.nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
-					.replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
 				
 				self.main_page_style = try String(contentsOf: s, encoding: .utf8)
 				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
@@ -487,13 +486,14 @@ struct ContentView: View {
 			let name = ContentView.chat_delegate.getDisplayName(chat_id: chat_id)
 			return name
 			
-		} else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" {
+		} else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" || f == "group_by" {
 			/// Searching for a specific term
 			let case_sensitive = (params["case_sensitive"] ?? "false") == "true"
 			let bridge_gaps = (params["bridge_gaps"] ?? "true") == "true"
+			let group_by_time = (params["group_by"] ?? "time") == "time" // if false, group by person.
 			let term = params["search"] ?? ""
 			
-			let responses = ContentView.chat_delegate.searchForString(term: term , case_sensitive: case_sensitive, bridge_gaps: bridge_gaps)
+			let responses = ContentView.chat_delegate.searchForString(term: term , case_sensitive: case_sensitive, bridge_gaps: bridge_gaps, group_by_time: group_by_time)
 			
 			let return_val = encodeToJson(object: responses, title: "matches")
 			
