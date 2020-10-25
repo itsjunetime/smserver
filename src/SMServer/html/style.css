@@ -91,7 +91,6 @@ p {
 	grid-template-rows: 1fr;
 	padding: 5px 5px;
 	max-width: 100%;
-	height: var(--messages-send-height);
 	resize: vertical;
 	margin: 0;
 }
@@ -117,7 +116,6 @@ p {
 	max-height: calc(var(--messages-title-height) * 0.72);
 	grid-column: 1;
 	grid-row: 1;
-	/*align-self: center;*/
 	border-radius: 100%;
 }
 .messages .text-content {
@@ -405,23 +403,41 @@ p {
 	outline: none;
 	border: none;
 	border-radius: calc(var(--send-button-size) / 2);
-	margin-top: calc((var(--messages-send-height) - var(--send-button-size)) / 2);
 	padding: 5px;
 	margin-left: -2px;
 	z-index: 1;
+	margin-top: auto;
+	margin-bottom: auto;
 }
-#sendbox {
+#sendbox, .subjectSubject {
+	outline: none;
+	resize: none;
+	border: none;
+	background-color: var(--selected-background);
+	font-size: calc(var(--send-box-size) - 8px);
+	height: var(--send-box-size);
+	padding: 3px calc(var(--send-button-size) + 10px) 0 10px;
+}
+#sendbox.input {
 	grid-column: 3/5;
 	grid-row: 1;
-	outline: none;
 	border-radius: calc(var(--send-box-size) / 2);
-	background-color: var(--selected-background);
-	height: var(--send-box-size);
-	resize: none;
-	margin-top: calc((var(--messages-send-height) - var(--send-box-size)) / 2);
-	padding: 5px calc(var(--send-button-size) + 10px) 0px 10px;
-	border: none;
-	font-size: calc(var(--send-box-size) - 8px);
+	margin: auto 0;
+}
+#sendbox.subjectInput {
+	border-radius: 0 0 calc(var(--send-box-size) / 2) calc(var(--send-box-size) / 2);
+	padding: 0 calc(var(--send-button-size) + 10px) 0 10px;
+}
+.subjectSubject {
+	border-radius: calc(var(--send-box-size) / 2) calc(var(--send-box-size) / 2) 0 0;
+	font-weight: bold;
+}
+.subjectTextarea {
+	display: flex;
+	flex-flow: column;
+	grid-column: 3/5;
+	grid-row: 1;
+	border-radius: calc(var(--send-box-size) / 2);
 }
 #attachmentbutton {
 	display: none;
@@ -433,9 +449,9 @@ p {
 	height: var(--send-box-size);
 	grid-column: 2;
 	grid-row: 1;
-	margin-top: calc((var(--messages-send-height) - var(--send-box-size)) / 2);
 	outline: none;
 	border: none;
+	margin: auto 0;
 }
 .popup, #camerarollpopup {
 	display: none;
@@ -573,9 +589,9 @@ p {
 	grid-row: 1;
 	width: var(--attachments-button-size);
 	height: var(--send-box-size);
-	margin-top: calc((var(--messages-send-height) - var(--send-box-size)) / 2);
 	outline: none;
 	border: none;
+	margin: auto 0;
 }
 #cameraroll {
 	background-color: var(--main-background);

@@ -200,7 +200,7 @@ struct SettingsView: View {
 					
 					Toggle("Override 'No Wifi' prevention setting on main interface", isOn: override_binding)
 					
-					Toggle("Enable subject functionality in API", isOn: subject_binding)
+					Toggle("Enable subject line in web interface (and API)", isOn: subject_binding)
 					
 					Toggle("Send typing indicator when you type", isOn: typing_binding)
 				}.alert(isPresented: $display_ssl_alert, content: {
