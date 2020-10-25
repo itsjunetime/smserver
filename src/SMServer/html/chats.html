@@ -13,7 +13,8 @@
 			var num_photos_to_load;
 			var socket_port;
 			var debug;
-			
+			var subject;
+
 			var printed_texts = 0;
 			var printed_chats = 0;
 			var printed_photos = 0;
@@ -47,7 +48,7 @@
 				socket_port = 8740;
 				socket_address = prefix.split("/")[2].split(":")[0];
 			}
-	
+
 			function timeConverter(t) {
 				var ts = (t / 1000000000) + 978307200;
 
@@ -97,7 +98,7 @@
 
 					var classes = "text";
 					if (last) classes += " more_texts";
-					
+
 					classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service;
 
 					t.setAttribute("class", classes);
@@ -105,11 +106,11 @@
 					t.setAttribute("title", timeConverter(text.date));
 					t.setAttribute("date_read", text.date_read);
 					t.innerHTML = "";
-					
+
 					/// it's a rich link
 					if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider" && text.attachment_file !== undefined) {
 						t.setAttribute("class", t.getAttribute("class") + " noPadding richLink");
-						
+
 						var img = document.createElement("img");
 						var attachment_splits = text.attachment_file.split(":");
 						img.src = "/data?path=" + (attachment_splits[1].length > 0 ? attachment_splits[1] : attachment_splits[0]);
@@ -117,7 +118,7 @@
 						var under = document.createElement("a");
 						under.href = text.text;
 						under.setAttribute("class", "richLinkUnder");
-						
+
 						if (attachment_splits[1].length > 0) {
 							t.appendChild(img);
 							t.appendChild(document.createElement("br"));
@@ -128,40 +129,40 @@
 
 						var desc = document.createElement("div");
 						desc.setAttribute("class", "richLinkDescription");
-						
+
 						var title = document.createElement("a");
 						title.innerText = text.link_title;
 						title.setAttribute("class", "richLinkTitle");
 						desc.appendChild(title);
-						
+
 						if (attachment_splits[1].length > 0) {
 							var subtitle = document.createElement("div");
 							subtitle.innerText = text.link_subtitle;
 							subtitle.setAttribute("class", "richLinkSubtitle");
 							desc.appendChild(subtitle);
 						}
-						
+
 						under.appendChild(desc);
-						
+
 						if (text.link_type !== undefined && text.link_type.split(".")[0] === "music") {
 							var icon = document.createElement("div");
 							icon.setAttribute("class", "richLinkIcon");
-							
+
 							var ii = document.createElement("img");
 							ii.src = "/data?path=" + attachment_splits[0];
 							icon.appendChild(ii);
 							under.appendChild(icon);
 						}
-						
+
 						t.appendChild(under);
 						return t;
 					}
-					
+
 					if (text.hasOwnProperty("attachment_file") && text.attachment_file.length != 0) {
-						
+
 						var files = text.attachment_file.split(":");
 						var types = text.attachment_type.split(":");
-						
+
 						for (var l = 0; l < files.length; ++l) {
 							if (types[l].length != 0 && types[l].substring(0, 5) === "image")
 								t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>";
@@ -169,16 +170,16 @@
 								t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(/ /g, "%20") + "\">Attachment: " + types[l] + "</a><br>";
 						}
 					}
-					
+
 					if (text.text.replace(/￼/g, "").trim().length > 0) {
 						/// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
 						var subject = document.createElement("div");
 						subject.setAttribute("class", "subject");
 						subject.innerText = text.subject;
-						
+
 						var inner = document.createElement("span");
 						inner.innerText += text.text.replace(/￼/g, "");
-						
+
 						t.appendChild(subject);
 						t.appendChild(inner);
 					}
@@ -224,10 +225,10 @@
 				var b = document.createElement("button");
 
 				b.setAttribute("id", chat.chat_identifier);
-				
+
 				var i = document.createElement("img");
 				i.src = prefix + "/data?chat_id=" + chat.chat_identifier;
-				
+
 				var classes = chat.has_unread === "true" ? "unread" : "";
 
 				var n = document.createElement("div");
@@ -236,51 +237,51 @@
 
 				if (chat.pinned === "false") {
 					b.appendChild(i);
-					
+
 					var nonpic = document.createElement("div");
 					nonpic.setAttribute("class", "chat-nonpic");
-					
+
 					var top = document.createElement("div");
 					top.setAttribute("class", "chat-toprow");
-					
+
 					if (chat.chat_identifier.substring(0, 4) !== "chat" && chat.display_name.length !== 0)
 						n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
-					
+
 					top.appendChild(n);
-					
+
 					var d = document.createElement("div");
 					d.setAttribute("class", "chat-date");
 					d.innerText = chat.relative_time;
 					top.appendChild(d);
 					nonpic.appendChild(top);
-					
+
 					var t = document.createElement("div");
 					t.setAttribute("class", "chat-text");
 					t.innerText = chat.latest_text.replace(/￼/g, "");
 					nonpic.appendChild(t);
 					b.appendChild(nonpic);
-					
+
 					classes += " unpinned";
 				} else {
 					var t = document.createElement("div");
 					t.setAttribute("class", "chat-top");
 					t.appendChild(i);
-					
+
 					if (chat.has_unread === "true") {
 						var ct = document.createElement("div");
 						ct.setAttribute("class", "chat-text");
 						ct.innerText = chat.latest_text.replace(/￼/g, "");
-						
+
 						t.appendChild(ct);
 					}
-					
+
 					b.appendChild(t);
 					b.appendChild(n);
 					classes += " pinned";
 				}
-				
+
 				b.setAttribute("class", classes);
-				
+
 				var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
 				b.setAttribute("onclick", get_texts_string);
 
@@ -324,10 +325,10 @@
 
 					name.innerHTML = "<p>" + text.sender + "</p>";
 					name.setAttribute("class", "sender");
-					
+
 					content.appendChild(name);
 				}					
-											
+
 				content.appendChild(t);
 				t.scrollIntoView();
 			}
@@ -350,48 +351,48 @@
 					has_shown_warning = true;
 				})
 			}
-	
+
 			const printChats = async () => {
 				if (debug) { console.log("printing Chats"); }
 				var new_items = await getChats();
 				const num_texts = num_texts_to_load;
 				var doc = document.getElementsByClassName("chats-list")[0];
 				var old_button = document.getElementById("morechatsbutton");
-				
+
 				var selected_id = "";
 				var selecteds = document.getElementsByClassName("selected");
 				if (selecteds.length > 0)
 					selected_id = selecteds[0].id;
-				
+
 				doc.innerHTML = "";
 				doc.appendChild(old_button);
 
 				printed_chats = num_chats_to_load;
-				
+
 				for(var i = 0; i < items.length; i++) {
 
 					var b = getChatElement(items[i], num_texts);
-					
+
 					if (items[i].chat_identifier == selected_id)
 						b.setAttribute("class", b.getAttribute("class") + " selected");
-					
+
 					if (b.getAttribute("class").includes("unpinned")) {
 						doc.insertBefore(b, document.getElementById("morechatsbutton"));
 					} else {
 						var pinRows = document.getElementsByClassName("pinRow");
-						
+
 						if (pinRows.length > 0 && pinRows[pinRows.length - 1].firstChild.children.length < 3) {
 							pinRows[pinRows.length - 1].firstChild.appendChild(b);
 						} else {
 							var row = document.createElement("div");
 							row.setAttribute("class", "pinRow");
-							
+
 							var inner = document.createElement("div");
 							inner.setAttribute("class", "innerRow");
-							
+
 							inner.appendChild(b);
 							row.appendChild(inner);
-							
+
 							if (doc.children.length === 0)
 								doc.appendChild(row);
 							else if (pinRows.length === 0)
@@ -401,11 +402,11 @@
 						}
 					}
 				}
-				
+
 				var unread_chats = document.getElementsByClassName("unread").length;
 				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
 			}
-		
+
 			const moreJsonChats = async (offset = 0) => {
 				if (debug) { console.log("Calling moreJsonChats with offset " + offset); }
 				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
@@ -424,13 +425,13 @@
 					has_shown_warning = true;
 				})
 			}
-		
+
 			const getMoreChats = async () => {
 				if (debug) { console.log("getting more chats"); }
 				var _ = await moreJsonChats(printed_chats);
 				printed_chats += num_chats_to_load;
 				var doc = document.getElementsByClassName("chats-list")[0];
-				
+
 				for(var i = 0; i < new_items.length; i++) {
 
 					var b = getChatElement(new_items[i], num_texts_to_load);
@@ -454,10 +455,10 @@
 				orig_btn.setAttribute("class", orig_btn.getAttribute("class").replace(/unread/g, "") + " selected");
 				var unread_chats = document.getElementsByClassName("unread").length;
 				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
-				
+
 				if (!orig_btn.getAttribute("class").includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
 					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
-				
+
 				var new_chat_id = chat_id;
 				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
 				const fetch_texts = await fetch(url)
@@ -489,44 +490,44 @@
 				var _ = await fetch_texts;
 
 				myNode.innerHTML = "";
-				
+
 				var more = document.createElement("button");
 				more.setAttribute("onclick", "getMoreTexts()");
 				more.setAttribute("id", "moretextsbutton");
 				more.innerHTML = "<p>+ More Texts</p>";
 				myNode.appendChild(more);
-				
+
 				printed_texts = texts.length;
 				texts = texts.reverse();
-				
+
 				var is_group = chat_id.substring(0, 4) === "chat";
 				var doc = document.getElementsByClassName("text-content")[0];
-				
+
 				for (var i = 0; i < texts.length; i++) {
 
 					var t = getTextElement(texts[i], i === texts.length - 1);
-					
+
 					if (t.innerHTML.length > 0) {
 						if (i === 0 || texts[i].date - texts[i - 1].date > 3600000000000) {
 							var time = document.createElement("div");
 							time.setAttribute("class", "time-display");
 
 							var formattedTime = timeConverter(texts[i].date);
-													
+
 							time.innerHTML = "<p>" + formattedTime + "</p>";
 							doc.appendChild(time);
 						}
-													
+
 						if (is_group && texts[i].is_from_me === "0" && (i === 0 || texts[i].sender !== texts[i - 1].sender)) {
 							var from = document.createElement("div");
 
 							from.innerHTML = "<p>" + texts[i].sender + "</p>";
 							from.setAttribute("class", "sender");
-													
+
 							doc.appendChild(from);
 						}
 					}
-					
+
 					doc.appendChild(t);
 				}
 
@@ -536,14 +537,14 @@
 
 				if (my_texts.length > 0) {
 					var my_last_text;
-					
+
 					for (var i = my_texts.length - 1; i > 0 && my_texts[0].getAttribute("date_read") !== "0"; i--) {
 						if (my_texts[i].getAttribute("date_read") !== "0") {
 							my_last_text = my_texts[i];
 							break;
 						}
 					}
-					
+
 					if (my_last_text !== undefined) {
 
 						var isimsg = (my_last_text.getAttribute("class").includes("text-area") ? my_last_text.lastChild : my_last_text).getAttribute("class").includes("iMessage");
@@ -552,7 +553,7 @@
 							var rr = document.createElement("span");
 							rr.setAttribute("class", "readreceipt");
 							rr.innerText = "Read " + timeConverter(parseInt(my_last_text.getAttribute("date_read")));
-							
+
 							if (my_last_text === doc.lastChild)
 								doc.appendChild(rr);
 							else
@@ -563,11 +564,11 @@
 											  
 				document.getElementById("text-content").lastChild.scrollIntoView();
 			}
-		
+
 			const getMoreTexts = async (num_texts = num_texts_to_load) => {
 				if (debug) { console.log("called getMoreText; num == " + num_texts); }
 				var chat_id = current_chat_id;
-				
+
 				var new_chat_id = chat_id;
 				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts + "&read=false";
 				const fetch_texts = await fetch(url)
@@ -588,10 +589,10 @@
 				var _ = await fetch_texts;
 
 				printed_texts += texts.length;
-				
+
 				var last_item = document.createElement("br");
 				var first_item = document.getElementsByClassName("text-content")[0];
-				
+
 				var is_group = chat_id.substring(0, 4) === "chat";
 				var doc = document.getElementsByClassName("text-content")[0];
 
@@ -604,7 +605,7 @@
 						time.setAttribute("class", "time-display");
 
 						var formattedTime = timeConverter(texts[i - 1].date);
-						
+
 						time.innerHTML = "<p>" + formattedTime + "</p>";
 						doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling);
 					}
@@ -616,7 +617,7 @@
 
 						from.innerHTML = "<p>" + texts[i].sender + "</p>";
 						from.setAttribute("class", "sender");
-												
+
 						doc.insertBefore(from, document.getElementById("moretextsbutton").nextSibling);
 					}
 				}
@@ -649,56 +650,65 @@
 			async function sendForm() {
 				if (debug) { console.log("sending form"); }
 				var form = document.getElementById("sendform");
-				
+
 				typing_sleep = 0;
 
 				var tbox = document.getElementById("sendbox");
 				var oldval = tbox.value;
-
-				var hta = document.getElementById("hiddentextarea");
-				hta.value = oldval;
 
 				var photos = document.getElementById("hiddenphotobutton");
 				var selected = document.getElementsByClassName("selected-photo");
 				for (var i = 0; i < selected.length; ++i) {
 					photos.value += selected[i].id + (i !== selected.length - 1 ? ":" : "");
 				}
-				
+
 				var submit = (oldval.length > 0 || selected.length > 0 || document.getElementById("attachmentbutton").files.length > 0);
 				var has_attachments = (selected.length > 0 || document.getElementById("attachmentbutton").files.length > 0);
-				
+
 				if (submit) {
 					form.submit();
 
 					tbox.value = "";
-					hta.value = "";
-					
+					var subval = "";
+					if (subject) {
+						subval = document.getElementById("subjectBox").value;
+						document.getElementById("subjectBox").value = "";
+					}
+
 					document.getElementById("attachmentbutton").value = "";
 					document.getElementById("unhiddenbutton").innerHTML = faLoaded ? "<i class=\"fas fa-paperclip\"></i>" : "📎";
 					hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
 					photos.value = "";
-					
+
 					autoGrow();
 
 					if (has_attachments) {
 						await sleep(sleep_time);
-						
+
 						getLatestText();
 					} else {
 						var omt = document.getElementsByClassName("more_texts")[0];
 						omt.setAttribute("class", omt.getAttribute("class").replace("more_texts", ""));
-						
+
 						var nt = document.createElement("p");
 						var im = document.getElementById("text-content").lastChild.getAttribute("class").includes("iMessage");
 						nt.setAttribute("class", "text more_texts is_from_me" + (im ? " iMessage" : " SMS"));
-						nt.innerText = oldval;
-						
+
+						var topsub = document.createElement("div");
+						topsub.setAttribute("class", "subject");
+						topsub.innerText = subval;
+
+						var bottomtext = document.createElement("span");
+						bottomtext.innerText = oldval;
+
+						nt.innerHTML = topsub.outerHTML + bottomtext.outerHTML;
+
 						document.getElementById("text-content").appendChild(nt);
 						nt.scrollIntoView();
-						
+
 						await sleep(sleep_time);
 					}
-					
+
 					setChatAsTop(current_chat_id, oldval);
 				}
 			}
@@ -759,22 +769,31 @@
 					called_typing_wait = false;
 				}
 			}
-						  
-			function autoGrow() {
+
+			async function autoGrow() {
 				var elem = document.getElementById("sendbox");
 				elem.style.height = getComputedStyle(document.documentElement).getPropertyValue("--send-button-size");
 				var scroll_height = elem.scrollHeight;
 				elem.style.height = scroll_height + "px";
-				
-				var form = document.getElementById("sendform");
-				form.style.height = String(scroll_height + 10) + "px";
-				
+
+				/// I don't know why this next section is necessary but it is
+				if (elem.value === "") {
+					var uhb = document.getElementById("unhiddenbutton");
+					var crb = document.getElementById("camerarollbutton");
+
+					await uhb.setAttribute("style", "margin: 0 !important;");
+					await crb.setAttribute("style", "margin: 0 !important;");
+					await sleep(1); /// Why do I need this. so dumb
+					await uhb.setAttribute("style", "margin: auto 0;");
+					await crb.setAttribute("style", "margin: auto 0;");
+				}
+
 				document.getElementById("text-content").lastChild.scrollIntoView();
 			}
-						  
+
 			function showPopup() {
 				document.getElementById("popup").style.display = "block";
-				
+
 				if (!has_shown_new_warning) {
 					alert("IMPORTANT: When using the compose box, you must type in the full phone number of the recipient, including a plus sign (+) before the country code. See hint for example.");
 					self.has_shown_new_warning = true;
@@ -804,7 +823,7 @@
 				var prefix = split[0];
 				var content = "";
 				if (split.length > 0) content = split[1];
-				
+
 				switch (prefix) {
 					case "text":
 						processNewText(content);
@@ -852,7 +871,7 @@
 
 					if (notif_text.sender !== undefined && notif_text.sender !== "nil")
 						new_text = notif_text.sender + ": " + new_text;
-						
+
 					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
 						new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
 
@@ -883,30 +902,30 @@
 							if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
 							has_shown_warning = true;
 						})
-						
+
 						var _ = await fetch_newest_text;
-						
+
 						var btn = document.getElementById(chat);
-						
+
 						new_text = notif_text.text;
-						
+
 						if (notif_text.sender !== undefined && notif_text.sender !== "nil")
 							new_text = notif_text.sender + ": " + new_text;
-							
+
 						if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
 							new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
-							
+
 						if (btn !== undefined) {
 							if (chat !== current_chat_id) btn.setAttribute("class", btn.getAttribute("class") + " unread");
 							if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
 								var text = btn.getElementsByClassName("chat-text")[0];
-								
+
 								if (text !== undefined) text.innerText = new_text;
 							} else if (chat !== current_chat_id) {
 								var text = document.createElement("div");
 								text.setAttribute("class", "chat-text");
 								text.innerText = new_text;
-								
+
 								var tb = btn.getElementsByClassName("chat-top")[0];
 								tb.appendChild(text);
 							}
@@ -918,7 +937,7 @@
 						if (typ !== undefined && typ !== null) typ.outerHTML = "";
 					}
 				}
-				
+
 				var unread_chats = document.getElementsByClassName("unread").length;
 				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
 			}
@@ -929,7 +948,7 @@
 				var chatsList = document.getElementsByClassName("chats-list")[0];
 				var unpins = document.getElementsByClassName("unpinned");
 				var current_box = document.getElementById(chat);
-				
+
 				if ((current_box && !current_box.getAttribute("class").includes("unpinned")) || (unpins.length > 0 && chat === unpins[0].id)) {
 					if (new_text !== "" && current_box.getAttribute("class").includes("unpinned"))
 						current_box.getElementsByClassName("chat-text")[0].innerText = new_text;
@@ -953,7 +972,7 @@
 						if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
 						has_shown_warning = true
 					})
-					
+
 					var _ = await fetch_recent_chat;
 
 					var new_chat = {
@@ -978,7 +997,7 @@
 					var new_box = getChatElement(new_chat);
 
 					if (new_text.length > 0) new_box.getElementsByClassName("chat-text")[0].innerText = new_text;
-					
+
 					var pinRows = document.getElementsByClassName("pinRow");
 
 					if (pinRows.length === 0)
@@ -1001,18 +1020,18 @@
 			function getPhotoElement(photo) {
 				if (debug) { console.log("Getting photo element " + photo); }
 				var p = document.createElement("span");
-				
+
 				var c = "photo";
 				if (photo.is_favorite === "true")
 					c += " is_favorite";
-				
+
 				p.setAttribute("class" , c);
-				
+
 				p.setAttribute("id", photo.URL);
 				p.setAttribute("onclick", "setSelectedPhoto(\"" + photo.URL + "\");");
 				p.setAttribute("width", "160");
 				p.setAttribute("height", "160");
-				
+
 				p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">";
 
 				if (photo.is_favorite === "true") {
@@ -1029,12 +1048,12 @@
 			async function displayCameraRoll() {
 				if (debug) { console.log("Displaying camera roll"); }
 				document.getElementById("camerarollpopup").style.display = "block";
-				
+
 				var cr = document.getElementById("camerarollContent");
-				
+
 				if (!has_shown_camera_roll) {
 					var photos;
-					
+
 					var url = prefix + "/requests?photos=" + num_photos_to_load;
 					const fetch_recent_photos = await fetch(url)
 					.then(response => {
@@ -1050,7 +1069,7 @@
 						if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)");
 						has_shown_warning = true;
 					})
-					
+
 					var _ = await fetch_recent_photos;
 					if (photos.length === 0) var _ = await fetch_recent_photos;
 
@@ -1058,7 +1077,7 @@
 
 					for (var i = 0; i < photos.length; i++) {
 						var p = await getPhotoElement(photos[i]);
-						
+
 						cr.insertBefore(p, cr.children[cr.children.length - 1]); /// I should just do cr.lastChild but it doesn't work
 					}
 					has_shown_camera_roll = true;
@@ -1094,7 +1113,7 @@
 					cr.insertBefore(p, cr.children[cr.children.length - 1]);
 				}
 			}
-									
+
 			function hideCameraRoll() {
 				document.getElementById("camerarollpopup").style.display = "none";
 				var p = document.getElementsByClassName("selected-photo");
@@ -1115,10 +1134,10 @@
 			function setNewBatteryLevel(level) {
 				if (debug) { console.log("new battery level: " + level); }
 				var batt = document.getElementById("battery");
-				
+
 				var symbol = "";
 				var dbl = ~~Number(level);
-				
+
 				if (faLoaded) {
 					if (dbl < 5)
 						symbol = " <i class=\"fas fa-battery-empty\"></i>";
@@ -1131,7 +1150,7 @@
 					else
 						symbol = " <i class=\"fas fa-battery-full\"></i>";
 				}
-				
+
 				batt.innerHTML = String(level).split(".")[0] + "%" + symbol;
 
 				if (dbl > 35)
@@ -1147,12 +1166,12 @@
 					var d = document.createElement("div");
 					d.setAttribute("class", "text is_from_them iMessage");
 					d.setAttribute("id", "typingIndicator");
-					
+
 					d.innerHTML = "<span class=\"dot flashing\">• </span><span class=\"dot\">• </span><span class=\"dot\">•</span>";
-					
+
 					document.getElementById("text-content").appendChild(d);
 					d.scrollIntoView();
-					
+
 					var c = 0;
 					var typing = window.setInterval(() => {
 						var i = document.getElementById("typingIndicator");
@@ -1164,17 +1183,47 @@
 				}
 			}
 
+			function enableSubject() {
+				var tbox = document.getElementById("sendbox");
+				var ntbox = tbox.cloneNode(false);
+				ntbox.setAttribute("class", "subjectInput");
+				ntbox.setAttribute("placeholder", "body");
+
+				var con = document.createElement("div");
+				con.setAttribute("class", "subjectTextarea");
+
+				var sbox = document.createElement("textarea");
+				sbox.setAttribute("class", "subjectSubject");
+				sbox.setAttribute("id", "subjectBox");
+				sbox.setAttribute("name", "subject");
+				sbox.setAttribute("oninput", tbox.getAttribute("oninput"));
+				sbox.setAttribute("onkeydown", tbox.getAttribute("onkeydown"));
+				sbox.setAttribute("form", tbox.getAttribute("form"));
+				sbox.setAttribute("placeholder", "Subject");
+
+				con.innerHTML = sbox.outerHTML + ntbox.outerHTML;
+				tbox.outerHTML = con.outerHTML;
+
+				document.documentElement.style.setProperty("--messages-send-height", "64px"); /// hardcoded. not a fan. should fix
+				document.documentElement.style.setProperty("--send-box-size", "calc((var(--messages-send-height) / 2) - 6px)");
+				document.getElementById("sendbutton").setAttribute("class", "hasSubject");
+
+				document.getElementById("camerarollbutton").style.margin = "auto 0";
+				document.getElementById("unhiddenbutton").style.margin = "auto 0";
+			}
+
 			window.onfocus = function() { self.window_is_focused = true; }
 			window.onblur = function() { self.window_is_focused = false; }
 
-			printChats();
-				
 			document.addEventListener("DOMContentLoaded", () => {
 				if (!window.Notification || Notification.permission === "granted") {
 					document.getElementById("notificationbutton").style.display = "none";
 					document.getElementById("composeShowButton").style.marginLeft = "auto";
 				}
+				if (subject) enableSubject();
 			});
+
+			printChats();
 
 		</script>
 		<!-- These next links are for fontawesome; it's how I display the reactions. It's safe to remove them, but then the reactions will just appear as text instead of icons-->
@@ -1217,8 +1266,7 @@
 					<button type="button" onclick="document.getElementById('attachmentbutton').click();" id="unhiddenbutton">&#128206</button>
 					<input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').innerHTML = document.getElementById('attachmentbutton').files.length;"></input>
 					<input type="text" name="photos" id="hiddenphotobutton" style="display: none;">
-					<textarea id="sendbox" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
-					<textarea name="text" style="display: none;" form="sendform" id="hiddentextarea"></textarea>
+					<textarea id="sendbox" class="input" name="text" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
 					<input type="text" name="chat" id="hiddenchatbox" form="sendform" style="display: none">
 					<button type="button" id="sendbutton" onclick="sendForm();">↑</button>
 				</form>
