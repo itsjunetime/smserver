@@ -61,12 +61,6 @@ final class ChatDelegate {
 		
 		/// Construct the query
 		var sqlString = "SELECT " + columns.joined(separator: ", ")
-		/*for i in columns {
-			sqlString += i
-			if columns.count > 0 && i != columns[columns.count - 1] {
-				sqlString += ", "
-			}
-		}*/
 		sqlString += " from " + table
 		if condition != "" {
 			sqlString += " " + condition
@@ -533,8 +527,8 @@ final class ChatDelegate {
 		}
 	}
 	
-	final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true) -> [String:[[String:String]]] {
-		/// This gets all texts with $term in them; case_sensitive and bridge_gaps are customization options
+	final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true, group_by_time: Bool = true) -> /*[String:[[String:String]]]*/ Any {
+		/// This gets all texts with $term in them; case_sensitive, bridge_gaps, and group_by_time are customization options
 		
 		/// Create Connections
 		var db = createConnection()
@@ -550,30 +544,33 @@ final class ChatDelegate {
 		var return_texts = [String:[[String:String]]]()
 		var names = [String:String]()
 		
-		var texts = selectFromSql(db: db, columns: ["c.chat_identifier", "c.display_name", "m.ROWID", "m.text", "m.service", "m.date", "m.cache_has_attachments"], table: "message m", condition: "inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID WHERE text like \"%\(upperTerm)\" order by m.date desc")
+		var texts = selectFromSql(db: db, columns: ["c.chat_identifier", "c.display_name", "m.ROWID", "m.text", "m.service", "m.date", "m.cache_has_attachments"], table: "message m", condition: "inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID WHERE text like \"%\(upperTerm)\" order by m.date desc", split_ids: true)
 		
-		if case_sensitive { texts.removeAll(where: { !($0["m.text"]?.contains(term) ?? true) })}
+		/// If case sensitive, remove those who don't exactly match. sqlite select is hardcoded case insensitive
+		if case_sensitive { texts.removeAll(where: { !($0["text"]?.contains(term) ?? true) })}
 		
 		for var i in texts {
 			
 			/// get sender for this text
-			let chat = i["c.chat_identifier"] ?? "(null)"
+			let chat = i["chat_identifier"] ?? "(null)"
 			
-			if i["c.display_name"]?.count == 0 {
-				if names[i["c.chat_identifier"] ?? ""] == nil {
-					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["c.chat_identifier"] ?? "")
-					names[i["c.chat_identifier"] ?? ""] = name
-					i["c.display_name"] = name
+			if i["display_name"]?.count == 0 {
+				if names[i["chat_identifier"] ?? ""] == nil {
+					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["chat_identifier"] ?? "")
+					names[i["chat_identifier"] ?? ""] = name
+					i["display_name"] = name
 				} else {
-					i["c.display_name"] = names[i["c.chat_identifier"] ?? ""]
+					i["display_name"] = names[i["chat_identifier"] ?? ""]
 				}
 			}
 			
-			/// Add this text onto the list of texts from this person that match term
-			if return_texts[chat] == nil {
-				return_texts[chat] = [i]
-			} else {
-				return_texts[chat]?.append(i)
+			/// Add this text onto the list of texts from this person that match term if grouping by person and not time
+			if !group_by_time {
+				if return_texts[chat] == nil {
+					return_texts[chat] = [i]
+				} else {
+					return_texts[chat]?.append(i)
+				}
 			}
 		}
 		
@@ -581,7 +578,7 @@ final class ChatDelegate {
 		closeDatabase(&db)
 		closeDatabase(&contact_db)
 		
-		return return_texts
+		return group_by_time ? texts : return_texts
 	}
 	
 	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] {

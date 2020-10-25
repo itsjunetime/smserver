@@ -10,7 +10,7 @@ All request parameters require a value, but only some of the values are conseque
 
 All requests to `/requests` return JSON information.
 
-## `person`, `num`, `offset`
+## `person`, `num`, `offset`, `read`
 
 Retrieves the most recent $num messages to or from $person, offset by $offset.
 
@@ -28,7 +28,7 @@ Example queries:
 - /requests?person=email@icloud.com&num=50&offset=100&read=false
 - /requests?person=person@gmail.com&offset=200
 
-## `chat`, `num_chats`
+## `chat`, `num_chats`, `chats_offset`
 
 Retrieves the latest $num_chats conversations
 
@@ -36,9 +36,12 @@ Retrieves the latest $num_chats conversations
   
 - num_chats: Parameter is not necessary, and value is consequential. Value must be integer, and will specify how many conversations to get the information of. If unspecified, it will default to the device's default, which is, at the time of writing, 40. If it is 0, it will retrieve all chats.
 
+- chats_offset: Parameter is not necessary, and value is consequential. Value must be an integer, and it will specify the offset of conversations to get. For example, if you've already retrieved the first 40 conversations, adn would like to retrieve the next 40, you would set both `num_chats` and `chats_offset` to 40. If this is not specified, it will default to 0.
+
 Example queries:
 - /requests?chat=0
 - /requests?chat=0&num_chats=80
+- /requests?chat=inconsequential&num_chats=80&offset=160
 
 ## `name`
 
@@ -50,13 +53,14 @@ Example queries:
 - /requests?name=email@icloud.com
 - /requests?name=+12761938272
 
-## `search`, `case_sensitive`, `bridge_gaps`
+## `search`, `case_sensitive`, `bridge_gaps`, `group_by`
 
-This searches for the term $search in all your texts. `case_sensitive` and `bridge_gaps` are customization options.
+This searches for the term $search in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options.
 
 - search: Parameter is necessary, and value is consequential. This must be the term you want to search for. Does not have to be surrounded by quotes. Case sensitivity is determined by the `case_sensitive` parameter.
 - case_sensitive: Parameter is not necessary, and value is consequential; default is false. This determines whether or not you want the search to be case sensitive; a value of `true` make it sensitive, and `false` makes it insensitive
 - bridge_gaps: Parameter is not necessary, and value is consequential; default is true. If set to true, this replaces all spaces with wildcard characters, allowing for the search term to be spaced out over a text. A value of `true` makes it true, and `false` makes it false
+- group_by: Parameter is not necessary, and value is consequential; default is 'time'. This specifies if you would like the values to be returned as grouped by conversation, or ungrouped and ordered by date (most recent first). If you pass in 'time' or don't set this query parameter, it will return them ungrouped and with the most recent first. If you pass in anything else, it will group them by conversation.
 
 Example queries:
 - /requests?search=hello%20world&case_sensitive=true&bridge_gaps=false
@@ -110,7 +114,7 @@ Example queries:
 
 # `/send` requests
 
-Requests to this url are all sent using `POST`, are what are used to send texts and attachments. There are two arguments that can be sent to this, and it accepts multiple files as well. 
+Requests to this url are all sent using `POST`, are what are used to send texts and attachments. There are four arguments that can be sent to this, and it accepts multiple files as well. For the text to actually send, you must include the chat, and then either at least 1 file, or something that is more than 0 characters for one of the other parameters.
 
 As with all other requests (besides to the gatekeeper), you must authenticate before sending any requests to this url, or else nothing will happen.
 
@@ -120,11 +124,19 @@ As with all other requests (besides to the gatekeeper), you must authenticate be
 
 This argument contains the body of the text you want to send. This parameter is not necessary for every request
 
+## subject
+
+This argument contains the subject of the text that you want to send. For it to actually be included with the text, it must be at least 1 character long (not just ""), and you must have the `Enable subject line in web interface (and API)` option toggled on in your app's settings. If it is 0-length or the subject setting is toggled off, the text will still be sent but it won't have a subject.
+
 ## chat
 
 This argument contains the chat_identifier of the recipient, specified as in the `person` parameter above. Before 0.1.0+debug77, these could only be an address for an existing conversation, but with version 0.1.0+debug77 of SMServer (and 0.1.0-85+debug of libsmserver), you can post requests for new conversations; new conversations do not yet support attachments, though.
 
 This parameter is necessary for every request, or else the app won't know who to send the text to. Also, plus signs should not be replaced with an escape character for these requests; they should stay plus signs.
+
+## photos
+
+This argument will contain a list of the path of the photos (from the camera roll) that you want to send with this text, but separated by colons and without the `/var/mobile/Media/` section of their path. For example, if you wanted to send three photos with this text, this parameter would look something like `DCIM/100APPLE/IMG_0001.JPG:DCIM/100APPLE/IMG_0002.JPG:DCIM/100APPLE/IMG_0003.JPG`. 
 
 ## files
 
@@ -134,14 +146,14 @@ These need to be sent with the key 'attachments'. Other than that, just send the
 
 ### Python3 &mdash;
 
-Sending a text with no attachments:
+Sending a text with a subject and no attachments:
 ```python
 from requests import post
 
 # It's safest to explicitly replace spaces with `%20`, since (last time I tested) python replaced 
 # all spaces with plus signs, which are not filtered out.
 vals = {'text': 'Hello%20world!', 'subject': 'This%20is%20a%20test', 'chat': 'email@email.org'}
-url = 'http://192.168.0.127:8741/send'
+url = 'https://192.168.0.127:8741/send'
 
 # The server's certificate is self-signed, so make to include the `verify` parameter in the request
 post(url, data=vals, verify=False)
@@ -151,15 +163,28 @@ Sending an attachment with no text:
 ```python
 from requests import post
 
-vals = {'chat': '+13020499949'}
+vals = {'chat': '+11231231234'}
 
 # file is a tuple, with the first val being the file name, the second being an open operator on the file, and the third being the mimetype.
 file = ('image.jpeg', open('/home/user/Pictures/image.jpeg', 'rb'), 'image/jpeg')
 files_values = {'attachments': file}
-url = 'http://192.168.0.127:8741/send'
+url = 'https://192.168.0.127:8741/send'
 
 # The server's certificate is self-signed, so make to include the `verify` parameter in the request
 post(url, files=files_values, data=vals, verify=False)
+```
+
+Sending a text with a subject and a photo from the camera roll:
+```python
+from requests import post
+
+# Set the values
+vals = {'chat': '+11231231234', 'text': 'This%20is%20the%20body!', 
+	'subject': 'This%20is%20the%20subject!', 'photos': 'DCIM/100APPLE/IMG_0001.JPG'}
+url = 'https://192.168.0.127:8741/send'
+
+# Make the request
+post(url, data=vals, verify=False)
 ```
 
 To be able to send a text with a subject, the `subject` variable in `vals` must not be empty, and you must have the option `Enable subject functionality` toggled on in the app
