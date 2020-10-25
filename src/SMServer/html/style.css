@@ -161,6 +161,9 @@ p {
 #battery.fullEnough i {
 	color: limegreen;
 }
+i#chargingSymbol {
+	color: yellow !important;
+}
 #stats {
 	padding-right: 10px;
 }
@@ -176,7 +179,7 @@ p {
 .chats-search {
 	grid-column: 1;
 	grid-row: 2;
-	padding: 10px;
+	padding: 5px 10px;
 	border-top: 1px solid var(--chats-border);
 	border-bottom: 1px solid var(--chats-border);
 	display: flex;
@@ -565,12 +568,21 @@ p {
 	border: none;
 	border-radius: 5px;
 	padding: 6px 0px 0px 0px;
-	margin-top: -5px;
 	height: 24px;
 }
 #composeShowButton {
-	width: max-content;
+	width: 94px;
 	padding: 0px 8px 0px 8px;
+}
+#searchBox {
+	width: 100%;
+	margin-right: 10px;
+	height: 100%;
+	outline: none;
+	border: none;
+	background-color: var(--light-button-background);
+	border-radius: 3px;
+	padding-left: 6px;
 }
 #notificationbutton {
 	width: max-content;
