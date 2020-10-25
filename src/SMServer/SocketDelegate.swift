@@ -66,10 +66,16 @@ class SocketDelegate : ServerWebSocketDelegate {
 	
 	func sendNewBattery() {
 		let percent = UIDevice.current.batteryLevel * 100
+		let charging_state = UIDevice.current.batteryState
+		var state_string = "charging"
+		if charging_state == .unplugged || charging_state == .unknown {
+			state_string = "unplugged"
+		}
 		
 		if server != nil {
 			for i in server!.webSockets {
-				i.send(text: "battery:" + String(percent))
+				i.send(text: "battery:\(String(percent))")
+				i.send(text: "battery:\(state_string)")
 			}
 		}
 	}
@@ -85,21 +91,31 @@ class SocketDelegate : ServerWebSocketDelegate {
 	
 	func server(_ server: Server, webSocketDidConnect webSocket: WebSocket, handshake: HTTPRequest) {
 		// A web socket connected, you can extract additional information from the handshake request
+		let ip = webSocket.remoteEndpoint?.host ?? ""
 		
-		self.log("\(webSocket.remoteEndpoint?.host ?? "") is trying to connect...")
+		self.log("\(ip) is trying to connect...")
 		
-		UIDevice.current.isBatteryMonitoringEnabled = true
-		
-		if !verify_auth(webSocket.remoteEndpoint?.host ?? "") {
-			self.log("\(webSocket.remoteEndpoint?.host ?? "") is not verified. Disconnecting.")
+		if !verify_auth(ip) {
+			self.log("\(ip) is not verified. Disconnecting.")
 			webSocket.close(immediately: true)
 		}
 		
+		self.log("\(ip) was allowed to connect")
+			
+		UIDevice.current.isBatteryMonitoringEnabled = true
+		
 		let battery_level = UIDevice.current.batteryLevel * 100
+		let charging_state = UIDevice.current.batteryState
+		var state_string = "charging"
+		if charging_state == .unplugged || charging_state == .unknown {
+			state_string = "unplugged"
+		}
 		
 		webSocket.send(text: "battery:\(String(battery_level))")
+		webSocket.send(text: "battery:\(state_string)")
 		
 		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryStateDidChangeNotification, object: nil)
 	}
 	
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
