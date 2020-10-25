@@ -5,6 +5,9 @@ package/Payload/SMServer.app/** -diff
 *.app binary
 *.app -diff
 package/* linguist-vendored
-src/SMServer.xcworkspace/* linguist-vendored
-src/SMServer.xcodeproj/* linguist-vendored
-src/Pods/* linguist-vendored
+src/SMServer.xcworkspace/**/* linguist-vendored
+src/SMServer.xcodeproj/**/* linguist-vendored
+src/Pods/**/* linguist-vendored
+src/Podfile linguist-vendored
+*.md linguist-vendored
+docs/* linguist-documentation

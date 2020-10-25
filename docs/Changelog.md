@@ -1,5 +1,9 @@
 # Changelog
 
+0.5.0 -> 0.5.1
+ - Added more customization options to search API
+ - Added subject line option to web interface
+
 0.4.3 -> 0.5.0
  - Added full suport for iOS 14+
  - Added support for displaying pinned conversations
