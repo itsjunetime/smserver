@@ -58,7 +58,7 @@
 - (uid_t)setUID {
 	setuid(0);
 	setgid(0);
-	
+
 	return getuid() + getgid();
 }
 
@@ -77,10 +77,10 @@
 - (void)sendTyping:(BOOL)isTyping forChat:(NSString *)chat {
 	NSBundle* imcore = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
 	[imcore load];
-	
+
 	CKConversationList* sharedList = [c(CKConversationList) sharedConversationList];
 	CKConversation* convo = [sharedList conversationForExistingChatWithGroupID:chat];
-	
+
 	[convo setLocalUserIsTyping:isTyping];
 }
 
@@ -92,21 +92,21 @@
 /*- (NSArray *)getPinnedChats {
  NSBundle* imcore = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
  [imcore load];
- 
+
  IMDaemonController* controller = [c(IMDaemonController) sharedController];
  __block NSArray* pins = [NSArray array];
- 
+
  if ([controller connectToDaemon]) {
 	[controller sendQueryWithReply:NO query:^{
 		if ([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion >= 14) {
 			IMPinnedConversationsController* pinnedController = [c(IMPinnedConversationsController) sharedInstance];
 			NSOrderedSet* set = [pinnedController pinnedConversationIdentifierSet];
- 
+
 			pins = [set array];
 		}
 	}];
  }
- 
+
  return pins;
 }*/
 

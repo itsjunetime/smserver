@@ -71,8 +71,27 @@
 				.then((response) => {
 					return_text = response;
 				})
+				.catch(error => {
+					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. url: " + url);
+					has_shown_warning = true;
+				})
 
 				return return_text;
+			}
+
+			async function fetchFromURL(url) {
+				var ret = "";
+				await fetch(url).then(response => {
+					if (!response.ok)
+						throw new Error("HTTP error " + response.status);
+					ret = response.json();
+				})
+				.catch(error => {
+					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. url: " + url);
+					has_shown_warning = true;
+				})
+
+				return ret;
 			}
 
 			function setFALoaded() {
@@ -90,7 +109,7 @@
 			}
 
 			function getTextElement(text, last = false) {
-				if (debug) { console.log("Getting text element for text " + text + (last ? ", last" : ", not last")); }
+				if (debug) console.log("Getting text element for text " + text + (last ? ", last" : ", not last"));
 
 				if (Number(text.associated_message_type) < 2000 || text.associated_message_type === undefined) {
 
@@ -164,14 +183,49 @@
 						var types = text.attachment_type.split(":");
 
 						for (var l = 0; l < files.length; ++l) {
-							if (types[l].length != 0 && types[l].substring(0, 5) === "image")
+							if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
 								t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>";
-							else if (files[l].length != 0)
-								t.innerHTML += "<a href=\"" + prefix + "/data?path=" + files[l].replace(/ /g, "%20") + "\">Attachment: " + types[l] + "</a><br>";
+							} else if (types[l].length != 0 && types[l].substring(0, 5) == "video") {
+								t.innerHTML = "<video controls=\"controls\" src=\"" + prefix + "/data?path=" + files[l] + "\"></video>";
+							} else if (files[l].length != 0) {
+								var splits = files[l].split("/");
+								var link = document.createElement("a");
+								link.href = prefix + "/data?path=" + files[l].replace(/ /g, "%20");
+								link.setAttribute("mime_type", types[l]);
+								link.setAttribute("class", "inlineAttachment");
+
+								var bigType = types[l].split("/")[0];
+								var smallType = types[l].split("/")[1];
+								var icon = "";
+
+								if (faLoaded && types[l].length != 0 && smallType !== undefined) {
+									if (bigType === "audio")
+										icon = "<i class=\"fas fa-file-audio\"></i>";
+									else if (bigType === "video")
+										icon = "<i class=\"fas fa-file-video\"></i>";
+									else if (smallType === "pdf")
+										icon = "<i class=\"fas fa-file-pdf\"></i>";
+									else if (smallType == "vcard")
+										icon = "<i class=\"fas fa-id-card\"></i>";
+									else if (smallType == "x-debian-package") 
+										icon = "<i class=\"fas fa-archive\"></i>";
+									else if (smallType.includes("script") || smallType === "x-sh") 
+										icon =  "<i class=\"fas fa-file-code\"></i>"
+									else if (smallType == "zip")
+										icon = "<i class=\"fas fa-file-archive\"></i>";
+									else
+										icon = "<i class=\"fas fa-file\"></i>";
+								} else {
+									icon = "<i class=\"fas fa-file\"></i>";
+								}
+
+								link.innerHTML = icon + " <span>" + splits[splits.length - 1] + (faLoaded ? "" : "(" + files[l] + ")") + "</span>";
+								t.innerHTML += link.outerHTML;
+							}
 						}
 					}
 
-					if (text.text.replace(/￼/g, "").trim().length > 0) {
+					if (text.text.replace(/￼/g, "").trim().length > 0 || text.subject.length > 0) {
 						/// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
 						var subject = document.createElement("div");
 						subject.setAttribute("class", "subject");
@@ -185,7 +239,7 @@
 					}
 
 					return t;
-				} else if (Number(text.associated_message_type) < 2006) {
+				} else if (Number(text.associated_message_type) < 2006 && Number(text.associated_message_type) > 1999) {
 					var guid = text.associated_message_guid.split("/")[1];
 
 					var original = document.getElementById(guid);
@@ -203,6 +257,7 @@
 
 					var reac = document.createElement("span");
 					reac.setAttribute("class", "reaction");
+					reac.setAttribute("reactionType", text.associated_message_type);
 
 					var icons = ["Love", "Thumbs up", "Thumbs down", "Haha", "!!", "??"];
 
@@ -215,13 +270,23 @@
 					area.appendChild(copy);
 
 					document.getElementById("text-content").insertBefore(area, next);
+				} else if (Number(text.associated_message_type) > 2999 && Number(text.associated_message_type) < 3006) {
+					var guid = text.associated_message_guid.split("/")[1];
+					var area = document.getElementById(guid).parentNode;
+
+					for (var i = 0; i < area.children.length; i++) {
+						if (Number(area.children[i].getAttribute("reactionType")) + 1000 == Number(text.associated_message_type)) {
+							area.children[i].outerHTML = "";
+							break;
+						}
+					}
 				}
 
 				return document.createElement("span");
 			}
 
 			function getChatElement(chat, num_texts) {
-				if (debug) { console.log("Getting chat element for " + chat.chat_identifier + ", num: " + num_texts); }
+				if (debug) console.log("Getting chat element for " + chat.chat_identifier + ", num: " + num_texts);
 				var b = document.createElement("button");
 
 				b.setAttribute("id", chat.chat_identifier);
@@ -289,27 +354,13 @@
 			}
 
 			async function getLatestText(chat = current_chat_id, read = false) {
-				if (debug) { console.log("Getting latest text for chat " + chat); }
+				if (debug) console.log("Getting latest text for chat " + chat);
 				var text;
 
 				let url = prefix + "/requests?person=" + chat + "&num=1&read=" + (read ? "true" : "false");
 
-				const fetch_one_text = await fetch(url)
-				.then(response => {
-					if (!response.ok)
-						throw new Error("HTTP error " + response.status);
-					return response.json();
-				})
-				.then(json => {
-					text = (json.texts)[0];
-					return text;
-				})
-				.catch(error => {
-					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_one_text func)");
-					has_shown_warning = true;
-				})
-
-				var text = await fetch_one_text;
+				let textPromise = await fetchFromURL(url);
+				var text = textPromise.texts[0];
 				var content = document.getElementById("text-content");
 
 				var more = document.getElementsByClassName("more_texts");
@@ -327,42 +378,25 @@
 					name.setAttribute("class", "sender");
 
 					content.appendChild(name);
-				}					
+				}
 
 				content.appendChild(t);
 				t.scrollIntoView();
 			}
 
-			const getChats = async (offset = 0) => {
-				if (debug) { console.log("getting chats with offset " + offset); }
+			const printChats = async (offset = 0) => {
+				if (debug) console.log("printing Chats");
 				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset;
-				const fetch_val = await fetch(url)
-				.then(response => {
-					if (!response.ok)
-						throw new Error("HTTP error " + response.status);
-					return response.json();
-				})
-				.then(json => {
-					this.items = (json.chats)
-					return items
-				})
-				.catch(function () {
-					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (getChats func)");
-					has_shown_warning = true;
-				})
-			}
+				let chatPromise = await fetchFromURL(url);
+				this.items = chatPromise.chats;
 
-			const printChats = async () => {
-				if (debug) { console.log("printing Chats"); }
-				var new_items = await getChats();
 				const num_texts = num_texts_to_load;
 				var doc = document.getElementsByClassName("chats-list")[0];
 				var old_button = document.getElementById("morechatsbutton");
 
 				var selected_id = "";
 				var selecteds = document.getElementsByClassName("selected");
-				if (selecteds.length > 0)
-					selected_id = selecteds[0].id;
+				if (selecteds.length > 0) selected_id = selecteds[0].id;
 
 				doc.innerHTML = "";
 				doc.appendChild(old_button);
@@ -407,28 +441,12 @@
 				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
 			}
 
-			const moreJsonChats = async (offset = 0) => {
-				if (debug) { console.log("Calling moreJsonChats with offset " + offset); }
+			const getMoreChats = async (offset = 0) => {
+				if (debug) console.log("getting more chats");
 				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
-				const fetch_val = await fetch(url)
-				.then(response => {
-					if (!response.ok)
-						throw new Error("HTTP error " + response.status);
-					return response.json();
-				})
-				.then(json => {
-					this.new_items = (json.chats)
-					return new_items
-				})
-				.catch(function () {
-					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (moreJsonChats func)");
-					has_shown_warning = true;
-				})
-			}
+				let chatsPromise = await fetchFromURL(url);
+				new_items = chatsPromise.chats;
 
-			const getMoreChats = async () => {
-				if (debug) { console.log("getting more chats"); }
-				var _ = await moreJsonChats(printed_chats);
 				printed_chats += num_chats_to_load;
 				var doc = document.getElementsByClassName("chats-list")[0];
 
@@ -440,7 +458,7 @@
 			}
 
 			const getTexts = async (chat_id, num_texts) => {
-				if (debug) { console.log("getting " + num_texts + " for chat " + chat_id); }
+				if (debug) console.log("getting " + num_texts + " for chat " + chat_id);
 
 				var myNode = document.getElementsByClassName("text-content")[0];
 
@@ -461,20 +479,6 @@
 
 				var new_chat_id = chat_id;
 				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
-				const fetch_texts = await fetch(url)
-				.then(response => {
-					if (!response.ok)
-						throw new Error("HTTP error " + response.status);
-					return response.json();
-				})
-				.then(json => {
-					this.texts = (json.texts)
-					return texts
-				})
-				.catch(function () {
-					has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (fetch_texts func)")
-					has_shown_warning = true;
-				})
 
 				var chat_title = document.getElementById(chat_id).getElementsByClassName("chat-name")[0];
 				var title_doc = document.getElementsByClassName("title-content")[0];
@@ -487,7 +491,8 @@
 
 				title_doc.insertBefore(img, title_doc.firstChild);
 
-				var _ = await fetch_texts;
+				let textsPromise = await fetchFromURL(url);
+				this.texts = textsPromise.texts;
 
 				myNode.innerHTML = "";
 
@@ -561,32 +566,18 @@
 						}
 					}
 				}
-											  
+
 				document.getElementById("text-content").lastChild.scrollIntoView();
 			}
 
 			const getMoreTexts = async (num_texts = num_texts_to_load) => {
-				if (debug) { console.log("called getMoreText; num == " + num_texts); }
+				if (debug) console.log("called getMoreText; num == " + num_texts);
 				var chat_id = current_chat_id;
 
 				var new_chat_id = chat_id;
 				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts + "&read=false";
-				const fetch_texts = await fetch(url)
-				.then(response => {
-					if (!response.ok)
-						throw new Error("HTTP error " + response.status);
-					return response.json();
-				})
-				.then(json => {
-					this.texts = (json.texts)
-					return texts
-				})
-				.catch(function () {
-					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
-					has_shown_warning = true;
-				})
-
-				var _ = await fetch_texts;
+				let textPromise = await fetchFromURL(url);
+				this.texts = textPromise.texts;
 
 				printed_texts += texts.length;
 
@@ -609,7 +600,7 @@
 						time.innerHTML = "<p>" + formattedTime + "</p>";
 						doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling);
 					}
-											  
+
 					doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling);
 
 					if (is_group && texts[i].is_from_me === "0" && ((i !== texts.length - 1 && texts[i].sender !== texts[i + 1].sender) || (i === texts.length - 1))){
@@ -623,32 +614,12 @@
 				}
 			}
 
-			const getImage = async (chat_id) => {
-				if (debug) { console.log("calling getImage for chat " + chat_id); }
-
-				var url = prefix + "/requests?image=" + chat_id;
-				const fetch_image = await fetch(url)
-				.then(response => {
-					if (!response.ok)
-						throw new Error("HTTP error " + response.status);
-					return response.text();
-				})
-				.then(text => {
-					this.image_string = text
-					return image_string
-				})
-				.catch(function () {
-					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_image func)");
-					has_shown_warning = true;
-				})
-			}
-
 			function sleep(ms) {
 				return new Promise(resolve => setTimeout(resolve, ms));
 			}
 
 			async function sendForm() {
-				if (debug) { console.log("sending form"); }
+				if (debug) console.log("sending form");
 				var form = document.getElementById("sendform");
 
 				typing_sleep = 0;
@@ -692,7 +663,7 @@
 
 						var nt = document.createElement("p");
 						var im = document.getElementById("text-content").lastChild.getAttribute("class").includes("iMessage");
-						nt.setAttribute("class", "text more_texts is_from_me" + (im ? " iMessage" : " SMS"));
+						nt.setAttribute("class", "text more_texts is_from_me " + (im ? "iMessage" : "SMS"));
 
 						var topsub = document.createElement("div");
 						topsub.setAttribute("class", "subject");
@@ -714,7 +685,7 @@
 			}
 
 			async function sendComposeForm() {
-				if (debug) { console.log("sending Compose form"); }
+				if (debug) console.log("sending Compose form");
 				hidePopup();
 
 				var form = document.getElementById("composeform");
@@ -740,7 +711,7 @@
 				document.getElementById("composeShowingAttachmentButton").value = "";
 				document.getElementById("composeAttachmentButton").value = "";
 			}
-						  
+
 			function inputKeyDown() {
 				autoGrow();
 				if (current_chat_id !== "") {
@@ -754,7 +725,7 @@
 					}
 				}
 			}
-						  
+
 			async function typingWait() {
 				if (!called_typing_wait) {
 					called_typing_wait = true;
@@ -801,8 +772,7 @@
 			}
 
 			function hidePopup() {
-				var pop = document.getElementById("popup");
-				pop.style.display = "none";
+				document.getElementById("popup").style.display = "none";
 			}
 
 			let socket_prefix = location.protocol === "https:" ? "wss://" : "ws://";
@@ -817,7 +787,7 @@
 			}
 
 			function parseMessage(msg) {
-				if (debug) { console.log("parsing message " + msg); }
+				if (debug) console.log("parsing message " + msg);
 				var split = msg.split(":");
 
 				var prefix = split[0];
@@ -827,109 +797,64 @@
 				switch (prefix) {
 					case "text":
 						processNewText(content);
-						break
+						break;
 					case "battery":
 						setNewBatteryLevel(content);
-						break
+						break;
 					case "typing":
 						setChatAsTyping(content);
-						break
+						break;
 					default:
 						console.log("cannot handle request: '" + msg + "'");
-						break
+						break;
 				}
 			}
 
 			async function processNewText(chat) {
-				if (debug) { console.log("received new text from " + chat); }
+				if (debug) console.log("received new text from " + chat);
 
+				var btn = document.getElementById(chat);
 				var new_text = "";
 				var name = "";
 				var notif_text;
 
-				if (window.Notification && Notification.permission === "granted" && (!window_is_focused || chat !== current_chat_id)) {
-					var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
-					const fetch_newest_text = await fetch(url)
-					.then(response => {
-						if (!response.ok)
-							throw new Error("HTTP error " + response.status);
-						return response.json();
-					})
-					.then(json => {
-						notif_text = (json.texts)[0]
-						return new_text
-					})
-					.catch(function () {
-						if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
-						has_shown_warning = true
-					}) 
+				var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
+				let textPromise = await fetchFromURL(url);
+				notif_text = textPromise.texts[0];
+				name = await getTextFromURL(prefix + "/requests?name=" + chat);
 
-					var _ = await fetch_newest_text;
-					name = await getTextFromURL(prefix + "/requests?name=" + chat);
+				new_text = notif_text.text;
 
-					new_text = notif_text.text;
+				if (notif_text.sender !== undefined && notif_text.sender !== "nil")
+					new_text = notif_text.sender + ": " + new_text;
 
-					if (notif_text.sender !== undefined && notif_text.sender !== "nil")
-						new_text = notif_text.sender + ": " + new_text;
+				if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
+					new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
 
-					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-						new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
-
+				if (window.Notification && Notification.permission === "granted" && (!window_is_focused || chat !== current_chat_id))
 					var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
-				}
 
 				if (chat.length !== 0) {
-					if (document.getElementById(chat) === undefined || chat == "any") {
+					if (btn == undefined || chat == "any") {
 						printChats();
-					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && document.getElementById(chat).getAttribute("class").includes("unpinned")) {
-						if (new_text !== "")
-							setChatAsTop(chat, new_text);
-						else
-							setChatAsTop(chat);
-					} else {
-						var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
-						const fetch_newest_text = await fetch(url)
-						.then(response => {
-							if (!response.ok)
-							throw new Error("HTTP error " + response.status);
-							return response.json();
-						})
-						.then(json => {
-							notif_text = (json.texts)[0];
-							return new_text;
-						})
-						.catch(function () {
-							if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
-							has_shown_warning = true;
-						})
+					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && btn.getAttribute("class").includes("unpinned")) {
+						setChatAsTop(chat, new_text);
+					} else if (btn !== undefined) {
+						
+						if (chat !== current_chat_id || !window_is_focused) btn.setAttribute("class", btn.getAttribute("class") + " unread");
+						if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
+							var text = btn.getElementsByClassName("chat-text")[0];
 
-						var _ = await fetch_newest_text;
+							if (text !== undefined && new_text.length > 0) text.innerText = new_text;
+						} else if (chat !== current_chat_id) {
+							var text = document.createElement("div");
+							text.setAttribute("class", "chat-text");
+							text.innerText = new_text;
 
-						var btn = document.getElementById(chat);
-
-						new_text = notif_text.text;
-
-						if (notif_text.sender !== undefined && notif_text.sender !== "nil")
-							new_text = notif_text.sender + ": " + new_text;
-
-						if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-							new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
-
-						if (btn !== undefined) {
-							if (chat !== current_chat_id) btn.setAttribute("class", btn.getAttribute("class") + " unread");
-							if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
-								var text = btn.getElementsByClassName("chat-text")[0];
-
-								if (text !== undefined) text.innerText = new_text;
-							} else if (chat !== current_chat_id) {
-								var text = document.createElement("div");
-								text.setAttribute("class", "chat-text");
-								text.innerText = new_text;
-
-								var tb = btn.getElementsByClassName("chat-top")[0];
-								tb.appendChild(text);
-							}
+							var tb = btn.getElementsByClassName("chat-top")[0];
+							tb.appendChild(text);
 						}
+
 					}
 					if (chat === current_chat_id) {
 						getLatestText(current_chat_id, window_is_focused);
@@ -941,9 +866,9 @@
 				var unread_chats = document.getElementsByClassName("unread").length;
 				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
 			}
-						  
+
 			async function setChatAsTop(chat, new_text = "") {
-				if (debug) { console.log("Setting chat as top: " + chat + ", new: " + new_text); }
+				if (debug) console.log("Setting chat as top: " + chat + ", new: " + new_text);
 
 				var chatsList = document.getElementsByClassName("chats-list")[0];
 				var unpins = document.getElementsByClassName("unpinned");
@@ -958,27 +883,13 @@
 				} else {
 					var last_text;
 					var url = prefix + "/requests?person=" + chat + "&num=1&read=false"; /// The most recent text from this person has (nearly) all the info we need
-					const fetch_recent_chat = await fetch(url)
-					.then(response => {
-						if (!response.ok)
-							throw new Error("HTTP error " + response.status);
-						return response.json();
-					})
-					.then(json => {
-						last_text = (json.texts)[0]
-						return last_text;
-					})
-					.catch(function () {
-						if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_more_texts func)");
-						has_shown_warning = true
-					})
-
-					var _ = await fetch_recent_chat;
+					let textPromise = await fetchFromURL(url);
+					last_text = textPromise.texts[0];
 
 					var new_chat = {
 						'time_marker': last_text.date,
 						'pinned': 'false',
-						'latest_text': last_text.text,
+						'latest_text': new_text.length > 0 ? new_text : last_text.text,
 						'chat_identifier': chat,
 						'display_name': chat,
 						'has_unread': 'false',
@@ -996,7 +907,7 @@
 
 					var new_box = getChatElement(new_chat);
 
-					if (new_text.length > 0) new_box.getElementsByClassName("chat-text")[0].innerText = new_text;
+					//if (new_text.length > 0) new_box.getElementsByClassName("chat-text")[0].innerText = new_text;
 
 					var pinRows = document.getElementsByClassName("pinRow");
 
@@ -1009,7 +920,7 @@
 			}
 
 			function setSelectedPhoto(url) {
-				if (debug) { console.log("setting selected photo for " + url); }
+				if (debug) console.log("setting selected photo for " + url);
 				var p = document.getElementById(url);
 				if (p.getAttribute("class").includes("selected-photo"))
 					p.setAttribute("class", "photo");
@@ -1018,12 +929,11 @@
 			}
 
 			function getPhotoElement(photo) {
-				if (debug) { console.log("Getting photo element " + photo); }
+				if (debug) console.log("Getting photo element " + photo);
 				var p = document.createElement("span");
 
 				var c = "photo";
-				if (photo.is_favorite === "true")
-					c += " is_favorite";
+				if (photo.is_favorite === "true") c += " is_favorite";
 
 				p.setAttribute("class" , c);
 
@@ -1038,15 +948,14 @@
 					var h = document.createElement("span");
 					h.setAttribute("class", "favorite-heart");
 					h.innerHTML = faLoaded ? "<i class=\"fas fa-heart\"></i>" : "❤";
-					if (faLoaded)
-						h.setAttribute("style", "padding-right: 24px") /// It's annoyingly specific, 1px off from using unicode
+					if (faLoaded) h.setAttribute("style", "padding-right: 24px") /// It's annoyingly specific, 1px off from using unicode
 					p.appendChild(h);
 				}
 				return p;
 			}
 
 			async function displayCameraRoll() {
-				if (debug) { console.log("Displaying camera roll"); }
+				if (debug) console.log("Displaying camera roll");
 				document.getElementById("camerarollpopup").style.display = "block";
 
 				var cr = document.getElementById("camerarollContent");
@@ -1055,23 +964,12 @@
 					var photos;
 
 					var url = prefix + "/requests?photos=" + num_photos_to_load;
-					const fetch_recent_photos = await fetch(url)
-					.then(response => {
-						if (!response.ok)
-							throw new Error("HTTP error " + response.status);
-						return response.json();
-					})
-					.then(json => {
-						photos = (json.photos);
-						return photos;
-					})
-					.catch(function () {
-						if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)");
-						has_shown_warning = true;
-					})
-
-					var _ = await fetch_recent_photos;
-					if (photos.length === 0) var _ = await fetch_recent_photos;
+					let photoPromise = await fetchFromURL(url);
+					photos = photoPromise.photos;
+					if (photos.length === 0) {
+						let photoPromise = await fetchFromURL(url);
+						photos = photoPromise.photos;
+					}
 
 					printed_photos += photos.length;
 
@@ -1085,36 +983,23 @@
 			}
 
 			async function loadMoreCameraRoll() {
+				if (debug) console.log("loading more Camera Roll");
 				var cr = document.getElementById("camerarollContent");
 				var new_photos;
 
 				var url = prefix + "/requests?photos=" + num_photos_to_load + "&photo_offset=" + printed_photos;
-				const fetch_new_photos = await fetch(url)
-				.then(response => {
-					if (!response.ok)
-						throw new Error("HTTP error " + response.status);
-					return response.json();
-				})
-				.then(json => {
-					new_photos = (json.photos);
-					return new_photos;
-				})
-				.catch(function () {
-					has_shown_warning ? 0 : alert("The server restarted, you need to reload and re-authenticate. (fetch_recent_photos func)")
-					has_shown_warning = true;
-				}) 
-
-				var _ = await fetch_new_photos;
+				let photoPromise = await fetchFromURL(url);
+				new_photos = photoPromise.photos;
 				printed_photos += new_photos.length;
 
 				for (var i = 0; i < new_photos.length; i++) { 
 					var p = await getPhotoElement(new_photos[i]);
-
 					cr.insertBefore(p, cr.children[cr.children.length - 1]);
 				}
 			}
 
 			function hideCameraRoll() {
+				if (debug) console.log("hiding camera roll");
 				document.getElementById("camerarollpopup").style.display = "none";
 				var p = document.getElementsByClassName("selected-photo");
 
@@ -1126,13 +1011,13 @@
 			}
 
 			function selectCameraRollPhotos() {
+				if (debug) console.log("selecing camera roll photos");
 				document.getElementById("camerarollpopup").style.display = "none";
-
 				document.getElementById("camerarollbutton").innerHTML = document.getElementsByClassName("selected-photo").length;
 			}
 
 			function setNewBatteryLevel(level) {
-				if (debug) { console.log("new battery level: " + level); }
+				if (debug) console.log("new battery level: " + level);
 				var batt = document.getElementById("battery");
 				var bat_symbol = document.getElementById("batterySymbol");
 
@@ -1141,7 +1026,7 @@
 
 					if (level === "charging")
 						symbol = " <i id=\"chargingSymbol\" class=\"fas fa-bolt\"></i>";
-					
+
 					var cgs = document.getElementById("chargingSymbol");
 					if (cgs !== undefined && cgs !== null)
 						cgs.outerHTML = symbol;
@@ -1180,8 +1065,9 @@
 						batt.setAttribute("class", "low");
 				}
 			}
-						  
+
 			function setChatAsTyping(chat) {
+				if (debug) console.log("setting " + chat + " as typing");
 				if (chat === current_chat_id) {
 					var d = document.createElement("div");
 					d.setAttribute("class", "text is_from_them iMessage");
@@ -1237,7 +1123,11 @@
 				window.location.href = prefix + "/requests?search=" + term; /// uhh simple stuff; use default settings for now
 			}
 
-			window.onfocus = function() { self.window_is_focused = true; }
+			window.onfocus = function() { 
+				self.window_is_focused = true; 
+				var bt = document.getElementById(current_chat_id);
+				if (bt !== undefined) bt.setAttribute("class", bt.getAttribute("class").replace("unread", ""))
+			}
 			window.onblur = function() { self.window_is_focused = false; }
 
 			document.addEventListener("DOMContentLoaded", () => {
