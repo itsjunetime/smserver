@@ -1,4 +1,12 @@
 # Changelog
+0.5.1 -> 0.5.2
+ - Added support for inline video displays
+ - Improved attachment displays in conversations
+ - Fixed issue where chats would be treated as empty if they held a subject but no text
+ - Significantly decreased html code footprint by combining all uses of the `fetch` api into one function
+ - Fixed issue where chat would not be set as unread when window was not focused
+ - Fixed issue where tapbacks would not disappear when they were removed
+ - Fixed some small spacing issues
 
 0.5.0 -> 0.5.1
  - Added more customization options to search API
