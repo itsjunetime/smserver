@@ -326,24 +326,24 @@ i#chargingSymbol {
 	width: max-content;
 	max-width: 40vw;
 	padding: 7px 10px 4px 8px;
-	margin: 0px 10px 20px 10px;
+	margin: 0px 10px 14px 10px;
 	font-weight: 300;
 	font-size: 18px;
 	word-break: break-word;
 }
-.text + .text {
-	margin-top: -12px;
-}
+/*.text + .text {
+	margin-top: -14px;
+}*/
 .text .subject {
 	font-weight: 500;
 }
 .text span {
 	white-space: pre-wrap;
 }
-.is_from_them a {
+.is_from_them a, .is_from_them a span {
 	color: dodgerblue;
 }
-.is_from_me a {
+.is_from_me a, .is_from_me a span {
 	color: lightblue;
 }
 .sender {
@@ -367,15 +367,18 @@ i#chargingSymbol {
 	border-radius: 10px 10px 10px 2px;
 	align-self: flex-start;
 }
-.is_from_me + .is_from_them,
-.is_from_them + .is_from_me {
-	margin-top: -6px;
+.is_from_me + .is_from_me,
+.is_from_them + .is_from_them {
+	margin-top: -8px;
 }
 .is_from_me.iMessage {
 	background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
 }
 .is_from_me.SMS {
 	background-image: linear-gradient(to right, rgb(71, 194, 90), rgb(41, 194, 63));
+}
+.text video {
+	max-width: 100%;
 }
 .time-display {
 	text-align: center;
@@ -494,6 +497,7 @@ i#chargingSymbol {
 #composeTitleBoxTitle, #camerarollTitleBoxTitle {
 	grid-column: 2;
 	text-align: center;
+	margin: auto 0;
 }
 #composeSendButton, #camerarollSelectButton {
 	grid-column: 3;
@@ -672,7 +676,9 @@ i#chargingSymbol {
 	float: right;
 	padding-right: 10px;
 	align-self: flex-end;
-	margin: -10px 0 10px 0;
+}
+.text + .readreceipt {
+	margin-top: -8px;
 }
 .reaction {
 	top: -5px;
@@ -704,6 +710,9 @@ i#chargingSymbol {
 }
 .noPadding {
 	padding: 0 !important;
+}
+p.text.richLink {
+	max-width: 32vw;
 }
 .richLink img {
 	border-radius: 10px 10px 0 0 !important;
