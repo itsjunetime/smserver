@@ -33,7 +33,7 @@ Example queries:
 Retrieves the latest $num_chats conversations
 
 - chat: Parameter is necessary, and value is inconsequential. Calling the parameter 'chat' simply specifies that you are asking for a list of the conversations on the device.
-  
+
 - num_chats: Parameter is not necessary, and value is consequential. Value must be integer, and will specify how many conversations to get the information of. If unspecified, it will default to the device's default, which is, at the time of writing, 40. If it is 0, it will retrieve all chats.
 
 - chats_offset: Parameter is not necessary, and value is consequential. Value must be an integer, and it will specify the offset of conversations to get. For example, if you've already retrieved the first 40 conversations, adn would like to retrieve the next 40, you would set both `num_chats` and `chats_offset` to 40. If this is not specified, it will default to 0.
@@ -48,7 +48,7 @@ Example queries:
 Retrieves the contact name that accompanies chat_identifier $name
 
 - name: Parameter is necessary, and value is consequential. Value must be the chat_identifier for the contact whose name you want. It can get the name if given an email address or phone number of an individual, but it cannot get a contact name for a group chat, since none such exist. Email must be given in the regular format, and phone number must be given in the format that the above 'person' section specifies.
-  
+
 Example queries:
 - /requests?name=email@icloud.com
 - /requests?name=+12761938272

@@ -122,7 +122,7 @@ p {
 	grid-row: 1/3;
 	grid-column: 1;
 	overflow-x: hidden;
-	padding-top: var(--messages-title-height);
+	padding: var(--messages-title-height) 10px 0 10px;
 	display: flex;
 	flex-direction: column;
 	scrollbar-width: none;
@@ -171,18 +171,16 @@ i#chargingSymbol {
 	color: dodgerblue;
 }
 .chats-title h1 {
-	grid-column: 1;
-	grid-row: 1;
-	margin-top: 6px;
+	margin: auto 0;
 	font-weight: 300;
 }
 .chats-search {
-	grid-column: 1;
-	grid-row: 2;
 	padding: 5px 10px;
 	border-top: 1px solid var(--chats-border);
 	border-bottom: 1px solid var(--chats-border);
-	display: flex;
+	display: grid;
+	grid-template-columns: 1fr max-content max-content;
+	grid-gap: 6px;
 }
 .chats-list {
 	grid-row: 3;
@@ -210,7 +208,6 @@ i#chargingSymbol {
 }
 .pinRow {
 	display: flex;
-	flex-flow: row;
 	padding: 6px 0;
 }
 .innerRow {
@@ -225,27 +222,31 @@ i#chargingSymbol {
 	max-width: calc(var(--chats-width) * 0.25);
 	width: min-content;
 }
-.chats button.pinned img {
-	max-height: calc(var(--chats-button-height)*1.4);
-	border-radius: 100%;
-	margin-bottom: 10px;
-	height: calc(var(--chats-width) * 0.20);
-}
 .chats button.pinned .chat-top {
-	display: flex;
-	justify-content: center;
+	display: grid;
+	grid-template-rows: 22px 1fr;
+	grid-template-columns: 1fr;
+}
+.chats button.pinned img {
+	max-height: calc(var(--chats-button-height) * 1.4);
+	border-radius: 100%;
+	height: calc(var(--chats-width) * 0.20);
+	grid-row: 1/3;
+	grid-column: 1;
+	margin: 0 auto 10px auto;
 }
 .chats button.pinned .chat-text {
-	position: fixed;
 	background-color: #7776;
 	color: white;
 	padding: 4px;
 	backdrop-filter: blur(30px);
 	border-radius: 8px;
 	width: max-content;
-	vertical-align: middle;
-	max-width: calc(var(--chats-width) * 0.2);
+	max-width: calc(var(--chats-width) * 0.19);
 	margin: 0;
+	grid-row: 1;
+	grid-column: 1;
+	height: max-content;
 }
 .pinned .chat-name {
 	font-size: calc(8px + 0.5vw);
@@ -256,9 +257,14 @@ i#chargingSymbol {
 .chat-nonpic {
 	padding-left: 14px;
 	width: calc(var(--chats-width) - (var(--chats-button-height) * 1.1)); /* This doesn't make any sense but it seems to work */
+	align-self: flex-start;
+	margin: auto 0;
+	align-self: flex-start;
+	margin: auto 0;
 }
 .chat-toprow {
 	display: flex;
+	margin-bottom: 5px;
 }
 .chat-name {
 	font-size: 16px;
@@ -269,17 +275,16 @@ i#chargingSymbol {
 	text-align: start;
 	font-weight: 500;
 	margin-right: auto;
-	margin-bottom: 10px;
 	white-space: nowrap;
 }
 .chat-text {
 	color: #ddd;
 	font-size: 12px;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	text-align: start;
-	max-height: calc(var(--chats-button-height) - 45px);
-	white-space: nowrap;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 }
 .chat-date {
 	padding-right: 6px;
@@ -304,6 +309,12 @@ i#chargingSymbol {
 	border-radius: 10px;
 	padding-bottom: 5px;
 }
+.text-content p.noPadding img {
+	padding: 0;
+}
+.text.noPadding.fullAttachment, .text-area.noPadding.fullAttachment {
+	background-color: transparent;
+}
 .chats p {
 	transition: all linear 0.1s;
 }
@@ -326,14 +337,11 @@ i#chargingSymbol {
 	width: max-content;
 	max-width: 40vw;
 	padding: 7px 10px 4px 8px;
-	margin: 0px 10px 14px 10px;
+	margin: 0px 0px 14px 0px;
 	font-weight: 300;
 	font-size: 18px;
 	word-break: break-word;
 }
-/*.text + .text {
-	margin-top: -14px;
-}*/
 .text .subject {
 	font-weight: 500;
 }
@@ -347,12 +355,13 @@ i#chargingSymbol {
 	color: lightblue;
 }
 .sender {
-	margin-left: 14px;
+	margin-left: 4px;
 	margin-bottom: -14px;
 }
 .sender p {
 	font-size: 14px;
 	font-weight: lighter;
+	margin: 0 0 16px 0;
 }
 .is_from_me {
 	float: right;
@@ -361,14 +370,14 @@ i#chargingSymbol {
 	align-self: flex-end;
 }
 .is_from_them {
-	float: left;
-	background-color: rgb(58, 58, 60);
 	position: relative;
 	border-radius: 10px 10px 10px 2px;
 	align-self: flex-start;
 }
 .is_from_me + .is_from_me,
-.is_from_them + .is_from_them {
+.from_me + .from_me,
+.is_from_them + .is_from_them,
+.from_them + .from_them {
 	margin-top: -8px;
 }
 .is_from_me.iMessage {
@@ -377,8 +386,11 @@ i#chargingSymbol {
 .is_from_me.SMS {
 	background-image: linear-gradient(to right, rgb(71, 194, 90), rgb(41, 194, 63));
 }
-.text video {
+.text video, .text-area video,
+.text img, .text-area img,
+.text audio, .text-area audio {
 	max-width: 100%;
+	border-radius: 10px;
 }
 .time-display {
 	text-align: center;
@@ -449,22 +461,14 @@ i#chargingSymbol {
 	display: none;
 }
 #unhiddenbutton {
-	border-radius: 5px;
-	background-color: grey;
-	width: var(--attachments-button-size);
-	height: var(--send-box-size);
 	grid-column: 2;
-	grid-row: 1;
-	outline: none;
-	border: none;
-	margin: auto 0;
 }
 .popup, #camerarollpopup {
 	display: none;
 	position: fixed;
 	width: 100vw;
 	height: 100vh;
-	z-index: 3;
+	z-index: 10;
 	overflow: auto;
 	top: 0;
 	left: 0;
@@ -572,15 +576,13 @@ i#chargingSymbol {
 	border: none;
 	border-radius: 5px;
 	padding: 6px 0px 0px 0px;
-	height: 24px;
 }
 #composeShowButton {
-	width: 94px;
-	padding: 0px 8px 0px 8px;
+	width: max-content;
+	padding: 0px 8px;
 }
 #searchBox {
 	width: 100%;
-	margin-right: 10px;
 	height: 100%;
 	outline: none;
 	border: none;
@@ -590,19 +592,19 @@ i#chargingSymbol {
 }
 #notificationbutton {
 	width: max-content;
-	padding: 0px 8px 0px 8px;
-	margin-left: auto;
-	margin-right: 10px;
+	padding: 0px 8px;
 }
 #composeShowButton p, #notificationbutton p {
 	margin: 0 0 0 0;
 	font-size: 14px;
 }
 #camerarollbutton {
+	grid-column: 1;
+}
+#camerarollbutton, #unhiddenbutton {
+	grid-row: 1;
 	background-color: gray;
 	border-radius: 5px;
-	grid-column: 1;
-	grid-row: 1;
 	width: var(--attachments-button-size);
 	height: var(--send-box-size);
 	outline: none;
@@ -681,14 +683,15 @@ i#chargingSymbol {
 	margin-top: -8px;
 }
 .reaction {
-	top: -5px;
+	top: -8px;
 	position: relative;
 	padding: 3px 6px;
 	z-index: 2;
 	box-shadow: 0px 0px 6px #000;
+	height: max-content;
 }
 .from_them .reaction {
-	left: -16px;
+	left: -6px;
 	border-radius: 4px 4px 1px 4px;
 	background-color: rgba(70, 140, 240, 0.7);
 }
@@ -696,6 +699,7 @@ i#chargingSymbol {
 	width: max-content;
 	margin-bottom: -10px;
 	margin-top: -6px;
+	display: flex;
 }
 .text-area.from_me {
 	align-self: flex-end;
@@ -704,7 +708,7 @@ i#chargingSymbol {
 	align-self: flex-start;
 }
 .from_me .reaction {
-	right: -16px;
+	right: -6px;
 	border-radius: 4px 4px 4px 1px;
 	background-color: rgba(71, 71, 80, 0.7);
 }
