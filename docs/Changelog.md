@@ -1,4 +1,15 @@
 # Changelog
+0.5.2 -> 0.5.3
+ - Added inline audio displays
+ - Images and attachments now appear more similar to stock iMessage
+ - Reactions now appear correctly in group chats
+ - Added functionality to select the "SMServer" title and de-select the currently selected conversation
+ - Expanded chat preview text to 2 lines to be more like stock
+ - Minor optimizations in html on web interface
+ - Fixed issue where browser wouldn't correctly return if it was focused or not (which, in turn, fixes many other issues).
+ - Fixed style issues with incorrect text spacing
+ - Fixed issue where no new chats would load
+
 0.5.1 -> 0.5.2
  - Added support for inline video displays
  - Improved attachment displays in conversations

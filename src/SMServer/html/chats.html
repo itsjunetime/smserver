@@ -23,7 +23,6 @@
 			var has_shown_camera_roll = false;
 			var notifications = false;
 			var has_shown_new_warning = false;
-			var window_is_focused = true;
 			var faLoaded = false;
 			var currently_typing = false;
 			var called_typing_wait = false;
@@ -108,16 +107,15 @@
 				}
 			}
 
-			function getTextElement(text, last = false) {
-				if (debug) console.log("Getting text element for text " + text + (last ? ", last" : ", not last"));
+			function getTextElement(text) {
+				if (debug) console.log("Getting text element for text " + text);
 
 				if (Number(text.associated_message_type) < 2000 || text.associated_message_type === undefined) {
 
-					var t = document.createElement("p");
+					var t = document.createElement("span");
+					var rets = [];
 
 					var classes = "text";
-					if (last) classes += " more_texts";
-
 					classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service;
 
 					t.setAttribute("class", classes);
@@ -183,10 +181,16 @@
 						var types = text.attachment_type.split(":");
 
 						for (var l = 0; l < files.length; ++l) {
-							if (types[l].length != 0 && types[l].substring(0, 5) === "image") {
-								t.innerHTML += "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>";
-							} else if (types[l].length != 0 && types[l].substring(0, 5) == "video") {
-								t.innerHTML = "<video controls=\"controls\" src=\"" + prefix + "/data?path=" + files[l] + "\"></video>";
+							var c = t.cloneNode();
+							var bigType = types[l].split("/")[0];
+							var smallType = types[l].split("/")[1];
+
+							if (bigType === "image") {
+								c.innerHTML = "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>";
+							} else if (bigType === "video") {
+								c.innerHTML = "<video controls=\"controls\" src=\"" + prefix + "/data?path=" + files[l] + "\"></video>";
+							} else if (bigType === "audio") {
+								c.innerHTML = "<audio controls=\"controls\" src=\"" + prefix + "/data?path=" + files[l] + "\"></audio>";
 							} else if (files[l].length != 0) {
 								var splits = files[l].split("/");
 								var link = document.createElement("a");
@@ -194,24 +198,18 @@
 								link.setAttribute("mime_type", types[l]);
 								link.setAttribute("class", "inlineAttachment");
 
-								var bigType = types[l].split("/")[0];
-								var smallType = types[l].split("/")[1];
 								var icon = "";
 
 								if (faLoaded && types[l].length != 0 && smallType !== undefined) {
-									if (bigType === "audio")
-										icon = "<i class=\"fas fa-file-audio\"></i>";
-									else if (bigType === "video")
-										icon = "<i class=\"fas fa-file-video\"></i>";
-									else if (smallType === "pdf")
+									if (smallType === "pdf")
 										icon = "<i class=\"fas fa-file-pdf\"></i>";
-									else if (smallType == "vcard")
+									else if (smallType === "vcard")
 										icon = "<i class=\"fas fa-id-card\"></i>";
-									else if (smallType == "x-debian-package") 
+									else if (smallType === "x-debian-package") 
 										icon = "<i class=\"fas fa-archive\"></i>";
 									else if (smallType.includes("script") || smallType === "x-sh") 
 										icon =  "<i class=\"fas fa-file-code\"></i>"
-									else if (smallType == "zip")
+									else if (smallType === "zip")
 										icon = "<i class=\"fas fa-file-archive\"></i>";
 									else
 										icon = "<i class=\"fas fa-file\"></i>";
@@ -220,8 +218,11 @@
 								}
 
 								link.innerHTML = icon + " <span>" + splits[splits.length - 1] + (faLoaded ? "" : "(" + files[l] + ")") + "</span>";
-								t.innerHTML += link.outerHTML;
+								c.innerHTML += link.outerHTML;
 							}
+							if (bigType === "image" || bigType === "video" || bigType === "audio")
+								c.setAttribute("class", c.getAttribute("class") + " noPadding fullAttachment");
+							rets.push(c);
 						}
 					}
 
@@ -238,22 +239,14 @@
 						t.appendChild(inner);
 					}
 
-					return t;
+					rets.push(t);
+					return rets;
 				} else if (Number(text.associated_message_type) < 2006 && Number(text.associated_message_type) > 1999) {
 					var guid = text.associated_message_guid.split("/")[1];
 
 					var original = document.getElementById(guid);
 
 					if (original === null || original === undefined) return document.createElement("span");
-
-					var next = original.nextElementSibling;
-					var copy = original.cloneNode(true);
-					original.outerHTML = "";
-
-					var area = document.createElement("span");
-					var new_class = "text-area";
-					new_class += copy.getAttribute("class").includes("is_from_them") ? " from_them" : " from_me";
-					area.setAttribute("class", new_class);
 
 					var reac = document.createElement("span");
 					reac.setAttribute("class", "reaction");
@@ -266,16 +259,48 @@
 
 					reac.innerHTML = icons[Number(text.associated_message_type) - 2000];
 
-					area.appendChild(reac);
-					area.appendChild(copy);
+					var elder = original.parentNode;
+					if (elder.getAttribute("class").includes("text-area")) {
+						var ln = elder.getElementsByClassName("reaction").length * 2;
+						var mg = " -" + String(ln) + "6px;";
+						mg += "z-index: " + String(9 > ln ? 9 : ln) + ";";
+						if (elder.getAttribute("class").includes("from_them")) {
+							reac.setAttribute("style", "left:" + mg);
+							elder.appendChild(reac);
+						} else {
+							reac.setAttribute("style", "right:" + mg);
+							elder.insertBefore(reac, elder.firstChild);
+						}
+					} else {
+						var next = original.nextElementSibling;
+						var copy = original.cloneNode(true);
+						original.outerHTML = "";
 
-					document.getElementById("text-content").insertBefore(area, next);
+						var area = document.createElement("span");
+						var new_class = "text-area";
+						new_class += copy.getAttribute("class").includes("is_from_them") ? " from_them" : " from_me";
+						area.setAttribute("class", new_class);
+
+						if (copy.getAttribute("class").includes("is_from_them")) {
+							area.appendChild(copy);
+							area.appendChild(reac);
+						} else {
+							area.appendChild(reac);
+							area.appendChild(copy);
+						}
+
+						if (next === null || next === undefined)
+							document.getElementById("text-content").insertBefore(area, next);
+						else
+							document.getElementById("text-content").appendChild(area);
+					}
+
 				} else if (Number(text.associated_message_type) > 2999 && Number(text.associated_message_type) < 3006) {
 					var guid = text.associated_message_guid.split("/")[1];
 					var area = document.getElementById(guid).parentNode;
 
 					for (var i = 0; i < area.children.length; i++) {
-						if (Number(area.children[i].getAttribute("reactionType")) + 1000 == Number(text.associated_message_type)) {
+						if (Number(area.children[i].getAttribute("reactionType")) + 1000 === Number(text.associated_message_type)) {
 							area.children[i].outerHTML = "";
 							break;
 						}
@@ -363,12 +388,8 @@
 				var text = textPromise.texts[0];
 				var content = document.getElementById("text-content");
 
-				var more = document.getElementsByClassName("more_texts");
-				if (more.length > 0) more[0].setAttribute("class", more[0].getAttribute("class").replace(" more_texts", ""));
-
 				var is_group = chat.substring(0, 4) === "chat";
 
-				var t = getTextElement(text, true);
 				var senders = document.getElementsByClassName("sender");
 
 				if (is_group && senders.length > 0 && text.is_from_me === "0" && text.sender !== senders[senders.length - 1].firstChild.innerText) {
@@ -380,8 +401,30 @@
 					content.appendChild(name);
 				}
 
-				content.appendChild(t);
-				t.scrollIntoView();
+				var fts = getTextElement(text);
+				if (fts.length === undefined && fts.outerHTML === "<span></span>") return;
+				var ft = fts.length === undefined ? [fts] : fts;
+
+				for (var i = 0; i < ft.length; i++) {
+					var t = ft[i];
+					if (t.innerHTML !== undefined && t.innerHTML.length > 0) {
+						content.appendChild(t);
+						t.scrollIntoView();
+					}
+				}
+			}
+
+			function clearTextContent() {
+				document.getElementById("text-content").innerHTML = "<div class=\"centered\"> Select a chat on the left to view your messages :)</div>";
+				printed_texts = 0;
+				document.getElementById("messagesTitleText").innerHTML = "";
+				document.getElementById("hiddenchatbox").setAttribute("value", "");
+
+				var sels = document.getElementsByClassName("selected");
+				for (var i = 0; i < sels.length; i++)
+					sels[i].setAttribute("class", sels[i].getAttribute("class").replace(/selected/g, ""));
+
+				current_chat_id = "";
 			}
 
 			const printChats = async (offset = 0) => {
@@ -407,7 +450,7 @@
 
 					var b = getChatElement(items[i], num_texts);
 
-					if (items[i].chat_identifier == selected_id)
+					if (items[i].chat_identifier === selected_id)
 						b.setAttribute("class", b.getAttribute("class") + " selected");
 
 					if (b.getAttribute("class").includes("unpinned")) {
@@ -441,7 +484,7 @@
 				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
 			}
 
-			const getMoreChats = async (offset = 0) => {
+			const getMoreChats = async (offset = printed_chats) => {
 				if (debug) console.log("getting more chats");
 				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
 				let chatsPromise = await fetchFromURL(url);
@@ -464,7 +507,7 @@
 
 				var selected = document.getElementsByClassName("selected");
 				if (selected.length > 0)
-					selected[0].setAttribute("class", selected[0].getAttribute("class").replace("selected", ""));
+					selected[0].setAttribute("class", selected[0].getAttribute("class").replace(/selected/g, ""));
 
 				var hiddenchatbox = document.getElementById("hiddenchatbox");
 				hiddenchatbox.setAttribute("value", chat_id);
@@ -510,9 +553,14 @@
 
 				for (var i = 0; i < texts.length; i++) {
 
-					var t = getTextElement(texts[i], i === texts.length - 1);
+					var ft = getTextElement(texts[i]);
+					if (ft.length === undefined) { 
+						if (ft.outerHTML === "<span></span>") continue;
+						ft = [ft];
+					}
+					t = ft[0];
 
-					if (t.innerHTML.length > 0) {
+					if (t.innerHTML !== undefined && t.innerHTML.length > 0) {
 						if (i === 0 || texts[i].date - texts[i - 1].date > 3600000000000) {
 							var time = document.createElement("div");
 							time.setAttribute("class", "time-display");
@@ -533,7 +581,9 @@
 						}
 					}
 
-					doc.appendChild(t);
+					ft.forEach(function(t, j, a) {
+						if (t.innerHTML !== undefined && t.innerHTML.length > 0) doc.appendChild(t);
+					});
 				}
 
 				document.getElementById("sendbox").focus();
@@ -552,7 +602,8 @@
 
 					if (my_last_text !== undefined) {
 
-						var isimsg = (my_last_text.getAttribute("class").includes("text-area") ? my_last_text.lastChild : my_last_text).getAttribute("class").includes("iMessage");
+						var lc = document.getElementById("text-content").lastChild
+						var ismsg = (lc.getAttribute("class").includes("text-area") ? lc.getElementsByClassName("text")[0] : lc).getAttribute("class").includes("iMessage");
 
 						if (!is_group && my_last_text.getAttribute("date_read") !== "0" && isimsg) {
 							var rr = document.createElement("span");
@@ -571,7 +622,7 @@
 			}
 
 			const getMoreTexts = async (num_texts = num_texts_to_load) => {
-				if (debug) console.log("called getMoreText; num == " + num_texts);
+				if (debug) console.log("called getMoreText; num === " + num_texts);
 				var chat_id = current_chat_id;
 
 				var new_chat_id = chat_id;
@@ -589,7 +640,14 @@
 
 				for (var i = 0; i < texts.length; i++) {
 
-					var t = getTextElement(texts[i], i === 0);
+					/*var ft = getTextElement(texts[i]);
+					if (ft.length === undefined) { 
+						if (ft.outerHTML === "<span></span>") continue;
+						ft = [ft];
+					}*/
+					var fts = getTextElement(texts[i]);
+					if (fts.length === undefined && fts.outerHTML === "<span></span>") return;
+					var ft = fts.length === undefined ? [fts] : fts;
 
 					if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
 						var time = document.createElement("div");
@@ -601,7 +659,18 @@
 						doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling);
 					}
 
-					doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling);
+					for (var j = 0; j < ft.length; j += 1) {
+						if (ft[j].innerHTML !== undefined && ft[j].innerHTML.length > 0) {
+							console.log(ft[j].outerHTML);
+							console.log(j);
+							doc.insertBefore(ft[j], document.getElementById("moretextsbutton").nextSibling);
+						}
+					}
+
+					/*for (t in ft) {
+						if (t.innerHTML !== undefined && t.innerHTML.length > 0) 
+							doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling);
+					}*/
 
 					if (is_group && texts[i].is_from_me === "0" && ((i !== texts.length - 1 && texts[i].sender !== texts[i + 1].sender) || (i === texts.length - 1))){
 						var from = document.createElement("div");
@@ -656,14 +725,12 @@
 					if (has_attachments) {
 						await sleep(sleep_time);
 
-						getLatestText();
+						getLatestText(current_chat_id, true);
 					} else {
-						var omt = document.getElementsByClassName("more_texts")[0];
-						omt.setAttribute("class", omt.getAttribute("class").replace("more_texts", ""));
-
 						var nt = document.createElement("p");
-						var im = document.getElementById("text-content").lastChild.getAttribute("class").includes("iMessage");
-						nt.setAttribute("class", "text more_texts is_from_me " + (im ? "iMessage" : "SMS"));
+						var lc = document.getElementById("text-content").lastChild
+						var im = (lc.getAttribute("class").includes("text-area") ? lc.getElementsByClassName("text")[0] : lc).getAttribute("class").includes("iMessage");
+						nt.setAttribute("class", "text is_from_me " + (im ? "iMessage" : "SMS"));
 
 						var topsub = document.createElement("div");
 						topsub.setAttribute("class", "subject");
@@ -824,27 +891,27 @@
 				name = await getTextFromURL(prefix + "/requests?name=" + chat);
 
 				new_text = notif_text.text;
+				
+				if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
+					new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
 
 				if (notif_text.sender !== undefined && notif_text.sender !== "nil")
 					new_text = notif_text.sender + ": " + new_text;
 
-				if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-					new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
-
-				if (window.Notification && Notification.permission === "granted" && (!window_is_focused || chat !== current_chat_id))
+				if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id))
 					var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
 
 				if (chat.length !== 0) {
-					if (btn == undefined || chat == "any") {
+					if (btn === undefined || chat === "any") {
 						printChats();
 					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && btn.getAttribute("class").includes("unpinned")) {
 						setChatAsTop(chat, new_text);
 					} else if (btn !== undefined) {
-						
-						if (chat !== current_chat_id || !window_is_focused) btn.setAttribute("class", btn.getAttribute("class") + " unread");
-						if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
-							var text = btn.getElementsByClassName("chat-text")[0];
 
+						if (chat !== current_chat_id || !document.hasFocus()) btn.setAttribute("class", btn.getAttribute("class") + " unread");
+						if (btn.getAttribute("class").includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
+
+							var text = btn.getElementsByClassName("chat-text")[0];
 							if (text !== undefined && new_text.length > 0) text.innerText = new_text;
 						} else if (chat !== current_chat_id) {
 							var text = document.createElement("div");
@@ -857,7 +924,7 @@
 
 					}
 					if (chat === current_chat_id) {
-						getLatestText(current_chat_id, window_is_focused);
+						getLatestText(current_chat_id, document.hasFocus());
 						var typ = document.getElementById("typingIndicator");
 						if (typ !== undefined && typ !== null) typ.outerHTML = "";
 					}
@@ -878,7 +945,7 @@
 					if (new_text !== "" && current_box.getAttribute("class").includes("unpinned"))
 						current_box.getElementsByClassName("chat-text")[0].innerText = new_text;
 
-					if (!window_is_focused || current_chat_id !== chat)
+					if (!document.hasFocus() || current_chat_id !== chat)
 						current_box.setAttribute("class", current_box.getAttribute("class") + " unread")
 				} else {
 					var last_text;
@@ -906,8 +973,6 @@
 					}
 
 					var new_box = getChatElement(new_chat);
-
-					//if (new_text.length > 0) new_box.getElementsByClassName("chat-text")[0].innerText = new_text;
 
 					var pinRows = document.getElementsByClassName("pinRow");
 
@@ -1004,7 +1069,7 @@
 				var p = document.getElementsByClassName("selected-photo");
 
 				for (var i = p.length - 1; i >= 0; --i) {
-					p[i].setAttribute("class", p[i].getAttribute("class").replace("selected-photo", ""));
+					p[i].setAttribute("class", p[i].getAttribute("class").replace(/selected-photo/g, ""));
 				}
 
 				document.getElementById("camerarollbutton").innerHTML = faLoaded ? "<i class=\"fas fa-camera\"></i>" : "📷";
@@ -1081,7 +1146,10 @@
 					var c = 0;
 					var typing = window.setInterval(() => {
 						var i = document.getElementById("typingIndicator");
-						if (i === null) clearInterval(typing);
+						if (i === null) {
+							clearInterval(typing);
+							return;
+						}
 						i.children[c].setAttribute("class", "dot");
 						c = (c + 1) % 3;
 						i.children[c].setAttribute("class", "dot flashing");
@@ -1123,12 +1191,12 @@
 				window.location.href = prefix + "/requests?search=" + term; /// uhh simple stuff; use default settings for now
 			}
 
-			window.onfocus = function() { 
-				self.window_is_focused = true; 
+			window.addEventListener("focus", function(event) {
+				if (current_chat_id.length === 0) return;
 				var bt = document.getElementById(current_chat_id);
-				if (bt !== undefined) bt.setAttribute("class", bt.getAttribute("class").replace("unread", ""))
-			}
-			window.onblur = function() { self.window_is_focused = false; }
+				if (bt !== undefined && bt !== null) bt.setAttribute("class", bt.getAttribute("class").replace(/unread/g, ""))
+				var _ = fetchFromURL(prefix + "/requests?person=" + current_chat_id + "&num=1"); /// Just to set the chat as read
+			});
 
 			document.addEventListener("DOMContentLoaded", () => {
 				if (!window.Notification || Notification.permission === "granted")
@@ -1152,7 +1220,7 @@
 	<body>
 		<div class="everything">
 			<div class="chats">
-				<div class="chats-title">
+				<div class="chats-title" onclick="clearTextContent();">
 					<h1>SMServer</h1>
 					<div id="stats">
 						<div id="battery">
@@ -1172,7 +1240,7 @@
 			</div>
 			<div class="messages">
 				<div class="title">
-					<span class="title-content"></span>
+					<span class="title-content" id="messagesTitleText"></span>
 				</div>
 				<div class="text-content" id="text-content">
 					<div class="centered">Select a chat on the left to view your messages :)</div>
