@@ -220,7 +220,7 @@ final class ChatDelegate {
 		var messages = [[String:String]]()
 
 		if is_group {
-			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
+			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
 		} else {
 			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
 		}
@@ -233,7 +233,7 @@ final class ChatDelegate {
 				for l in 0..<a.count {
 					/// use ':' as separater between attachments 'cause you can't have a filename in iOS that contains it (I think?)
 					/// Also yes I now recognize that this is terrible and I should just make this an array instead of a string.
-					/// Yes I'll fix that some time but this seems to function ok right now and I'm apprehensive to change the API
+					/// I'll fix that some time but this seems to function ok right now and I'm apprehensive to change the API
 					file_string += a[l][0] + (l != a.count ? ":" : "")
 					type_string += a[l][1] + (l != a.count ? ":" : "")
 				}
@@ -527,7 +527,7 @@ final class ChatDelegate {
 		}
 	}
 
-	final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true, group_by_time: Bool = true) -> /*[String:[[String:String]]]*/ Any {
+	final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true, group_by_time: Bool = true) -> Any {
 		/// This gets all texts with $term in them; case_sensitive, bridge_gaps, and group_by_time are customization options
 
 		/// Create Connections

@@ -1,7 +1,7 @@
 # SMServer
 
 ![The iphone & web interfaces side by side](assets/smserver.png)
-<span style="font-weight: 200; font-size: 12px">The iPhone and web interfaces shown side by side</span>
+<span style="font-weight: 200; font-size: 12px">The web interface shown with personal information blurred out</span>
 
 **SMServer is an iPhone app, written in SwiftUI, which allows for one to send and receive text messages (and iMessages) from their Web browser**
 
@@ -27,7 +27,7 @@
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
-- To install the ipa: some signing service/bypass -- Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign it, but if that doesn't work for you, then feel free to sign & install the .ipa. The .deb does not require signing or any sort of bypass, since it install as a system application.
+- To install the ipa (NOT the deb): some signing service/bypass -- Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign it, but if that doesn't work for you, then feel free to sign & install the .ipa. The .deb does not require signing or any sort of bypass, since it install as a system application.
 
 ## To Install
 Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.md` for information on how to build from source.
@@ -41,7 +41,7 @@ The source code may be updated past the latest released version, so don't be sur
 5. Enjoy!
 6. (Optional) Customize the defaults under the settings section of the app to better fit your needs 
 
-## TODO
+<!--## TODO
 - [x] View conversations in browser
 - [x] View texts in browser
 - [x] Dynamic loading of texts
@@ -65,6 +65,7 @@ The source code may be updated past the latest released version, so don't be sur
 - [x] Subject lines for texts on web interface
 - [ ] Ability to send reactions from web interface - This is nearly done
 - [ ] Search through messages from browser - This has been implemented in the API
+- [ ] Ability to delete conversations from the web interface-->
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
@@ -88,7 +89,7 @@ Also, if the app did not crash on startup, but rather crashed after it was alrea
  - Enable debug on the app, then kill the app in app switcher
  - Start the app and let it reach the error point
  - Manually copy the output from the above command (as much as you can get) into a text file.
- - DM me the file at u/Janshai on reddit. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information. 
+ - Email me the file at contact@ianwelker.com. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information. 
 
 ## Companion App
 There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
