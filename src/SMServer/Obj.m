@@ -47,6 +47,7 @@
 - (id)init {
 	if (self = [super init]) {
 		self.center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserver"];
+		/// TODO: Find a way to add an NSNotificationCenter observer for the name "__kIMChatMessageReceivedNotification" and "__kIMChatRegistryMessageSentNotification"
 	}
 	return self;
 }

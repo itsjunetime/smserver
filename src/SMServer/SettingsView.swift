@@ -19,6 +19,9 @@ struct SettingsView: View {
 	@State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
 	@State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
 	@State var send_typing: Bool = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
+	@State var combine_contacts: Bool = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
+
+	var grey_box = Color("BeginningBlur")
 
 	private let picker_options: [String] = ["Dark", "Light", "Nord"]
 
@@ -52,6 +55,13 @@ struct SettingsView: View {
 			UserDefaults.standard.setValue(Int($0), forKey: "num_photos")
 		})
 
+		let socket_binding = Binding<Int>(get: {
+			self.socket_port
+		}, set: {
+			self.socket_port = Int($0)
+			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
+		})
+
 		let theme_binding = Binding<Int>(get: {
 			self.light_theme ? 1 : (self.nord_theme ? 2 : 0)
 		}, set: {
@@ -61,18 +71,25 @@ struct SettingsView: View {
 			UserDefaults.standard.setValue(self.nord_theme, forKey: "nord_theme")
 		})
 
-		let socket_binding = Binding<Int>(get: {
-			self.socket_port
+		let subject_binding = Binding<Bool>(get: {
+			self.subjects_enabled
 		}, set: {
-			self.socket_port = Int($0)
-			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
+			self.subjects_enabled = $0
+			UserDefaults.standard.setValue($0, forKey: "subjects_enabled")
 		})
 
-		let debug_binding = Binding<Bool>(get: {
-			self.debug
+		let typing_binding = Binding<Bool>(get: {
+			self.send_typing
 		}, set: {
-			self.debug = $0
-			UserDefaults.standard.setValue($0, forKey: "debug")
+			self.send_typing = $0
+			UserDefaults.standard.setValue($0, forKey: "send_typing")
+		})
+
+		let read_binding = Binding<Bool>(get: {
+			self.mark_when_read
+		}, set: {
+			self.mark_when_read = $0
+			UserDefaults.standard.setValue($0, forKey: "mark_when_read")
 		})
 
 		let auth_binding = Binding<Bool>(get: {
@@ -80,6 +97,20 @@ struct SettingsView: View {
 		}, set: {
 			self.require_authentication = $0
 			UserDefaults.standard.setValue($0, forKey: "require_auth")
+		})
+
+		let contacts_binding = Binding<Bool>(get: {
+			self.combine_contacts
+		}, set: {
+			self.combine_contacts = $0
+			UserDefaults.standard.setValue($0, forKey: "combine_contacts")
+		})
+
+		let debug_binding = Binding<Bool>(get: {
+			self.debug
+		}, set: {
+			self.debug = $0
+			UserDefaults.standard.setValue($0, forKey: "debug")
 		})
 
 		let background_binding = Binding<Bool>(get: {
@@ -97,13 +128,6 @@ struct SettingsView: View {
 			self.display_ssl_alert = true
 		})
 
-		let read_binding = Binding<Bool>(get: {
-			self.mark_when_read
-		}, set: {
-			self.mark_when_read = $0
-			UserDefaults.standard.setValue($0, forKey: "mark_when_read")
-		})
-
 		let override_binding = Binding<Bool>(get: {
 			self.override_no_wifi
 		}, set: {
@@ -111,64 +135,54 @@ struct SettingsView: View {
 			UserDefaults.standard.setValue($0, forKey: "override_no_wifi")
 		})
 
-		let subject_binding = Binding<Bool>(get: {
-			self.subjects_enabled
-		}, set: {
-			self.subjects_enabled = $0
-			UserDefaults.standard.setValue($0, forKey: "subjects_enabled")
-		})
-
-		let typing_binding = Binding<Bool>(get: {
-			self.send_typing
-		}, set: {
-			self.send_typing = $0
-			UserDefaults.standard.setValue($0, forKey: "send_typing")
-		})
-
 		return ScrollView {
-			VStack(spacing: 16) {
-				HStack {
-					Text("Settings")
-						.font(.largeTitle)
-					Spacer()
-				}
+			VStack(alignment: .leading, spacing: 16) {
+				Text("Settings")
+					.font(.largeTitle)
 
-				Spacer().frame(height: 12)
+				Spacer().frame(height: 8)
+
+				Text("Load values")
+					.font(.headline)
 
 				Section {
+					VStack {
 
-					HStack {
-						Text("Initial number of chats to load")
-						Spacer()
-						TextField("Chats", value: chats_binding, formatter: NumberFormatter())
-							.textFieldStyle(RoundedBorderTextFieldStyle())
-							.frame(width: 60)
-					}
+						HStack {
+							Text("Initial number of chats to load")
+							Spacer()
+							TextField("Chats", value: chats_binding, formatter: NumberFormatter())
+								.textFieldStyle(RoundedBorderTextFieldStyle())
+								.frame(width: 60)
+						}
 
-					HStack {
-						Text("Initial number of messages to load")
-						Spacer()
-						TextField("Messages", value: messages_binding, formatter: NumberFormatter())
-							.textFieldStyle(RoundedBorderTextFieldStyle())
-							.frame(width: 60)
-					}
+						HStack {
+							Text("Initial number of messages to load")
+							Spacer()
+							TextField("Messages", value: messages_binding, formatter: NumberFormatter())
+								.textFieldStyle(RoundedBorderTextFieldStyle())
+								.frame(width: 60)
+						}
 
-					HStack {
-						Text("Initial number of photos to load")
-						Spacer()
-						TextField("Photos", value: photos_binding, formatter: NumberFormatter())
-							.textFieldStyle(RoundedBorderTextFieldStyle())
-							.frame(width: 60)
-					}
+						HStack {
+							Text("Initial number of photos to load")
+							Spacer()
+							TextField("Photos", value: photos_binding, formatter: NumberFormatter())
+								.textFieldStyle(RoundedBorderTextFieldStyle())
+								.frame(width: 60)
+						}
 
-					HStack {
-						Text("Websocket port")
-						Spacer()
-						TextField("Port", value: socket_binding, formatter: NumberFormatter())
-							.textFieldStyle(RoundedBorderTextFieldStyle())
-							.frame(width: 60)
+						HStack {
+							Text("Websocket port")
+							Spacer()
+							TextField("Port", value: socket_binding, formatter: NumberFormatter())
+								.textFieldStyle(RoundedBorderTextFieldStyle())
+								.frame(width: 60)
+						}
 					}
-				}
+				}.padding(10)
+				.background(grey_box)
+				.cornerRadius(8)
 
 				Spacer().frame(height: 14)
 
@@ -188,21 +202,42 @@ struct SettingsView: View {
 				Spacer().frame(height: 14)
 
 				Section {
-					Toggle("Toggle debug", isOn: debug_binding)
 
-					Toggle("Require Authentication to view messages", isOn: auth_binding)
+					Text("Web interface Settings")
+						.font(.headline)
 
-					Toggle("Enable backgrounding", isOn: background_binding)
+					Section {
+						VStack(spacing: 8) {
 
-					Toggle("Enable SSL", isOn: secure_binding)
+							Toggle("Enable subject line", isOn: subject_binding)
+							Toggle("Send typing indicators", isOn: typing_binding)
+							Toggle("Automatically mark as read", isOn: read_binding)
+							Toggle("Require Authentication", isOn: auth_binding)
+							//Toggle("Merge contact addresses (slower)", isOn: contacts_binding)
 
-					Toggle("Mark conversations as read when viewed on web interface", isOn: read_binding)
+						}
+					}.padding(10)
+					.background(grey_box)
+					.cornerRadius(8)
 
-					Toggle("Override 'No Wifi' prevention setting on main interface", isOn: override_binding)
+					Spacer().frame(height: 8)
 
-					Toggle("Enable subject line in web interface (and API)", isOn: subject_binding)
+					Text("Miscellaneous")
+						.font(.headline)
 
-					Toggle("Send typing indicator when you type", isOn: typing_binding)
+					Section {
+						VStack(spacing: 8) {
+
+							Toggle("Toggle debug", isOn: debug_binding)
+							Toggle("Enable backgrounding", isOn: background_binding)
+							Toggle("Enable SSL", isOn: secure_binding)
+							Toggle("Allow operation off of Wifi", isOn: override_binding)
+
+						}
+					}.padding(10)
+					.background(grey_box)
+					.cornerRadius(8)
+
 				}.alert(isPresented: $display_ssl_alert, content: {
 					Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
 				})
@@ -211,14 +246,20 @@ struct SettingsView: View {
 
 					Spacer().frame(height: 30)
 
-					Button(action: {
-						self.resetDefaults()
-					}) {
-						Text("Reset Defaults")
-							.padding(.init(top: 8, leading: 24, bottom: 8, trailing: 24))
-							.background(Color.blue)
-							.cornerRadius(8)
-							.foregroundColor(Color.white)
+					HStack {
+						Spacer()
+
+						Button(action: {
+							self.resetDefaults()
+						}) {
+							Text("Reset Defaults")
+								.padding(.init(top: 8, leading: 24, bottom: 8, trailing: 24))
+								.background(Color.blue)
+								.cornerRadius(8)
+								.foregroundColor(Color.white)
+						}
+
+						Spacer()
 					}
 				}
 

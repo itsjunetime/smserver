@@ -1,5 +1,19 @@
 # Changelog
-0.5.2 -> 0.5.3
+0.5.3 &rightarrow; 0.5.4
+ - Texts now have prettier bubble tails and no tails when sent close after each other
+ - Texts also have proper spacing when sent far from each other to indicate the gaps in conversation
+ - Added experimental option to combine numbers that are assigned to the same contact as similar chats
+ - Added option in API to get chats from multiple addresses as if they were one conversation
+ - Revamped settings view
+ - Sending a text now creates a new time display when it's been more than an hour
+ - Web interface is better at waiting for attachments to fully upload when sending a text before displaying the new text in the web interface
+ - Web interface now only tries to mark a conversation as read when the window becomes focused if it was already unread
+ - Fixed issue with z-indices on multiple overlayed reations
+ - Fixed coloring issues with dark and light themes
+ - Fixed spacing issues in text area
+ - Fixed issue where conversations would not appear as selected if they were not the top of the list when you sent a text to them
+
+0.5.2 &rightarrow; 0.5.3
  - Added inline audio displays
  - Images and attachments now appear more similar to stock iMessage
  - Reactions now appear correctly in group chats
@@ -10,7 +24,7 @@
  - Fixed style issues with incorrect text spacing
  - Fixed issue where no new chats would load
 
-0.5.1 -> 0.5.2
+0.5.1 &rightarrow; 0.5.2
  - Added support for inline video displays
  - Improved attachment displays in conversations
  - Fixed issue where chats would be treated as empty if they held a subject but no text
@@ -19,14 +33,14 @@
  - Fixed issue where tapbacks would not disappear when they were removed
  - Fixed some small spacing issues
 
-0.5.0 -> 0.5.1
+0.5.0 &rightarrow; 0.5.1
  - Added more customization options to search API
  - Added subject line option to web interface
  - Added icon to show if device is charging or not
  - Added partial functionality for search bar; doesn't show graphic display yet but redirects to JSON API page
  - Significantly improved documentation on API and websocket
 
-0.4.3 -> 0.5.0
+0.4.3 &rightarrow; 0.5.0
  - Added full suport for iOS 14+
  - Added support for displaying pinned conversations
  - Added support for group chat names in `/requests?name` API
@@ -51,7 +65,7 @@
  - Fixed issue with wrong conversation showing at top
  - Changed some glyphs in web interface
 
-0.4.2 -> 0.4.3
+0.4.2 &rightarrow; 0.4.3
  - Fixed issue with new texts in group chats sometimes not showing immediately
  - Fixed issue where text box in web interface would not automatically resize after text was sent
  - Texts sent with images now show images immediately after being sent
@@ -59,7 +73,7 @@
  - Prevented conversations from being marked as read when webpage/conversation was not selected
  - Added option to manually (not) mark conversation as read through API
 
-0.4.1 -> 0.4.2
+0.4.1 &rightarrow; 0.4.2
  - Rich Links look very nice now
  - Added support for battery percentage display
  - Fixed issue with notification button placement
@@ -68,7 +82,7 @@
  - Added subject functionality to API (+ setting to toggle on/off)
  - Added support for viewing text subjects in web interface 
 
-0.4.0 -> 0.4.1
+0.4.0 &rightarrow; 0.4.1
  - Fixed up displays of Rich Links to look okay
  - Fixed issue with document not scrolling to bottom if all texts.date_read attributes === "0".
  - Added graphical display for reactions
@@ -77,7 +91,7 @@
  - Laid groundwork for sending reactions
  - Removed unnecessary restarting functions
 
-0.3.8 -> 0.4.0
+0.3.8 &rightarrow; 0.4.0
  - Added extra UIBackgroundModes to app `Info.plist` to allow for truly unlimited background time (screen on/off)
  - Fixed countless styling issues on all themes
  - Rewrote light theme
@@ -85,7 +99,7 @@
  - Fixed issue with not all chats being returned
  - (Probably) fixed issue with wrong chat button displaying on top of list in web interface
 
-0.3.7 -> 0.3.8
+0.3.7 &rightarrow; 0.3.8
  - Fixed multiple issues with images from camera roll not displaying correctly
  - Fixed issue with camera roll favorite hearts not showing
  - Made css routes more dynamic
@@ -95,7 +109,7 @@
  - Almost fixed background issue (it won't crash in the background now, but still doesn't receive connections)
  - Improved web interface styling
 
-0.3.6 -> 0.3.7
+0.3.6 &rightarrow; 0.3.7
  - Introduced general optimizations
  - Specifically optimized message and searching retrieval functions
  - Introduced viewing of read receipts
@@ -103,26 +117,26 @@
  - Removed postinst script
  - Decreased code footprint
 
-0.3.5 -> 0.3.6
+0.3.5 &rightarrow; 0.3.6
  - Maybe fixed Cydia never-ending update issue?
  - Fixed styling issues with css grid noncompatible browsers
  - Fixed weird colors on light theme
  - Fixed crashing issue when marking conversation as read
  - Optimized chat retrieval SQL Query
 
-0.3.4 -> 0.3.5
+0.3.4 &rightarrow; 0.3.5
  - Added support for marking conversations as read when viewed in web interface
  - Added support for relative date displays
  - Removed unnecessary functions
  - Added option to change how many photos display by default
 
-0.3.3 -> 0.3.4
+0.3.3 &rightarrow; 0.3.4
  - Rewrote function to fetch texts to use sql joins instead of multiple queries; is significantly faster now
  - Almost now shows favorite images in interface
  - Fixed issue #14 (correctly parses `chat_id`s when retrieving messages)
  - Improved name retrieval to match SMS Sender IDs
 
-0.3.2 -> 0.3.3
+0.3.2 &rightarrow; 0.3.3
  - Implemented better `chat_identifier` parsing to get name & image (see issue #9);
  - Enabled interacting with and selecting photos from the camera roll in the web interface
  - Remove unnecessary `parsePhoneNum()` function
@@ -130,25 +144,25 @@
  - Introduced custom query parsing to allow for plus signs (or replacements like `%2B`) in the URL
  - Fixed issues with app crashing if a text was received before the server had started
 
-0.3.1 -> 0.3.2
+0.3.1 &rightarrow; 0.3.2
  - Updated notifications to show more information
  - Fixed issue with favicon not showing
  - Fixed issue with app still requiring one to enter phone number
  - Updated Content-type of CSS pages to `text/css`
  - Fixed issue with new texts not displaying properly
 
-0.3.0-1+debug -> 0.3.1
+0.3.0-1+debug &rightarrow; 0.3.1
  - Change api specifications for sending text
  - Removed requirement for inputting phone numbers
  - Added option to disable SSL/HTTPS
  - Better parsing of phone numbers for sending and checking texts
 
-0.2.0-20+debug -> 0.3.0-1+debug
+0.2.0-20+debug &rightarrow; 0.3.0-1+debug
  - Changed from GCDWebServer framework to my forked branch of Criollo
  - Implemented HTTPS
  - Implemented Desktop Notifications
 
-0.2.0+debug19 -> 0.2.0-20+debug
+0.2.0+debug19 &rightarrow; 0.2.0-20+debug
  - Changed how version numbers are named
  - Fixed issue with new text content not appearing on web interface conversation button if it was currently selected and top conversation
  - Web interface now shows attachment description in place of latest text content when latest text had no body but had an attachment
@@ -156,103 +170,103 @@
  - Added error checking for when the database fails to open
  - Updated method of opening database for possibly better compatibility
 
-0.2.0+debug18 -> 0.2.0+debug19
+0.2.0+debug18 &rightarrow; 0.2.0+debug19
  - Improved phone number parsing
  - Improved bounds checking on arrays
  - Fixed minor css styling issues
  - Fixed issue with default chats/messages numbers being switched
 
-0.2.0+debug17 -> 0.2.0+debug18
+0.2.0+debug17 &rightarrow; 0.2.0+debug18
  - Fixed issue with port not changing
  - Fixed issue with force unwrapping ip address
  - Now calls mryipc methods asynchronously so that app does not crash if they fail
 
-0.2.0+debug15 -> 0.2.0+debug17
+0.2.0+debug15 &rightarrow; 0.2.0+debug17
  - Updated libmryipc.dylib to newest version
  - Set libmryipc.dylib to embed & sign, not neither.
  - Removed option to start server on load
  - Added new information about entering phone number
  - Added postinst script to recommend ldrestarting
 
-0.2.0+debug14 -> 0.2.0+debug15
+0.2.0+debug14 &rightarrow; 0.2.0+debug15
  - Fixed dependency issues
  - Laid groundwork for showing camera roll images in browser interface
 
-0.2.0+debug13 -> 0.2.0+debug14
+0.2.0+debug13 &rightarrow; 0.2.0+debug14
  - Added app icon on home screen
  - Added app icon to website
 
-0.2.0+debug11 -> 0.2.0+debug13
+0.2.0+debug11 &rightarrow; 0.2.0+debug13
  - Fixed issue with styling of profile pictures and more texts button
  - Added easy access to light theme
  - Fixed styling issues on light theme
  - Removed server_ping setting
 
-0.2.0+debug10 -> 0.2.0+debug11
+0.2.0+debug10 &rightarrow; 0.2.0+debug11
  - Fixed issue with new texts showing slowly
  - No longer updates when user sends text from another device
  - Fixed issue with new texts not appearing under conversation in chats list
  - Will have issues with new texts doubling if you use libsmserver < 0.2.0+debug20
 
-0.2.0+debug9 -> 0.2.0+debug10
+0.2.0+debug9 &rightarrow; 0.2.0+debug10
 - Fixed styling issues in web interface
 - Added dynamic colors for sms vs imessages
 
-0.2.0+debug8 -> 0.2.0+debug9
+0.2.0+debug8 &rightarrow; 0.2.0+debug9
 - Added view for time & most recent text on chat list in web interface
 - Refactored JS in web interface
 - Fixed styling issues in web interface
 
-0.2.0+debug7 -> 0.2.0+debug8
+0.2.0+debug7 &rightarrow; 0.2.0+debug8
 - Changed profile & attachment request directory from `profile` and `attachments` to `data` (for both)
 - Fixed issue with parsing attachment path
 - Added support for retrieving a list of photos from photo library through API
 - Added support for retrieving specific item from photo library through API
 
-0.2.0+debug6 -> 0.2.0+debug7
+0.2.0+debug6 &rightarrow; 0.2.0+debug7
 - Fixed issue with IPv6 address incorrectly showing
 - Fixed issue with keyboard covering textfields when entering name
 - Disabled long-polling by default on web interface; however, the code is still there and the call func is simply commented out. Easy to revert if you so wish
 - Removed unnecessary messages reloading in web interface
 
-0.2.0+debug5 -> 0.2.0+debug6
+0.2.0+debug5 &rightarrow; 0.2.0+debug6
 - Added extra address handing to support more types of address formatting (e.g. with/without area code, country code, etc.)
 - Added options to reset defaults
 - Fixed bug with popup form sending even when 'cancel' was clicked instead of 'sent'
 - Fixed small css styling issues
 
-0.2.0+debug3 -> 0.2.0+debug5
+0.2.0+debug3 &rightarrow; 0.2.0+debug5
 - Merged PR to fix extra line issue when sending text in web interface
 - Merged PR to allow extra line creation on web interface with Shift+Enter
 - Fixed spacing issue on main app view
 - Optimized new text retrieval
 
-0.2.0+debug2 -> 0.2.0+debug3
+0.2.0+debug2 &rightarrow; 0.2.0+debug3
 - Added protections for unwanted webSocket connections
 - Added settings for changing webSocket port
 - Laid groundwork for battery/wifi stats on webpage
 - Laid groundwork for new texts retrieval method customization
 
-+debug80 -> 0.2.0+debug2
++debug80 &rightarrow; 0.2.0+debug2
 - Added support for websockets (instant notification on web client when new texts are received on host)
 - Fixed issue with defaults
 - Fixed issue with unread conversations not showing
 
-+debug77 -> +debug80
++debug77 &rightarrow; +debug80
 - Added basic search API
 - Fixed CSS issues in web interface
 
-+debug76 -> +debug77
++debug76 &rightarrow; +debug77
 - Added support within libsmserver for sending texts to previously nonexistent conversations
 - Added support in web interface for sending texts to previously nonexistent conversations
 
-+debug72 -> +debug76
++debug72 &rightarrow; +debug76
 - Fixed issue with unc0ver devices being unable to send attachments or set custom CSS
 - Fixed entitlements
 - Implemented correct codesigning
 - Removed postinst Script
 
-0.1.0+debug68 -> +debug72
+0.1.0+debug68 &rightarrow; +debug72
 - Changed upload/POST directory to /send instead of /uploads
 - Whenever new texts arrive, the web interface conditionally reloads the Chats & only adds new texts instead of reloading all texts
 - New texts appear as soon as they're sent in the web interface

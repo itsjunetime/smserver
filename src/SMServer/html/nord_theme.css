@@ -6,6 +6,10 @@
 	--selected-background: #d8dee930;
 	--text-box-gradient: linear-gradient(to bottom right, #2e3440, #3b4252);
 	--light-button-background: #4c566a;
+
+	--my-imessage-background: #5381ac;
+	--my-sms-background: #6fbf9b;
+	--their-text-background: #4c566a;
 }
 .chats button:hover {
 	background-color: #4c566a;
@@ -15,16 +19,9 @@
 }
 #moretextsbutton {
 	border: none;
+	box-shadow: 0px 0px 10px #2224;
 }
-.is_from_me.iMessage {
-	background-color: #5381ac;
-	background-image: none;
-}
-.is_from_me.SMS {
-	background-image: none;
-	background-color: #6fbf9b;
-}
-.is_from_them, #camerarollbutton, #unhiddenbutton {
+#camerarollbutton, #unhiddenbutton {
 	background-color: #4c566a;
 }
 #composeShowingAttachmentButton {
