@@ -21,6 +21,10 @@
 	--light-button-background: #444;
 	--grayblue-background: #1a191b;
 	--selected-background: #252525;
+
+	--my-imessage-background: rgb(49, 100, 240);
+	--my-sms-background: rgb(32, 179, 53);
+	--their-text-background: rgb(58, 58, 60);
 }
 * {
 	font-family: var(--main-font);
@@ -82,7 +86,6 @@ p {
 	grid-gap: 10px;
 	transform: translateY(calc(var(--messages-title-height) / 8));
 	white-space: nowrap;
-	padding-left: 20px;
 	max-width: calc(100vw - var(--chats-width) - 40px);
 }
 .textbox {
@@ -118,14 +121,18 @@ p {
 	grid-row: 1;
 	border-radius: 100%;
 }
-.messages .text-content {
+#text-content {
 	grid-row: 1/3;
 	grid-column: 1;
 	overflow-x: hidden;
-	padding: var(--messages-title-height) 10px 0 10px;
+	padding: var(--messages-title-height) 11px 0 11px;
 	display: flex;
 	flex-direction: column;
 	scrollbar-width: none;
+}
+#text-content::after {
+	content: '';
+	padding: 1px;
 }
 .centered {
 	margin: auto;
@@ -224,8 +231,6 @@ i#chargingSymbol {
 }
 .chats button.pinned .chat-top {
 	display: grid;
-	grid-template-rows: 22px 1fr;
-	grid-template-columns: 1fr;
 }
 .chats button.pinned img {
 	max-height: calc(var(--chats-button-height) * 1.4);
@@ -246,7 +251,7 @@ i#chargingSymbol {
 	margin: 0;
 	grid-row: 1;
 	grid-column: 1;
-	height: max-content;
+	height: 26px;
 }
 .pinned .chat-name {
 	font-size: calc(8px + 0.5vw);
@@ -257,10 +262,6 @@ i#chargingSymbol {
 .chat-nonpic {
 	padding-left: 14px;
 	width: calc(var(--chats-width) - (var(--chats-button-height) * 1.1)); /* This doesn't make any sense but it seems to work */
-	align-self: flex-start;
-	margin: auto 0;
-	align-self: flex-start;
-	margin: auto 0;
 }
 .chat-toprow {
 	display: flex;
@@ -269,7 +270,6 @@ i#chargingSymbol {
 .chat-name {
 	font-size: 16px;
 	line-height: 18px;
-	max-height: 18px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	text-align: start;
@@ -288,7 +288,6 @@ i#chargingSymbol {
 }
 .chat-date {
 	padding-right: 6px;
-	text-align: right;
 	min-width: max-content;
 	margin-left: 5px;
 }
@@ -315,6 +314,9 @@ i#chargingSymbol {
 .text.noPadding.fullAttachment, .text-area.noPadding.fullAttachment {
 	background-color: transparent;
 }
+.fullAttachment:before, .fullAttachment:after {
+	display: none;
+}
 .chats p {
 	transition: all linear 0.1s;
 }
@@ -334,13 +336,19 @@ i#chargingSymbol {
 }
 .text {
 	font-family: var(--main-font);
-	width: max-content;
 	max-width: 40vw;
-	padding: 7px 10px 4px 8px;
 	margin: 0px 0px 14px 0px;
 	font-weight: 300;
 	font-size: 18px;
-	word-break: break-word;
+	padding: 7px 12px;
+	line-height: 21px; /* Specific but that's what it is */
+}
+.text:before, .text:after,
+.text-area:before, .text-area:after {
+	content: '';
+	position: absolute;
+	bottom: -2px;
+	height: 16px;
 }
 .text .subject {
 	font-weight: 500;
@@ -364,33 +372,77 @@ i#chargingSymbol {
 	margin: 0 0 16px 0;
 }
 .is_from_me {
-	float: right;
 	position: relative;
-	border-radius: 10px 10px 2px 10px;
+	border-radius: 20px 20px 15px 20px;
 	align-self: flex-end;
 }
+.is_from_me:before {
+	right: -11px;
+	border-bottom-left-radius: 16px 14px;
+	transform: translate(0, -2px);
+	border-bottom-right-radius: 12px;
+}
+.is_from_me:after {
+	right: -42px;
+	border-bottom-left-radius: 8px;
+}
+.iMessage.is_from_me:before {
+	border-right: 19px solid var(--my-imessage-background);
+}
+.SMS.is_from_me:before {
+	border-right: 19px solid var(--my-sms-background);
+}
 .is_from_them {
-	position: relative;
-	border-radius: 10px 10px 10px 2px;
+	border-radius: 20px 20px 20px 15px;
 	align-self: flex-start;
+	background-color: var(--their-text-background);
+	position: relative;
+}
+.is_from_them:before {
+	left: -11px;
+	border-left: 20px solid var(--their-text-background);
+	border-bottom-right-radius: 16px 14px;
+	transform: translate(0, -2px);
+	border-bottom-left-radius: 8px;
+}
+.is_from_them:after {
+	left: 18px;
+	border-bottom-right-radius: 8px;
+}
+.text:after {
+	width: 12px;
+	background: var(--main-background);
+	transform: translate(-30px, -2px);
 }
 .is_from_me + .is_from_me,
 .from_me + .from_me,
 .is_from_them + .is_from_them,
 .from_them + .from_them {
-	margin-top: -8px;
+	margin-top: -10px;
 }
 .is_from_me.iMessage {
-	background-image: linear-gradient(to right, rgb(49, 100, 240), rgb(19, 75, 218));
+	background-color: var(--my-imessage-background);
 }
 .is_from_me.SMS {
-	background-image: linear-gradient(to right, rgb(71, 194, 90), rgb(41, 194, 63));
+	background-color: var(--my-sms-background);
 }
 .text video, .text-area video,
 .text img, .text-area img,
 .text audio, .text-area audio {
 	max-width: 100%;
 	border-radius: 10px;
+}
+.notLast:before, .notLast:after {
+	display: none;
+}
+.notLast {
+	border-radius: 20px;
+}
+.notLast {
+	border-radius: 20px;
+}
+.spacer {
+	height: 10px;
 }
 .time-display {
 	text-align: center;
@@ -401,7 +453,6 @@ i#chargingSymbol {
 	background-color: cornflowerblue;
 	align-self: center;
 	margin: 20px 0;
-	min-height: 46px;
 	box-shadow: 0px 0px 10px #222;
 	transition: linear 0.2s;
 }
@@ -434,17 +485,18 @@ i#chargingSymbol {
 	background-color: var(--selected-background);
 	font-size: calc(var(--send-box-size) - 8px);
 	height: var(--send-box-size);
-	padding: 3px calc(var(--send-button-size) + 10px) 0 10px;
+	padding: 5px calc(var(--send-button-size) + 10px) 0 10px;
+	margin: 0;
 }
 #sendbox.input {
 	grid-column: 3/5;
 	grid-row: 1;
 	border-radius: calc(var(--send-box-size) / 2);
 	margin: auto 0;
+	font-weight: 300;
 }
 #sendbox.subjectInput {
 	border-radius: 0 0 calc(var(--send-box-size) / 2) calc(var(--send-box-size) / 2);
-	padding: 0 calc(var(--send-button-size) + 10px) 0 10px;
 }
 .subjectSubject {
 	border-radius: calc(var(--send-box-size) / 2) calc(var(--send-box-size) / 2) 0 0;
@@ -455,7 +507,6 @@ i#chargingSymbol {
 	flex-flow: column;
 	grid-column: 3/5;
 	grid-row: 1;
-	border-radius: calc(var(--send-box-size) / 2);
 }
 #attachmentbutton {
 	display: none;
@@ -469,7 +520,6 @@ i#chargingSymbol {
 	width: 100vw;
 	height: 100vh;
 	z-index: 10;
-	overflow: auto;
 	top: 0;
 	left: 0;
 	background-color: rgba(0, 0, 0, 0.3);
@@ -487,7 +537,6 @@ i#chargingSymbol {
 }
 .composeTitleBoxDiv {
 	background-color: rgba(100, 100, 100, 0.2);
-	color: #ddd;
 	border-radius: 8px 8px 0px 0px;
 	padding: 5px;
 	display: grid;
@@ -510,7 +559,6 @@ i#chargingSymbol {
 #composeHideButton, #composeSendButton, 
 #camerarollHideButton, #camerarollSelectButton {
 	border: none;
-	outline: none;
 	border-radius: 5px;
 	transition: all linear 0.1s;
 	font-size: 15px;
@@ -532,22 +580,20 @@ i#chargingSymbol {
 	grid-row: 2;
 }
 .composeAddressToDiv {
-	margin-left: 6px;
+	margin: auto 0 auto 6px;
 	grid-column: 1;
 }
 #composeAddressBox {
 	grid-column: 2;
 	border: none;
-	outline: none;
 	border-radius: 5px;
 	background: var(--text-box-gradient);
 	font-size: 16px;
-	padding: 0px 4px
+	padding: 4px;
 }
 #composeShowingAttachmentButton {
 	grid-column: 3;
 	border: none;
-	outline: none;
 	border-radius: 5px;
 	background-color: transparent;
 	box-shadow: 0px 0px 6px black;
@@ -560,7 +606,6 @@ i#chargingSymbol {
 #composeSendBox {
 	margin: 10px;
 	border: none;
-	outline: none;
 	border-radius: 5px;
 	width: calc(100% - (2 * 10px));
 	height: calc(46vh - 90px);
@@ -572,14 +617,12 @@ i#chargingSymbol {
 }
 #composeShowButton, #notificationbutton {
 	background-color: var(--light-button-background);
-	outline: none;
 	border: none;
 	border-radius: 5px;
-	padding: 6px 0px 0px 0px;
 }
 #composeShowButton {
-	width: max-content;
 	padding: 0px 8px;
+	margin-right: -6px;
 }
 #searchBox {
 	width: 100%;
@@ -603,7 +646,7 @@ i#chargingSymbol {
 }
 #camerarollbutton, #unhiddenbutton {
 	grid-row: 1;
-	background-color: gray;
+	background-color: var(--selected-background);
 	border-radius: 5px;
 	width: var(--attachments-button-size);
 	height: var(--send-box-size);
@@ -613,10 +656,7 @@ i#chargingSymbol {
 }
 #cameraroll {
 	background-color: var(--main-background);
-	border: 2px black;
-	height: 80vh;
 	max-height: 80vh;
-	width: var(--camera-roll-width);
 	max-width: var(--camera-roll-width);
 	margin: auto;
 	margin-top: 10vh;
@@ -627,7 +667,6 @@ i#chargingSymbol {
 }
 #camerarollTitle {
 	background-color: rgba(100, 100, 100, 0.2);
-	color: #ddd;
 	border-radius: 8px 8px 0px 0px;
 	padding: 5px;
 	display: grid;
@@ -696,7 +735,6 @@ i#chargingSymbol {
 	background-color: rgba(70, 140, 240, 0.7);
 }
 .text-area {
-	width: max-content;
 	margin-bottom: -10px;
 	margin-top: -6px;
 	display: flex;
@@ -755,7 +793,6 @@ p.text.richLink {
 	margin: auto 0;
 }
 .richLinkIcon {
-	float: right;
 	margin-right: 20px;
 }
 .dot {

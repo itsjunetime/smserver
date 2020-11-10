@@ -48,8 +48,10 @@
 				socket_address = prefix.split("/")[2].split(":")[0];
 			}
 
-			function timeConverter(t) {
-				var ts = (t / 1000000000) + 978307200;
+			function timeConverter(t, ts_only = false, apple = true) {
+				if (apple) var ts = (t / 1000000000) + 978307200;
+				else var ts = t;
+				if (ts_only) return ts;
 
 				var a = new Date(ts * 1000);
 				var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -64,9 +66,7 @@
 
 			async function getTextFromURL(url) {
 				var return_text = "";
-				await fetch(url, {
-					mode: 'no-cors',
-				}).then(response => response.text())
+				await fetch(url).then(response => response.text())
 				.then((response) => {
 					return_text = response;
 				})
@@ -122,6 +122,7 @@
 					t.setAttribute("id", text.guid);
 					t.setAttribute("title", timeConverter(text.date));
 					t.setAttribute("date_read", text.date_read);
+					t.setAttribute("date", text.date);
 					t.innerHTML = "";
 
 					/// it's a rich link
@@ -147,7 +148,7 @@
 						var desc = document.createElement("div");
 						desc.setAttribute("class", "richLinkDescription");
 
-						var title = document.createElement("a");
+						var title = document.createElement("p");
 						title.innerText = text.link_title;
 						title.setAttribute("class", "richLinkTitle");
 						desc.appendChild(title);
@@ -205,10 +206,10 @@
 										icon = "<i class=\"fas fa-file-pdf\"></i>";
 									else if (smallType === "vcard")
 										icon = "<i class=\"fas fa-id-card\"></i>";
-									else if (smallType === "x-debian-package") 
+									else if (smallType === "x-debian-package")
 										icon = "<i class=\"fas fa-archive\"></i>";
-									else if (smallType.includes("script") || smallType === "x-sh") 
-										icon =  "<i class=\"fas fa-file-code\"></i>"
+									else if (smallType.includes("script") || smallType === "x-sh")
+										icon =  "<i class=\"fas fa-file-code\"></i>";
 									else if (smallType === "zip")
 										icon = "<i class=\"fas fa-file-archive\"></i>";
 									else
@@ -227,7 +228,7 @@
 					}
 
 					if (text.text.replace(/￼/g, "").trim().length > 0 || text.subject.length > 0) {
-						/// There's an invisible character between those first two quotes that displays on firefox.This just removes it so it doesn't look weird.
+						/// There's an invisible character between those first two quotes that displays on firefox. This just removes it
 						var subject = document.createElement("div");
 						subject.setAttribute("class", "subject");
 						subject.innerText = text.subject;
@@ -261,9 +262,9 @@
 
 					var elder = original.parentNode;
 					if (elder.getAttribute("class").includes("text-area")) {
-						var ln = elder.getElementsByClassName("reaction").length * 2;
-						var mg = " -" + String(ln) + "6px;";
-						mg += "z-index: " + String(9 > ln ? 9 : ln) + ";";
+						var ln = elder.getElementsByClassName("reaction").length;
+						var mg = " -" + String(ln * 2) + "6px;";
+						mg += "z-index: " + String(9 < (ln + 2) ? 9 : (ln + 2)) + ";";
 						if (elder.getAttribute("class").includes("from_them")) {
 							reac.setAttribute("style", "left:" + mg);
 							elder.appendChild(reac);
@@ -310,11 +311,13 @@
 				return document.createElement("span");
 			}
 
-			function getChatElement(chat, num_texts) {
+			function getChatElement(chat, num_texts, searched = false, relevant_text = 0) {
+				/// relevant_text will contain the ROWID of the matching text from the search
 				if (debug) console.log("Getting chat element for " + chat.chat_identifier + ", num: " + num_texts);
 				var b = document.createElement("button");
 
-				b.setAttribute("id", chat.chat_identifier);
+				if (!searched) b.setAttribute("id", chat.chat_identifier);
+				else b.setAttribute("chat_id", chat.chat_identifier);
 
 				var i = document.createElement("img");
 				i.src = prefix + "/data?chat_id=" + chat.chat_identifier;
@@ -334,7 +337,7 @@
 					var top = document.createElement("div");
 					top.setAttribute("class", "chat-toprow");
 
-					if (chat.chat_identifier.substring(0, 4) !== "chat" && chat.display_name.length !== 0)
+					if (chat.chat_identifier.substring(0, 4) !== "chat" && !chat.chat_identifier.includes("@") && chat.display_name.length !== 0)
 						n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
 
 					top.appendChild(n);
@@ -404,6 +407,31 @@
 				var fts = getTextElement(text);
 				if (fts.length === undefined && fts.outerHTML === "<span></span>") return;
 				var ft = fts.length === undefined ? [fts] : fts;
+
+				var texts = document.getElementsByClassName("text");
+				var text_areas = document.getElementsByClassName("text-area");
+				var last_time = Math.max(texts.length > 0 ? texts[texts.length - 1].getAttribute("date") : 0, text_areas.length > 0 ? text_areas[text_areas.length - 1].getAttribute("date") : 0);
+				var last_is_area = text_areas.length > 0 && last_time === text_areas[text_areas.length - 1];
+
+				var now = new Date();
+				var time = now.getTime() / 1000;
+				if (time - 3600 > timeConverter(last_time, true)) {
+					var t = document.createElement("div");
+					t.setAttribute("class", "time-display");
+					t.innerHTML = "<p>" + timeConverter(time, false, false) + "</p>";
+					document.getElementById("text-content").appendChild(t);
+				} else {
+					var last_item = last_is_area ? text_areas[text_areas.length - 1] : texts[texts.length - 1];
+					if (last_item.getAttribute("class").includes("from_them")) {
+						if (time - 600 > timeConverter(last_time, true)) {
+							var spacer = document.createElement("div");
+							spacer.setAttribute("class", "spacer");
+							document.getElementById("text-content").appendChild(spacer);
+						} else {
+							last_item.setAttribute("class", last_item.getAttribute("class") + " notLast");
+						}
+					}
+				}
 
 				for (var i = 0; i < ft.length; i++) {
 					var t = ft[i];
@@ -486,7 +514,7 @@
 
 			const getMoreChats = async (offset = printed_chats) => {
 				if (debug) console.log("getting more chats");
-				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset
+				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset;
 				let chatsPromise = await fetchFromURL(url);
 				new_items = chatsPromise.chats;
 
@@ -494,7 +522,6 @@
 				var doc = document.getElementsByClassName("chats-list")[0];
 
 				for(var i = 0; i < new_items.length; i++) {
-
 					var b = getChatElement(new_items[i], num_texts_to_load);
 					doc.insertBefore(b, document.getElementById("morechatsbutton"));
 				}
@@ -520,12 +547,10 @@
 				if (!orig_btn.getAttribute("class").includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
 					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
 
-				var new_chat_id = chat_id;
-				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
-
 				var chat_title = document.getElementById(chat_id).getElementsByClassName("chat-name")[0];
 				var title_doc = document.getElementsByClassName("title-content")[0];
-				title_doc.innerHTML = "<p>" + chat_title.innerHTML + "</p>";
+				if (chat_title.children.length > 0) title_doc.innerHTML = "<p>" + chat_title.textContent.replace(chat_title.children[0].innerText, "") + "</p>";
+				else title_doc.innerHTML = "<p>" + chat_title.textContent + "</p>";
 
 				current_chat_id = chat_id;
 
@@ -533,6 +558,9 @@
 				img.src = prefix + "/data?chat_id=" + chat_id;
 
 				title_doc.insertBefore(img, title_doc.firstChild);
+
+				var new_chat_id = chat_id;
+				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
 
 				let textsPromise = await fetchFromURL(url);
 				this.texts = textsPromise.texts;
@@ -548,20 +576,21 @@
 				printed_texts = texts.length;
 				texts = texts.reverse();
 
-				var is_group = chat_id.substring(0, 4) === "chat";
+				var is_group = chat_id.substring(0, 4) === "chat" && !chat_id.includes("@");
 				var doc = document.getElementsByClassName("text-content")[0];
 
 				for (var i = 0; i < texts.length; i++) {
 
 					var ft = getTextElement(texts[i]);
-					if (ft.length === undefined) { 
+					if (ft.length === undefined) {
 						if (ft.outerHTML === "<span></span>") continue;
 						ft = [ft];
 					}
 					t = ft[0];
 
 					if (t.innerHTML !== undefined && t.innerHTML.length > 0) {
-						if (i === 0 || texts[i].date - texts[i - 1].date > 3600000000000) {
+						var add_time = i === 0 || texts[i].date - texts[i - 1].date > 3600000000000;
+						if (add_time) {
 							var time = document.createElement("div");
 							time.setAttribute("class", "time-display");
 
@@ -571,7 +600,7 @@
 							doc.appendChild(time);
 						}
 
-						if (is_group && texts[i].is_from_me === "0" && (i === 0 || texts[i].sender !== texts[i - 1].sender)) {
+						if (is_group && texts[i].is_from_me === "0" && (i === 0 || texts[i].sender !== texts[i - 1].sender || add_time)) {
 							var from = document.createElement("div");
 
 							from.innerHTML = "<p>" + texts[i].sender + "</p>";
@@ -581,9 +610,20 @@
 						}
 					}
 
-					ft.forEach(function(t, j, a) {
-						if (t.innerHTML !== undefined && t.innerHTML.length > 0) doc.appendChild(t);
-					});
+					var notLast = (i < texts.length - 1 && texts[i].is_from_me == texts[i+1].is_from_me && texts[i+1].date - texts[i].date < 600000000000);
+					if (notLast && is_group) notLast = texts[i].sender === texts[i+1].sender;
+
+					for (var j = 0; j < ft.length; j++) {
+						if (ft[j].innerHTML === undefined || ft[j].innerHTML.length === 0) continue;
+						if (notLast) ft[j].setAttribute("class", ft[j].getAttribute("class") + " notLast");
+						doc.appendChild(ft[j]);
+					}
+
+					if (i < texts.length - 1 && texts[i+1].date - texts[i].date >= 600000000000 && texts[i+1].date - texts[i].date <= 3600000000000) {
+						var spacer = document.createElement("div");
+						spacer.setAttribute("class", "spacer");
+						doc.appendChild(spacer);
+					}
 				}
 
 				document.getElementById("sendbox").focus();
@@ -602,8 +642,8 @@
 
 					if (my_last_text !== undefined) {
 
-						var lc = document.getElementById("text-content").lastChild
-						var ismsg = (lc.getAttribute("class").includes("text-area") ? lc.getElementsByClassName("text")[0] : lc).getAttribute("class").includes("iMessage");
+						var lc = document.getElementById("text-content").lastChild;
+						var isimsg = (lc.getAttribute("class").includes("text-area") ? lc.getElementsByClassName("text")[0] : lc).getAttribute("class").includes("iMessage");
 
 						if (!is_group && my_last_text.getAttribute("date_read") !== "0" && isimsg) {
 							var rr = document.createElement("span");
@@ -640,16 +680,12 @@
 
 				for (var i = 0; i < texts.length; i++) {
 
-					/*var ft = getTextElement(texts[i]);
-					if (ft.length === undefined) { 
-						if (ft.outerHTML === "<span></span>") continue;
-						ft = [ft];
-					}*/
 					var fts = getTextElement(texts[i]);
 					if (fts.length === undefined && fts.outerHTML === "<span></span>") return;
 					var ft = fts.length === undefined ? [fts] : fts;
 
-					if (i != 0 && texts[i].date - texts[i - 1].date < -3600000000000) {
+					var add_time = i != 0 && texts[i].date - texts[i-1].date < -3600000000000;
+					if (add_time) {
 						var time = document.createElement("div");
 						time.setAttribute("class", "time-display");
 
@@ -659,20 +695,22 @@
 						doc.insertBefore(time, document.getElementById("moretextsbutton").nextSibling);
 					}
 
-					for (var j = 0; j < ft.length; j += 1) {
-						if (ft[j].innerHTML !== undefined && ft[j].innerHTML.length > 0) {
-							console.log(ft[j].outerHTML);
-							console.log(j);
-							doc.insertBefore(ft[j], document.getElementById("moretextsbutton").nextSibling);
-						}
+					if (i > 0 && texts[i-1].date - texts[i].date >= 600000000000 && texts[i-1].date - texts[i].date <= 3600000000000) {
+						var spacer = document.createElement("div");
+						spacer.setAttribute("class", "spacer");
+						doc.insertBefore(spacer, document.getElementById("moretextsbutton").nextSibling);
 					}
 
-					/*for (t in ft) {
-						if (t.innerHTML !== undefined && t.innerHTML.length > 0) 
-							doc.insertBefore(t, document.getElementById("moretextsbutton").nextSibling);
-					}*/
+					var notLast = i > 0 && texts[i].is_from_me === texts[i-1].is_from_me && texts[i-1].date - texts[i].date <= 600000000000;
+					if (notLast && is_group) notLast = texts[i].sender === texts[i+1].sender;
 
-					if (is_group && texts[i].is_from_me === "0" && ((i !== texts.length - 1 && texts[i].sender !== texts[i + 1].sender) || (i === texts.length - 1))){
+					for (var j = 0; j < ft.length; j += 1) {
+						if (ft[j].innerHTML === undefined || ft[j].innerHTML.length === 0) continue;
+						if (notLast) ft[j].setAttribute("class", ft[j].getAttribute("class") + " notLast");
+						doc.insertBefore(ft[j], document.getElementById("moretextsbutton").nextSibling);
+					}
+
+					if (is_group && texts[i].is_from_me === "0" && ((i !== texts.length - 1 && texts[i].sender !== texts[i + 1].sender) || (i === texts.length - 1) || add_time)) {
 						var from = document.createElement("div");
 
 						from.innerHTML = "<p>" + texts[i].sender + "</p>";
@@ -689,6 +727,8 @@
 
 			async function sendForm() {
 				if (debug) console.log("sending form");
+				if (current_chat_id.length === 0) return;
+
 				var form = document.getElementById("sendform");
 
 				typing_sleep = 0;
@@ -700,6 +740,12 @@
 				var selected = document.getElementsByClassName("selected-photo");
 				for (var i = 0; i < selected.length; ++i) {
 					photos.value += selected[i].id + (i !== selected.length - 1 ? ":" : "");
+				}
+
+				var total_size = 0;
+				var files = document.getElementById("attachmentbutton").files;
+				for (var i = 0; i < files.length; i++) {
+					total_size += files[i].size;
 				}
 
 				var submit = (oldval.length > 0 || selected.length > 0 || document.getElementById("attachmentbutton").files.length > 0);
@@ -722,15 +768,46 @@
 
 					autoGrow();
 
-					if (has_attachments) {
-						await sleep(sleep_time);
+					var texts = document.getElementsByClassName("text");
+					var text_areas = document.getElementsByClassName("text-area");
+					var last_time = Math.max(texts.length > 0 ? texts[texts.length - 1].getAttribute("date") : 0, text_areas.length > 0 ? text_areas[text_areas.length - 1].getAttribute("date") : 0);
+					var last_is_area = text_areas.length > 0 && last_time === text_areas[text_areas.length - 1];
 
-						getLatestText(current_chat_id, true);
+					var now = new Date();
+					var time = now.getTime() / 1000;
+					if (time - 3600 > timeConverter(last_time, true)) {
+						var t = document.createElement("div");
+						t.setAttribute("class", "time-display");
+						t.innerHTML = "<p>" + timeConverter(time, false, false) + "</p>";
+						document.getElementById("text-content").appendChild(t);
 					} else {
+						var last_item = last_is_area ? text_areas[text_areas.length - 1] : texts[texts.length - 1];
+						if (last_item.getAttribute("class").includes("from_me")) {
+							if (time - 600 > timeConverter(last_time, true)) {
+								var spacer = document.createElement("div");
+								spacer.setAttribute("class", "spacer");
+								document.getElementById("text-content").appendChild(spacer);
+							} else {
+								last_item.setAttribute("class", last_item.getAttribute("class") + " notLast");
+							}
+						}
+					}
+
+					if (!has_attachments) {
 						var nt = document.createElement("p");
-						var lc = document.getElementById("text-content").lastChild
-						var im = (lc.getAttribute("class").includes("text-area") ? lc.getElementsByClassName("text")[0] : lc).getAttribute("class").includes("iMessage");
+						var im = true;
+
+						var ch = document.getElementById("text-content").children;
+						for (var i = ch.length - 1; i >= 0; i -= 1) {
+							if (ch[i].getAttribute("class").includes("text")) {
+								im = ch[i].getAttribute("class").includes("iMessage");
+								break;
+							}
+						}
+
 						nt.setAttribute("class", "text is_from_me " + (im ? "iMessage" : "SMS"));
+						var new_time = (time - 978307200) * 1000000000;
+						nt.setAttribute("date", String(new_time));
 
 						var topsub = document.createElement("div");
 						topsub.setAttribute("class", "subject");
@@ -743,9 +820,12 @@
 
 						document.getElementById("text-content").appendChild(nt);
 						nt.scrollIntoView();
-
-						await sleep(sleep_time);
 					}
+
+					await sleep(has_attachments ? (total_size / 10000) : sleep_time);
+
+					if (has_attachments)
+						getLatestText(current_chat_id, true);
 
 					setChatAsTop(current_chat_id, oldval);
 				}
@@ -842,17 +922,6 @@
 				document.getElementById("popup").style.display = "none";
 			}
 
-			let socket_prefix = location.protocol === "https:" ? "wss://" : "ws://";
-			let socket = new WebSocket(socket_prefix + socket_address + ":" + socket_port);
-
-			socket.onmessage = function(event) {
-				parseMessage(event.data);
-			}
-
-			socket.onerror = function(event) {
-				alert("It appears you have not yet trusted the websocket certificate. Please navigate to https://" + socket_address + ":" + socket_port + "/ and trust the certificate there");
-			}
-
 			function parseMessage(msg) {
 				if (debug) console.log("parsing message " + msg);
 				var split = msg.split(":");
@@ -891,7 +960,7 @@
 				name = await getTextFromURL(prefix + "/requests?name=" + chat);
 
 				new_text = notif_text.text;
-				
+
 				if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
 					new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
 
@@ -902,7 +971,7 @@
 					var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
 
 				if (chat.length !== 0) {
-					if (btn === undefined || chat === "any") {
+					if (btn === undefined || btn === null || chat === "any") {
 						printChats();
 					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && btn.getAttribute("class").includes("unpinned")) {
 						setChatAsTop(chat, new_text);
@@ -949,7 +1018,9 @@
 						current_box.setAttribute("class", current_box.getAttribute("class") + " unread")
 				} else {
 					var last_text;
-					var url = prefix + "/requests?person=" + chat + "&num=1&read=false"; /// The most recent text from this person has (nearly) all the info we need
+					var selected = false;
+					/// The most recent text from this person has (nearly) all the info we need
+					var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
 					let textPromise = await fetchFromURL(url);
 					last_text = textPromise.texts[0];
 
@@ -967,12 +1038,14 @@
 					if (existingButton) {
 						new_chat.pinned = existingButton.getAttribute("class").includes("unpinned") ? "false" : "true";
 						new_chat.display_name = existingButton.getElementsByClassName("chat-name")[0].firstChild.textContent;
+						selected = existingButton.getAttribute("class").includes("selected");
 						existingButton.outerHTML = "";
 					} else {
 						new_chat.display_name = await getTextFromURL("/requests?name=" + chat);
 					}
 
 					var new_box = getChatElement(new_chat);
+					if (selected) new_box.setAttribute("class", new_box.getAttribute("class") + " selected");
 
 					var pinRows = document.getElementsByClassName("pinRow");
 
@@ -1057,7 +1130,7 @@
 				new_photos = photoPromise.photos;
 				printed_photos += new_photos.length;
 
-				for (var i = 0; i < new_photos.length; i++) { 
+				for (var i = 0; i < new_photos.length; i++) {
 					var p = await getPhotoElement(new_photos[i]);
 					cr.insertBefore(p, cr.children[cr.children.length - 1]);
 				}
@@ -1186,7 +1259,7 @@
 				document.getElementById("unhiddenbutton").style.margin = "auto 0";
 			}
 
-			function submitSearch() {
+			async function submitSearch() {
 				var term = document.getElementById("searchBox").value;
 				window.location.href = prefix + "/requests?search=" + term; /// uhh simple stuff; use default settings for now
 			}
@@ -1194,8 +1267,12 @@
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
 				var bt = document.getElementById(current_chat_id);
-				if (bt !== undefined && bt !== null) bt.setAttribute("class", bt.getAttribute("class").replace(/unread/g, ""))
-				var _ = fetchFromURL(prefix + "/requests?person=" + current_chat_id + "&num=1"); /// Just to set the chat as read
+				if (bt === undefined || bt === null || !bt.getAttribute("class").includes("unread")) return;
+				bt.setAttribute("class", bt.getAttribute("class").replace(/unread/g, ""));
+				var _ = fetchFromURL(prefix + "/requests?person=" + current_chat_id + "&num=1");
+
+				var unreads = document.getElementsByClassName("unread").length;
+				document.title = "SMServer" + (unreads > 0 ? " (" + String(unreads) + ")" : "");
 			});
 
 			document.addEventListener("DOMContentLoaded", () => {
@@ -1206,6 +1283,17 @@
 			});
 
 			printChats();
+
+			let socket_prefix = location.protocol === "https:" ? "wss://" : "ws://";
+			let socket = new WebSocket(socket_prefix + socket_address + ":" + socket_port);
+
+			socket.onmessage = function(event) {
+				parseMessage(event.data);
+			}
+
+			socket.onerror = function(event) {
+				alert("It appears you have not yet trusted the websocket certificate. Please navigate to https://" + socket_address + ":" + socket_port + "/ and trust the certificate there");
+			}
 
 		</script>
 		<!-- These next links are for fontawesome; it's how I display the reactions. It's safe to remove them, but then the reactions will just appear as text instead of icons-->

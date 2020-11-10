@@ -6,6 +6,9 @@
 	--chats-border: #ccc;
 	--light-button-background: #ccc;
 	--selected-background: #fff;
+
+	--my-imessage-background: rgb(90 133 245);
+	--their-text-background: #cacaca;
 }
 .chat-text {
 	color: #181818;
@@ -19,14 +22,10 @@
 #camerarollbutton, #unhiddenbutton {
 	background-color: var(--light-button-background);
 }
-.is_from_me.iMessage {
-	background-image: linear-gradient(to right, rgb(119 155 255), rgb(90 133 245));
-}
 .is_from_me * {
 	color: #e6e6e6;
 }
 .is_from_them {
-	background-color: #cacaca;
 	color: #222;
 }
 .selected div {
