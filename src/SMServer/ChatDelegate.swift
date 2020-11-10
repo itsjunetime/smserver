@@ -205,7 +205,7 @@ final class ChatDelegate {
 		return ret_val
 	}
 
-	final func loadMessages(num: String, num_items: Int, offset: Int = 0) -> [[String:String]] {
+	final func loadMessages(num: String, num_items: Int, offset: Int = 0, surrounding: Int? = nil) -> [[String:String]] {
 		/// This loads the latest $num_items messages from/to $num, offset by $offset.
 
 		self.log("getting messages for \(num)")
@@ -218,14 +218,20 @@ final class ChatDelegate {
 		/// check if it's a group chat
 		let is_group = num.prefix(4) == "chat" && !num.contains("@")
 		var messages = [[String:String]]()
+		var fixed_num = num
+		if num.contains(",") {
+			/// So that you can merge multiple conversations
+			fixed_num = num.split(separator: ",").joined(separator: "\" or chat_identifier is \"")
+		}
 
 		if is_group {
-			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(num)\")) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
+			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(fixed_num)\")) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
 		} else {
-			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(fixed_num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
 		}
 
 		for i in 0..<messages.count {
+
 			if messages[i]["cache_has_attachments"] == "1" && messages[i]["ROWID"] != nil {
 				let a = getAttachmentFromMessage(mid: messages[i]["ROWID"] ?? "") /// get list of attachments
 				var file_string = ""
@@ -233,7 +239,7 @@ final class ChatDelegate {
 				for l in 0..<a.count {
 					/// use ':' as separater between attachments 'cause you can't have a filename in iOS that contains it (I think?)
 					/// Also yes I now recognize that this is terrible and I should just make this an array instead of a string.
-					/// I'll fix that some time but this seems to function ok right now and I'm apprehensive to change the API
+					/// I'll fix that some time but this seems to function ok right now and I'm worried about changing the API
 					file_string += a[l][0] + (l != a.count ? ":" : "")
 					type_string += a[l][1] + (l != a.count ? ":" : "")
 				}
@@ -270,6 +276,8 @@ final class ChatDelegate {
 		self.log("Getting \(String(num_to_load)) chats")
 
 		var pinned_chats: [String] = [""]
+		var combine = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
+		var return_array = [[String:String]]()
 
 		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
 			DispatchQueue.global(qos: .default).async {
@@ -281,15 +289,59 @@ final class ChatDelegate {
 		/// Create connections
 		var db = createConnection()
 		var contacts_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
-		if db == nil || contacts_db == nil { return [[String:String]]() }
+		if db == nil || contacts_db == nil { return return_array }
 
-		let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read ", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
-		var return_array = [[String:String]]()
+		var addresses = [[String:String]]()
+		var chat_identifiers = [[String]]()
+		var checked = [String]()
+
+		let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
+
+		inner: if combine { /// uhhh sketchy times. Seems to not impact performance that much but isn't perfect
+			/// This `if` gets all the addresses associated with your contacts, parses them with regex to get all possible `chat_identifier`s,
+			/// then puts them into a nested array. Later on, the conversations check themselves with the nested arrays to find the associated `chat_identifier`s.
+			/// This section is probably not very optimized and probably also inaccurate. That's why it's optional.
+
+			addresses = selectFromSql(db: contacts_db, columns: ["c.c16Phone", "c.c17Email"], table: "ABPersonFullTextSearch_content c")
+
+			/// If can reverse, using #"((?<= )[0-9]{5,}\+|(?<= )([0-9]{5,7})(?= )(?!.*\2))"# accurately removes duplicates but is less accurate in other ways
+			let pattern = #"(?<= )(\+|)[0-9]{5,}(?= )"#
+			var regex: NSRegularExpression
+			do {
+				regex = try NSRegularExpression(pattern: pattern, options: [])
+			} catch {
+				self.log("Unable to create regex; not merging contacts", warning: true)
+				combine = false
+				break inner
+			}
+
+			for i in addresses {
+				var personal_addresses = i["c.c17Email"]?.split(separator: " ").map({String($0)}) ?? [String]()
+				let phone = i["c.c16Phone"] ?? ""
+				let range = NSRange(phone.startIndex..<phone.endIndex, in: phone)
+
+				var checked_matches = [String]()
+				let matches = regex.matches(in: phone, options: [], range: range)
+				personal_addresses += matches.map({String(phone[Range($0.range, in: phone)!])})
+
+				outerfor: for j in personal_addresses {
+					for l in checked_matches {
+						if (l.contains(j)) {
+							continue outerfor
+						}
+					}
+					checked_matches.append(j)
+				}
+
+				chat_identifiers.append(checked_matches)
+			}
+		}
 
 		let formatter = RelativeDateTimeFormatter()
 
 		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
 			DispatchQueue.main.sync {
+				/// It's all async stuff so normally this doesn't even get executed but we still have to have it
 				while pinned_chats == [""] {
 					usleep(2000)
 				}
@@ -301,8 +353,22 @@ final class ChatDelegate {
 
 			var new_chat = [String:String]()
 
+			if combine {
+				if checked.contains(i["c.chat_identifier"] ?? "") { continue }
+
+				for j in chat_identifiers {
+					if j.contains(i["c.chat_identifier"] ?? "") {
+						new_chat["chat_identifier"] = j.joined(separator: ",")
+						for elem in j {
+							checked.append(elem)
+						}
+						break
+					}
+				}
+			}
+
 			/// Check for if it has unread. It has to fit all these specific things.
-			new_chat["has_unread"] = (i["m.is_from_me"] == "0" && i["m.date_read"] == "0" && i["m.text"] != nil && i["m.is_read"] == "0" && i["m.item_type"] == "0") ? "true" : "false"
+			new_chat["has_unread"] = String(i["m.is_from_me"] == "0" && i["m.date_read"] == "0" && i["m.text"] != nil && i["m.is_read"] == "0" && i["m.item_type"] == "0")
 
 			/// Content of the most recent text. If a text has attachments, `i["m.text"]` will look like `\u{ef}`. this checks for that.
 			new_chat["latest_text"] = ""
@@ -325,7 +391,8 @@ final class ChatDelegate {
 			}
 
 			/// Cause `i["h.id"]` is just the `chat_identifier` of one of the members of the group if it's a group chat.
-			new_chat["chat_identifier"] = i["c.chat_identifier"]
+			if new_chat["chat_identifier"] == nil { new_chat["chat_identifier"] = i["c.chat_identifier"] }
+			new_chat["send_to"] = i["c.chat_identifier"]
 			new_chat["time_marker"] = i["m.date"]
 			new_chat["pinned"] = "false"
 
@@ -392,13 +459,22 @@ final class ChatDelegate {
 
 		var docid = [[String:String]]()
 
+		var fixed_num = chat_id
+		if chat_id.contains(",") {
+			/// Just turns it into a proper sql condition based on if the specific address is an email or number
+			let splits = chat_id.split(separator: ",").map({String($0).contains("@") ? "c17Email like \"%\(String($0))%\"" : "c16Phone like \"%\(String($0))%\""})
+			fixed_num = splits.joined(separator: " or ")
+		}
+
 		/// get docid. docid is the identifier that corresponds to each contact, allowing for us to get their image
-		if chat_id.contains("@") { /// if an email
-			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
+		if chat_id.contains(",") { /// Multiple addresses in one
+			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE \(fixed_num)", num_items: 1)
+		} else if chat_id.contains("@") { /// if an email
+			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"", num_items: 1)
 		} else if chat_id.contains("+") {
 			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
 		} else {
-			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"")
+			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"", num_items: 1)
 		}
 
 		/// Use default profile if you don't have them in your contacts
@@ -700,6 +776,10 @@ final class ChatDelegate {
 
 		/// Always under object `$objects`
 		let objects: [Any] = plistData["$objects"] as! [Any]
+
+		guard objects.count > 5 else {
+			return ret_dict
+		}
 
 		if let title: String = objects[6] as? String {
 			ret_dict["title"] = title
