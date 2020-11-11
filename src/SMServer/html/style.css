@@ -207,6 +207,7 @@ i#chargingSymbol {
 	transition: all linear 0.1s;
 	align-items: center;
 	height: var(--chats-button-height);
+	position: relative;
 }
 .chats button.unpinned img {
 	max-height: calc(var(--chats-button-height) * 0.76);
@@ -228,6 +229,7 @@ i#chargingSymbol {
 	border-radius: 8px;
 	max-width: calc(var(--chats-width) * 0.25);
 	width: min-content;
+	position: relative;
 }
 .chats button.pinned .chat-top {
 	display: grid;
@@ -253,10 +255,24 @@ i#chargingSymbol {
 	grid-column: 1;
 	height: 26px;
 }
+.chats button.pinned.unread .chat-name:before,
+.unread .chat-nonpic:before {
+	content: '';
+	background-color: #369cff;
+	position: absolute;
+	border-radius: 100%;
+}
+.chats button.pinned.unread .chat-name:before {
+	width: calc(7px + 0.3vw);
+	height: calc(7px + 0.3vw);
+	left: -10px;
+	bottom: calc(14px - 5%);
+}
 .pinned .chat-name {
 	font-size: calc(8px + 0.5vw);
 	margin: auto;
 	padding: 0;
+	max-width: 100%;
 	width: max-content;
 }
 .chat-nonpic {
@@ -300,8 +316,12 @@ i#chargingSymbol {
 	color: dodgerblue;
 	margin: auto;
 }
-.unread img {
-	box-shadow: 0 0 10px dodgerblue;
+.unread .chat-nonpic:before {
+	height: 15px;
+	width: 15px;
+	top: 9px;
+	left: 44px;
+	box-shadow: 0 0 5px #0007;
 }
 .text-content p img {
 	max-width: 100%;
@@ -343,8 +363,7 @@ i#chargingSymbol {
 	padding: 7px 12px;
 	line-height: 21px; /* Specific but that's what it is */
 }
-.text:before, .text:after,
-.text-area:before, .text-area:after {
+.text:before, .text:after {
 	content: '';
 	position: absolute;
 	bottom: -2px;
@@ -355,12 +374,16 @@ i#chargingSymbol {
 }
 .text span {
 	white-space: pre-wrap;
+	word-break: break-word;
 }
 .is_from_them a, .is_from_them a span {
 	color: dodgerblue;
 }
 .is_from_me a, .is_from_me a span {
 	color: lightblue;
+}
+.from_them + .sender {
+	margin-top: 10px;
 }
 .sender {
 	margin-left: 4px;
@@ -370,6 +393,7 @@ i#chargingSymbol {
 	font-size: 14px;
 	font-weight: lighter;
 	margin: 0 0 16px 0;
+	color: #bbb;
 }
 .is_from_me {
 	position: relative;
@@ -415,9 +439,7 @@ i#chargingSymbol {
 	transform: translate(-30px, -2px);
 }
 .is_from_me + .is_from_me,
-.from_me + .from_me,
-.is_from_them + .is_from_them,
-.from_them + .from_them {
+.is_from_them + .is_from_them {
 	margin-top: -10px;
 }
 .is_from_me.iMessage {
@@ -432,14 +454,22 @@ i#chargingSymbol {
 	max-width: 100%;
 	border-radius: 10px;
 }
-.notLast:before, .notLast:after {
+.notLast:before, .notLast:after,
+.allEmoji:before, .allEmoji:after {
 	display: none;
 }
 .notLast {
 	border-radius: 20px;
 }
-.notLast {
-	border-radius: 20px;
+.text.allEmoji {
+	background-color: transparent;
+	font-size: 50px;
+}
+.allEmoji.is_from_me {
+	padding: 20px 0 20px 20px;
+}
+.allEmoji.is_from_them {
+	padding: 20px 20px 20px 0;
 }
 .spacer {
 	height: 10px;
@@ -449,15 +479,16 @@ i#chargingSymbol {
 }
 #moretextsbutton {
 	border: 1px solid black;
-	border-radius: 20px;
+	border-radius: 8px;
 	background-color: cornflowerblue;
 	align-self: center;
 	margin: 20px 0;
 	box-shadow: 0px 0px 10px #222;
 	transition: linear 0.2s;
+	padding: 6px;
 }
 #moretextsbutton p {
-	margin: 10px 0
+	margin: 0;
 }
 #moretextsbutton:hover {
 	box-shadow: none;
@@ -712,11 +743,11 @@ i#chargingSymbol {
 	top: -20px;
 }
 .readreceipt {
-	color: #a6a6a6;
 	font-size: 14px;
-	float: right;
-	padding-right: 10px;
 	align-self: flex-end;
+}
+.readreceipt, .readreceipt strong {
+	color: #a6a6a6;
 }
 .text + .readreceipt {
 	margin-top: -8px;
@@ -728,6 +759,8 @@ i#chargingSymbol {
 	z-index: 2;
 	box-shadow: 0px 0px 6px #000;
 	height: max-content;
+	backdrop-filter: blur(1.5px);
+	-webkit-backdrop-filter: blur(1.5px);
 }
 .from_them .reaction {
 	left: -6px;
@@ -736,7 +769,6 @@ i#chargingSymbol {
 }
 .text-area {
 	margin-bottom: -10px;
-	margin-top: -6px;
 	display: flex;
 }
 .text-area.from_me {
@@ -768,6 +800,7 @@ p.text.richLink {
 }
 .richLinkTitle {
 	font-size: 22px;
+	margin: 2px;
 }
 .richLinkSubtitle {
 	padding: 5px;

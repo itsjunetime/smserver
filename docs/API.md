@@ -15,6 +15,7 @@ All requests to `/requests` return JSON information.
 Retrieves the most recent $num messages to or from $person, offset by $offset.
 
 - person: parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_identifier will be the email address or phone number of an individual, or 'chat' + $arbitrary_number for a group chat. chat_identifiers for group chats and email addresses must be exact, and phone numbers must be in the form of '+\<country code>\<area code>\<number>'. e.g. "+16378269173". Using parentheses or dashes will mess it up and return nothing.
+$\qquad$ As of version 0.5.4, you may also send multiple addresses to this parameter, separated by single commas, and it will return a merged text list with all of the texts from the listed addresses included. This can be useful if you'd like to treat multiple conversations as one, such as if you have multiple conversations for talking with one person.
 
 - num: Parameter is not necessary, but value is consequential. The value of this parameter must be an integer, and will be the number of most recent messages that are returned from the app. If it is 0, it will return all the messages to or from this person, and if it is not specified, it will use the default number of messages on the app, which is currently 100 at the time of writing this.
 
@@ -23,10 +24,11 @@ Retrieves the most recent $num messages to or from $person, offset by $offset.
 - read: Parameter is not necessary, but value is consequential. The value of this parameter must be a string, either `true` or `false`. If it is `true`, or the parameter is not included but the 'mark conversation as read when viewed on web interface' option is checked in the app's settings, the conversation whose messages are being requested will be marked as read on the host device. 
 
 Example queries:
-- /requests?person=chat192370112946&num=500
+- /requests?person=chat192370112946281736&num=500
 - /requests?person=+15202621138
 - /requests?person=email@icloud.com&num=50&offset=100&read=false
 - /requests?person=person@gmail.com&offset=200
+- /requests?person=email@icloud.com,+15202621138,person@gmail.com&num=100&read=true
 
 ## `chat`, `num_chats`, `chats_offset`
 
@@ -47,11 +49,12 @@ Example queries:
 
 Retrieves the contact name that accompanies chat_identifier $name
 
-- name: Parameter is necessary, and value is consequential. Value must be the chat_identifier for the contact whose name you want. It can get the name if given an email address or phone number of an individual, but it cannot get a contact name for a group chat, since none such exist. Email must be given in the regular format, and phone number must be given in the format that the above 'person' section specifies.
+- name: Parameter is necessary, and value is consequential. Value must be the chat_identifier for the contact whose name you want. It can get the name if given an email address or phone number of an individual, or the chat_identifier of a group chat. Email must be given in the regular format, and phone number must be given in the format that the above 'person' section specifies. If there is no name for the email address, phone number, or chat_identifier given, then it will return the given address (in the case of a phone number or email address) or list of recipients (in the case of a group chat chat_identifier)
 
 Example queries:
 - /requests?name=email@icloud.com
 - /requests?name=+12761938272
+- /requests?name=chat193827462058278283
 
 ## `search`, `case_sensitive`, `bridge_gaps`, `group_by`
 
