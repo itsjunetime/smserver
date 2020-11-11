@@ -106,11 +106,6 @@ struct ContentView: View {
 
 			self.log("GET main: " + ip)
 
-			/*if self.checkIfAuthenticated(ras: ip) {
-				res.send(self.main_page)
-			} else {
-				res.send(self.gatekeeper_page)
-			}*/
 			res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
 		}
 
