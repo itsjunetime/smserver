@@ -9,7 +9,7 @@ final class ChatDelegate {
 	let prefix: String = "SMServer_app: "
 
 	static let addressBookAddress: String = "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb"
-	static let imageStoragePrefix: String = "/private/var/mobile/Library/SMS/Attachments/"
+	static let imageStoragePrefix: String = "/private/var/mobile/Library/SMS/"
 	static let photoStoragePrefix: String = "/var/mobile/Media/"
 	static let userHomeString: String = "/private/var/mobile/"
 
@@ -147,7 +147,7 @@ final class ChatDelegate {
 		var display_name_array = [[String:String]]()
 
 		/// Support for group chats
-		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count > 20 {
+		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20 {
 			let check_name = selectFromSql(db: sms_db, columns: ["display_name"], table: "chat", condition: "where chat_identifier is \"\(chat_id)\"", num_items: 1)
 
 			if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
@@ -171,10 +171,10 @@ final class ChatDelegate {
 			let unc = selectFromSql(db: sms_db, columns: ["uncanonicalized_id"], table: "handle", condition: "WHERE id is \"\(chat_id)\"")
 
 			guard unc.count > 0, let ret = unc[0]["uncanonicalized_id"] else {
-				return ""
+				return chat_id
 			}
 
-			return ret
+			return ret.count == 0 ? chat_id : ret
 		}
 
 		/// combine first name and last name
@@ -276,7 +276,7 @@ final class ChatDelegate {
 		self.log("Getting \(String(num_to_load)) chats")
 
 		var pinned_chats: [String] = [""]
-		var combine = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
+		let combine = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
 		var return_array = [[String:String]]()
 
 		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
@@ -297,40 +297,35 @@ final class ChatDelegate {
 
 		let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
 
-		inner: if combine { /// uhhh sketchy times. Seems to not impact performance that much but isn't perfect
+		inner: if combine {
 			/// This `if` gets all the addresses associated with your contacts, parses them with regex to get all possible `chat_identifier`s,
 			/// then puts them into a nested array. Later on, the conversations check themselves with the nested arrays to find the associated `chat_identifier`s.
 			/// This section is probably not very optimized and probably also inaccurate. That's why it's optional.
 
-			addresses = selectFromSql(db: contacts_db, columns: ["c.c16Phone", "c.c17Email"], table: "ABPersonFullTextSearch_content c")
-
-			/// If can reverse, using #"((?<= )[0-9]{5,}\+|(?<= )([0-9]{5,7})(?= )(?!.*\2))"# accurately removes duplicates but is less accurate in other ways
-			let pattern = #"(?<= )(\+|)[0-9]{5,}(?= )"#
-			var regex: NSRegularExpression
-			do {
-				regex = try NSRegularExpression(pattern: pattern, options: [])
-			} catch {
-				self.log("Unable to create regex; not merging contacts", warning: true)
-				combine = false
-				break inner
-			}
+			addresses = selectFromSql(db: contacts_db, columns: ["c16Phone", "c17Email"], table: "ABPersonFullTextSearch_content")
+			let identifier_array = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where chat_identifier not regexp \"chat[0-9]{10,}\"")
+			let identifiers: [String] = identifier_array.map({$0["chat_identifier"] ?? ""})
 
 			for i in addresses {
-				var personal_addresses = i["c.c17Email"]?.split(separator: " ").map({String($0)}) ?? [String]()
-				let phone = i["c.c16Phone"] ?? ""
-				let range = NSRange(phone.startIndex..<phone.endIndex, in: phone)
+				var personal_addresses = i["c17Email"]?.split(separator: " ").map({String($0)}) ?? [String]()
+				let phone = i["c16Phone"] ?? ""
 
-				var checked_matches = [String]()
-				let matches = regex.matches(in: phone, options: [], range: range)
-				personal_addresses += matches.map({String(phone[Range($0.range, in: phone)!])})
+				var checked_matches = personal_addresses
+				personal_addresses += phone.split(separator: " ").map({String($0)})
 
 				outerfor: for j in personal_addresses {
+					let len = j.components(separatedBy: .decimalDigits).joined().count
+					if !(j.count >= 5 && (len == j.count || (len == j.count - 1 && j.first == "+"))) {
+						continue outerfor
+					}
 					for l in checked_matches {
 						if (l.contains(j)) {
 							continue outerfor
 						}
 					}
-					checked_matches.append(j)
+					if identifiers.contains(j) {
+						checked_matches.append(j)
+					}
 				}
 
 				chat_identifiers.append(checked_matches)
@@ -538,13 +533,13 @@ final class ChatDelegate {
 	final func getAttachmentFromMessage(mid: String) -> [[String]] {
 		/// This returns the file path for all attachments associated with a certain message with the message_id of $mid
 
-		self.log("Gettig attachment for mid \(mid)")
+		self.log("Getting attachment for mid \(mid)")
 
 		/// create connection, get attachments information
 		var db = createConnection()
 		if db == nil { return [[String]]() }
 
-		let file = selectFromSql(db: db, columns: ["filename", "mime_type", "hide_attachment"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
+		let file = selectFromSql(db: db, columns: ["filename", "mime_type"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
 
 		var return_val = [[String]]()
 		self.log("attachment file length: \(String(file.count))")

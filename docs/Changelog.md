@@ -2,16 +2,23 @@
 0.5.3 &rightarrow; 0.5.4
  - Texts now have prettier bubble tails and no tails when sent close after each other
  - Texts also have proper spacing when sent far from each other to indicate the gaps in conversation
- - Added experimental option to combine numbers that are assigned to the same contact as similar chats
  - Added option in API to get chats from multiple addresses as if they were one conversation
  - Revamped settings view
+ - Completely rewrote javascript that prints list of texts
  - Sending a text now creates a new time display when it's been more than an hour
  - Web interface is better at waiting for attachments to fully upload when sending a text before displaying the new text in the web interface
  - Web interface now only tries to mark a conversation as read when the window becomes focused if it was already unread
+ - Unread indicators look much cleaner now
+ - Texts wholly made of emojis now show without background and with a larger font
  - Fixed issue with z-indices on multiple overlayed reations
  - Fixed coloring issues with dark and light themes
  - Fixed spacing issues in text area
+ - Fixed issue where order of texts would be messed up when reactions were inserted
  - Fixed issue where conversations would not appear as selected if they were not the top of the list when you sent a text to them
+ - Fixed issue where textbox wouldn't properly resize when going from 2 lines to 1
+ - Fixed issue where some memojis wouldn't load into the web interface
+ - Fixed issue where sometimes chats without a contact would return an empty name, thus causing more issues
+ - Fixed issue where sender name wouldn't appear in a group chat after a time display
 
 0.5.2 &rightarrow; 0.5.3
  - Added inline audio displays

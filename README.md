@@ -71,6 +71,7 @@ The source code may be updated past the latest released version, so don't be sur
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged issues:
+- Creating new conversations does not work on iOS 14+. This is being worked on.
 - Although typing indicators do appear when the other party starts typing, they don't always disappear when they stop typing. This is also being worked on.
 
 ### To file an issue:
@@ -86,7 +87,7 @@ Please include the following information:
 Also, if the app did not crash on startup, but rather crashed after it was already up and running, I would appreciate if you could do the following: 
  - Install the package 'oslog' from your package manager
  - ssh into your device and run (as root): `oslog --debug | grep -i -e "SMServer_app" -e "mryipc"`; do not redirect the output into a file.
- - Enable debug on the app, then kill the app in app switcher
+ - Enable debug on the app, then hit the purple 'refresh' button in the bottom left of the main view.
  - Start the app and let it reach the error point
  - Manually copy the output from the above command (as much as you can get) into a text file.
  - Email me the file at contact@ianwelker.com. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information. 
