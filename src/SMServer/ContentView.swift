@@ -11,7 +11,7 @@ struct ContentView: View {
 	let geo_width: CGFloat = 0.6
 	let font_size: CGFloat = 25
 	let identity = Bundle.main.path(forResource: "identity", ofType: "pfx")
-	let cert_pass = "smserver"
+	let cert_pass = PKCS12Identity.pass  /// This is in a hidden file, not in the git repository, so that nobody can steal the private key of my certs.
 
 	@State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
 	@State var custom_css = UserDefaults.standard.object(forKey: "custom_css") as? String ?? ""
@@ -90,7 +90,7 @@ struct ContentView: View {
 		}
 
 		/// The mobileSMS App must be running to hijack receiving texts, so we launch it.
-		ContentView.sender.launchMobileSMS()
+		//ContentView.sender.launchMobileSMS()
 
 		self.log("launched MobileSMS")
 
@@ -376,9 +376,12 @@ struct ContentView: View {
 		}
 	}
 
-	func setNewestTexts(_ chat_id: String) {
+	func setNewestTexts(_ guid: String) {
 		/// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
-		socket.sendNewText(info: chat_id)
+		let text = ContentView.chat_delegate.getTextByGUID(guid);
+		let json = encodeToJson(object: text, title: "text")
+
+		socket.sendNewText(info: json)
 	}
 
 	func setPartyTyping(_ chat_id: String) {
@@ -388,7 +391,6 @@ struct ContentView: View {
 
 	func checkIfAuthenticated(ras: String) -> Bool {
 		/// This checks if the ip address $ras has already authenticated with the host
-
 		let require_authentication = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
 
 		return !require_authentication || self.authenticated_addresses.contains(ras)
@@ -502,14 +504,14 @@ struct ContentView: View {
 			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 
 			return encodeToJson(object: ret_val, title: "photos")
-		} /*else if f == "reaction" || f == "toGUID" || f == "inChat" || f == "remove" {
+		} else if f == "reaction" || f == "toGUID" || f == "inChat" || f == "remove" {
 			/// Haven't got the `libsmserver` side of this to work yet, so I'm disabling it for this version.
 			/// Hopefully I'll have it good and done by next version
 
 			var reaction: Int = (Int(params["reaction"] ?? "0") ?? 0) + 2000 /// reactions are 2000 - 2005
-			var textGuid: String = params["toGUID"] ?? "0"
-			var chat: String = params["inChat"] ?? "0"
-			var remove = (params["remove"] ?? "false") == "true"
+			let textGuid: String = params["toGUID"] ?? "0"
+			let chat: String = params["inChat"] ?? "0"
+			let remove = (params["remove"] ?? "false") == "true"
 
 			guard params["reaction"] != nil && params["toGUID"] != nil && params["inChat"] != nil else {
 				return "Please include parameters 'reaction', 'toGUID', and 'inChat' in your request"
@@ -518,9 +520,9 @@ struct ContentView: View {
 			if remove { reaction += 1000 }
 
 			if chat != "0" && textGuid != "0" {
-				s.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
+				ContentView.sender.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
 			}
-		}*/
+		}
 
 		self.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
 
@@ -609,7 +611,7 @@ struct ContentView: View {
 					HStack {
 						Button(action: {
 							self.loadFiles()
-							ContentView.sender.launchMobileSMS()
+							//ContentView.sender.launchMobileSMS()
 							ContentView.chat_delegate.refreshVars()
 							self.socket.refreshVars()
 						}) {

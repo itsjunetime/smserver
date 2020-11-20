@@ -5,7 +5,8 @@ import os
 class SocketDelegate : ServerWebSocketDelegate {
 
 	static let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
-	static let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: "smserver")
+	/// This passphrase is found in a hidden file that doesn't exist in the git repo. This is so that nobody can extract the private key from the pfx file
+	static let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: PKCS12Identity.pass)
 	var server: Server? = nil
 	var watcher: IPCTextWatcher? = nil
 	var authenticated_addresses = [String]()

@@ -5,3 +5,6 @@
 *.deb
 tests.md
 implement.md
+
+src/SMServer/IdentityPass.swift
+src/SMServer/identity.pfx
