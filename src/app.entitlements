@@ -6,5 +6,7 @@
 <string>com.ianwelker.smserver</string>
 	<key>com.apple.private.security.no-container</key>
 	<true/>
+	<key>get-task-allow</key>
+	<true/>
 </dict>
 </plist>

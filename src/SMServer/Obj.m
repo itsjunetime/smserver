@@ -28,10 +28,10 @@
 	return self;
 }
 
-- (void)handleReceivedTextWithCallback:(NSString *)chat_id {
+- (void)handleReceivedTextWithCallback:(NSString *)guid {
 	/// This is the function that is called when a new text is received.
 	/// _setTexts is a block that is set somewhere around line 554 in ContentView.swift, in loadFuncs().
-	_setTexts(chat_id);
+	_setTexts(guid);
 }
 
 - (void)handlePartyTypingWithCallback:(NSString *)chat_id {
@@ -68,7 +68,10 @@
 }
 
 - (void)markConvoAsRead:(NSString *)chat_id {
-	[self.center callExternalVoidMethod:@selector(setAllAsRead:) withArguments:chat_id];
+	NSArray* chats = [chat_id componentsSeparatedByString:@","]; /// To allow marking multiple convos as read
+	for (NSString* chat in chats) {
+		[self.center callExternalVoidMethod:@selector(setAllAsRead:) withArguments:chat];
+	}
 }
 
 - (void)sendReaction:(NSNumber *)reaction forGuid:(NSString *)guid inChat:(NSString *)chat {

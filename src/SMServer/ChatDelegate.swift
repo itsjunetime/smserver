@@ -292,7 +292,7 @@ final class ChatDelegate {
 		if db == nil || contacts_db == nil { return return_array }
 
 		var addresses = [[String:String]]()
-		var chat_identifiers = [[String]]()
+		var chat_identifiers = [String:[String]]()
 		var checked = [String]()
 
 		let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
@@ -303,7 +303,7 @@ final class ChatDelegate {
 			/// This section is probably not very optimized and probably also inaccurate. That's why it's optional.
 
 			addresses = selectFromSql(db: contacts_db, columns: ["c16Phone", "c17Email"], table: "ABPersonFullTextSearch_content")
-			let identifier_array = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where chat_identifier not regexp \"chat[0-9]{10,}\"")
+			let identifier_array = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat")
 			let identifiers: [String] = identifier_array.map({$0["chat_identifier"] ?? ""})
 
 			for i in addresses {
@@ -314,7 +314,7 @@ final class ChatDelegate {
 				personal_addresses += phone.split(separator: " ").map({String($0)})
 
 				outerfor: for j in personal_addresses {
-					let len = j.components(separatedBy: .decimalDigits).joined().count
+					let len = (j.filter { "0"..."9" ~= $0}).count
 					if !(j.count >= 5 && (len == j.count || (len == j.count - 1 && j.first == "+"))) {
 						continue outerfor
 					}
@@ -328,7 +328,9 @@ final class ChatDelegate {
 					}
 				}
 
-				chat_identifiers.append(checked_matches)
+				for j in checked_matches {
+					chat_identifiers[j] = checked_matches
+				}
 			}
 		}
 
@@ -351,15 +353,13 @@ final class ChatDelegate {
 			if combine {
 				if checked.contains(i["c.chat_identifier"] ?? "") { continue }
 
-				for j in chat_identifiers {
-					if j.contains(i["c.chat_identifier"] ?? "") {
-						new_chat["chat_identifier"] = j.joined(separator: ",")
-						for elem in j {
-							checked.append(elem)
-						}
-						break
-					}
+				let these_addresses: [String] = chat_identifiers[i["c.chat_identifier"] ?? ""] ?? [String]()
+				new_chat["addresses"] = these_addresses.joined(separator: ",")
+				for j in these_addresses {
+					checked.append(j)
 				}
+			} else {
+				new_chat["addresses"] = i["c.chat_identifier"]
 			}
 
 			/// Check for if it has unread. It has to fit all these specific things.
@@ -385,8 +385,7 @@ final class ChatDelegate {
 				new_chat["display_name"] = i["c.display_name"]
 			}
 
-			/// Cause `i["h.id"]` is just the `chat_identifier` of one of the members of the group if it's a group chat.
-			if new_chat["chat_identifier"] == nil { new_chat["chat_identifier"] = i["c.chat_identifier"] }
+			new_chat["chat_identifier"] = i["c.chat_identifier"]
 			new_chat["send_to"] = i["c.chat_identifier"]
 			new_chat["time_marker"] = i["m.date"]
 			new_chat["pinned"] = "false"
@@ -787,6 +786,51 @@ final class ChatDelegate {
 		}
 
 		return ret_dict
+	}
+	
+	final func getTextByGUID(_ guid: String) -> [String:String] {
+		self.log("Getting text at guid \(guid)")
+		
+		var db = createConnection()
+		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
+		
+		if db == nil || contact_db == nil { return [String:String]() }
+		
+		var text = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is \"\(guid)\"", num_items: 1, offset: 0, split_ids: true)[0]
+		
+		if text["cache_has_attachments"] == "1" && text["ROWID"] != nil {
+			let a = getAttachmentFromMessage(mid: text["ROWID"] ?? "") /// get list of attachments
+			var file_string = ""
+			var type_string = ""
+			for l in 0..<a.count {
+				file_string += a[l][0] + (l != a.count ? ":" : "")
+				type_string += a[l][1] + (l != a.count ? ":" : "")
+			}
+			text["attachment_file"] = file_string
+			text["attachment_type"] = type_string
+		}
+
+		if text["room_name"]?.count ?? 0 > 0 && text["is_from_me"] == "0" && text["id"]?.count != 0 {
+			let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: text["chat_identifier"] ?? "")
+			text["sender"] = name
+		}
+
+		if text["balloon_bundle_id"] == "com.apple.messages.URLBalloonProvider" && text["ROWID"] != nil {
+			let link_info = getLinkInfo(text["ROWID"]!, db: db)
+
+			text["link_title"] = link_info["title"]
+			text["link_subtitle"] = link_info["subtitle"]
+			text["link_type"] = link_info["type"]
+		}
+		
+		self.log("Closing database and destroying pointer")
+		closeDatabase(&db)
+		db = nil
+		
+		closeDatabase(&contact_db)
+		contact_db = nil
+		
+		return text
 	}
 }
 

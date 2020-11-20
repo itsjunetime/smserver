@@ -12,6 +12,7 @@
 		3C03DDE224E32EA90017A265 /* libmryipce.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipce.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3C11174E24CC9F050065894F /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C11174D24CC9F050065894F /* SocketDelegate.swift */; };
 		3C11175024CCF3AC0065894F /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */; };
+		3C13F91D255DFDE600DB77F6 /* IdentityPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C13F91C255DFDE600DB77F6 /* IdentityPass.swift */; };
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3C69EB2F24E77F1D00F48291 /* cert.der in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB2E24E77F1D00F48291 /* cert.der */; };
@@ -62,6 +63,7 @@
 /* Begin PBXFileReference section */
 		3C11174D24CC9F050065894F /* SocketDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		3C13F91C255DFDE600DB77F6 /* IdentityPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityPass.swift; sourceTree = "<group>"; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
 		3C69EB2E24E77F1D00F48291 /* cert.der */ = {isa = PBXFileReference; lastKnownFileType = file; path = cert.der; sourceTree = "<group>"; };
 		3C69EB3024E77F7800F48291 /* identity.pfx */ = {isa = PBXFileReference; lastKnownFileType = file; path = identity.pfx; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 				3CC4184F24B1327400A98288 /* SettingsView.swift */,
 				3CC4185324B135B500A98288 /* ChatDelegate.swift */,
 				3C11174D24CC9F050065894F /* SocketDelegate.swift */,
+				3C13F91C255DFDE600DB77F6 /* IdentityPass.swift */,
 				3C69EB3024E77F7800F48291 /* identity.pfx */,
 				3C69EB2E24E77F1D00F48291 /* cert.der */,
 				3C7CFF84246C8F8D0061749A /* Obj.m */,
@@ -386,6 +389,7 @@
 				3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */,
 				3C11174E24CC9F050065894F /* SocketDelegate.swift in Sources */,
 				3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */,
+				3C13F91D255DFDE600DB77F6 /* IdentityPass.swift in Sources */,
 				3CC4185424B135B500A98288 /* ChatDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -558,6 +562,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"SMServer/Preview Content\"";
 				DEVELOPMENT_TEAM = X543N5D24H;
 				DYLIB_INSTALL_NAME_BASE = "";
@@ -572,6 +577,7 @@
 				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_UNUSED_VARIABLE = NO;
+				GENERATE_PROFILING_CODE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket/CocoaAsyncSocket.framework/Headers\"",
@@ -589,6 +595,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SMServer",
 				);
+				LINKER_DISPLAYS_MANGLED_NAMES = YES;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -603,6 +610,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ianwelker.smserver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				STRIP_STYLE = all;
+				STRIP_SWIFT_SYMBOLS = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "SMServer/SMServer-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -635,6 +645,7 @@
 				);
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_WARN_UNUSED_VARIABLE = NO;
+				GENERATE_PROFILING_CODE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket/CocoaAsyncSocket.framework/Headers\"",
@@ -652,6 +663,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SMServer",
 				);
+				LINKER_DISPLAYS_MANGLED_NAMES = YES;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"z\"",
@@ -665,6 +677,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ianwelker.smserver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_INSTALLED_PRODUCT = NO;
+				STRIP_STYLE = all;
+				STRIP_SWIFT_SYMBOLS = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "SMServer/SMServer-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
