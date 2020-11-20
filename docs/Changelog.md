@@ -1,4 +1,18 @@
 # Changelog
+0.5.4 &rightarrow; Unreleased
+ - Made a new build script which makes it __much__ easier to build SMServer from scratch
+ - Added experimental option to combine conversations that belong to the same contact
+ - Changed cert and hid new password to prevent people from stealing private key
+ - Changed some glyphs in the web interface to look prettier
+ - Web interface now checks to make sure there are more texts to be loaded before adding a 'more texts' button
+ - Rewrote text-receiving backend to prevent race condition from duplicating texts in web interface
+ - Fixed issue with duplicate typing indicators appearing in web interface
+ - Fixed issue with profile picture displays getting cut off
+ - Fixed issue with sender names in group chats appearing above time displays
+ - Fixed issues with unread indicator displays
+ - Fixed many issues with sender and time display placement in group chats
+ - Fixed issue with links redirecting to the wrong site if they didn't have `http(s)://` prefix
+
 0.5.3 &rightarrow; 0.5.4
  - Texts now have prettier bubble tails and no tails when sent close after each other
  - Texts also have proper spacing when sent far from each other to indicate the gaps in conversation

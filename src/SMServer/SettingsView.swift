@@ -213,7 +213,7 @@ struct SettingsView: View {
 							Toggle("Send typing indicators", isOn: typing_binding)
 							Toggle("Automatically mark as read", isOn: read_binding)
 							Toggle("Require Authentication", isOn: auth_binding)
-							//Toggle("Merge contact addresses (slower)", isOn: contacts_binding)
+							Toggle("Merge contact addresses (experimental)", isOn: contacts_binding)
 
 						}
 					}.padding(10)

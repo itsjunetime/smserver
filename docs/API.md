@@ -12,9 +12,9 @@ All requests to `/requests` return JSON information.
 
 ## `person`, `num`, `offset`, `read`
 
-Retrieves the most recent $num messages to or from $person, offset by $offset.
+Retrieves the most recent \$num messages to or from \$person, offset by \$offset.
 
-- person: parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_identifier will be the email address or phone number of an individual, or 'chat' + $arbitrary_number for a group chat. chat_identifiers for group chats and email addresses must be exact, and phone numbers must be in the form of '+\<country code>\<area code>\<number>'. e.g. "+16378269173". Using parentheses or dashes will mess it up and return nothing.
+- person: parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_identifier will be the email address or phone number of an individual, or the chat_identifier for a group chat (normally the string 'chat' followed by 16-20 numerical digits). chat_identifiers for group chats and email addresses must be exact, and phone numbers must include the entire phone number (including country codes, area codes, and other identifiers where necessary), with a plus sign at the beginning, e.g. "+16378269173". Using parentheses or dashes will mess it up and return nothing. \
 $\qquad$ As of version 0.5.4, you may also send multiple addresses to this parameter, separated by single commas, and it will return a merged text list with all of the texts from the listed addresses included. This can be useful if you'd like to treat multiple conversations as one, such as if you have multiple conversations for talking with one person.
 
 - num: Parameter is not necessary, but value is consequential. The value of this parameter must be an integer, and will be the number of most recent messages that are returned from the app. If it is 0, it will return all the messages to or from this person, and if it is not specified, it will use the default number of messages on the app, which is currently 100 at the time of writing this.
@@ -32,7 +32,7 @@ Example queries:
 
 ## `chat`, `num_chats`, `chats_offset`
 
-Retrieves the latest $num_chats conversations
+Retrieves the latest \$num_chats conversations
 
 - chat: Parameter is necessary, and value is inconsequential. Calling the parameter 'chat' simply specifies that you are asking for a list of the conversations on the device.
 
@@ -47,7 +47,7 @@ Example queries:
 
 ## `name`
 
-Retrieves the contact name that accompanies chat_identifier $name
+Retrieves the contact name that accompanies chat_identifier \$name
 
 - name: Parameter is necessary, and value is consequential. Value must be the chat_identifier for the contact whose name you want. It can get the name if given an email address or phone number of an individual, or the chat_identifier of a group chat. Email must be given in the regular format, and phone number must be given in the format that the above 'person' section specifies. If there is no name for the email address, phone number, or chat_identifier given, then it will return the given address (in the case of a phone number or email address) or list of recipients (in the case of a group chat chat_identifier)
 
@@ -58,7 +58,7 @@ Example queries:
 
 ## `search`, `case_sensitive`, `bridge_gaps`, `group_by`
 
-This searches for the term $search in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options.
+This searches for the term \$search in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options.
 
 - search: Parameter is necessary, and value is consequential. This must be the term you want to search for. Does not have to be surrounded by quotes. Case sensitivity is determined by the `case_sensitive` parameter.
 - case_sensitive: Parameter is not necessary, and value is consequential; default is false. This determines whether or not you want the search to be case sensitive; a value of `true` make it sensitive, and `false` makes it insensitive
@@ -71,9 +71,9 @@ Example queries:
 
 ## `photos`, `offset`, `most_recent`
 
-if most_recent == "true", this retrieves a list of information about the most recent $photos ($photos is an integer) photos, offset by \$offset ($offset is also an integer). If most_recent != "true", this retrieves a list of the oldest $photos photos, offset by $offset.
+if most_recent == "true", this retrieves a list of information about the most recent \$photos (\$photos is an integer) photos, offset by \\$offset (\$offset is also an integer). If most_recent != "true", this retrieves a list of the oldest \$photos photos, offset by \$offset.
 
-- photos: Parameter is necessary, and value is consequential. This must be the number of photos that you want to receive information about, and if it is not an integer, it will be changed to the default number of photos (which is available to set in the settings of the app). Setting this to 0 will retrieve 0 photos, and the only way to retrieve all photos would be to set to $photos to an absurdly large number, such as 999999999. 
+- photos: Parameter is necessary, and value is consequential. This must be the number of photos that you want to receive information about, and if it is not an integer, it will be changed to the default number of photos (which is available to set in the settings of the app). Setting this to 0 will retrieve 0 photos, and the only way to retrieve all photos would be to set to \$photos to an absurdly large number, such as 999999999. 
 - offset: Parameter is not necessary, and value is consequential. This must be the offset for the list of photos that you want to retrieve. For example, if you already retrieved the most recent 100 photos, but want to retrieve info about the next 100 images, you would set offset to 100, and photos to 100 as well. This must be an integer, or else it will default to 0. 
 - most_recent: Parameter is not necessary, and value is consequential. This must be either "true" or "false". If it is neither, it will default to true. Setting this to false will query the oldest pictures first, and setting it to true or not settings it at all will retrieve the most recent images first.
 

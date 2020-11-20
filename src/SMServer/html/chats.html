@@ -35,6 +35,7 @@
 			var current_chat_id = "";
 			var sleep_time = 400;
 			var typing_sleep = 10000;
+			var load_icon = '<i class="fas fa-chevron-circle-up"></i>';
 
 			var doc_url = window.location.href.split("/")[2].split(":")[0];
 			var socket_address = doc_url;
@@ -63,7 +64,7 @@
 				var date = a.getDate();
 				var hour = a.getHours();
 				var min = a.getMinutes();
-				var time = date + ' ' + month + ' ' + year + ' ' + (hour < 10 ? '0' : '') + hour + ':' + (min < 10 ? '0' : '') + min;
+				var time = `${date} ${month} ${year} ${(hour < 10 ? '0' : '')}${hour}:${(min < 10 ? '0' : '')}${min}`;
 				return time;
 			}
 
@@ -74,7 +75,7 @@
 					return_text = response;
 				})
 				.catch(error => {
-					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. url: " + url);
+					if (!has_shown_warning) alert(`The server restarted, you need to reload and re-authenticate. url: ${url}`);
 					has_shown_warning = true;
 				})
 
@@ -84,11 +85,11 @@
 			async function fetchFromURL(url) {
 				var ret = "";
 				await fetch(url).then(response => {
-					if (!response.ok) throw new Error("HTTP error " + response.status);
+					if (!response.ok) throw new Error(`HTTP error ${response.status}`);
 					ret = response.json();
 				})
 				.catch(error => {
-					if (!has_shown_warning) alert("The server restarted, you need to reload and re-authenticate. url: " + url);
+					if (!has_shown_warning) alert(`The server restarted, you need to reload and re-authenticate. url: ${url}`);
 					has_shown_warning = true;
 				})
 
@@ -97,20 +98,18 @@
 
 			function setFALoaded() {
 				faLoaded = true;
-				var crb = document.getElementById("camerarollbutton");
-				if (crb !== undefined) crb.innerHTML = "<i class=\"fas fa-camera\"></i>";
-				var uhb = document.getElementById("unhiddenbutton");
-				if (uhb !== undefined) uhb.innerHTML = "<i class=\"fas fa-paperclip\"></i>";
-				if (uhb === undefined || crb === undefined) {
-					document.addEventListener("DOMContentLoaded", () => {
-						document.getElementById("camerarollbutton").innerHTML = "<i class=\"fas fa-camera\"></i>";
-						document.getElementById("unhiddenbutton").innerHTML = "<i class=\"fas fa-paperclip\"></i>";
+				var b = [["cameraroll", "camera", ""], ["unhidden", "paperclip", ""], ["morechats", "chevron-circle-down", " More"], ["composeshow", "plus-circle", " New"]];
+				for (var i = 0; i < b.length; i++) {
+					var btn = document.getElementById(`${b[i][0]}button`);
+					if (btn !== undefined) btn.innerHTML = `<i class="fas fa-${b[i][1]}"></i>${b[i][2]}`;
+					else document.addEventListener("DOMContentLoaded", () => { 
+						document.getElementById(b[i][0] + "button").innerHTML = `<i class="fas fa-${b[i][1]}"></i>${b[i][2]}`; 
 					});
 				}
 			}
 
 			function getTextElement(text) {
-				if (debug) console.log("Getting text element for text " + text);
+				if (debug) console.log(`Getting text element for text ${text}`);
 
 				if (Number(text.associated_message_type) < 2000 || text.associated_message_type === undefined) {
 
@@ -118,7 +117,7 @@
 					var rets = [];
 
 					var classes = "text";
-					classes += (text.is_from_me === "0" ? " is_from_them" : " is_from_me") + " " + text.service;
+					classes += `${(text.is_from_me === "0" ? " is_from_them" : " is_from_me")} ${text.service}`;
 
 					t.className = classes;
 					t.id = text.guid;
@@ -133,10 +132,10 @@
 
 						var img = document.createElement("img");
 						var attachment_splits = text.attachment_file.split(":");
-						img.src = "/data?path=" + (attachment_splits[1].length > 0 ? attachment_splits[1] : attachment_splits[0]);
+						img.src = `${prefix}/data?path=${(attachment_splits[1].length > 0 ? attachment_splits[1] : attachment_splits[0])}`;
 
 						var under = document.createElement("a");
-						under.href = text.text;
+						under.href = (text.text.match(/^https{0,1}:\/\//) ? "" : "http://") + text.text;
 						under.className = "richLinkUnder";
 
 						if (attachment_splits[1].length > 0) {
@@ -169,7 +168,7 @@
 							icon.className = "richLinkIcon";
 
 							var ii = document.createElement("img");
-							ii.src = "/data?path=" + attachment_splits[0];
+							ii.src = `${prefix}/data?path=${attachment_splits[0]}`;
 							icon.appendChild(ii);
 							under.appendChild(icon);
 						}
@@ -185,19 +184,20 @@
 
 						for (var l = 0; l < files.length; ++l) {
 							var c = t.cloneNode();
+							if (l !== 0) c.id += `-${String(l)}`;
 							var bigType = types[l].split("/")[0];
 							var smallType = types[l].split("/")[1];
 
 							if (bigType === "image") {
-								c.innerHTML = "<img src=\"" + prefix + "/data?path=" + files[l] + "\"><br>";
+								c.innerHTML = `<img src="${prefix}/data?path=${files[l]}"><br>`;
 							} else if (bigType === "video") {
-								c.innerHTML = "<video controls=\"controls\" src=\"" + prefix + "/data?path=" + files[l] + "\"></video>";
+								c.innerHTML = `<video controls="controls" src="${prefix}/data?path=${files[l]}"></video>`;
 							} else if (bigType === "audio") {
-								c.innerHTML = "<audio controls=\"controls\" src=\"" + prefix + "/data?path=" + files[l] + "\"></audio>";
+								c.innerHTML = `<audio controls="controls" src="${prefix}/data?path=${files[l]}"></audio>`;
 							} else if (files[l].length != 0) {
 								var splits = files[l].split("/");
 								var link = document.createElement("a");
-								link.href = prefix + "/data?path=" + files[l].replace(/ /g, "%20");
+								link.href = `${prefix}/data?path=${files[l].replace(/ /g, "%20")}`;
 								link.setAttribute("mime_type", types[l]);
 								link.className = "inlineAttachment";
 
@@ -205,22 +205,22 @@
 
 								if (faLoaded && types[l].length != 0 && smallType !== undefined) {
 									if (smallType === "pdf")
-										icon = "<i class=\"fas fa-file-pdf\"></i>";
+										icon = '<i class="fas fa-file-pdf"></i>';
 									else if (smallType === "vcard")
-										icon = "<i class=\"fas fa-id-card\"></i>";
+										icon = '<i class="fas fa-id-card"></i>';
 									else if (smallType === "x-debian-package")
-										icon = "<i class=\"fas fa-archive\"></i>";
+										icon = '<i class="fas fa-archive"></i>';
 									else if (smallType.includes("script") || smallType === "x-sh")
-										icon =  "<i class=\"fas fa-file-code\"></i>";
+										icon =  '<i class="fas fa-file-code"></i>';
 									else if (smallType === "zip")
-										icon = "<i class=\"fas fa-file-archive\"></i>";
+										icon = '<i class="fas fa-file-archive"></i>';
 									else
-										icon = "<i class=\"fas fa-file\"></i>";
+										icon = '<i class="fas fa-file"></i>';
 								} else {
-									icon = "<i class=\"fas fa-file\"></i>";
+									icon = '<i class="fas fa-file"></i>';
 								}
 
-								link.innerHTML = icon + " <span>" + splits[splits.length - 1] + (faLoaded ? "" : "(" + files[l] + ")") + "</span>";
+								link.innerHTML = `${icon} <span>${splits[splits.length - 1]}${(faLoaded ? "" : "(" + files[l] + ")")}</span>`;
 								c.innerHTML += link.outerHTML;
 							}
 							if (bigType === "image" || bigType === "video" || bigType === "audio")
@@ -261,21 +261,21 @@
 
 					var icons = ["Love", "Thumbs up", "Thumbs down", "Haha", "!!", "??"];
 
-					if (faLoaded) icons = ["<i class=\"fas fa-heart\"></i>", "<i class=\"fas fa-thumbs-up\"></i>", "<i class=\"fas fa-thumbs-down\"></i>",
-					"<i class=\"fas fa-grin-tears\"></i>", "<i class=\"fas fa-exclamation\"></i><i class=\"fas fa-exclamation\"></i>", "<i class=\"fas fa-question\"></i>"];
+					if (faLoaded) icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>',
+					'<i class="fas fa-grin-tears"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
 
 					reac.innerHTML = icons[Number(text.associated_message_type) - 2000];
 
 					var elder = original.parentNode;
 					if (elder.className.includes("text-area")) {
 						var ln = elder.getElementsByClassName("reaction").length;
-						var mg = " -" + String(ln * 2) + "6px;";
-						mg += "z-index: " + String(9 < (ln + 2) ? 9 : (ln + 2)) + ";";
+						var mg = ` -${String(ln * 2)}6px;`;
+						mg += `z-index: ${String(9 < (ln + 2) ? 9 : (ln + 2))};`;
 						if (elder.className.includes("from_them")) {
-							reac.setAttribute("style", "left:" + mg);
+							reac.setAttribute("style", `left:${mg}`);
 							elder.appendChild(reac);
 						} else {
-							reac.setAttribute("style", "right:" + mg);
+							reac.setAttribute("style", `right:${mg}`);
 							elder.insertBefore(reac, elder.firstChild);
 						}
 					} else {
@@ -300,12 +300,15 @@
 
 				} else if (Number(text.associated_message_type) > 2999 && Number(text.associated_message_type) < 3006) {
 					var guid = text.associated_message_guid.split("/")[1];
-					var area = document.getElementById(guid).parentNode;
+					var box = document.getElementById(guid)
+					if (box !== null) {
+						var area = box.parentNode;
 
-					for (var i = 0; i < area.children.length; i++) {
-						if (Number(area.children[i].getAttribute("reactionType")) + 1000 === Number(text.associated_message_type)) {
-							area.children[i].outerHTML = "";
-							break;
+						for (var i = 0; i < area.children.length; i++) {
+							if (Number(area.children[i].getAttribute("reactionType")) + 1000 === Number(text.associated_message_type)) {
+								area.children[i].outerHTML = "";
+								break;
+							}
 						}
 					}
 				}
@@ -315,14 +318,16 @@
 
 			function getChatElement(chat, num_texts, searched = false, relevant_text = 0) {
 				/// relevant_text will contain the ROWID of the matching text from the search
-				if (debug) console.log("Getting chat element for " + chat.chat_identifier + ", num: " + num_texts);
+				if (debug) console.log(`Getting chat element for ${chat.chat_identifier}, num: ${num_texts}`);
 				var b = document.createElement("button");
 
 				if (!searched) b.id = chat.chat_identifier;
 				else b.setAttribute("chat_id", chat.chat_identifier);
 
+				b.setAttribute("addresses", (chat.addresses !== undefined && chat.addresses !== "" ? chat.addresses : chat.chat_identifier));
+
 				var i = document.createElement("img");
-				i.src = prefix + "/data?chat_id=" + chat.chat_identifier;
+				i.src = `${prefix}/data?chat_id=${chat.chat_identifier}`
 
 				var classes = chat.has_unread === "true" ? "unread" : "";
 
@@ -340,7 +345,7 @@
 					top.className = "chat-toprow";
 
 					if (chat.chat_identifier.substring(0, 4) !== "chat" && !chat.chat_identifier.includes("@") && chat.display_name.length !== 0)
-						n.innerHTML += "<span style=\"color: #858585; font-weight: 200;\"> (" + chat.chat_identifier + ")</span>";
+						n.innerHTML += `<span style="color: #858585; font-weight: 200;"> (${chat.chat_identifier})</span>`;
 
 					top.appendChild(n);
 
@@ -377,8 +382,8 @@
 
 				b.className = classes;
 
-				var get_texts_string = "getTexts(\"" + chat.chat_identifier + "\", " + num_texts + ");";
-				b.setAttribute("onclick", get_texts_string);
+				var gts = `getTexts("${chat.chat_identifier}", ${num_texts}` + (chat.addresses !== undefined ? `, "${chat.addresses}"` : "") + ');';
+				b.setAttribute("onclick", gts);
 
 				return b;
 			}
@@ -386,13 +391,18 @@
 			function printListOfTexts(texts, append = true, is_group = false) {
 				/// If append is true, then it places this list of texts under the existing ones. Else, it places them above the existing ones.
 				/// the Last element in `texts` will always be the farthest from the texts that were here when this was called
-				if (debug) console.log("printing List of chats " + String(chats.length) + ", appending: " + append ? "true" : "false");
+				/// Also this function is a nightmare; if something is going terribly wrong it may be easier to just rewrite it than troubleshoot
+				if (debug) console.log(`printing List of texts ${String(texts.length)}, appending: ${String(append ? "true" : "false")}`);
 
 				var tc = document.getElementById("text-content");
 				var et = document.getElementsByClassName("text");
+				var orig_len = et.length;
 
 				var spacer = document.createElement("div");
 				spacer.className = "spacer";
+
+				var lnr = texts.length - 1 // lnr = last non-reaction text
+				for (; lnr > 0 && texts[lnr].associated_message_type !== "0"; lnr--) {}
 
 				for (var i = 0; i < texts.length; i++) {
 					var fts = getTextElement(texts[i]);
@@ -405,11 +415,13 @@
 					var notLast = false;
 					var n = append ? i+1 : i-1;
 
-					var sender_box = undefined;
+					var sender_box = document.createElement("div");
+					sender_box.className = "sender";
+
 					var add_spacer = false;
 					var append_time_display = false;
-					var hourBreak;
-					var tenMinuteBreak;
+					var hourBreak = false;
+					var tenMinuteBreak = false;
 
 					if (i === 0 && et.length > 0) {
 						if (append) {
@@ -431,27 +443,23 @@
 
 					if ((append && i < texts.length - 1) || (!append && i > 0)) {
 						var brk = append ? 1 : -1;
-						/// Hopefully gets next text that is not a reaction
 						for (; (append ? n < texts.length : n >= 0) && texts[n].associated_message_type !== "0"; n += brk) {}
 
-						tenMinuteBreak = texts[n].date - texts[i].date >= 600000000000;
-						hourBreak = texts[n].date - texts[i].date >= 3600000000000;
-						if (!hourBreak && texts[i].is_from_me === texts[n].is_from_me && (!is_group || texts[i].sender === texts[n].sender)) {
-							if (tenMinuteBreak && !hourBreak)
-								add_spacer = true;
-							else
-								notLast = true;
-						}
+						if ((append && n < texts.length) || (!append && n >= 0)) {
+							tenMinuteBreak = texts[n].date - texts[i].date >= 600000000000;
+							hourBreak = texts[n].date - texts[i].date >= 3600000000000;
+							if (!hourBreak && texts[i].is_from_me === texts[n].is_from_me && (!is_group || texts[i].sender === texts[n].sender)) {
+								if (tenMinuteBreak) add_spacer = true;
+								else notLast = true;
+							}
 
-						if (is_group && texts[n].is_from_me === "0" && texts[i].sender !== texts[n].sender) {
-							sender_box = document.createElement("div");
-							sender_box.className = "sender";
-							sender_box.innerHTML = "<p>" + texts[n].sender + "</p>";
+							if (is_group && texts[n].is_from_me === "0" && texts[i].sender !== texts[n].sender)
+								sender_box.innerText = texts[n].sender;
 						}
 					}
 
-					if (append_time_display)
-						tc.innerHTML += "<div class=\"time-display\"><p>" + timeConverter(texts[i].date) + "</p></div>";
+					if (append_time_display || (i === 0 && append && orig_len === 0))
+						tc.innerHTML += `<div class="time-display"><p>${timeConverter(texts[i].date)}</p></div>`;
 
 					for (var j = 0; j < ft.length; j++) {
 						if (ft[j].innerHTML === undefined || ft[j].innerHTML === "") continue;
@@ -460,28 +468,43 @@
 						else tc.insertBefore(ft[j], document.getElementById("moretextsbutton").nextSibling);
 					}
 
-					if (add_spacer) {
-						if (append) tc.appendChild(spacer);
-						else tc.insertBefore(spacer, tc.firstChild.nextSibling);
+					var orig = null; // if you do insertBefore(node, null), it just appends.
+					if (!append) {
+						orig = document.getElementById(ft[0].id).nextSibling;
+						for (var j = 1; j < ft.length && orig.id === ft[0].id; j++) orig = orig.nextSibling;
 					}
 
-					if ((hourBreak && i < texts.length - 1) || (!append && i === texts.length - 1)) {
-						var td = document.createElement("div");
-						td.className = "time-display";
-						td.innerHTML = "<p>" + timeConverter(texts[n].date) + "</p>";
-						if (append) tc.appendChild(td);
-						else tc.insertBefore(td, ft[ft.length - 1].nextSibling);
-						if (is_group && texts[n].is_from_me === "0") {
-							sender_box = document.createElement("div");
-							sender_box.className = "sender";
-							sender_box.innerHTML = "<p>" + texts[n].sender + "</p>";
+					if (add_spacer)
+						tc.insertBefore(spacer, append ? null : tc.firstChild.nextSibling);
+
+					if ((hourBreak && i < texts.length - 1) || (!append && i === lnr) || (append && i === 0 && orig_len == 0)) {
+						if (hourBreak || !append) {
+							var td = document.createElement("div");
+							td.className = "time-display";
+							td.innerHTML = `<p>${timeConverter(texts[n].date)}</p>`;
+
+							if (append || i < lnr) tc.insertBefore(td, orig);
+							else tc.insertBefore(td, tc.firstChild.nextSibling);
+						}
+
+						if (is_group) {
+							var tds = document.getElementsByClassName("time-display");
+							if (texts[n].is_from_me === "0") {
+								sender_box.innerText = texts[n].sender;
+								var next = texts[n].sender === texts[i].sender ? tds[0].nextSibling : orig;
+								tc.insertBefore(sender_box, append ? tds[tds.length-1].nextSibling : next);
+							} 
+							if (((append && i === 0) || (!append && i === lnr)) && texts[i].is_from_me === "0" && texts[i].sender !== texts[n].sender) {
+								var clone = sender_box.cloneNode();
+								clone.innerText = texts[i].sender;
+								tc.insertBefore(clone, tds[0].nextSibling);
+							}
+							sender_box = undefined;
 						}
 					}
 
-					if (sender_box !== undefined) {
-						if (append) tc.appendChild(sender_box);
-						else tc.insertBefore(sender_box, ft[ft.length - 1].nextSibling);
-					}
+					if (sender_box !== undefined && sender_box.innerText != "")
+						tc.insertBefore(sender_box, orig);
 				}
 
 				if (append && !is_group) {
@@ -498,7 +521,7 @@
 					if (lt !== undefined) {
 						var nrr = document.createElement("span");
 						nrr.className = "readreceipt";
-						nrr.innerHTML = "<strong>Read</strong> " + timeConverter(parseInt(lt.getAttribute("date_read")));
+						nrr.innerHTML = `<strong>Read</strong> ${timeConverter(parseInt(lt.getAttribute("date_read")))}`;
 
 						if (lt === tc.lastChild) tc.appendChild(nrr);
 						else tc.insertBefore(nrr, lt.nextSibling);
@@ -509,10 +532,10 @@
 			}
 
 			async function getLatestText(chat = current_chat_id, read = false) {
-				if (debug) console.log("Getting latest text for chat " + chat);
+				if (debug) console.log(`Getting latest text for chat ${chat}`);
 				var text;
 
-				let url = prefix + "/requests?person=" + chat + "&num=1&read=" + (read ? "true" : "false");
+				let url = `${prefix}/requests?person=${chat}&num=1&read=${(read ? "true" : "false")}`;
 
 				let textPromise = await fetchFromURL(url);
 				var text = textPromise.texts[0];
@@ -523,7 +546,7 @@
 			}
 
 			function clearTextContent() {
-				document.getElementById("text-content").innerHTML = "<div class=\"centered\"> Select a chat on the left to view your messages :)</div>";
+				document.getElementById("text-content").innerHTML = '<div class="centered"> Select a chat on the left to view your messages :)</div>';
 				printed_texts = 0;
 				document.getElementById("messagesTitleText").innerHTML = "";
 				document.getElementById("hiddenchatbox").setAttribute("value", "");
@@ -537,7 +560,7 @@
 
 			const printChats = async (offset = 0) => {
 				if (debug) console.log("printing Chats");
-				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset;
+				let url = `${prefix}/requests?chat=0&num_chats=${num_chats_to_load}&chats_offset=${offset}`;
 				let chatPromise = await fetchFromURL(url);
 				this.items = chatPromise.chats;
 
@@ -589,12 +612,12 @@
 				}
 
 				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
+				document.title = `SMServer${(unread_chats > 0 ? " (" + String(unread_chats) + ")" : "")}`
 			}
 
 			const getMoreChats = async (offset = printed_chats) => {
 				if (debug) console.log("getting more chats");
-				let url = prefix + "/requests?chat=0&num_chats=" + num_chats_to_load + "&chats_offset=" + offset;
+				let url = `${prefix}/requests?chat=0&num_chats=${num_chats_to_load}&chats_offset=${offset}`;
 				let chatsPromise = await fetchFromURL(url);
 				new_items = chatsPromise.chats;
 
@@ -607,8 +630,8 @@
 				}
 			}
 
-			const getTexts = async (chat_id, num_texts) => {
-				if (debug) console.log("getting " + num_texts + " for chat " + chat_id);
+			const getTexts = async (chat_id, num_texts, addresses = "") => {
+				if (debug) console.log(`getting ${num_texts} for chat ${chat_id}`);
 
 				var myNode = document.getElementsByClassName("text-content")[0];
 
@@ -619,28 +642,27 @@
 				var hiddenchatbox = document.getElementById("hiddenchatbox");
 				hiddenchatbox.setAttribute("value", chat_id);
 
-				var orig_btn = document.getElementById(chat_id);
+				var orig_btn = document.querySelector(`[addresses*="${chat_id}"]`);
 				orig_btn.className = orig_btn.className.replace(/unread/g, "") + " selected";
 				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
+				document.title = `SMServer${(unread_chats > 0 ? " (" + String(unread_chats) + ")" : "")}`;
 
 				if (!orig_btn.className.includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
 					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
 
-				var chat_title = document.getElementById(chat_id).getElementsByClassName("chat-name")[0];
+				var chat_title = orig_btn.getElementsByClassName("chat-name")[0];
 				var title_doc = document.getElementsByClassName("title-content")[0];
-				if (chat_title.children.length > 0) title_doc.innerHTML = "<p>" + chat_title.textContent.replace(chat_title.children[0].innerText, "") + "</p>";
-				else title_doc.innerHTML = "<p>" + chat_title.textContent + "</p>";
+				if (chat_title.children.length > 0) title_doc.innerHTML = `<p>${chat_title.textContent.replace(chat_title.children[0].innerText, "")}</p>`;
+				else title_doc.innerHTML = `<p>${chat_title.textContent}</p>`;
 
 				current_chat_id = chat_id;
 
 				var img = document.createElement("img");
-				img.src = prefix + "/data?chat_id=" + chat_id;
+				img.src = `${prefix}/data?chat_id=${chat_id}`;
 
 				title_doc.insertBefore(img, title_doc.firstChild);
 
-				var new_chat_id = chat_id;
-				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts;
+				let url = `${prefix}/requests?person=${(addresses === "" ? chat_id : addresses)}&num=${num_texts}`;
 
 				let textsPromise = await fetchFromURL(url);
 				this.texts = textsPromise.texts;
@@ -650,7 +672,7 @@
 				var more = document.createElement("button");
 				more.setAttribute("onclick", "getMoreTexts()");
 				more.id = "moretextsbutton";
-				more.innerHTML = "<p>+ More Texts</p>";
+				more.innerHTML = faLoaded ? '<i class="fas fa-chevron-circle-up"></i> More' : "+ More Texts";
 				myNode.appendChild(more);
 
 				printed_texts = texts.length;
@@ -661,14 +683,15 @@
 
 				document.getElementById("text-content").lastChild.scrollIntoView();
 				document.getElementById("sendbox").focus();
+
+				if (texts.length < num_texts) document.getElementById("moretextsbutton").outerHTML = "";
 			}
 
 			const getMoreTexts = async (num_texts = num_texts_to_load) => {
-				if (debug) console.log("called getMoreText; num === " + num_texts);
-				var chat_id = current_chat_id;
+				if (debug) console.log(`called getMoreText; num === ${num_texts}`);
+				var chat_id = document.querySelector(`[addresses*="${current_chat_id}"]`).getAttribute("addresses");
 
-				var new_chat_id = chat_id;
-				let url = prefix + "/requests?person=" + new_chat_id + "&num=" + num_texts_to_load + "&offset=" + printed_texts + "&read=false";
+				let url = `${prefix}/requests?person=${chat_id}&num=${num_texts_to_load}"&offset=${printed_texts}&read=false`;
 				let textPromise = await fetchFromURL(url);
 				this.texts = textPromise.texts;
 
@@ -676,6 +699,8 @@
 
 				var is_group = chat_id.substring(0, 4) === "chat";
 				printListOfTexts(texts, false, is_group);
+
+				if (texts.length < num_texts) document.getElementById("moretextsbutton").outerHTML = "";
 			}
 
 			function sleep(ms) {
@@ -796,7 +821,7 @@
 				if (current_chat_id !== "") {
 					if (document.getElementById("sendbox").value.length > 0) {
 						typing_sleep = 10000;
-						if (!currently_typing) socket.send("typing:" + current_chat_id);
+						if (!currently_typing) socket.send(`typing:${current_chat_id}`);
 						currently_typing = true;
 						typingWait();
 					} else {
@@ -814,7 +839,7 @@
 					}
 					if (currently_typing) {
 						currently_typing = false;
-						socket.send("idle:" + current_chat_id);
+						socket.send(`idle:${current_chat_id}`);
 					}
 					called_typing_wait = false;
 				}
@@ -854,12 +879,12 @@
 			}
 
 			function parseMessage(msg) {
-				if (debug) console.log("parsing message " + msg);
+				if (debug) console.log(`parsing message ${msg}`);
 				var split = msg.split(":");
 
 				var prefix = split[0];
 				var content = "";
-				if (split.length > 0) content = split[1];
+				if (split.length > 0) content = msg.replace(prefix + ":", "");
 
 				switch (prefix) {
 					case "text":
@@ -872,31 +897,27 @@
 						setChatAsTyping(content);
 						break;
 					default:
-						console.log("cannot handle request: '" + msg + "'");
+						console.log(`cannot handle request: '${msg}'`);
 						break;
 				}
 			}
 
-			async function processNewText(chat) {
-				if (debug) console.log("received new text from " + chat);
+			async function processNewText(text) {
+				if (debug) console.log(`received new text: ${text}`);
 
-				var btn = document.getElementById(chat);
-				var new_text = "";
-				var name = "";
-				var notif_text;
+				var notif_text = JSON.parse(text).text;
+				var new_text = notif_text.text;
+				var chat = notif_text.chat_identifier;
 
-				var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
-				let textPromise = await fetchFromURL(url);
-				notif_text = textPromise.texts[0];
-				name = await getTextFromURL(prefix + "/requests?name=" + chat);
+				var btn = document.querySelector(`[addresses*="${chat}"]`);
 
-				new_text = notif_text.text;
+				var name = await getTextFromURL(`${prefix}/requests?name=${chat}`);
 
 				if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-					new_text = "Attachment: " + notif_text.attachment_type.split(":")[0];
+					new_text = `Attachment: ${notif_text.attachment_type.split(":")[0]}`
 
 				if (notif_text.sender !== undefined && notif_text.sender !== "nil")
-					new_text = notif_text.sender + ": " + new_text;
+					new_text = `${notif_text.sender}: ${new_text}`;
 
 				if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id))
 					var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
@@ -906,7 +927,7 @@
 						printChats();
 					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && btn.className.includes("unpinned")) {
 						setChatAsTop(chat, new_text);
-					} else if (btn !== undefined) {
+					} else {
 
 						if (chat !== current_chat_id || !document.hasFocus()) btn.classList.add("unread");
 						if (btn.className.includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
@@ -924,22 +945,22 @@
 
 					}
 					if (chat === current_chat_id) {
-						getLatestText(current_chat_id, document.hasFocus());
+						printListOfTexts([notif_text], true, notif_text.room_name.length > 0);
 						var typ = document.getElementById("typingIndicator");
 						if (typ !== undefined && typ !== null) typ.outerHTML = "";
 					}
 				}
 
 				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = "SMServer" + (unread_chats > 0 ? " (" + String(unread_chats) + ")" : "");
+				document.title = `SMServer${(unread_chats > 0 ? " (" + String(unread_chats) + ")" : "")}`;
 			}
 
 			async function setChatAsTop(chat, new_text = "") {
-				if (debug) console.log("Setting chat as top: " + chat + ", new: " + new_text);
+				if (debug) console.log(`Setting chat as top: ${chat}, new: ${new_text}`);
 
 				var chatsList = document.getElementsByClassName("chats-list")[0];
 				var unpins = document.getElementsByClassName("unpinned");
-				var current_box = document.getElementById(chat);
+				var current_box = document.querySelector(`[addresses*="${chat}"]`);
 
 				if ((current_box && !current_box.className.includes("unpinned")) || (unpins.length > 0 && chat === unpins[0].id)) {
 					if (new_text !== "" && current_box.className.includes("unpinned"))
@@ -951,7 +972,7 @@
 					var last_text;
 					var selected = false;
 					/// The most recent text from this person has (nearly) all the info we need
-					var url = prefix + "/requests?person=" + chat + "&num=1&read=false";
+					var url = `${prefix}/requests?person=${chat}&num=1&read=false`;
 					let textPromise = await fetchFromURL(url);
 					last_text = textPromise.texts[0];
 
@@ -965,18 +986,18 @@
 						'relative_time': 'now',
 					}
 
-					var existingButton = document.getElementById(chat);
+					var existingButton = document.querySelector(`[addresses*="${chat}"]`);
 					if (existingButton) {
 						new_chat.pinned = existingButton.className.includes("unpinned") ? "false" : "true";
 						new_chat.display_name = existingButton.getElementsByClassName("chat-name")[0].firstChild.textContent;
 						selected = existingButton.className.includes("selected");
 						existingButton.outerHTML = "";
 					} else {
-						new_chat.display_name = await getTextFromURL("/requests?name=" + chat);
+						new_chat.display_name = await getTextFromURL(`${prefix}/requests?name=${chat}`);
 					}
 
 					var new_box = getChatElement(new_chat);
-					if (selected) new_box.classList += "selected";
+					if (selected) new_box.classList.add("selected");
 
 					var pinRows = document.getElementsByClassName("pinRow");
 
@@ -989,7 +1010,7 @@
 			}
 
 			function setSelectedPhoto(url) {
-				if (debug) console.log("setting selected photo for " + url);
+				if (debug) console.log(`setting selected photo for ${url}`);
 				var p = document.getElementById(url);
 				if (p.className.includes("selected-photo"))
 					p.className = "photo";
@@ -998,7 +1019,7 @@
 			}
 
 			function getPhotoElement(photo) {
-				if (debug) console.log("Getting photo element " + photo);
+				if (debug) console.log(`Getting photo element ${photo}`);
 				var p = document.createElement("span");
 
 				var c = "photo";
@@ -1007,11 +1028,11 @@
 				p.className = c;
 
 				p.id = photo.URL;
-				p.setAttribute("onclick", "setSelectedPhoto(\"" + photo.URL + "\");");
+				p.setAttribute("onclick", `setSelectedPhoto("${photo.URL}");`);
 				p.setAttribute("width", "160");
 				p.setAttribute("height", "160");
 
-				p.innerHTML = "<img src=\"" + prefix + "/data?photo=" + photo.URL + "\">";
+				p.innerHTML = `<img src="${prefix}/data?photo=${photo.URL}">`;
 
 				if (photo.is_favorite === "true") {
 					var h = document.createElement("span");
@@ -1032,7 +1053,7 @@
 				if (!has_shown_camera_roll) {
 					var photos;
 
-					var url = prefix + "/requests?photos=" + num_photos_to_load;
+					var url = `${prefix}/requests?photos=${num_photos_to_load}`;
 					let photoPromise = await fetchFromURL(url);
 					photos = photoPromise.photos;
 					if (photos.length === 0) {
@@ -1056,7 +1077,7 @@
 				var cr = document.getElementById("camerarollContent");
 				var new_photos;
 
-				var url = prefix + "/requests?photos=" + num_photos_to_load + "&photo_offset=" + printed_photos;
+				var url = `${prefix}/requests?photos=${num_photos_to_load}&photo_offset=${printed_photos}`;
 				let photoPromise = await fetchFromURL(url);
 				new_photos = photoPromise.photos;
 				printed_photos += new_photos.length;
@@ -1085,7 +1106,7 @@
 			}
 
 			function setNewBatteryLevel(level) {
-				if (debug) console.log("new battery level: " + level);
+				if (debug) console.log(`new battery level: ${level}`);
 				var batt = document.getElementById("battery");
 				var bat_symbol = document.getElementById("batterySymbol");
 
@@ -1106,15 +1127,15 @@
 
 					if (faLoaded) {
 						if (dbl < 5)
-							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-empty\"></i>";
+							symbol = ' <i id="levelSymbol" class="fas fa-battery-empty"></i>';
 						else if (dbl < 25)
-							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-quarter\"></i>";
+							symbol = ' <i id="levelSymbol" class="fas fa-battery-quarter"></i>';
 						else if (dbl < 50)
-							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-half\"></i>";
+							symbol = ' <i id="levelSymbol" class="fas fa-battery-half"></i>';
 						else if (dbl < 75)
-							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-three-quarters\"></i>";
+							symbol = ' <i id="levelSymbol" class="fas fa-battery-three-quarters"></i>';
 						else
-							symbol = " <i id=\"levelSymbol\" class=\"fas fa-battery-full\"></i>";
+							symbol = ' <i id="levelSymbol" class="fas fa-battery-full"></i>';
 					}
 
 					var lvs = document.getElementById("levelSymbol");
@@ -1123,7 +1144,7 @@
 					else
 						bat_symbol.innerHTML = bat_symbol.innerHTML + symbol;
 
-					batt.innerHTML = String(level).split(".")[0] + "%" + bat_symbol.outerHTML;
+					batt.innerHTML = `${String(level).split(".")[0]}%${bat_symbol.outerHTML}`;
 
 					if (dbl > 35)
 						batt.className = "fullEnough";
@@ -1135,13 +1156,15 @@
 			}
 
 			function setChatAsTyping(chat) {
-				if (debug) console.log("setting " + chat + " as typing");
+				if (debug) console.log(`setting ${chat} as typing`);
+				var current = document.getElementById("typingIndicator");
+				if (current !== null && current !== undefined) return;
 				if (chat === current_chat_id) {
 					var d = document.createElement("div");
 					d.className = "text is_from_them iMessage";
 					d.id = "typingIndicator";
 
-					d.innerHTML = "<span class=\"dot flashing\">• </span><span class=\"dot\">• </span><span class=\"dot\">•</span>";
+					d.innerHTML = '<span class="dot flashing">• </span><span class="dot">• </span><span class="dot">•</span>';
 
 					document.getElementById("text-content").appendChild(d);
 					d.scrollIntoView();
@@ -1191,18 +1214,18 @@
 
 			async function submitSearch() {
 				var term = document.getElementById("searchBox").value;
-				window.location.href = prefix + "/requests?search=" + term; /// uhh simple stuff; use default settings for now
+				window.location.href = `${prefix}/requests?search=${term}`; /// uhh simple stuff; use default settings for now
 			}
 
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
-				var bt = document.getElementById(current_chat_id);
+				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
 				if (bt === undefined || bt === null || !bt.className.includes("unread")) return;
 				bt.className = bt.className.replace(/unread/g, "");
-				var _ = fetchFromURL(prefix + "/requests?person=" + current_chat_id + "&num=1");
+				var _ = fetchFromURL(`${prefix}/requests?person=${current_chat_id}&num=1`);
 
 				var unreads = document.getElementsByClassName("unread").length;
-				document.title = "SMServer" + (unreads > 0 ? " (" + String(unreads) + ")" : "");
+				document.title = `SMServer${(unreads > 0 ? " (" + String(unreads) + ")" : "")}`;
 			});
 
 			document.addEventListener("DOMContentLoaded", () => {
@@ -1215,18 +1238,18 @@
 			printChats();
 
 			let socket_prefix = location.protocol === "https:" ? "wss://" : "ws://";
-			let socket = new WebSocket(socket_prefix + socket_address + ":" + socket_port);
+			let socket = new WebSocket(`${socket_prefix}${socket_address}:${socket_port}`);
 
 			socket.onmessage = function(event) {
 				parseMessage(event.data);
 			}
 
 			socket.onerror = function(event) {
-				alert("It appears you have not yet trusted the websocket certificate. Please navigate to https://" + socket_address + ":" + socket_port + "/ and trust the certificate there");
+				alert(`It appears you have not yet trusted the websocket certificate. Please navigate to https://${socket_address}:${socket_port} and trust the certificate there`);
 			}
 
 		</script>
-		<!-- These next links are for fontawesome; it's how I display the reactions. It's safe to remove them, but then the reactions will just appear as text instead of icons-->
+		<!-- These next links are for fontawesome; it's how I display the reactions and various other glyphs. It's safe to remove them, but then the reactions will appear as text instead of icons, and some other things won't appear as pretty-->
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="setFALoaded();">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/fontawesome.css">
 		<link rel="stylesheet" type="text/css" href="style?main">
@@ -1249,8 +1272,8 @@
 				</div>
 				<div class="chats-search">
 					<input type="text" id="searchBox" placeholder="Search" onkeydown="if (event.keyCode === 13) submitSearch();"></input>
-					<button onclick="Notification.requestPermission();" id="notificationbutton"><p>Notifications</p></button>
-					<button onclick="showPopup();" id="composeShowButton"><p>+ New</p></button>
+					<button onclick="Notification.requestPermission();" id="notificationbutton">Notifications</button>
+					<button onclick="showPopup();" id="composeshowbutton">+ New</button>
 				</div>
 				<div class="chats-list">
 					<button onclick="getMoreChats()" id="morechatsbutton"><p>+ More Chats</p></button>

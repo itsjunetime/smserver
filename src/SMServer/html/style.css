@@ -132,7 +132,7 @@ p {
 }
 #text-content::after {
 	content: '';
-	padding: 1px;
+	padding: 5px;
 }
 .centered {
 	margin: auto;
@@ -210,8 +210,8 @@ i#chargingSymbol {
 	position: relative;
 }
 .chats button.unpinned img {
-	max-height: calc(var(--chats-button-height) * 0.76);
-	max-width: calc(var(--chats-button-height) * 0.76);
+	max-height: calc(var(--chats-button-height) * 0.74);
+	max-width: calc(var(--chats-button-height) * 0.74);
 	border-radius: 100%;
 }
 .pinRow {
@@ -228,7 +228,6 @@ i#chargingSymbol {
 	margin: 0px 0.7vw;
 	border-radius: 8px;
 	max-width: calc(var(--chats-width) * 0.25);
-	width: min-content;
 	position: relative;
 }
 .chats button.pinned .chat-top {
@@ -265,8 +264,8 @@ i#chargingSymbol {
 .chats button.pinned.unread .chat-name:before {
 	width: calc(7px + 0.3vw);
 	height: calc(7px + 0.3vw);
-	left: -10px;
-	bottom: calc(14px - 5%);
+	left: calc(1vw - 19px);
+	bottom: calc(14px - 3.5%);
 }
 .pinned .chat-name {
 	font-size: calc(8px + 0.5vw);
@@ -308,13 +307,11 @@ i#chargingSymbol {
 	margin-left: 5px;
 }
 #morechatsbutton {
-	display: flex;
-	padding: auto;
-	text-align: center;
+	font-size: 20px;
+	display: block;
 }
-#morechatsbutton p {
+#morechatsbutton, #morechatsbutton * {
 	color: dodgerblue;
-	margin: auto;
 }
 .unread .chat-nonpic:before {
 	height: 15px;
@@ -357,7 +354,7 @@ i#chargingSymbol {
 .text {
 	font-family: var(--main-font);
 	max-width: 40vw;
-	margin: 0px 0px 14px 0px;
+	margin: 2px 0;
 	font-weight: 300;
 	font-size: 18px;
 	padding: 7px 12px;
@@ -376,23 +373,16 @@ i#chargingSymbol {
 	white-space: pre-wrap;
 	word-break: break-word;
 }
-.is_from_them a, .is_from_them a span {
+.is_from_them a, .is_from_them a p {
 	color: dodgerblue;
 }
-.is_from_me a, .is_from_me a span {
+.is_from_me a, .is_from_me a p, .is_from_me a span{
 	color: lightblue;
 }
-.from_them + .sender {
-	margin-top: 10px;
-}
 .sender {
-	margin-left: 4px;
-	margin-bottom: -14px;
-}
-.sender p {
 	font-size: 14px;
 	font-weight: lighter;
-	margin: 0 0 16px 0;
+	margin: 10px 0 0 5px;;
 	color: #bbb;
 }
 .is_from_me {
@@ -438,9 +428,9 @@ i#chargingSymbol {
 	background: var(--main-background);
 	transform: translate(-30px, -2px);
 }
-.is_from_me + .is_from_me,
-.is_from_them + .is_from_them {
-	margin-top: -10px;
+[class*="from_them"] + [class*="from_me"],
+[class*="from_me"] + [class*="from_them"] {
+	margin-top: 10px;
 }
 .is_from_me.iMessage {
 	background-color: var(--my-imessage-background);
@@ -472,7 +462,7 @@ i#chargingSymbol {
 	padding: 20px 20px 20px 0;
 }
 .spacer {
-	height: 10px;
+	min-height: 10px;
 }
 .time-display {
 	text-align: center;
@@ -486,9 +476,7 @@ i#chargingSymbol {
 	box-shadow: 0px 0px 10px #222;
 	transition: linear 0.2s;
 	padding: 6px;
-}
-#moretextsbutton p {
-	margin: 0;
+	font-size: 20px;
 }
 #moretextsbutton:hover {
 	box-shadow: none;
@@ -646,12 +634,12 @@ i#chargingSymbol {
 	background-color: rgba(20, 20, 20, 0.7);
 	font-size: 16px
 }
-#composeShowButton, #notificationbutton {
+#composeshowbutton, #notificationbutton {
 	background-color: var(--light-button-background);
 	border: none;
 	border-radius: 5px;
 }
-#composeShowButton {
+#composeshowbutton {
 	padding: 0px 8px;
 	margin-right: -6px;
 }
@@ -667,10 +655,6 @@ i#chargingSymbol {
 #notificationbutton {
 	width: max-content;
 	padding: 0px 8px;
-}
-#composeShowButton p, #notificationbutton p {
-	margin: 0 0 0 0;
-	font-size: 14px;
 }
 #camerarollbutton {
 	grid-column: 1;
@@ -745,12 +729,10 @@ i#chargingSymbol {
 .readreceipt {
 	font-size: 14px;
 	align-self: flex-end;
+	margin-top: 3px;
 }
 .readreceipt, .readreceipt strong {
 	color: #a6a6a6;
-}
-.text + .readreceipt {
-	margin-top: -8px;
 }
 .reaction {
 	top: -8px;
@@ -763,12 +745,11 @@ i#chargingSymbol {
 	-webkit-backdrop-filter: blur(1.5px);
 }
 .from_them .reaction {
-	left: -6px;
-	border-radius: 4px 4px 1px 4px;
+	left: -12px;
+	border-radius: 4px 4px 0 4px;
 	background-color: rgba(70, 140, 240, 0.7);
 }
 .text-area {
-	margin-bottom: -10px;
 	display: flex;
 }
 .text-area.from_me {
@@ -779,7 +760,7 @@ i#chargingSymbol {
 }
 .from_me .reaction {
 	right: -6px;
-	border-radius: 4px 4px 4px 1px;
+	border-radius: 4px 4px 4px 0;
 	background-color: rgba(71, 71, 80, 0.7);
 }
 .noPadding {

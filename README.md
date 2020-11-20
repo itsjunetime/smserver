@@ -7,10 +7,11 @@
 
 ## Features
 - Viewing all texts & iMessages from another device
-- HTTPS
+- TLS
 - Desktop Notifications upon new text arrival
 - Sending iMessages remotely, without on-device interaction
-- Sending all types of attachments from desktop 
+- Sending all types of attachments from desktop
+- Ability to browse and send attachments from host device camera roll
 - Authentication to protect against spying eyes
 - Background operation of server for unlimited time, with screen on or off
 - Easy and accessible customization options
@@ -27,7 +28,7 @@
 
 ### Dependencies
 - libsmserver, the tweak which allows sending texts with this app. You can get it from [here](https://github.com/iandwelker/libsmserver).
-- To install the ipa (NOT the deb): some signing service/bypass &mdash; Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign it, but if that doesn't work for you, then feel free to sign & install the .ipa. The .deb does not require signing or any sort of bypass, since it install as a system application.
+- To install the ipa (NOT the deb): some signing service/bypass &mdash; Whether this be signing via Xcode, AltServer, etc. or using AppSync Unified to bypass signing checks, any works. I'd recommend AppSync since you won't have to manually sign it, but if that doesn't work for you, then feel free to sign & install the .ipa. The .deb does not require signing or any sort of bypass, since it installs as a system application.
 
 ## To Install
 Use the provided .ipa or .deb package under the Releases, or read `docs/INSTALL.md` for information on how to build from source.
@@ -68,10 +69,9 @@ The source code may be updated past the latest released version, so don't be sur
 - [ ] Ability to delete conversations from the web interface-->
 
 ## Issues
-If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I may not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
+If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I will not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged issues:
-- Creating new conversations does not work on iOS 14+. This is being worked on.
 - Although typing indicators do appear when the other party starts typing, they don't always disappear when they stop typing. This is also being worked on.
 
 ### To file an issue:
