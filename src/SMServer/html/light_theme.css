@@ -45,13 +45,13 @@
 	box-shadow: 0px 0px 10px #999;
 	border: none;
 }
-#moretextsbutton p {
+#moretextsbutton, #moretextsbutton * {
 	color: #eee;
 }
 #sendbutton {
 	color: #eee;
 }
-#sendbox {
+#sendbox, #subjectBox {
 	background-color: var(--light-button-background);
 }
 .from_me .reaction {

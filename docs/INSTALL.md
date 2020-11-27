@@ -8,6 +8,6 @@
 	`-n` if this is your first time running \
 	`-i` if you'd like to make a `.ipa` package \
 	`-d` if you'd like to make a `.deb` package \
-	`-v` if you'd like verbose output \
+	`-v` if you'd like verbose output
 
 For example, if you'd like to make a `.deb` package and you've never run this before, run `./make.sh -dn`
