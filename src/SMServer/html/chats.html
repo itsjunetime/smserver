@@ -33,7 +33,6 @@
 			var texts = "";
 			var image_string = "";
 			var current_chat_id = "";
-			var sleep_time = 400;
 			var typing_sleep = 10000;
 			var load_icon = '<i class="fas fa-chevron-circle-up"></i>';
 
@@ -201,24 +200,14 @@
 								link.setAttribute("mime_type", types[l]);
 								link.className = "inlineAttachment";
 
-								var icon = "";
+								var fa = "file";
 
 								if (faLoaded && types[l].length != 0 && smallType !== undefined) {
-									if (smallType === "pdf")
-										icon = '<i class="fas fa-file-pdf"></i>';
-									else if (smallType === "vcard")
-										icon = '<i class="fas fa-id-card"></i>';
-									else if (smallType === "x-debian-package")
-										icon = '<i class="fas fa-archive"></i>';
-									else if (smallType.includes("script") || smallType === "x-sh")
-										icon =  '<i class="fas fa-file-code"></i>';
-									else if (smallType === "zip")
-										icon = '<i class="fas fa-file-archive"></i>';
-									else
-										icon = '<i class="fas fa-file"></i>';
-								} else {
-									icon = '<i class="fas fa-file"></i>';
+									var dict = {'pdf': 'file-pdf', 'vcard': 'id-card', 'x-debian-package': 'archive', 'x-sh': 'file-code', 'zip': 'file-archive', 'x-python-script': 'file-code'};
+									if (dict[smallType] !== undefined) fa = dict[smallType];
 								}
+
+								var icon = `<i class="fas fa-${fa}"></i>`;
 
 								link.innerHTML = `${icon} <span>${splits[splits.length - 1]}${(faLoaded ? "" : "(" + files[l] + ")")}</span>`;
 								c.innerHTML += link.outerHTML;
@@ -230,15 +219,16 @@
 					}
 
 					if (text.text.replace(/￼/g, "").trim().length > 0 || text.subject.length > 0) {
-						/// There's an invisible character between those first two quotes that displays on firefox. This just removes it
-						var subject = document.createElement("div");
-						subject.className = "subject";
-						subject.innerText = text.subject;
+						/// There's an invisible character between those first two quotes that sometimes displays on firefox. This just removes it
+						if (text.subject.length > 0) {
+							var subject = document.createElement("div");
+							subject.className = "subject";
+							subject.innerText = text.subject;
+							t.appendChild(subject);
+						}
 
 						var inner = document.createElement("span");
 						inner.innerText += text.text.replace(/￼/g, "");
-
-						t.appendChild(subject);
 						t.appendChild(inner);
 					}
 
@@ -249,7 +239,7 @@
 					rets.push(t);
 					return rets;
 				} else if (Number(text.associated_message_type) < 2006 && Number(text.associated_message_type) > 1999) {
-					var guid = text.associated_message_guid.split("/")[1];
+					var guid = text.associated_message_guid.slice(-36);
 
 					var original = document.getElementById(guid);
 
@@ -401,7 +391,7 @@
 				var spacer = document.createElement("div");
 				spacer.className = "spacer";
 
-				var lnr = texts.length - 1 // lnr = last non-reaction text
+				var lnr = texts.length - 1 /// lnr = last non-reaction text
 				for (; lnr > 0 && texts[lnr].associated_message_type !== "0"; lnr--) {}
 
 				for (var i = 0; i < texts.length; i++) {
@@ -410,8 +400,7 @@
 					var ft = fts.length === undefined ? [fts] : fts;
 					if (ft.length === 0) continue;
 
-					var lt = texts[i-1];
-					var ld = i > 0 ? lt.date : 0;
+					var ld = i > 0 ? texts[i-1].date : 0;
 					var notLast = false;
 					var n = append ? i+1 : i-1;
 
@@ -463,14 +452,14 @@
 
 					for (var j = 0; j < ft.length; j++) {
 						if (ft[j].innerHTML === undefined || ft[j].innerHTML === "") continue;
-						if (notLast) ft[j].classList.add("notLast");
+						if (notLast || j < ft.length - 1) ft[j].classList.add("notLast");
 						if (append) tc.appendChild(ft[j]);
 						else tc.insertBefore(ft[j], document.getElementById("moretextsbutton").nextSibling);
 					}
 
-					var orig = null; // if you do insertBefore(node, null), it just appends.
+					var orig = null; /// if you do insertBefore(node, null), it just appends.
 					if (!append) {
-						orig = document.getElementById(ft[0].id).nextSibling;
+						orig = document.getElementById(ft[0].id);
 						for (var j = 1; j < ft.length && orig.id === ft[0].id; j++) orig = orig.nextSibling;
 					}
 
@@ -489,12 +478,13 @@
 
 						if (is_group) {
 							var tds = document.getElementsByClassName("time-display");
-							if (texts[n].is_from_me === "0") {
+							if (n < texts.length && texts[n].is_from_me === "0") {
 								sender_box.innerText = texts[n].sender;
 								var next = texts[n].sender === texts[i].sender ? tds[0].nextSibling : orig;
-								tc.insertBefore(sender_box, append ? tds[tds.length-1].nextSibling : next);
+								if (append && i !== 0) next = tds[tds.length - 1].nextSibling;
+								tc.insertBefore(sender_box, next);
 							} 
-							if (((append && i === 0) || (!append && i === lnr)) && texts[i].is_from_me === "0" && texts[i].sender !== texts[n].sender) {
+							if (((append && i === 0) || (!append && i === lnr)) && texts[i].is_from_me === "0" && (n >= texts.length || texts[i].sender !== texts[n].sender)) {
 								var clone = sender_box.cloneNode();
 								clone.innerText = texts[i].sender;
 								tc.insertBefore(clone, tds[0].nextSibling);
@@ -531,11 +521,11 @@
 				if (append) tc.lastChild.scrollIntoView();
 			}
 
-			async function getLatestText(chat = current_chat_id, read = false) {
+			async function getLatestText(from = 1, chat = current_chat_id, read = false) {
 				if (debug) console.log(`Getting latest text for chat ${chat}`);
 				var text;
 
-				let url = `${prefix}/requests?person=${chat}&num=1&read=${(read ? "true" : "false")}`;
+				let url = `${prefix}/requests?person=${chat}&num=1&read=${(read ? "true" : "false")}&from=${from}`;
 
 				let textPromise = await fetchFromURL(url);
 				var text = textPromise.texts[0];
@@ -589,17 +579,12 @@
 					} else {
 						var pinRows = document.getElementsByClassName("pinRow");
 
-						if (pinRows.length > 0 && pinRows[pinRows.length - 1].firstChild.children.length < 3) {
-							pinRows[pinRows.length - 1].firstChild.appendChild(b);
+						if (pinRows.length > 0 && pinRows[pinRows.length - 1].children.length < 3) {
+							pinRows[pinRows.length - 1].appendChild(b);
 						} else {
 							var row = document.createElement("div");
 							row.className = "pinRow";
-
-							var inner = document.createElement("div");
-							inner.className = "innerRow";
-
-							inner.appendChild(b);
-							row.appendChild(inner);
+							row.appendChild(b);
 
 							if (doc.children.length === 0)
 								doc.appendChild(row);
@@ -746,44 +731,21 @@
 					}
 
 					document.getElementById("attachmentbutton").value = "";
-					document.getElementById("unhiddenbutton").innerHTML = faLoaded ? "<i class=\"fas fa-paperclip\"></i>" : "📎";
+					document.getElementById("unhiddenbutton").innerHTML = faLoaded ? '<i class="fas fa-paperclip"></i>' : "📎";
 					hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
 					photos.value = "";
 
 					autoGrow();
 
-					if (!has_attachments) {
-						var now = new Date();
-						var time = now.getTime() / 1000;
+					var seg = 6000; /// kinda arbitrary
+					var at_sleep = 400;
+					var sleep_time = 250;
+					if (has_attachments)
+						await sleep(Math.max((total_size / seg), at_sleep));
+					else
+						await sleep(sleep_time);
 
-						var nt = {
-							'associated_message_guid': "",
-							'service': "iMessage",
-							'cache_has_attachments': "0",
-							'subject': subval,
-							'date_read': "0",
-							'is_from_me': "1",
-							'date': timeConverter(time, true, false, true),
-							'associated_message_type': "0",
-							'text': oldval,
-							'balloon_bundle_id': "0",
-							'guid': "0",
-						}
-
-						var ch = document.getElementById("text-content").children;
-						for (var i = ch.length - 1; i >= 0; i -= 1) {
-							if (ch[i].className.includes("text")) {
-								nt.service = ch[i].className.includes("iMessage") ? "iMessage" : "SMS";
-								break;
-							}
-						}
-
-						printListOfTexts([nt], true, is_group);
-					}
-
-					await sleep(has_attachments && total_size > 1000000 ? (total_size / 6000)  : sleep_time);
-
-					if (has_attachments) getLatestText(current_chat_id, true);
+					getLatestText(1, current_chat_id, true);
 					setChatAsTop(current_chat_id, oldval);
 				}
 			}
@@ -816,8 +778,8 @@
 				document.getElementById("composeAttachmentButton").value = "";
 			}
 
-			function inputKeyDown() {
-				autoGrow();
+			function inputKeyDown(subject = false) {
+				if (!subject) autoGrow();
 				if (current_chat_id !== "") {
 					if (document.getElementById("sendbox").value.length > 0) {
 						typing_sleep = 10000;
@@ -1037,7 +999,7 @@
 				if (photo.is_favorite === "true") {
 					var h = document.createElement("span");
 					h.className = "favorite-heart";
-					h.innerHTML = faLoaded ? "<i class=\"fas fa-heart\"></i>" : "❤";
+					h.innerHTML = faLoaded ? '<i class="fas fa-heart"></i>' : "❤";
 					if (faLoaded) h.setAttribute("style", "padding-right: 24px"); /// It's annoyingly specific, 1px off from using unicode
 					p.appendChild(h);
 				}
@@ -1096,7 +1058,7 @@
 				for (var i = p.length - 1; i >= 0; --i)
 					p[i].className = p[i].className.replace(/selected-photo/g, "");
 
-				document.getElementById("camerarollbutton").innerHTML = faLoaded ? "<i class=\"fas fa-camera\"></i>" : "📷";
+				document.getElementById("camerarollbutton").innerHTML = faLoaded ? '<i class="fas fa-camera"></i>' : "📷";
 			}
 
 			function selectCameraRollPhotos() {
@@ -1114,7 +1076,7 @@
 				if (isNaN(level)) {
 
 					if (level === "charging")
-						symbol = " <i id=\"chargingSymbol\" class=\"fas fa-bolt\"></i>";
+						symbol = ' <i id="chargingSymbol" class="fas fa-bolt"></i>';
 
 					var cgs = document.getElementById("chargingSymbol");
 					if (cgs !== undefined && cgs !== null)
@@ -1196,8 +1158,8 @@
 				sbox.className = "subjectSubject";
 				sbox.id = "subjectBox";
 				sbox.setAttribute("name", "subject");
-				sbox.setAttribute("oninput", tbox.getAttribute("oninput"));
-				sbox.setAttribute("onkeydown", tbox.getAttribute("onkeydown"));
+				sbox.setAttribute("oninput", "if (event.keyCode !== 13) inputKeyDown(true);");
+				sbox.setAttribute("onkeydown", "if (event.keyCode === 13) document.getElementById('sendbox').focus(); event.preventDefault();");
 				sbox.setAttribute("form", tbox.getAttribute("form"));
 				sbox.setAttribute("placeholder", "Subject");
 
@@ -1228,11 +1190,27 @@
 				document.title = `SMServer${(unreads > 0 ? " (" + String(unreads) + ")" : "")}`;
 			});
 
+			function setUpDND() {
+				var input_form = document.getElementById("sendform");
+				input_form.ondragover = input_form.ondragenter = function(evt) {
+					evt.preventDefault();
+				}
+
+				input_form.ondrop = function(evt) {
+					var file_box = document.getElementById("attachmentbutton");
+					file_box.files = evt.dataTransfer.files;
+					if (file_box.files.length > 0) document.getElementById('unhiddenbutton').innerHTML = file_box.files.length;
+					else document.getElementById("unhiddenbutton").innerHTML = faLoaded ? '<i class="fas fa-paperclip"></i>' : '📷';
+					evt.preventDefault();
+				}
+			}
+
 			document.addEventListener("DOMContentLoaded", () => {
 				if (!window.Notification || Notification.permission === "granted")
 					document.getElementById("notificationbutton").outerHTML = "";
 
 				if (subject) enableSubject();
+				setUpDND();
 			});
 
 			printChats();

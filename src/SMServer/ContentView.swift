@@ -11,7 +11,7 @@ struct ContentView: View {
 	let geo_width: CGFloat = 0.6
 	let font_size: CGFloat = 25
 	let identity = Bundle.main.path(forResource: "identity", ofType: "pfx")
-	let cert_pass = PKCS12Identity.pass  /// This is in a hidden file, not in the git repository, so that nobody can steal the private key of my certs.
+	let cert_pass = PKCS12Identity.pass  /// This is in a hidden file, not in the git repository, so that nobody can steal the private key of my cert.
 
 	@State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
 	@State var custom_css = UserDefaults.standard.object(forKey: "custom_css") as? String ?? ""
@@ -20,19 +20,16 @@ struct ContentView: View {
 	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
 
 	@State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-	@State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
-	@State var nord_theme: Bool = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
 	@State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
-	@State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
 	@State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
-	@State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
 	@State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
-
-	@State var view_settings = false
-	@State var server_running = false
-	@State var alert_connected = false
-	@State var has_root = false
-	@State var show_picker = false
+	
+	@State var mark_when_read: Bool = true
+	@State var view_settings: Bool = false
+	@State var server_running: Bool = false
+	@State var alert_connected: Bool = false
+	@State var has_root: Bool = false
+	@State var show_picker: Bool = false
 
 	static let chat_delegate = ChatDelegate()
 	static let sender: IWSSender = IWSSender.init()
@@ -157,18 +154,19 @@ struct ContentView: View {
 
 				let q = req.query
 
-				res.setValue("image/jpeg", forHTTPHeaderField: "Content-type")
+				res.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
 				res.send(ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? ""))
 			} else if f == "path" {
 
 				let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
 				let type = ContentView.chat_delegate.getAttachmentType(path: req.query["path"] ?? "")
 
-				res.setValue(type, forHTTPHeaderField: "Content-type")
+				res.setValue(type, forHTTPHeaderField: "Content-Type")
+				res.setValue("inline; filename=\(String(req.query["path"]?.split(separator: "/").last ?? ""))", forHTTPHeaderField: "Content-Disposition")
 				res.send(dataResponse)
 			} else if f == "photo" {
 
-				res.setValue("image/png", forHTTPHeaderField: "Content-type")
+				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 				res.send(ContentView.chat_delegate.getPhotoDatafromPath(path: req.query["photo"] ?? ""))
 			} else {
 				//if they don't have any of the above parameters, return nothing.
@@ -251,7 +249,7 @@ struct ContentView: View {
 			}
 
 			let s = Array(req.query.keys)[0]
-			res.setValue("text/css", forHTTPHeaderField: "Content-type")
+			res.setValue("text/css", forHTTPHeaderField: "Content-Type")
 
 			if s == "main" {
 				res.send(self.main_page_style)
@@ -267,7 +265,7 @@ struct ContentView: View {
 		server.add("/favicon.ico") { (req, res, next) in
 			/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
 			let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
-			res.setValue("image/png", forHTTPHeaderField: "Content-type")
+			res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 			res.send(data)
 		}
 
@@ -305,7 +303,7 @@ struct ContentView: View {
 		/// Make sure there's actually some content
 		if body != "" || files.count > 0 || subject != "" {
 			/// Send the information the obj-c function
-			ContentView.sender.sendIPCText(body, withSubject: subjects_enabled ? subject : "", toAddress: address, withAttachments: files)
+			ContentView.sender.sendIPCText(body, withSubject: subject, toAddress: address, withAttachments: files)
 
 			return true
 		}
@@ -332,14 +330,14 @@ struct ContentView: View {
 		let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
 		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
 		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
+		
+		let subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
+		let light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
+		let nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
 
 		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-		self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
-		self.subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
 		self.background = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
-
-		self.light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
-		self.nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
+		self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
 
 		if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
 		   let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
@@ -354,9 +352,9 @@ struct ContentView: View {
 					.replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(default_num_photos);")
 					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
 					.replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
-					.replacingOccurrences(of: "var subject;", with: "var subject = \(self.subjects_enabled ? "true" : "false");")
-					.replacingOccurrences(of: "<!--light-->", with: self.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
-					.replacingOccurrences(of: "<!--nord-->", with: self.nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
+					.replacingOccurrences(of: "var subject;", with: "var subject = \(subjects_enabled ? "true" : "false");")
+					.replacingOccurrences(of: "<!--light-->", with: light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
+					.replacingOccurrences(of: "<!--nord-->", with: nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
 
 				self.main_page_style = try String(contentsOf: s, encoding: .utf8)
 				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
@@ -372,7 +370,6 @@ struct ContentView: View {
 			self.custom_style = try String(contentsOf: self.custom_css_path, encoding: .utf8)
 		} catch {
 			self.log("Could not load custom css file", warning: true)
-			self.custom_style = ""
 		}
 	}
 
@@ -445,7 +442,7 @@ struct ContentView: View {
 
 		let f = Array(params.keys)[0]
 
-		if f == "person" || f == "num" || f == "offset" || f == "read" {
+		if f == "person" || f == "num" || f == "offset" || f == "read" || f == "from" {
 			/// requesting messages from a specific person
 			var person = params["person"] ?? ""
 
@@ -455,12 +452,13 @@ struct ContentView: View {
 
 			let num_texts = Int(params["num"] ?? String(default_num_messages)) ?? default_num_messages
 			let offset = Int(params["offset"] ?? "0") ?? 0
+			let from = Int(params["from"] ?? "0") ?? 0 /// 0 for either, 1 for me, 2 for them
 
 			self.log( "selecting person: " + person + ", num: " + String(num_texts))
 
 			person = person.replacingOccurrences(of: "\"", with: "") /// In case they decide to capture it in quotes
 
-			let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset)
+			let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset, from: from)
 			let texts = encodeToJson(object: texts_array, title: "texts")
 			return texts
 
@@ -504,7 +502,7 @@ struct ContentView: View {
 			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 
 			return encodeToJson(object: ret_val, title: "photos")
-		} else if f == "reaction" || f == "toGUID" || f == "inChat" || f == "remove" {
+		} /*else if f == "reaction" || f == "toGUID" || f == "inChat" || f == "remove" {
 			/// Haven't got the `libsmserver` side of this to work yet, so I'm disabling it for this version.
 			/// Hopefully I'll have it good and done by next version
 
@@ -522,7 +520,7 @@ struct ContentView: View {
 			if chat != "0" && textGuid != "0" {
 				ContentView.sender.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
 			}
-		}
+		}*/
 
 		self.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
 

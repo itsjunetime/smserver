@@ -43,18 +43,15 @@ IMDaemonController* controller = [%c(IMDaemonController) sharedController];
 
 /// Attempt to connect directly to the daemon
 if ([controller connectToDaemon]) {
-	/// Send the code that you want it to run, basically
-	[controller sendQueryWithReply:NO query: ^{
-		/// Do your IMCore/ChatKit stuff here
-		/// e.g. send a text, send a reaction, create a new conversation, etc
-	}];
+	/// Do your IMCore/ChatKit stuff here
+	/// e.g. send a text, send a reaction, create a new conversation, etc
 } else {
 	/// If it failed to connect to the daemon for whatever reason
 	NSLog(@"Couldn't connect to daemon :(");
 }
 ```
 
-Now, this is the basic context that you need to interface with IMAgent and run your IMCore/ChatKit code. Now that we've got that out of the way, just assume that the rest of the code in this article is being run within the `query` block above unless explicitly stated otherwise.
+Now, this is the basic context that you need to interface with IMAgent and run your IMCore/ChatKit code. Now that we've got that out of the way, just assume that the rest of the code in this article is being run within the `if` block above unless it explicitly states otherwise.
 
 ## Sending a text
 &nbsp;&nbsp;&nbsp;&nbsp; This was, by far, the most crucial function to get working. A web interface to simply browse your texts but not send any wouldn't get anyone's interest. This also did take me a significantly long time to get working, but that was due mainly to my own inability to read. [This page](https://iphonedevwiki.net/index.php/ChatKit.framework) on the iPhoneDevWiki has basic information about how to send a text to a pre-existing conversation, but when I read through it, I missed the section that said *"Note that this will still only work from the MobileSMS process, even though `[CKConversationList sharedConversationList]` is NOT always null in other processes."* Once I set up IPC with libmryipc, I was able to send information through the IPC to the MobileSMS process to send the text. Now, however, since I connect directly to the IMDaemon, I don't need to inject into the MobileSMS process to send a text. \
@@ -86,8 +83,7 @@ dispatch_async(dispatch_get_main_queue(), ^{
 });
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp; There is one caveat about the above code: It seemed to work fine on iOS 13, but when I've tried in on iOS 14, it appears that the sucess rate of sending an attachment drops to about ~20% or less. I don't know why this is, and as of October 17, 2020, I'm still working on figuring it out and making it work better. I'll try to update this document once I figure it out. \
-&nbsp;&nbsp;&nbsp;&nbsp; If you'd prefer not to use ChatKit, but rather pure IMCore, I've found another way to send a message using only IMCore, but I haven't yet figured out how to attach attachments to the message. Once again, I'll update this document once I do figure that out (if I ever do). Here's the code:
+&nbsp;&nbsp;&nbsp;&nbsp; If you'd prefer not to use ChatKit, but rather pure IMCore, I've found another way to send a message using only IMCore, but I haven't yet figured out how to attach attachments to the message. I'll update this document once I do figure that out (if I ever do). Here's the code:
 
 ```objectivec
 __NSCFString *address = (__NSCFString *)@"+11231231234"; /// Must have the full phone number. just "1231234" wont work.

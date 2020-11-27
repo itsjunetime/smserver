@@ -70,8 +70,8 @@ then
         -n, --new     : Runs processes that only need to happen once, specifically creating a certificate
                         and adding support swift files. You must run this at least once after cloning the
                         repo or else it won't build.
-        -d, --deb     : Builds a .deb. Requires a jailbroken iDevice on the local network to ssh into to
-                        create the archive
+        -d, --deb     : Builds a .deb. Requires either the command line utility \033[1mdpkg\033[0m, or a jailbroken
+                        iDevice on the local network to ssh into to create the archive
         -i, --ipa     : Builds a .ipa
         -v, --verbose : Runs verbose; doesn't hide any output
         -k, --keep    : Don't remove extracted \033[1mSMServer.app\033[0m files when cleaning up
@@ -118,13 +118,10 @@ fi
 if [ "$deb" = true ] || [ "$ipa" = true ]
 then
 	rm -rf ${ROOTDIR}/package/SMServer.xcarchive
-	pn "\033[34m==>\033[0m Clean building package..."
-	xcodebuild clean build -workspace ${ROOTDIR}/src/SMServer.xcworkspace -scheme SMServer -destination generic/platform=iOS
+	pn "\033[34m==>\033[0m Cleaning and archiving package..."
+	xcodebuild clean archive -workspace ${ROOTDIR}/src/SMServer.xcworkspace -scheme SMServer -archivePath ${ROOTDIR}/package/SMServer.xcarchive -destination generic/platform=iOS
 
-	[ $? -ne 0 ] && err "Failed to build package. Run again with \033[1m-v\033[0m to see why"
-
-	pn "\033[34m==>\033[0m Archiving package..."
-	xcodebuild archive -workspace ${ROOTDIR}/src/SMServer.xcworkspace -scheme SMServer -archivePath ${ROOTDIR}/package/SMServer.xcarchive -destination generic/platform=iOS
+	[ $? -ne 0 ] && err "Failed to archive package. Run again with \033[1m-v\033[0m to see why"
 
 	pn "\033[34m==>\033[0m Codesigning..."
 	codesign --entitlements ${ROOTDIR}/src/app.entitlements -f -s "${DEV_CERT}" ${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app
@@ -166,7 +163,7 @@ then
 		then
 			pn "\033[0mPlease enter your iDevice's \033[1mssh password\033[0;34m: " -n
 			read -s THEOS_DEVICE_PASS
-			echo "" # Just for the newline
+			pn "" # Just for the newline
 		fi
 
 
