@@ -1,8 +1,6 @@
 # API
 
-All non-image get requests are made to \<ip>:\<port>/requests. Requests for attachments are made to /attachments, and requests for profile images are made to /profile.
-
-All post requests are directed to /send. In the latest version, this is the only way to send texts and/or attachments.
+All plain text GET requests must be made to \<ip>:\<port>/requests (e.g. 192.168.0.127:8741/requests). Requests for binary data (whether it be pictures from the camera roll, profile pictures, or attachments) must be sent to /data. All post requests must be directed to /send.
 
 All request parameters require a value, but only some of the values are consequential. However, the app will not interpret a parameter as a parameter unless it has an accompanying value -- For example, to retrieve the list of conversations, one must make a request to /requests with a parameter of 'chat', but 'GET /requests?chat' will return nothing. Something like 'GET /requests?chat=0' will return the correct information.
 
@@ -10,7 +8,9 @@ All request parameters require a value, but only some of the values are conseque
 
 All requests to `/requests` return JSON information.
 
-## `person`, `num`, `offset`, `read`
+The below sections detail the query key/value pairs that you can combine to get the information you need from the API.
+
+## `person`, `num`, `offset`, `read`, `from`
 
 Retrieves the most recent \$num messages to or from \$person, offset by \$offset.
 
@@ -23,9 +23,11 @@ $\qquad$ As of version 0.5.4, you may also send multiple addresses to this param
 
 - read: Parameter is not necessary, but value is consequential. The value of this parameter must be a string, either `true` or `false`. If it is `true`, or the parameter is not included but the 'mark conversation as read when viewed on web interface' option is checked in the app's settings, the conversation whose messages are being requested will be marked as read on the host device. 
 
+- from: Parameter is not necessary, but value is consequential. The value of this parameter must be an int, either 0, 1, or 2. If you pass 0 for this key, this request will grab texts both to and from you in this conversation. If you pass 1 in for this key, it will grab only texts that are from you, and if you pass in 2, it will only grab texts that are to you.
+
 Example queries:
 - /requests?person=chat192370112946281736&num=500
-- /requests?person=+15202621138
+- /requests?person=+15202621138&from=2
 - /requests?person=email@icloud.com&num=50&offset=100&read=false
 - /requests?person=person@gmail.com&offset=200
 - /requests?person=email@icloud.com,+15202621138,person@gmail.com&num=100&read=true
@@ -117,7 +119,9 @@ Example queries:
 
 # `/send` requests
 
-Requests to this url are all sent using `POST`, are what are used to send texts and attachments. There are four arguments that can be sent to this, and it accepts multiple files as well. For the text to actually send, you must include the chat, and then either at least 1 file, or something that is more than 0 characters for one of the other parameters.
+Requests to this url are all sent using `POST`, as opposed to `GET`, as multipart/form-data forms (as opposed to application/x-www-form-urlencoded). In practice, it's generally safe to not encode anything in requests to this url, but only percent encodings (e.g. using `%20` for spaces and `%2B` for plus signs) will be accepted and parsed correctly. For example, replacing spaces with plus signs (as is specified in [RFC1738](https://www.ietf.org/rfc/rfc1738.txt) will cause the string to be used raw, and none of the plus signs will be replaced with spaces.
+
+There are five key/value pairs that can be sent to this URL, and it accepts multiple files as well. For the text to actually send, you must include the chat, and then either at least 1 file, or something that is more than 0 characters for one of the other parameters.
 
 As with all other requests (besides to the gatekeeper), you must authenticate before sending any requests to this url, or else nothing will happen.
 
@@ -125,36 +129,37 @@ As with all other requests (besides to the gatekeeper), you must authenticate be
 
 ## text
 
-This argument contains the body of the text you want to send. This parameter is not necessary for every request
+The value for this key simply contains the body of the text you want to send.
 
 ## subject
 
-This argument contains the subject of the text that you want to send. For it to actually be included with the text, it must be at least 1 character long (not just ""), and you must have the `Enable subject line in web interface (and API)` option toggled on in your app's settings. If it is 0-length or the subject setting is toggled off, the text will still be sent but it won't have a subject.
+The value for this key contains the subject of the text that you want to send. For it to actually be included with the text, it must be at least 1 character long (not just ""); if it is 0-length or you simply don't include this key/value pair, the text will still be sent but it won't have a subject.
 
 ## chat
 
-This argument contains the chat_identifier of the recipient, specified as in the `person` parameter above. Before 0.1.0+debug77, these could only be an address for an existing conversation, but with version 0.1.0+debug77 of SMServer (and 0.1.0-85+debug of libsmserver), you can post requests for new conversations; new conversations do not yet support attachments, though.
+The value for this key contains the chat_identifier of the recipient, specified as in the `person` parameter above. Before 0.1.0+debug77, these could only be an address for an existing conversation, but with version 0.1.0+debug77 of SMServer (and 0.1.0-85+debug of libsmserver), you can post requests for new conversations; new conversations do not yet support attachments, though.
 
-This parameter is necessary for every request, or else the app won't know who to send the text to. Also, plus signs should not be replaced with an escape character for these requests; they should stay plus signs.
+This parameter is necessary for every request, or else the app won't know who to send the text to.
 
 ## photos
 
-This argument will contain a list of the path of the photos (from the camera roll) that you want to send with this text, but separated by colons and without the `/var/mobile/Media/` section of their path. For example, if you wanted to send three photos with this text, this parameter would look something like `DCIM/100APPLE/IMG_0001.JPG:DCIM/100APPLE/IMG_0002.JPG:DCIM/100APPLE/IMG_0003.JPG`. 
+The value for this key will contain a list of the path of the photos (from the camera roll) that you want to send with this text, but deliminted by colons and without the `/var/mobile/Media/` section of their path. For example, if you wanted to send three photos with this text, this parameter would look something like `DCIM/100APPLE/IMG_0001.JPG:DCIM/100APPLE/IMG_0002.JPG:DCIM/100APPLE/IMG_0003.JPG`.
 
 ## files
 
-These need to be sent with the key 'attachments'. Other than that, just send them as normal. It does support sending multiple attachments, but (obviously), the more attachments you send, the longer it'll take, and the higher likelihood it'll fail along the way. 
+These need to be sent with the key 'attachments'. Other than that, just send them as normal. It does support sending multiple attachments, but (obviously), the more attachments you send, the longer it'll take, and the higher likelihood it'll fail along the way.
 
 ## Example requests
 
-### Python3 &mdash;
+### Python3
 
 Sending a text with a subject and no attachments:
 ```python
 from requests import post
 
-# It's safest to explicitly replace spaces with `%20`, since (last time I tested) python replaced 
-# all spaces with plus signs, which are not filtered out.
+# It's safest to explicitly encode spaces as `%20`, since python replaces all spaces with plus signs, 
+# which are not filtered out. If your scripting language does not replace spaces with plus signs,
+# you need not manually encode them.
 vals = {'text': 'Hello%20world!', 'subject': 'This%20is%20a%20test', 'chat': 'email@email.org'}
 url = 'https://192.168.0.127:8741/send'
 
@@ -176,6 +181,7 @@ url = 'https://192.168.0.127:8741/send'
 # The server's certificate is self-signed, so make to include the `verify` parameter in the request
 post(url, files=files_values, data=vals, verify=False)
 ```
+I've read that the value for `attachments` in `files_values` could be a list of tuples (a list of variables like `file` in the example above), but doing that has caused python to fail to post the request every time I've tried it, so I would recommend just iterating over each attachment and sending them individually.
 
 Sending a text with a subject and a photo from the camera roll:
 ```python
@@ -190,6 +196,13 @@ url = 'https://192.168.0.127:8741/send'
 post(url, data=vals, verify=False)
 ```
 
-To be able to send a text with a subject, the `subject` variable in `vals` must not be empty, and you must have the option `Enable subject functionality` toggled on in the app
-
-I've read that the value for `attachments` in `files_values` could be a list of tuples (a list of variables like `file`), but doing that has caused python to fail every time I've tried it, so I would recommend just iterating over each attachment and sending them individually. 
+### Curl
+Sending a text with a body, subject, and attachments with curl
+```bash
+curl -k -F "attachments=@/home/user/Pictures/image1.png" \
+        -F "attachments=@/home/user/Pictures/image2.png" \
+        -F "text=Hello there" \
+        -F "subject=Subject" \
+        -F "chat=+11231231234" \
+        "https://192.168.0.127:8741/send"
+```

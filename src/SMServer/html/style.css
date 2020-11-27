@@ -29,6 +29,8 @@
 * {
 	font-family: var(--main-font);
 	color: var(--font-color);
+	line-height: 1.2;
+	scrollbar-width: none;
 }
 body, html {
 	background-color: var(--body-background);
@@ -43,7 +45,7 @@ html {
 	grid-template-rows: 1fr;
 	grid-template-areas: 'conversations messages';
 	grid-column-gap: 5px;
-	height: calc(100vh - 20px);
+	height: calc(100vh - 16px);
 }
 p, h2, a, button {
 	font-family: var(--main-font);
@@ -52,9 +54,6 @@ p, h2, a, button {
 }
 :focus {
 	outline: none !important;
-}
-p {
-	font-size: 20px;
 }
 ::-webkit-scrollbar {
 	display: none;
@@ -70,7 +69,6 @@ p {
 	background-color: var(--main-background);
 	overflow-x: hidden;
 	border-radius: 5px;
-	scrollbar-width: none;
 }
 .messages .title {
 	grid-row: 1;
@@ -128,7 +126,6 @@ p {
 	padding: var(--messages-title-height) 11px 0 11px;
 	display: flex;
 	flex-direction: column;
-	scrollbar-width: none;
 }
 #text-content::after {
 	content: '';
@@ -194,13 +191,12 @@ i#chargingSymbol {
 	grid-column: 1;
 	overflow: auto;
 	overflow-x: hidden;
-	scrollbar-width: none;
+	max-width: var(--chats-width);
 }
 .chats button.unpinned,
 #morechatsbutton {
 	border: none;
 	border-top: 1px solid var(--chats-border);
-	border-bottom: 1px solid var(--chats-border);
 	background-color: var(--main-background);
 	display: flex;
 	width: var(--chats-width);
@@ -208,6 +204,7 @@ i#chargingSymbol {
 	align-items: center;
 	height: var(--chats-button-height);
 	position: relative;
+	padding: 6px;
 }
 .chats button.unpinned img {
 	max-height: calc(var(--chats-button-height) * 0.74);
@@ -217,6 +214,7 @@ i#chargingSymbol {
 .pinRow {
 	display: flex;
 	padding: 6px 0;
+	justify-content: center;
 }
 .innerRow {
 	margin: auto;
@@ -275,12 +273,13 @@ i#chargingSymbol {
 	width: max-content;
 }
 .chat-nonpic {
-	padding-left: 14px;
+	padding: 8px 0 0 14px;
 	width: calc(var(--chats-width) - (var(--chats-button-height) * 1.1)); /* This doesn't make any sense but it seems to work */
+	height: 100%;
 }
 .chat-toprow {
 	display: flex;
-	margin-bottom: 5px;
+	margin-bottom: 4px;
 }
 .chat-name {
 	font-size: 16px;
@@ -304,7 +303,7 @@ i#chargingSymbol {
 .chat-date {
 	padding-right: 6px;
 	min-width: max-content;
-	margin-left: 5px;
+	margin: auto 0;
 }
 #morechatsbutton {
 	font-size: 20px;
@@ -369,14 +368,14 @@ i#chargingSymbol {
 .text .subject {
 	font-weight: 500;
 }
-.text span {
+.text span, .richLinkTitle, .richLinkSubtitle {
 	white-space: pre-wrap;
 	word-break: break-word;
 }
-.is_from_them a, .is_from_them a p {
+.is_from_them a, .is_from_them a p, .is_from_them a span {
 	color: dodgerblue;
 }
-.is_from_me a, .is_from_me a p, .is_from_me a span{
+.is_from_me a, .is_from_me a p, .is_from_me a span {
 	color: lightblue;
 }
 .sender {
@@ -454,12 +453,7 @@ i#chargingSymbol {
 .text.allEmoji {
 	background-color: transparent;
 	font-size: 50px;
-}
-.allEmoji.is_from_me {
-	padding: 20px 0 20px 20px;
-}
-.allEmoji.is_from_them {
-	padding: 20px 20px 20px 0;
+	padding: 0;
 }
 .spacer {
 	min-height: 10px;
@@ -691,23 +685,16 @@ i#chargingSymbol {
 #camerarollContent {
 	overflow: auto;
 	max-width: 100%;
-	scrollbar-width: none;
 }
 .photo {
-	min-width: calc(var(--camera-roll-width) * 0.2);
-	max-width: calc(var(--camera-roll-width) * 0.2);
-	min-height: calc(var(--camera-roll-width) * 0.2);
-	max-height: calc(var(--camera-roll-width) * 0.2);	
-	overflow: hidden;
+	width: calc(var(--camera-roll-width) * 0.2);
+	height: calc(var(--camera-roll-width) * 0.2);
 }
 .photo img {
 	margin: 5px;
 	object-fit: cover;
-	object-position: center center;
-	max-width: calc(var(--camera-roll-width) * 0.2 - 10px);
-	min-width: calc(var(--camera-roll-width) * 0.2 - 10px);
-	max-height: calc(var(--camera-roll-width) * 0.2 - 10px);
-	min-height: calc(var(--camera-roll-width) * 0.2 - 10px);
+	width: calc(var(--camera-roll-width) * 0.2 - 10px);
+	height: calc(var(--camera-roll-width) * 0.2 - 10px);
 	border-radius: 4px;
 }
 .photo.selected-photo img {
@@ -766,10 +753,10 @@ i#chargingSymbol {
 .noPadding {
 	padding: 0 !important;
 }
-p.text.richLink {
-	max-width: 32vw;
+.text.richLink, .noPadding.fullAttachment {
+	max-width: 26vw;
 }
-.richLink img {
+.richLink > img {
 	border-radius: 10px 10px 0 0 !important;
 	width: 100%;
 }
@@ -780,12 +767,17 @@ p.text.richLink {
 	align-items: center;
 }
 .richLinkTitle {
-	font-size: 22px;
+	font-size: 18px;
 	margin: 2px;
 }
 .richLinkSubtitle {
-	padding: 5px;
+	padding-left: 5px;
 	color: #ccc;
+	font-size: 16px;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow-y: hidden;
 }
 .richLinkNavigator {
 	display: grid;
@@ -807,11 +799,17 @@ p.text.richLink {
 	margin: auto 0;
 }
 .richLinkIcon {
-	margin-right: 20px;
+	margin: 0 4%;
+	max-width: 10%;
 }
 .dot {
 	color: #888;
 }
 .dot.flashing {
 	color: #eee;
+}
+@-moz-document url-prefix() {
+	.text {
+		padding: 7px 12px 4px 12px;
+	}
 }

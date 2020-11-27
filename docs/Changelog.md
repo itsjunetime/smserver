@@ -1,17 +1,26 @@
 # Changelog
 0.5.4 &rightarrow; Unreleased
- - Made a new build script which makes it __much__ easier to build SMServer from scratch
+ - Made a new build script which makes it __much__ easier and faster to build SMServer from scratch
  - Added experimental option to combine conversations that belong to the same contact
+ - Added Drag 'n' drop for attachments in the web interface
+ - Added extra option in API to grab only texts to or from you in a certain conversation
  - Changed cert and hid new password to prevent people from stealing private key
  - Changed some glyphs in the web interface to look prettier
  - Web interface now checks to make sure there are more texts to be loaded before adding a 'more texts' button
  - Rewrote text-receiving backend to prevent race condition from duplicating texts in web interface
+ - Downloaded attachments now have correct name and filetype
+ - Web interface waits more accurately for attachments to fully upload before displaying the new text.
+ - Fixed multiple issues with rich links displaying incorrectly or not at all
+ - Fixed multiple issues with just-sent texts having incorrect attributes and thus causing weird graphical issues
+ - Fixed issue with rich Links not showing reactions at all
  - Fixed issue with duplicate typing indicators appearing in web interface
+ - Fixed issue with file descriptor not appearing in text description when file didn't have a specific mimetype.
  - Fixed issue with profile picture displays getting cut off
  - Fixed issue with sender names in group chats appearing above time displays
  - Fixed issues with unread indicator displays
  - Fixed many issues with sender and time display placement in group chats
  - Fixed issue with links redirecting to the wrong site if they didn't have `http(s)://` prefix
+ - Fixed padding issue within texts on Firefox
 
 0.5.3 &rightarrow; 0.5.4
  - Texts now have prettier bubble tails and no tails when sent close after each other

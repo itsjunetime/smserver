@@ -205,7 +205,7 @@ final class ChatDelegate {
 		return ret_val
 	}
 
-	final func loadMessages(num: String, num_items: Int, offset: Int = 0, surrounding: Int? = nil) -> [[String:String]] {
+	final func loadMessages(num: String, num_items: Int, offset: Int = 0, from: Int = 0, surrounding: Int? = nil) -> [[String:String]] {
 		/// This loads the latest $num_items messages from/to $num, offset by $offset.
 
 		self.log("getting messages for \(num)")
@@ -218,16 +218,22 @@ final class ChatDelegate {
 		/// check if it's a group chat
 		let is_group = num.prefix(4) == "chat" && !num.contains("@")
 		var messages = [[String:String]]()
+		var from_string: String = ""
 		var fixed_num = num
+		
 		if num.contains(",") {
 			/// So that you can merge multiple conversations
 			fixed_num = num.split(separator: ",").joined(separator: "\" or chat_identifier is \"")
 		}
+		
+		if from != 0 {
+			from_string = " and \(is_group ? "m." : "")is_from_me is \(from == 1 ? 1 : 0)"
+		}
 
 		if is_group {
-			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(fixed_num)\")) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
+			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(fixed_num)\"\(from_string))) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
 		} else {
-			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(fixed_num)\") ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "payload_data", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(fixed_num)\"\(from_string)) ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
 		}
 
 		for i in 0..<messages.count {
@@ -251,8 +257,9 @@ final class ChatDelegate {
 				let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: messages[i]["id"] ?? "")
 				messages[i]["sender"] = name
 			}
-
-			if messages[i]["balloon_bundle_id"] == "com.apple.messages.URLBalloonProvider" && messages[i]["ROWID"] != nil {
+			
+			if messages[i]["payload_data"]?.count ?? 0 > 0 && messages[i]["ROWID"] != nil {
+				messages[i]["balloon_bundle_id"] = "com.apple.messages.URLBalloonProvider"
 				let link_info = getLinkInfo(messages[i]["ROWID"]!, db: db)
 
 				messages[i]["link_title"] = link_info["title"]
@@ -338,7 +345,7 @@ final class ChatDelegate {
 
 		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
 			DispatchQueue.main.sync {
-				/// It's all async stuff so normally this doesn't even get executed but we still have to have it
+				/// It's all async stuff so normally this doesn't even get executed but we still have to have it just in case
 				while pinned_chats == [""] {
 					usleep(2000)
 				}
@@ -373,8 +380,10 @@ final class ChatDelegate {
 				let att = getAttachmentFromMessage(mid: i["m.ROWID"] ?? "")
 
 				/// Make it say like `Attachment: Image` if there's no text
-				if att.count != 0 && att[0].count == 2 {
+				if att.count != 0 && att[0].count == 2 && att[0][1].count > 0 {
 					new_chat["latest_text"] = "Attachment: " + att[0][1].prefix(upTo: att[0][1].firstIndex(of: "/") ?? att[0][1].endIndex)
+				} else {
+					new_chat["latest_text"] = "Attachment: 1 File"
 				}
 			}
 
@@ -787,17 +796,17 @@ final class ChatDelegate {
 
 		return ret_dict
 	}
-	
+
 	final func getTextByGUID(_ guid: String) -> [String:String] {
 		self.log("Getting text at guid \(guid)")
-		
+
 		var db = createConnection()
 		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
-		
+
 		if db == nil || contact_db == nil { return [String:String]() }
-		
+
 		var text = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is \"\(guid)\"", num_items: 1, offset: 0, split_ids: true)[0]
-		
+
 		if text["cache_has_attachments"] == "1" && text["ROWID"] != nil {
 			let a = getAttachmentFromMessage(mid: text["ROWID"] ?? "") /// get list of attachments
 			var file_string = ""
@@ -810,7 +819,7 @@ final class ChatDelegate {
 			text["attachment_type"] = type_string
 		}
 
-		if text["room_name"]?.count ?? 0 > 0 && text["is_from_me"] == "0" && text["id"]?.count != 0 {
+		if text["room_name"]?.count ?? 0 > 0 && text["is_from_me"] == "0" {
 			let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: text["chat_identifier"] ?? "")
 			text["sender"] = name
 		}
@@ -822,14 +831,14 @@ final class ChatDelegate {
 			text["link_subtitle"] = link_info["subtitle"]
 			text["link_type"] = link_info["type"]
 		}
-		
-		self.log("Closing database and destroying pointer")
+
+		self.log("Closing databases and destroying pointers")
 		closeDatabase(&db)
 		db = nil
-		
+
 		closeDatabase(&contact_db)
 		contact_db = nil
-		
+
 		return text
 	}
 }

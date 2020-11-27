@@ -1,6 +1,6 @@
 # SMServer
 
-![The iphone & web interfaces side by side](assets/smserver.png)
+<img src="assets/smserver.png" style="border-radius: 4px;"/>
 <span style="font-weight: 200; font-size: 12px">The web interface shown with personal information blurred out</span>
 
 **SMServer is an iPhone app, written in SwiftUI, which allows for one to send and receive text messages (and iMessages) from their Web browser**
