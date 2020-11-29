@@ -50,7 +50,6 @@ html {
 p, h2, a, button {
 	font-family: var(--main-font);
 	text-decoration: none;
-	font-weight: 300;
 }
 :focus {
 	outline: none !important;
@@ -354,7 +353,6 @@ i#chargingSymbol {
 	font-family: var(--main-font);
 	max-width: 40vw;
 	margin: 2px 0;
-	font-weight: 300;
 	font-size: 18px;
 	padding: 7px 12px;
 	line-height: 21px; /* Specific but that's what it is */
@@ -380,7 +378,6 @@ i#chargingSymbol {
 }
 .sender {
 	font-size: 14px;
-	font-weight: lighter;
 	margin: 10px 0 0 5px;;
 	color: #bbb;
 }
@@ -506,7 +503,6 @@ i#chargingSymbol {
 	grid-row: 1;
 	border-radius: calc(var(--send-box-size) / 2);
 	margin: auto 0;
-	font-weight: 300;
 }
 #sendbox.subjectInput {
 	border-radius: 0 0 calc(var(--send-box-size) / 2) calc(var(--send-box-size) / 2);
