@@ -4,18 +4,29 @@ All plain text GET requests must be made to \<ip>:\<port>/requests (e.g. 192.168
 
 All request parameters require a value, but only some of the values are consequential. However, the app will not interpret a parameter as a parameter unless it has an accompanying value -- For example, to retrieve the list of conversations, one must make a request to /requests with a parameter of 'chat', but 'GET /requests?chat' will return nothing. Something like 'GET /requests?chat=0' will return the correct information.
 
+Requests to all of these API endpoints besides `/requests?password` will return nothing, unless you authenticate first, at `/requests?password`. Details are under the first subsection of the `/requests` requests
+
 # `/requests` requests:
 
-All requests to `/requests` return JSON information.
+All requests to `/requests` besides `?password` return JSON information. `?password` returns plain text.
 
 The below sections detail the query key/value pairs that you can combine to get the information you need from the API.
+
+## `password`
+
+Authenticates with the server, so that you can retrieve more information from it.
+
+- password: Parameter is necessary, and value is consequential. If yoyou pass in the same password as is specified in the main view of the app, it will return `false` as plain text. If it is the same password, it will return `true`, and you will be able to make further requests to other API endpoints.
+
+Example queries:
+- /requests?password=toor
 
 ## `person`, `num`, `offset`, `read`, `from`
 
 Retrieves the most recent \$num messages to or from \$person, offset by \$offset.
 
-- person: parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_identifier will be the email address or phone number of an individual, or the chat_identifier for a group chat (normally the string 'chat' followed by 16-20 numerical digits). chat_identifiers for group chats and email addresses must be exact, and phone numbers must include the entire phone number (including country codes, area codes, and other identifiers where necessary), with a plus sign at the beginning, e.g. "+16378269173". Using parentheses or dashes will mess it up and return nothing. \
-$\qquad$ As of version 0.5.4, you may also send multiple addresses to this parameter, separated by single commas, and it will return a merged text list with all of the texts from the listed addresses included. This can be useful if you'd like to treat multiple conversations as one, such as if you have multiple conversations for talking with one person.
+- person: Parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_identifier will be the email address or phone number of an individual, or the chat_identifier for a group chat (normally the string 'chat' followed by 16-20 numerical digits). chat_identifiers for group chats and email addresses must be exact, and phone numbers must include the entire phone number (including country codes, area codes, and other identifiers where necessary), with a plus sign at the beginning, e.g. "+16378269173". Using parentheses or dashes will mess it up and return nothing.
+&nbsp;&nbsp;&nbsp;&nbsp; As of version 0.5.4, you may also send multiple addresses to this parameter, separated by single commas, and it will return a merged text list with all of the texts from the listed addresses included. This can be useful if you'd like to treat multiple conversations as one, such as if you have multiple conversations for talking with one person.
 
 - num: Parameter is not necessary, but value is consequential. The value of this parameter must be an integer, and will be the number of most recent messages that are returned from the app. If it is 0, it will return all the messages to or from this person, and if it is not specified, it will use the default number of messages on the app, which is currently 100 at the time of writing this.
 

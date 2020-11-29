@@ -1,5 +1,9 @@
 # Changelog
-0.5.4 &rightarrow; Unreleased
+0.6.0 &rightarrow; 0.6.1
+ - Fixed issue that would offset sender names in `printListOfTexts` when `append` was false
+ - Fixed font-weight display issues
+
+0.5.4 &rightarrow; 0.6.0
  - Made a new build script which makes it __much__ easier and faster to build SMServer from scratch
  - Added experimental option to combine conversations that belong to the same contact
  - Added Drag 'n' drop for attachments in the web interface
