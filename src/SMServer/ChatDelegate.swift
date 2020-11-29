@@ -820,7 +820,7 @@ final class ChatDelegate {
 		}
 
 		if text["room_name"]?.count ?? 0 > 0 && text["is_from_me"] == "0" {
-			let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: text["chat_identifier"] ?? "")
+			let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: text["handle_id"] ?? "")
 			text["sender"] = name
 		}
 

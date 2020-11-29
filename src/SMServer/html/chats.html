@@ -460,7 +460,7 @@
 					var orig = null; /// if you do insertBefore(node, null), it just appends.
 					if (!append) {
 						orig = document.getElementById(ft[0].id);
-						for (var j = 1; j < ft.length && orig.id === ft[0].id; j++) orig = orig.nextSibling;
+						while (orig !== null && orig !== undefined && orig.id === ft[0].id) orig = orig.nextSibling;
 					}
 
 					if (add_spacer)
