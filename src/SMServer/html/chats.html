@@ -44,8 +44,11 @@
 				prefix = "http://192.168.0.180:8741";
 				num_texts_to_load = 100;
 				num_chats_to_load = 60;
+				num_photos_to_load = 40;
 				socket_port = 8740;
 				socket_address = prefix.split("/")[2].split(":")[0];
+				debug = true;
+				subject = false;
 			}
 
 			function timeConverter(t, ts_only = false, apple = true, rev = false) {
@@ -400,6 +403,8 @@
 					var ft = fts.length === undefined ? [fts] : fts;
 					if (ft.length === 0) continue;
 
+					if (!append) ft.reverse();
+
 					var ld = i > 0 ? texts[i-1].date : 0;
 					var notLast = false;
 					var n = append ? i+1 : i-1;
@@ -424,6 +429,8 @@
 								et[et.length-1].classList.add("notLast");
 							else if (texts[i].date - et[et.length-1].getAttribute("date") >= 3600000000000)
 								append_time_display = true;
+							else if (is_group && !sameSender)
+								sender_box.innerText = texts[i].sender;
 						} else {
 							var hourTillFirst = texts[i].date - et[0].getAttribute("date") >= 3600000000000;
 							if (!hourTillFirst) document.getElementsByClassName("time-display")[0].outerHTML = "";
@@ -452,7 +459,7 @@
 
 					for (var j = 0; j < ft.length; j++) {
 						if (ft[j].innerHTML === undefined || ft[j].innerHTML === "") continue;
-						if (notLast || j < ft.length - 1) ft[j].classList.add("notLast");
+						if (notLast || (append && j < ft.length - 1) || (!append && j > 0)) ft[j].classList.add("notLast");
 						if (append) tc.appendChild(ft[j]);
 						else tc.insertBefore(ft[j], document.getElementById("moretextsbutton").nextSibling);
 					}
@@ -505,7 +512,7 @@
 					var lt = undefined;
 
 					for (var i = et.length - 1; i >= 0 && lt === undefined; i--)
-						if (et[i].className.includes("from_me") && et[i].className.includes("iMessage") && et[i].getAttribute("date_read") !== "0")
+						if (et[i].className.includes("from_me") && et[i].className.includes("iMessage") && et[i].getAttribute("date_read") !== "0" && et[i].getAttribute("date_read") !== "undefined")
 							lt = et[i];
 
 					if (lt !== undefined) {
@@ -736,17 +743,6 @@
 					photos.value = "";
 
 					autoGrow();
-
-					var seg = 6000; /// kinda arbitrary
-					var at_sleep = 400;
-					var sleep_time = 250;
-					if (has_attachments)
-						await sleep(Math.max((total_size / seg), at_sleep));
-					else
-						await sleep(sleep_time);
-
-					getLatestText(1, current_chat_id, true);
-					setChatAsTop(current_chat_id, oldval);
 				}
 			}
 
@@ -875,14 +871,16 @@
 
 				var name = await getTextFromURL(`${prefix}/requests?name=${chat}`);
 
-				if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-					new_text = `Attachment: ${notif_text.attachment_type.split(":")[0]}`
+				if (notif_text.is_from_me === "0") {
+					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
+						new_text = `Attachment: ${notif_text.attachment_type.split(":")[0]}`
 
-				if (notif_text.sender !== undefined && notif_text.sender !== "nil")
-					new_text = `${notif_text.sender}: ${new_text}`;
+					if (notif_text.sender !== undefined && notif_text.sender !== "nil")
+						new_text = `${notif_text.sender}: ${new_text}`;
 
-				if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id))
-					var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
+					if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id))
+						var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
+				}
 
 				if (chat.length !== 0) {
 					if (btn === undefined || btn === null || chat === "any") {
@@ -1159,7 +1157,7 @@
 				sbox.id = "subjectBox";
 				sbox.setAttribute("name", "subject");
 				sbox.setAttribute("oninput", "if (event.keyCode !== 13) inputKeyDown(true);");
-				sbox.setAttribute("onkeydown", "if (event.keyCode === 13) document.getElementById('sendbox').focus(); event.preventDefault();");
+				sbox.setAttribute("onkeydown", "if (event.keyCode === 13) { document.getElementById('sendbox').focus(); event.preventDefault(); }");
 				sbox.setAttribute("form", tbox.getAttribute("form"));
 				sbox.setAttribute("placeholder", "Subject");
 

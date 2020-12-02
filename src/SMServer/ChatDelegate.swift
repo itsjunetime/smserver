@@ -39,6 +39,8 @@ final class ChatDelegate {
 			return db
 		}
 
+		sqlite3_busy_timeout(db, 20)
+
 		self.log("opened database")
 
 		/// Return pointer to the database
@@ -76,13 +78,14 @@ final class ChatDelegate {
 
 		self.log("opened statement")
 
+		var main_return = [[String:String]]()
+
 		/// Prepare the database for querying $sqlString
 		if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(db)!)
 			self.log("WARNING: error preparing select: \(errmsg)", warning: true)
+			return main_return
 		}
-
-		var main_return = [[String:String]]()
 
 		var i = 0
 		/// for each row, up to num_items rows
@@ -220,12 +223,12 @@ final class ChatDelegate {
 		var messages = [[String:String]]()
 		var from_string: String = ""
 		var fixed_num = num
-		
+
 		if num.contains(",") {
 			/// So that you can merge multiple conversations
 			fixed_num = num.split(separator: ",").joined(separator: "\" or chat_identifier is \"")
 		}
-		
+
 		if from != 0 {
 			from_string = " and \(is_group ? "m." : "")is_from_me is \(from == 1 ? 1 : 0)"
 		}
@@ -257,7 +260,7 @@ final class ChatDelegate {
 				let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: messages[i]["id"] ?? "")
 				messages[i]["sender"] = name
 			}
-			
+
 			if messages[i]["payload_data"]?.count ?? 0 > 0 && messages[i]["ROWID"] != nil {
 				messages[i]["balloon_bundle_id"] = "com.apple.messages.URLBalloonProvider"
 				let link_info = getLinkInfo(messages[i]["ROWID"]!, db: db)
@@ -395,7 +398,6 @@ final class ChatDelegate {
 			}
 
 			new_chat["chat_identifier"] = i["c.chat_identifier"]
-			new_chat["send_to"] = i["c.chat_identifier"]
 			new_chat["time_marker"] = i["m.date"]
 			new_chat["pinned"] = "false"
 
@@ -482,7 +484,6 @@ final class ChatDelegate {
 
 		/// Use default profile if you don't have them in your contacts
 		if docid.count == 0 {
-
 			let image_dat = UIImage(named: "profile")
 			let pngdata = (image_dat?.pngData())!
 
@@ -500,6 +501,11 @@ final class ChatDelegate {
 		if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
 			self.log("WARNING: error preparing select: \(errmsg)", warning: true)
+
+			let image_dat = UIImage(named: "profile")
+			let pngdata = (image_dat?.pngData())!
+
+			return pngdata
 		}
 
 		var pngdata: Data
@@ -597,9 +603,14 @@ final class ChatDelegate {
 		let parsed_path = path.replacingOccurrences(of: "../", with: "") /// To prevent LFI
 
 		do {
-			/// Pretty strsightforward -- get data and return it
-			let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.imageStoragePrefix + parsed_path))
-			return attachment_data
+			/// Pretty straightforward -- get data and return it
+			if (getAttachmentType(path: parsed_path) == "image/heic") { /// Since they're used so much
+				let attachment_data = UIImage(contentsOfFile: ChatDelegate.imageStoragePrefix + parsed_path)
+				return attachment_data?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
+			} else {
+				let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.imageStoragePrefix + parsed_path))
+				return attachment_data
+			}
 		} catch {
 			self.log("WARNING: failed to load image for path \(ChatDelegate.imageStoragePrefix + path)", warning: true)
 			return Data.init(capacity: 0)
@@ -805,7 +816,24 @@ final class ChatDelegate {
 
 		if db == nil || contact_db == nil { return [String:String]() }
 
-		var text = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is \"\(guid)\"", num_items: 1, offset: 0, split_ids: true)[0]
+		var text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is \"\(guid)\"", num_items: 1, offset: 0, split_ids: true)
+
+		var total = 0;
+		let begin = 50000;
+		let max = begin * 5
+
+		while text_array.count == 0 && total <= max {
+			usleep(useconds_t(begin))  /// I hate race conditions so much but I have no idea how to avoid it for this
+			total += begin
+
+			text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is \"\(guid)\"", num_items: 1, offset: 0, split_ids: true)
+		}
+
+		guard text_array.count > 0 else {
+			return [String:String]()
+		}
+
+		var text = text_array[0]
 
 		if text["cache_has_attachments"] == "1" && text["ROWID"] != nil {
 			let a = getAttachmentFromMessage(mid: text["ROWID"] ?? "") /// get list of attachments
@@ -820,7 +848,7 @@ final class ChatDelegate {
 		}
 
 		if text["room_name"]?.count ?? 0 > 0 && text["is_from_me"] == "0" {
-			let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: text["handle_id"] ?? "")
+			let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: text["id"] ?? "")
 			text["sender"] = name
 		}
 

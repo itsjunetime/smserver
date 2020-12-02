@@ -23,7 +23,7 @@ struct ContentView: View {
 	@State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
 	@State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
 	@State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
-	
+
 	@State var mark_when_read: Bool = true
 	@State var view_settings: Bool = false
 	@State var server_running: Bool = false
@@ -106,7 +106,7 @@ struct ContentView: View {
 			res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
 		}
 
-		server.add("/requests") { (req, res, next) in
+		server.add("/requests") { (req, res, _) in
 			/// There is no authentication handler here 'cause it handles that within parseAndReturn()
 			/// since they send the password auth request to this subdirectory
 			/// This handler is part of the API, and returns JSON info.
@@ -330,7 +330,7 @@ struct ContentView: View {
 		let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
 		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
 		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
-		
+
 		let subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
 		let light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
 		let nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
@@ -375,6 +375,8 @@ struct ContentView: View {
 
 	func setNewestTexts(_ guid: String) {
 		/// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
+		guard server.isListening && socket.server?.webSockets.count ?? 0 > 0 else { return }
+
 		let text = ContentView.chat_delegate.getTextByGUID(guid);
 		let json = encodeToJson(object: text, title: "text")
 
@@ -609,7 +611,6 @@ struct ContentView: View {
 					HStack {
 						Button(action: {
 							self.loadFiles()
-							//ContentView.sender.launchMobileSMS()
 							ContentView.chat_delegate.refreshVars()
 							self.socket.refreshVars()
 						}) {

@@ -72,6 +72,7 @@ The source code may be updated past the latest released version, so don't be sur
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I will not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
 
 ### Acknowledged issues:
+- Read receipts don't update until you reload a conversation. This is being worked on.
 - Although typing indicators do appear when the other party starts typing, they don't always disappear when they stop typing. This is also being worked on.
 
 ### To file an issue:
