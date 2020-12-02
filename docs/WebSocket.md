@@ -5,7 +5,7 @@ As of 0.2.0+debug2, the server supports websockets. This is, as of 0.5.0, used t
 ## Messages to client from host
 
 ### `text`
-Every time that the host reeives a new text, a message with the prefix `text` is sent to all connected devices. The content of this message is a JSON message with a key of `text` that describes all the necessary parameters of the most recent text that you just received. For example, if you just got sent a text that simply said 'Hello!' from the number '+11231231234', this message would look something like:
+Every time that the host receives a new text or sends a text through SMServer, a message with the prefix `text` is sent to all connected devices. The content of this message is a JSON message with a key of `text` that describes all the necessary parameters of the most recent text that you just received or sent. For example, if you just got sent a text that simply said 'Hello!' from the number '+11231231234', this message would look something like:
 ```json
 text:{ "text": {  "ROWID" : "150000",  "subject" : "",  "chat_identifier" : "+11231231234",  "balloon_bundle_id" : "",  "is_from_me" : "0",  "service" : "iMessage",  "guid" : "3FCF9CC7-FFF3-4172-82FD-773F9A3CC89A",  "text" : "Hello!",  "date_read" : "0",  "date" : "626981115265999744",  "cache_has_attachments" : "0",  "handle_id" : "100",  "associated_message_type" : "0",  "associated_message_guid" : ""}}
 ```

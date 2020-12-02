@@ -1,7 +1,13 @@
 # Changelog
 0.6.0 &rightarrow; 0.6.1
+ - Added support for heic/heif images embedded in browser
+ - May have actually fixed duplicating text issue
+ - Fixed issue that would prevent loss of information when database was locked (mostly manifested in missing profile pictures)
  - Fixed issue that would offset sender names in `printListOfTexts` when `append` was false
  - Fixed font-weight display issues
+ - Fixed issue that would incorrectly display texts that contained both attachments and a body or subject
+ - Fixed issue that would prevent you from typing in the subject box
+ - Fixed issue that would prevent sender name from appearing when you received a new text in a group chat
 
 0.5.4 &rightarrow; 0.6.0
  - Made a new build script which makes it __much__ easier and faster to build SMServer from scratch
