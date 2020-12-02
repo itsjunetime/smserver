@@ -364,7 +364,7 @@ i#chargingSymbol {
 	height: 16px;
 }
 .text .subject {
-	font-weight: 500;
+	font-weight: 600;
 }
 .text span, .richLinkTitle, .richLinkSubtitle {
 	white-space: pre-wrap;

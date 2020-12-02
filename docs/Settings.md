@@ -32,11 +32,23 @@ This is the port that the webSocket runs on; must not be the same as the server 
 ### Theme
 This setting sets the color theme of the web interface; Dark is the default. It is much more polished, and, I think, looks much better than the light theme, but I did make a light theme as well for easy access. As of version 0.3.8, a `Nord` theme is also available (my favorite).
 
-### Toggle debug
-This will log basically every thing that happens, and may slow down the server considerably. Unless you're actually debugging or logging with the app, I'd highly recommend leaving this off. This does not require a server restart to take effect.
+### Enable subject line
+This will show a subject field as well as a body field in the text interface, allowing you to send texts with subject as well as with bodies. You do not need to enable this option to use subjects in the API, however.
+
+### Send typing indicators
+When this is toggled on, typing indicators will be sent to the other party in the conversation whenever you are currently typing in the web interface.
+
+### Automatically mark as read
+If this is toggled, whenever you view a conversation on the web interface (more specifically, whenever you use the API to request the messages to and from one conversation, and `offset` is 0), that conversation is marked as read on your device as well.
 
 ### Requre Authentication to view messages:
 Toggling this on will prevent anyone from querying the host if they have not already authenticated with the main page. I'd highly recommend leaving it on; without it, anyone can send and view texts from your device without restriction.
+
+### Merge contact addresses (experimental)
+When this is off, messages to and from each individual address are treated as separate conversations. However, when this is toggled on, conversations are grouped by contact, as opposed to by address.
+
+### Toggle debug
+This will log basically every thing that happens, and may slow down the server considerably. Unless you're actually debugging or logging with the app, I'd highly recommend leaving this off. This does not require a server restart to take effect.
 
 ### Enable backgrounding
 Toggling this on will prevent the server from shutting off when the app goes into the background, given that the server is already running. Even if this is on, though, the server will shut down when the app is forcibly killed from the multitasking screen. This does not require anything to take effect, simply a toggle.
@@ -44,8 +56,5 @@ Toggling this on will prevent the server from shutting off when the app goes int
 ### Enable SSL
 Toggling this will require you to connect to the `https://` site, instead of the `http://` site. It also encrypts everything sent to your phone for the server, preventing anyone from listening in on your messages.
 
-### Mark conversations as read when viewed on web interface
-This should be fairly self explanatory; if this is toggled, whenever you view a conversation on the web interface, it is marked as read on your device as well.
-
-### Override `No Wifi` prevention setting on main interface
+### Allow operation off of Wifi
 A user reported an issue with the server refusing to start due to thinking that the phone was not connected to wifi, so this allows you to override the section of the app that prevents you from starting the server if it is not connected to wifi.
