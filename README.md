@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/icon.png" style="width: 100px;"/></p>
+<p align="center"><img src="assets/icon_small.png" /></p>
 <h1 align="center">SMServer</h1>
 <p align="center"><a href="https://github.com/iandwelker/smserver/releases"><img src="https://img.shields.io/github/v/release/iandwelker/smserver.svg?style=flat"/></a>&nbsp;&nbsp;<a href="https://github.com/iandwelker/smserver/blob/master/LICENSE"><img src="https://img.shields.io/github/license/iandwelker/smserver.svg?style=flat"></a>&nbsp;&nbsp;<a href="https://github.com/iandwelker/smserver/issues"><img src="https://img.shields.io/github/issues/iandwelker/smserver.svg?style=flat"/></a>&nbsp;&nbsp;<a href="https://github.com/iandwelker/smserver/stargazers"><img src="https://img.shields.io/github/stars/iandwelker/smserver?style=flat"/></a>&nbsp;&nbsp;<a href="https://repo.twickd.com/package/com.twickd.ian-welker.smserver"><img src="https://img.shields.io/static/v1?label=repository&message=twickd&color=red"/></a></p>
 
