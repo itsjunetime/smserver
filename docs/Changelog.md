@@ -1,4 +1,14 @@
 # Changelog
+0.6.1 &rightarrow; Unreleased
+ - Added support for sending reactions through in the API
+ - Added support for deleting conversations in API
+ - Significantly improved API documentation
+ - Main view now shows device hostname when it can't get the IP Address
+ - Removed unnecessary calls to API
+ - Fixed issue where typing indicator would dissappear when you sent a text
+ - Fixed issue that would prevent document from loading if fontawesome script was sourced before inline javascript loaded in
+ - Fixed issue where server would try to parse a digital touch message as a rich link and cause the app to crash
+
 0.6.0 &rightarrow; 0.6.1
  - Added support for heic/heif images embedded in browser
  - May have actually fixed duplicating text issue

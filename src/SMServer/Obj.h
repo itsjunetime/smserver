@@ -23,6 +23,7 @@
 - (void)markConvoAsRead:(NSString *)chat_id;
 - (void)sendReaction:(NSNumber *)reaction forGuid:(NSString *)guid inChat:(NSString *)chat;
 - (void)sendTyping:(BOOL)isTyping forChat:(NSString *)chat;
+- (void)removeObject:(NSString *)identifier isChat:(BOOL)isChat;
 //- (NSArray *)getPinnedChats;
 
 @end
