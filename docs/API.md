@@ -8,7 +8,7 @@ Requests to all of these API endpoints besides `/requests?password` will return 
 
 # `/requests` requests:
 
-All requests to `/requests` besides `?password` return JSON information. `?password` returns plain text.
+All requests to `/requests` besides `?password` and `?name` return JSON information. The other two return plain text.
 
 The below sections detail the query key/value pairs that you can combine to get the information you need from the API.
 
@@ -16,25 +16,29 @@ The below sections detail the query key/value pairs that you can combine to get 
 
 Authenticates with the server, so that you can retrieve more information from it.
 
-- password: Parameter is necessary, and value is consequential. If yoyou pass in the same password as is specified in the main view of the app, it will return `false` as plain text. If it is the same password, it will return `true`, and you will be able to make further requests to other API endpoints.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| password | Yes | String | If you pass in a different password from what is specified in the main view of the app for this key, it will return `false` as plain text. If it is the same password, it will return `true`, and you will be able to make further requests to other API endpoints. |
 
 Example queries:
 - /requests?password=toor
 
+Example return:
+```json
+true
+```
+
 ## `person`, `num`, `offset`, `read`, `from`
 
-Retrieves the most recent \$num messages to or from \$person, offset by \$offset.
+Retrieves the most recent `num` messages to or from `person`, offset by `offset`.
 
-- person: Parameter is necessary, and value is consequential; must be chat_identifier of conversation. chat_identifier will be the email address or phone number of an individual, or the chat_identifier for a group chat (normally the string 'chat' followed by 16-20 numerical digits). chat_identifiers for group chats and email addresses must be exact, and phone numbers must include the entire phone number (including country codes, area codes, and other identifiers where necessary), with a plus sign at the beginning, e.g. "+16378269173". Using parentheses or dashes will mess it up and return nothing.
-&nbsp;&nbsp;&nbsp;&nbsp; As of version 0.5.4, you may also send multiple addresses to this parameter, separated by single commas, and it will return a merged text list with all of the texts from the listed addresses included. This can be useful if you'd like to treat multiple conversations as one, such as if you have multiple conversations for talking with one person.
-
-- num: Parameter is not necessary, but value is consequential. The value of this parameter must be an integer, and will be the number of most recent messages that are returned from the app. If it is 0, it will return all the messages to or from this person, and if it is not specified, it will use the default number of messages on the app, which is currently 100 at the time of writing this.
-
-- offset: Parameter is not necessary, but value is consequential. The value of this parameter must be an integer, and will be the offset off the messages that you want to receive. Say, for example, that you already retrieved the latest 100 messages, and wanted to receive the 100 before those, your offset would be 100. If unspecified, this value will default to 0.
-
-- read: Parameter is not necessary, but value is consequential. The value of this parameter must be a string, either `true` or `false`. If it is `true`, or the parameter is not included but the 'mark conversation as read when viewed on web interface' option is checked in the app's settings, the conversation whose messages are being requested will be marked as read on the host device. 
-
-- from: Parameter is not necessary, but value is consequential. The value of this parameter must be an int, either 0, 1, or 2. If you pass 0 for this key, this request will grab texts both to and from you in this conversation. If you pass 1 in for this key, it will grab only texts that are from you, and if you pass in 2, it will only grab texts that are to you.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| person | Yes | String | Must be chat_identifier of the conversation in question (either full phone number or email address for single person conversations, or `chat` followed by 16-20 integers for group chats). You can pass multiple chat_identifiers in for the value for this paramter, delimited by commas. |
+| num | No | Int | Will be number of the most recent messages that are returned for this conversation. If it is 0, it will return all the messages for this conversation, and if this key is not included in the query, it will return the default number of messages as is specified in the settings of the app
+| offset | No | Int | Will be the offset of messages that you want to receive. For example, if you already retrieved the latest 100 messages from this contact, you could set offset to 100 to get the next 100. If this key is not included in the query, offset will be 0.
+| read | No | Bool | If value is `true`, this conversation will be marked as read on the device (or, if you pass in multiple values for `person`, all will be marked as read on the device). If this key is not included in the query, the conversation(s) will be marked as read only if you have the `Automatically mark as read` setting toggled on in the host device's settings.
+| from | No | Int | This value must either be a 0, 1, or 2. If it is 0 or the key is not included in the query, it will return all messages to and from you in this conversation. If it is 1, if will return only texts that are from you, and if it is 2, it will return only texts that are to you.
 
 Example queries:
 - /requests?person=chat192370112946281736&num=500
@@ -43,57 +47,223 @@ Example queries:
 - /requests?person=person@gmail.com&offset=200
 - /requests?person=email@icloud.com,+15202621138,person@gmail.com&num=100&read=true
 
+Example return:
+```json
+{ "texts": [
+	{
+		"date" : "628152966581388032",
+		"is_from_me" : "0",
+		"date_read" : "628152966982129024",
+		"guid" : "82485D1E-0AA7-40A1-B6BC-9A2FB9DB0D7A",
+		"subject" : "",
+		"ROWID" : "176225",
+		"cache_has_attachments" : "0",
+		"associated_message_guid" : "bp:ED180020-AEF5-4E2F-9991-E5C227B648C3",
+		"service" : "iMessage",
+		"associated_message_type" : "2000",
+		"text" : "Loved “https:\/\/open.spotify.com\/track\/1yyIxshSIfW89EPTW0xkPH?si=D-S1TWN5S4CjjR65x9LBjg”",
+		"balloon_bundle_id" : ""
+	},
+	{
+		"date" : "628152957708999936",
+		"associated_message_guid" : "",
+		"date_read" : "628152958118957952",
+		"cache_has_attachments" : "0",
+		"subject" : "",
+		"ROWID" : "176224",
+		"is_from_me" : "1",
+		"associated_message_type" : "0",
+		"balloon_bundle_id" : "",
+		"text" : "Hey! You should check out this song that I really like!",
+		"service" : "iMessage",
+		"guid" : "DBC43A7C-C8A9-42CB-838A-B574F7857FE3"
+	},
+	{
+		"balloon_bundle_id" : "com.apple.messages.URLBalloonProvider",
+		"attachment_file" : "Attachments\/e8\/08\/88BB7DB7-D78D-4A8C-91EF-9934D2DFEF26\/AFC76D4C-2664-4555-BA7A-7DCA3B21A502.pluginPayloadAttachment:Attachments\/cc\/12\/B46F7234-68A5-40B8-8B7C-66DE078B5A97\/10A2FC94-5732-453A-B4CE-040D275B2477.pluginPayloadAttachment:",
+		"link_subtitle" : "Hobo Johnson · Song · 2019",
+		"service" : "iMessage",
+		"associated_message_guid" : "",
+		"associated_message_type" : "0",
+		"link_type" : "Website",
+		"ROWID" : "176223",
+		"text" : "https:\/\/open.spotify.com\/track\/1yyIxshSIfW89EPTW0xkPH?si=D-S1TWN5S4CjjR65x9LBjg",
+		"attachment_type" : "::",
+		"cache_has_attachments" : "1",
+		"link_title" : "Mover Awayer",
+		"guid" : "ED180020-AEF5-4E2F-9991-E5C227B648C3",
+		"date" : "628152944292000000",
+		"is_from_me" : "1",
+		"date_read" : "0",
+		"subject" : ""
+	},
+]}
+```
+### Return fields description
+| Key | Description |
+| - | - |
+| date | This is the date when the text was sent, in apple's own way of storing dates (to get a unix timestamp from it, do `(date / 1000000000) + 978307200`
+| is_from_me | "1" if it is from you, "0" if it was sent to you
+| date_read | Theoretically the date at which the message was read by the other party. Is only something other than "0" if the text in question is a regular text (not a rich link, not a reaction, not just an attachment, etc), and either the other party sends read receipts or the text is to you.
+| guid | The guid of the text. Will become relevant in the case of reactions, which specify guid of the text which they are reacting to.
+| subject | The subject of the text, as opposed to the body. |
+| ROWID | The rowid of the text. Normally irrelevant, but can be useful for checking order of texts, if that is something that can help you. |
+| cache_has_attachments | "1" if the text has any attachments, "0" if it has no attachments. |
+| service | "iMessage" if the text is an iMessage, "SMS" if it is an SMS.
+| text | The body of the text, the most important part. |
+| associated_message_type | "0" unless it is a type of reaction (either a reaction adding or removal). 2000 = love, 2001 = thumbs up, 2002 = thumbs down, 2003 = Haha, 2004 = Exclamation, 2005 = Question. If it is above 3000, then it is removing a reaction of type `associated_message_type - 1000` (e.g. if it is 3003, it is removing a 'Haha' reaction).
+| associated_message_guid | Normally empty, but if the text with this key is a reaction, the last 36 characters of this key will contain the guid of the text to which it is reacting. |
+| balloon_bundle_id | Generally empty, but is something for special types of messages. This is "com.apple.messages.URLBalloonProvider" for rich links, and "com.apple.DigitalTouchBalloonProvder" for digital touch messages. |
+| link_type | Only exists on rich link messages. Specifies what type of content the link leads to, generally. For most spotify links, for example, it is "Music", and for youtube videos, it is "Video". Generally is just "Website", though.
+| link_title | The title of the link, that generally shows up right underneath the rich link preview image. |
+| link_subtitle | The subtitle of the link, that generally shows up right underneath the title of the rich link. |
+
+
 ## `chat`, `num_chats`, `chats_offset`
 
-Retrieves the latest \$num_chats conversations
+Retrieves the latest `num_chats` conversations
 
-- chat: Parameter is necessary, and value is inconsequential. Calling the parameter 'chat' simply specifies that you are asking for a list of the conversations on the device.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| chat | Yes | Any | Value is inconsequential. Including this key in the request simply specifies that you are asking fora list of the conversations on the device |
+| num_chats | No | Int | Specifies how many conversations to the information of. If this key is not included in the query, it will default to the device's default, which is specified in the settings of the host app.
+| chats_offset | No | Int | Specifies the offset of the list of conversations that you want to retrieve. For example, if you have already retrieved the first 100 conversations, and would like to retrieve the next 100, you would set the value for this key to `100`, and that would get you what you want. If this key is not included in the query, it will default to 0 for the offset.
 
-- num_chats: Parameter is not necessary, and value is consequential. Value must be integer, and will specify how many conversations to get the information of. If unspecified, it will default to the device's default, which is, at the time of writing, 40. If it is 0, it will retrieve all chats.
-
-- chats_offset: Parameter is not necessary, and value is consequential. Value must be an integer, and it will specify the offset of conversations to get. For example, if you've already retrieved the first 40 conversations, adn would like to retrieve the next 40, you would set both `num_chats` and `chats_offset` to 40. If this is not specified, it will default to 0.
-
-Example queries:
+__Example queries:__
 - /requests?chat=0
 - /requests?chat=0&num_chats=80
 - /requests?chat=inconsequential&num_chats=80&offset=160
 
+__Example return:__
+```json
+{ "chats": [
+	{
+		"has_unread" : "false",
+		"chat_identifier" : "+11231231234",
+		"pinned" : "false",
+		"latest_text" : "Hey there friend",
+		"display_name" : "John Smith",
+		"time_marker" : "625632825876320896",
+		"relative_time" : "1 month ago",
+		"addresses" : "+11231231234,email@email.com"
+	}
+]}
+```
+
+__Return fields description__
+| Key | Description |
+| - | - |
+| has_unread | Either "true" or "false". If it is "true", this conversation currently has at least one unread message. Else, it has none.
+| chat_identifier | The chat_identifier of the conversation. This is the value that you would pass in for the `person` key in the queries listed first.
+| pinned | Either "true" or "false". If it is "true", the conversation is pinned in the iMessages app on the host device. Else, it is not. |
+| latest_text | The body of the latest text (iMessage or SMS) sent to or from this conversation. |
+| display_name | This is the name that shows up in the iMessages app for this conversation. If the conversation is just with one person, it will contain their first and last name. If it is with a group chat that has a name, it will show that group chat's name, and if it is with a group chat that has no name, it will be a list of the first + last names of everyone in the group chat (e.g. "John Smith, Jane Doe, Bob Johnson").
+| time_marker | This is the date at which the latest text was sent or received in this conversation, also in apple's own time  format. To get a unix timestamp, do `(time_marker / 1000000000) + 978307200`.
+| relative_time | A simple description of about when the last text was sent, somewhat similar to how it is shown in the iMessages app (but not exactly).
+| addresses | If the `Merge contact addresses` option is turned on in the host device's settings, this field will contain all of the email addresses and phone numbers that are associated with the contact who holds this `chat_identifier`. |
+
 ## `name`
+Retrieves the contact name that accompanies chat_identifier `name`. Returns plain text, not JSON.
 
-Retrieves the contact name that accompanies chat_identifier \$name
+| Key | Required | Type | Description |
+| - | - | - | - |
+| name | Yes | String | Value for this key must be the chat_identifier of the conversation which name you want. This will get you the `display_name` of the conversation, as described above. If there is no contact associated with the chat_identifier you passed in, it will simply give you back the value that you passed in. |
 
-- name: Parameter is necessary, and value is consequential. Value must be the chat_identifier for the contact whose name you want. It can get the name if given an email address or phone number of an individual, or the chat_identifier of a group chat. Email must be given in the regular format, and phone number must be given in the format that the above 'person' section specifies. If there is no name for the email address, phone number, or chat_identifier given, then it will return the given address (in the case of a phone number or email address) or list of recipients (in the case of a group chat chat_identifier)
-
-Example queries:
+__Example queries:__
 - /requests?name=email@icloud.com
 - /requests?name=+12761938272
 - /requests?name=chat193827462058278283
 
+Example Return
+```json
+John Smith
+```
+
 ## `search`, `case_sensitive`, `bridge_gaps`, `group_by`
+This searches for the term `search` in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options.
 
-This searches for the term \$search in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| search | Yes | String | This is the term you want to search for. Does not have to be surrounded by quotes. |
+| case_sensitive | No | Bool | Either "true" or "false". If "true", the matches must match case-sensitive. Else, the matches are all case-insensitive. |
+| bridge_gaps | No | Bool | If this is "true", all spaces are replaced by wildcard characters so that the spaces don't have to match exactly. For example, if you searched for "hello friend" and set `bridge_gaps` to `true`, this search would also match a text that contained only "hello there friend". |
+| group_by | No | String | If you pass in `time` or don't include this key in the query, it will return all the search matches as a list of texts, with the most recent one first. If you pass in anything else, it will group them by conversation (return a list of conversations, each containing a list of texts which match this query). |
 
-- search: Parameter is necessary, and value is consequential. This must be the term you want to search for. Does not have to be surrounded by quotes. Case sensitivity is determined by the `case_sensitive` parameter.
-- case_sensitive: Parameter is not necessary, and value is consequential; default is false. This determines whether or not you want the search to be case sensitive; a value of `true` make it sensitive, and `false` makes it insensitive
-- bridge_gaps: Parameter is not necessary, and value is consequential; default is true. If set to true, this replaces all spaces with wildcard characters, allowing for the search term to be spaced out over a text. A value of `true` makes it true, and `false` makes it false
-- group_by: Parameter is not necessary, and value is consequential; default is 'time'. This specifies if you would like the values to be returned as grouped by conversation, or ungrouped and ordered by date (most recent first). If you pass in 'time' or don't set this query parameter, it will return them ungrouped and with the most recent first. If you pass in anything else, it will group them by conversation.
-
-Example queries:
+__Example queries:__
 - /requests?search=hello%20world&case_sensitive=true&bridge_gaps=false
 - /requests?search=hello_there
 
+__Example return:__ \
+With `group_by=time`
+
+```json
+{ "matches": [
+  {
+    "chat_identifier" : "+11231231234",
+    "text" : "Hey there, friend",
+    "cache_has_attachments" : "0",
+    "display_name" : "John Smith",
+    "service" : "SMS",
+    "date" : "627285343072013056",
+    "ROWID" : "175309"
+  },
+]}
+```
+
+With `group_by=chat`
+
+```json
+{ "matches": {
+	"+11231231234" : [
+		{
+			"chat_identifier" : "+11231231234",
+			"text" : "Hey there, friend",
+			"cache_has_attachments" : "0",
+			"display_name" : "John Smith",
+			"service" : "SMS",
+			"date" : "627285343072013056",
+			"ROWID" : "175309"
+		},
+	]
+}}
+```
+
+See above, in the `person` query return value descriptions for how to understand these return values
+
 ## `photos`, `offset`, `most_recent`
 
-if most_recent == "true", this retrieves a list of information about the most recent \$photos (\$photos is an integer) photos, offset by \\$offset (\$offset is also an integer). If most_recent != "true", this retrieves a list of the oldest \$photos photos, offset by \$offset.
+If `most_recent == "true"`, this retrieves a list of information about the most recent `photos` (`photos` is an integer) photos, offset by `offset` (`offset` is also an integer). If most_recent != "true", this retrieves a list of the oldest `photos` photos, offset by `offset`
 
-- photos: Parameter is necessary, and value is consequential. This must be the number of photos that you want to receive information about, and if it is not an integer, it will be changed to the default number of photos (which is available to set in the settings of the app). Setting this to 0 will retrieve 0 photos, and the only way to retrieve all photos would be to set to \$photos to an absurdly large number, such as 999999999. 
-- offset: Parameter is not necessary, and value is consequential. This must be the offset for the list of photos that you want to retrieve. For example, if you already retrieved the most recent 100 photos, but want to retrieve info about the next 100 images, you would set offset to 100, and photos to 100 as well. This must be an integer, or else it will default to 0. 
-- most_recent: Parameter is not necessary, and value is consequential. This must be either "true" or "false". If it is neither, it will default to true. Setting this to false will query the oldest pictures first, and setting it to true or not settings it at all will retrieve the most recent images first.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| photos | Yes | Int | Must be the number of photos that you want to receive information about, and if it is not an integer or no value is passed in for this key, it will be changed to the default number of photos (which is available to set in the settings of the host device). Setting this to 0 will retrieve 0 photos, and the only way to retrieve all photos would be to set this value to an absurdly large number that is higher than or equal to the number of photos that you have on the host device.
+| offset | No | Int | Must be the offset for the list of photos that you want to retrieve. For example, if you had already retrieved the most recent 100 photos, but want to retrieve info about the next 100, you would set offset to 100 (and photos to 100 as well). If this is not an integer or the key is not included in the query, it will default to 0.
+| most_recent | No | Bool | If it is "true" or this key is not included in the query, it will retrieve the most recent photos. Else, it will retrieve the oldest photos. |
 
-Example queries:
+__Example queries:__
 - /requests?photos=100
 - /requests?photos=40&offset=120&most_recent=false
 - /requests?photos=1&most_recent=false
+
+__Example Return:__
+```json
+{ "photos": [
+  {
+    "is_favorite" : "false",
+    "URL" : "DCIM\/100APPLE\/IMG_0244.JPG"
+  },
+  {
+    "is_favorite" : "true",
+    "URL" : "DCIM\/100APPLE\/IMG_0243.JPG"
+  }
+]}
+```
+
+__Return fields Description:__
+| Key | Description |
+| - | - |
+| is_favorite | Tells whether or not the photo is favorited on the host device. |
+| URL | This value holds the URL of the photo on the host device, minus the prefix of `/var/mobile/Media/` |
 
 # `/data` requests
 
@@ -101,31 +271,35 @@ Requests to this URL return image data, which is why they have to be sent to a d
 
 ## `path`
 
-This simply contains the path, excluding the attachments base URL ('/private/var/mobile/Library/SMS/Attachments/') of the attachment that is requested. It should return all attachment types, and will be handled by the browser just like any other file of its type.
+You should use this to get attachments from a conversation; it will simply return the data of a file at a certain URL.
 
-- path: Parameter is necessary, and value is consequential. Value needs to be a string containing the path of the file to get, minus the attachments base URL (mentioned above). It also filters out "../" to prevent LFI through this method, so any instances of '../' in the path will be filtered out.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| path | Yes | String | Should contain the path of the file to get, minus the attachment prefix URL (`/private/var/mobile/Library/SMS/Attachments/`). The server also filters out all instances of `../` to prevent LFI. |
 
 Example queries:
 - /data?path=00/D8/172BC809-BA7A-118D-18BCF0DEF/IMG_9841.JPEG
 
 ## `chat_id`
 
-This contains the chat_id of the person that the request is trying to get the profile picture for. The chat_id should be in the same format as is specified in the `person` parameter above.
+This query key can be used to get the profile picture for a certain chat.
 
-- chat_id: Parameter is necessary, and value is consequential. As stated above, it has a specified format that it should be in. 
+| Key | Required | Type | Description |
+| - | - | - | - |
+| chat_id | Yes | String | This should contain the chat_id of the conversation for which you want the profile picture. It should be in the same format as the `person` paramter above |
 
 Example queries:
-
 - /data?chat_id=+15204458272
 
 ## `photo`
 
 This will return an image from the image library, specifically from the `/var/mobile/Media/` folder. It it protected against LFI, just like `path` above. It will return whatever is at that address, whether it be a video or image.
 
-- photo: Parameter is necessary, and value is consequential. It should be the raw path, excluding the prefix of `/var/mobile/Media/`, of the image that you want to retrieve.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| photo | Yes | String | Should be the raw path of the photo in the filesystem, excluding the prefix of `/var/mobile/Media`. |
 
 Example queries:
-
 - /data?photo=DCIM/109APPLE/IMG_8273.JPEG
 
 # `/send` requests
@@ -136,29 +310,15 @@ There are five key/value pairs that can be sent to this URL, and it accepts mult
 
 As with all other requests (besides to the gatekeeper), you must authenticate before sending any requests to this url, or else nothing will happen.
 
-## Arguments
+## Data values
 
-## text
-
-The value for this key simply contains the body of the text you want to send.
-
-## subject
-
-The value for this key contains the subject of the text that you want to send. For it to actually be included with the text, it must be at least 1 character long (not just ""); if it is 0-length or you simply don't include this key/value pair, the text will still be sent but it won't have a subject.
-
-## chat
-
-The value for this key contains the chat_identifier of the recipient, specified as in the `person` parameter above. Before 0.1.0+debug77, these could only be an address for an existing conversation, but with version 0.1.0+debug77 of SMServer (and 0.1.0-85+debug of libsmserver), you can post requests for new conversations; new conversations do not yet support attachments, though.
-
-This parameter is necessary for every request, or else the app won't know who to send the text to.
-
-## photos
-
-The value for this key will contain a list of the path of the photos (from the camera roll) that you want to send with this text, but deliminted by colons and without the `/var/mobile/Media/` section of their path. For example, if you wanted to send three photos with this text, this parameter would look something like `DCIM/100APPLE/IMG_0001.JPG:DCIM/100APPLE/IMG_0002.JPG:DCIM/100APPLE/IMG_0003.JPG`.
-
-## files
-
-These need to be sent with the key 'attachments'. Other than that, just send them as normal. It does support sending multiple attachments, but (obviously), the more attachments you send, the longer it'll take, and the higher likelihood it'll fail along the way.
+| Key | Required | Type | Description |
+| - | - | - | - |
+| text | No | String | Should include the body of the text you want to send. |
+| subject | No | String | Should include the subject of the text you want to send. For it to actually be included with the text, it must be at least one character long (not just ""); if it is 0-length or you simply don't include this key/value pair, the text will still be sent but it won't have a subject. |
+| chat | No | String | Should be the chat_id of the conversation which you want to send this text to. Should be formatted in the same format as the `person` parameter above, under the `/requests` requests subsection.
+| photos | No | String | This should contain a list of the path of the photos (from the camera roll) that you want to send with this text, dlimited by colons and each without the `/var/mobile/Media/` prefix of their path. For example, if you wanted to send three photos with this text, this parameter may look something like `DCIM/100APPLE/IMG_0001.JPG:DCIM/100APPLE/IMG_0002.JPG:DCIM/100APPLE/IMG_0003.JPG`. |
+| attachments | No | Files | All the files that you send with a text must be attached to the key `attachments`, and you can send multiple files. I have managed to send up to 45mb of files at a time, but anything upwards of ~75mb at a time will fail (in my experience).
 
 ## Example requests
 

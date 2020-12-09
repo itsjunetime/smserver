@@ -88,6 +88,10 @@
 	[convo setLocalUserIsTyping:isTyping];
 }
 
+- (void)removeObject:(NSString *)identifier isChat:(BOOL)isChat {
+	[self.center callExternalVoidMethod:@selector(delete:) withArguments:@{@"id": identifier, @"is_chat": isChat ? @"true" : @"false"}];
+}
+
 /// This is not being used, but I am leaving it here for future versions in case I figure out how to make it work well.
 /// The issue right now is that this code works when I sign it with the com.apple.messages.pinned
 /// (or something like that) entitlement, but I can't have Xcode automatically sign it with that, so I'd have to

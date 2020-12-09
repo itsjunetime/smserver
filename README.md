@@ -1,6 +1,8 @@
-# SMServer
+<p align="center"><img src="assets/icon.png" style="width: 100px;"/></p>
+<h1 align="center">SMServer</h1>
+<p align="center"><a href="https://github.com/iandwelker/smserver/releases"><img src="https://img.shields.io/github/v/release/iandwelker/smserver.svg?style=flat"/></a>&nbsp;&nbsp;<a href="https://github.com/iandwelker/smserver/blob/master/LICENSE"><img src="https://img.shields.io/github/license/iandwelker/smserver.svg?style=flat"></a>&nbsp;&nbsp;<a href="https://github.com/iandwelker/smserver/issues"><img src="https://img.shields.io/github/issues/iandwelker/smserver.svg?style=flat"/></a>&nbsp;&nbsp;<a href="https://github.com/iandwelker/smserver/stargazers"><img src="https://img.shields.io/github/stars/iandwelker/smserver?style=flat"/></a>&nbsp;&nbsp;<a href="https://repo.twickd.com/package/com.twickd.ian-welker.smserver"><img src="https://img.shields.io/static/v1?label=repository&message=twickd&color=red"/></a></p>
 
-<img src="assets/smserver.png" style="border-radius: 4px;"/>
+<img src="assets/smserver.png" style="border-radius: 5px;"/>
 <span style="font-weight: 200; font-size: 12px">The web interface shown with personal information blurred out</span>
 
 **SMServer is an iPhone app, written in SwiftUI, which allows for one to send and receive text messages (and iMessages) from their Web browser**
@@ -94,7 +96,7 @@ Also, if the app did not crash on startup, but rather crashed after it was alrea
  - Email me the file at contact@ianwelker.com. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information. 
 
 ## Companion App
-There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and handles authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
+There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
 
 ## Donations
 If you'd like to support development of this project, I really appreciate that, but I would ask that you instead consider donating to more worthy causes, such as [Save the Children](https://support.savethechildren.org/site/Donation2?df_id=2521&2521.donation=form1), who are helping with the humanitarian crisis in Yemen, or [Diasporans against SARS](https://www.gofundme.com/f/4ppyfs-diasporans-against-sars?utm_source=twitter&utm_medium=social&utm_campaign=m_pd+share-sheet), fighting injustice in Nigeria. \

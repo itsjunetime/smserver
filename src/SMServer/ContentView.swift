@@ -492,9 +492,9 @@ struct ContentView: View {
 
 			let responses = ContentView.chat_delegate.searchForString(term: term , case_sensitive: case_sensitive, bridge_gaps: bridge_gaps, group_by_time: group_by_time)
 
-			let return_val = encodeToJson(object: responses, title: "matches")
+			let ret_val = encodeToJson(object: responses, title: "matches")
 
-			return return_val
+			return ret_val
 		} else if f == "photos" || f == "photo_offset" || f == "most_recent" {
 			/// Retrieving most recent photos
 			let most_recent = (params["most_recent"] ?? "true") == "true"
@@ -504,25 +504,31 @@ struct ContentView: View {
 			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 
 			return encodeToJson(object: ret_val, title: "photos")
-		} /*else if f == "reaction" || f == "toGUID" || f == "inChat" || f == "remove" {
+		} else if f == "delete" || f == "delete_chat" {
+			/// Deletes a conversation or text
+			guard let id: String = params["delete"] else { return "Please enter at least one identifier" }
+			let is_chat = (params["delete_chat"] ?? "true") == "true"
+
+			ContentView.sender.removeObject(id, isChat: is_chat)
+			return "true"
+		} else if f == "reaction" || f == "to_guid" || f == "in_chat" || f == "remove" {
 			/// Haven't got the `libsmserver` side of this to work yet, so I'm disabling it for this version.
 			/// Hopefully I'll have it good and done by next version
 
-			var reaction: Int = (Int(params["reaction"] ?? "0") ?? 0) + 2000 /// reactions are 2000 - 2005
-			let textGuid: String = params["toGUID"] ?? "0"
-			let chat: String = params["inChat"] ?? "0"
-			let remove = (params["remove"] ?? "false") == "true"
-
-			guard params["reaction"] != nil && params["toGUID"] != nil && params["inChat"] != nil else {
-				return "Please include parameters 'reaction', 'toGUID', and 'inChat' in your request"
+			guard params["reaction"] != nil && params["to_guid"] != nil && params["in_chat"] != nil else {
+				return "Please include parameters 'reaction', 'to_guid', and 'in_chat' in your request"
 			}
+
+			var reaction: Int = (Int(params["reaction"] ?? "0") ?? 0) + 2000 /// reactions are 2000 - 2005
+			let textGuid: String = params["to_guid"] ?? "0"
+			let chat: String = params["in_chat"] ?? "0"
+			let remove = (params["remove"] ?? "false") == "true"
 
 			if remove { reaction += 1000 }
 
-			if chat != "0" && textGuid != "0" {
-				ContentView.sender.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
-			}
-		}*/
+			ContentView.sender.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
+			return "true"
+		}
 
 		self.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
 
@@ -602,6 +608,16 @@ struct ContentView: View {
 		freeifaddrs(ifaddr)
 
 		return address
+	}
+
+	func getHostname() -> String {
+		let hnp: UnsafeMutablePointer<Int8>? = UnsafeMutablePointer<Int8>.allocate(capacity: 255)
+		var _ = gethostname(hnp, 100)
+
+		let new_str = String.init(cString: hnp!)
+
+		free(hnp)
+		return new_str /// this may not work at all. Let's see
 	}
 
 	var bottom_bar: some View { /// just to break up the code
@@ -700,7 +716,7 @@ struct ContentView: View {
 			.padding(.top, 14)
 
 			if self.getWiFiAddress() != nil || override_no_wifi {
-				Text("Visit http\(secure ? "s" : "")://\(self.getWiFiAddress() ?? "your phone's private IP, port "):\(port) in your browser to view your messages!")
+				Text("Visit http\(secure ? "s" : "")://\(self.getWiFiAddress() ?? self.getHostname()):\(port) in your browser to view your messages!")
 					.font(Font.custom("smallTitle", size: 22))
 					.padding()
 			} else {
