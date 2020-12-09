@@ -282,11 +282,8 @@ i#chargingSymbol {
 }
 .chat-name {
 	font-size: 16px;
-	line-height: 18px;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	text-align: start;
-	font-weight: 500;
 	margin-right: auto;
 	white-space: nowrap;
 }
@@ -302,7 +299,7 @@ i#chargingSymbol {
 .chat-date {
 	padding-right: 6px;
 	min-width: max-content;
-	margin: auto 0;
+	margin: auto 0 auto 6px;
 }
 #morechatsbutton {
 	font-size: 20px;
@@ -365,10 +362,6 @@ i#chargingSymbol {
 }
 .text .subject {
 	font-weight: 600;
-}
-.text span, .richLinkTitle, .richLinkSubtitle {
-	white-space: pre-wrap;
-	word-break: break-word;
 }
 .is_from_them a, .is_from_them a p, .is_from_them a span {
 	color: dodgerblue;
@@ -763,7 +756,6 @@ i#chargingSymbol {
 	align-items: center;
 }
 .richLinkTitle {
-	font-size: 18px;
 	margin: 2px;
 }
 .richLinkSubtitle {
@@ -803,9 +795,4 @@ i#chargingSymbol {
 }
 .dot.flashing {
 	color: #eee;
-}
-@-moz-document url-prefix() {
-	.text {
-		padding: 7px 12px 4px 12px;
-	}
 }

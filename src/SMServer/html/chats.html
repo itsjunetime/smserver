@@ -26,6 +26,7 @@
 			var faLoaded = false;
 			var currently_typing = false;
 			var called_typing_wait = false;
+			var shown_ws_alert = false;
 
 			var items = "";
 			var new_items = "";
@@ -49,6 +50,7 @@
 				socket_address = prefix.split("/")[2].split(":")[0];
 				debug = true;
 				subject = false;
+				document.getElementById("sendform").setAttribute("action", prefix + "/send");
 			}
 
 			function timeConverter(t, ts_only = false, apple = true, rev = false) {
@@ -869,17 +871,21 @@
 
 				var btn = document.querySelector(`[addresses*="${chat}"]`);
 
-				var name = await getTextFromURL(`${prefix}/requests?name=${chat}`);
+				var name = ""; //await getTextFromURL(`${prefix}/requests?name=${chat}`);
 
 				if (notif_text.is_from_me === "0") {
 					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
 						new_text = `Attachment: ${notif_text.attachment_type.split(":")[0]}`
 
-					if (notif_text.sender !== undefined && notif_text.sender !== "nil")
+					if (notif_text.sender !== undefined && notif_text.sender !== "nil") {
+						name = notif_text.sender;
 						new_text = `${notif_text.sender}: ${new_text}`;
+					}
 
-					if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id))
+					if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id)) {
+						if (name === "") name = await getTextFromURL(`${prefix}/requests?name=${chat}`);
 						var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
+					}
 				}
 
 				if (chat.length !== 0) {
@@ -907,7 +913,11 @@
 					if (chat === current_chat_id) {
 						printListOfTexts([notif_text], true, notif_text.room_name.length > 0);
 						var typ = document.getElementById("typingIndicator");
-						if (typ !== undefined && typ !== null) typ.outerHTML = "";
+						if (typ !== undefined && typ !== null) {
+							var typing_outer = notif_text.is_from_me === "1" ? typing_outer = typ.outerHTML : "";
+							typ.outerHTML = "";
+							document.getElementById("text-content").innerHTML += typing_outer;
+						}
 					}
 				}
 
@@ -1221,12 +1231,13 @@
 			}
 
 			socket.onerror = function(event) {
-				alert(`It appears you have not yet trusted the websocket certificate. Please navigate to https://${socket_address}:${socket_port} and trust the certificate there`);
+				if (!shown_ws_alert) alert(`It appears you may not have trusted the websocket certificate yet. Please navigate to https://${socket_address}:${socket_port} and trust the certificate there (If you have already trusted the websocket, you can ignore this message).`);
+				shown_ws_alert = true;
 			}
 
 		</script>
 		<!-- These next links are for fontawesome; it's how I display the reactions and various other glyphs. It's safe to remove them, but then the reactions will appear as text instead of icons, and some other things won't appear as pretty-->
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="setFALoaded();">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="document.addEventListener('DOMContentLoaded', () => { setFALoaded(); });">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/fontawesome.css">
 		<link rel="stylesheet" type="text/css" href="style?main">
 		<link rel="stylesheet" type="text/css" href="style?custom">

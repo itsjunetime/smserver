@@ -165,25 +165,30 @@ long long int reaction = 2000;
 
 IMChat *chat = [[%c(IMChatRegistry) sharedInstance] existingChatWithChatIdentifier:address];
 
-id item; /// I don't know what type this needs to be, or how to initialize it. That's the crucial missing part.
-[chat sendMessageAcknowledgment:reaction forChatItem:item withMessageSummaryInfo:nil];
+IMMessageItem *item = nil;
+bool repeat = true;
+
+while (repeat) { // Sometimes it takes a few tries to actually load the messages correctly
+	[chat loadMessagesUpToGUID:nil date:nil limit:1000 loadImmediately:YES];
+
+	for (int i = 0; item == nil && i < 100; i++) { /// Sometimes it takes a few tries here as well
+		item = [chat messageItemForGUID:guid];
+	}
+
+	if (item != nil)
+		repeat = false;
+	else if (!repeat)
+		return;
+}
+
+IMTextMessagePartChatItem *pci = [[%c(IMTextMessagePartChatItem) alloc] _initWithItem:item text:[item body] index:0 messagePartRange:NSMakeRange(0, [[item body] length]) subject:[item subject]];
+
+if ([[[UIDevice currentDevice] systemVersion] floatValue] < 14.0)
+	[chat sendMessageAcknowledgment:reaction forChatItem:pci withMessageSummaryInfo:nil]; /// I honestly have no idea if this will work. No way to test
+else
+	[chat sendMessageAcknowledgment:reaction forChatItem:pci withAssociatedMessageInfo:@{@"amc": @1, @"ams": [[item body] string]}];
+
 ```
-
-&nbsp;&nbsp;&nbsp;&nbsp; So I think that `item` needs to be an `IMTextMessagePartChatItem`, but I don't know exactly how to get the item taht I need. That's what I'm missing right now. \
-&nbsp;&nbsp;&nbsp;&nbsp; Here's some code that I've tried to get item (I've also tried passing in `pci` in the following code), but I haven't yet figured out exactly it is.
-
-```objectivec
-__block IMMessage *item = nil;
-[[%c(IMChatHistoryController) sharedInstance] loadMessageWithGUID:guid completionBlock: ^(id msg){
-	item = msg;
-}];
-
-while (item == nil) {}; /// since the block runs async, we need to verify that item isn't nil before continuing.
-
-IMTextMessagePartChatItem *pci = [[%c(IMTextMessagePartChatItem) alloc] _initWithItem:item._imMessageItem text:item.text index:0 messagePartRange:item.associatedMessageRange subject:item.messageSubject];
-```
-
-&nbsp;&nbsp;&nbsp;&nbsp; Once again, this is incomplete. And if you know exactly how to get `item`, please let me know.
 
 ## Getting pinned chats
 &nbsp;&nbsp;&nbsp;&nbsp; I am actually fairly certain this is the best way to get the list of pinned chats. It's short and easy, so here's the code:

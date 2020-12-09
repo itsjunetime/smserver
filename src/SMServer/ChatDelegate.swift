@@ -234,9 +234,9 @@ final class ChatDelegate {
 		}
 
 		if is_group {
-			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(fixed_num)\"\(from_string))) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
+			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(fixed_num)\"\(from_string))) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
 		} else {
-			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "handle_id", "balloon_bundle_id", "payload_data", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(fixed_num)\"\(from_string)) ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
+			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "balloon_bundle_id", "payload_data", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(fixed_num)\"\(from_string)) ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
 		}
 
 		for i in 0..<messages.count {
@@ -261,7 +261,7 @@ final class ChatDelegate {
 				messages[i]["sender"] = name
 			}
 
-			if messages[i]["payload_data"]?.count ?? 0 > 0 && messages[i]["ROWID"] != nil {
+			if messages[i]["payload_data"]?.count ?? 0 > 0 && messages[i]["balloon_bundle_id"] != "com.apple.DigitalTouchBalloonProvder" && messages[i]["ROWID"] != nil {
 				messages[i]["balloon_bundle_id"] = "com.apple.messages.URLBalloonProvider"
 				let link_info = getLinkInfo(messages[i]["ROWID"]!, db: db)
 
@@ -269,6 +269,8 @@ final class ChatDelegate {
 				messages[i]["link_subtitle"] = link_info["subtitle"]
 				messages[i]["link_type"] = link_info["type"]
 			}
+
+			messages[i].removeValue(forKey: "payload_data")
 		}
 
 		/// close dbs
@@ -305,7 +307,7 @@ final class ChatDelegate {
 		var chat_identifiers = [String:[String]]()
 		var checked = [String]()
 
-		let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
+		let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
 
 		inner: if combine {
 			/// This `if` gets all the addresses associated with your contacts, parses them with regex to get all possible `chat_identifier`s,
@@ -388,6 +390,8 @@ final class ChatDelegate {
 				} else {
 					new_chat["latest_text"] = "Attachment: 1 File"
 				}
+			} else if i["m.balloon_bundle_id"] == "com.apple.DigitalTouchBalloonProvder" {
+				new_chat["latest_text"] = "Digital Touch Message"
 			}
 
 			/// Get name for chat
@@ -782,7 +786,7 @@ final class ChatDelegate {
 		do {
 			plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as! [String : AnyObject]
 		} catch {
-			self.log("WARNING: failed to decode plist", warning: true)
+			self.log("WARNING: failed to decode plist for ROWID \(mid)", warning: true)
 			return ret_dict
 		}
 
