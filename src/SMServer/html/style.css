@@ -93,6 +93,7 @@ p, h2, a, button {
 	max-width: 100%;
 	resize: vertical;
 	margin: 0;
+	word-break: break-word;
 }
 @supports (backdrop-filter: blur(50px)) or (-webkit-backdrop-filter: blur(50px)) {
 	.messages .title, .textbox,
@@ -230,10 +231,12 @@ i#chargingSymbol {
 .chats button.pinned .chat-top {
 	display: grid;
 }
-.chats button.pinned img {
-	max-height: calc(var(--chats-button-height) * 1.4);
-	border-radius: 100%;
+.chats button.pinned img, .pinned .chat-image {
 	height: calc(var(--chats-width) * 0.20);
+	width: calc(var(--chats-width) * 0.20);
+	max-height: calc(var(--chats-button-height) * 1.4);
+	max-width: calc(var(--chats-button-height) * 1.4);
+	border-radius: 100%;
 	grid-row: 1/3;
 	grid-column: 1;
 	margin: 0 auto 10px auto;
@@ -270,6 +273,18 @@ i#chargingSymbol {
 	padding: 0;
 	max-width: 100%;
 	width: max-content;
+}
+.chat-image {
+	font-size: 24px;
+	background: linear-gradient(45deg, grey, #cacacab5);
+	border-radius: 100%;
+	width: calc(var(--chats-button-height) * 0.74);
+	height: calc(var(--chats-button-height) * 0.74);
+	display: grid;
+}
+.chat-image-letters {
+	margin: auto;
+	color: white;
 }
 .chat-nonpic {
 	padding: 8px 0 0 14px;
@@ -444,6 +459,36 @@ i#chargingSymbol {
 	background-color: transparent;
 	font-size: 50px;
 	padding: 0;
+}
+.tapback_dialog {
+	padding: 9px 8px;
+	border-radius: 20px;
+}
+.tapback_dialog:after {
+	content: none;
+}
+.tapback_dialog:before {
+	width: 12px;
+	height: 12px;
+	top: 34px;
+	border-radius: 100%;
+	border: 0 solid black !important;
+}
+.is_from_them.tapback_dialog:before {
+	left: -4px;
+	background-color: var(--their-text-background);
+}
+.is_from_me.tapback_dialog:before {
+	right: -4px;
+	background-color: var(--my-imessage-background);
+}
+.SMS.is_from_me.tapback_dialog:before {
+	background-color: var(--my-sms-background);
+}
+.tapback_choice {
+	margin: 0 8px;
+	border-radius: 100%;
+	text-shadow: 2px 2px var(--body-background);
 }
 .spacer {
 	min-height: 10px;
@@ -710,7 +755,7 @@ i#chargingSymbol {
 .readreceipt, .readreceipt strong {
 	color: #a6a6a6;
 }
-.reaction {
+.tapback {
 	top: -8px;
 	position: relative;
 	padding: 3px 6px;
@@ -720,10 +765,15 @@ i#chargingSymbol {
 	backdrop-filter: blur(1.5px);
 	-webkit-backdrop-filter: blur(1.5px);
 }
-.from_them .reaction {
+.from_them .tapback {
 	left: -12px;
 	border-radius: 4px 4px 0 4px;
 	background-color: rgba(70, 140, 240, 0.7);
+}
+.from_me .tapback {
+	right: -6px;
+	border-radius: 4px 4px 4px 0;
+	background-color: rgba(71, 71, 80, 0.7);
 }
 .text-area {
 	display: flex;
@@ -733,11 +783,6 @@ i#chargingSymbol {
 }
 .text-area.from_them {
 	align-self: flex-start;
-}
-.from_me .reaction {
-	right: -6px;
-	border-radius: 4px 4px 4px 0;
-	background-color: rgba(71, 71, 80, 0.7);
 }
 .noPadding {
 	padding: 0 !important;

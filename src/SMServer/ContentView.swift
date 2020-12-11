@@ -153,9 +153,11 @@ struct ContentView: View {
 			if f == "chat_id" {
 
 				let q = req.query
+				let data = ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? "")
 
 				res.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
-				res.send(ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? ""))
+				if data.isEmpty { res.setStatusCode(404, description: "No profile image for chat_id \(q["chat_id"] ?? "")") }
+				res.send(data)
 			} else if f == "path" {
 
 				let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
@@ -373,12 +375,21 @@ struct ContentView: View {
 		}
 	}
 
-	func setNewestTexts(_ guid: String) {
+	func sentOrReceivedNewText(_ guid: String) {
 		/// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
-		guard server.isListening && socket.server?.webSockets.count ?? 0 > 0 else { return }
+		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
 
 		let text = ContentView.chat_delegate.getTextByGUID(guid);
 		let json = encodeToJson(object: text, title: "text")
+
+		socket.sendNewText(info: json)
+	}
+
+	func sentTapback(_ tapback: Int32, guid: String) {
+		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
+
+		let tb = ContentView.chat_delegate.getTapbackInformation(tapback, guid: guid)
+		let json = encodeToJson(object: tb, title: "text")
 
 		socket.sendNewText(info: json)
 	}
@@ -419,8 +430,6 @@ struct ContentView: View {
 			/// If they're sending over the password to authenticate
 			let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
 
-			self.log("comparing " + Array(params.values)[0] + " to " + password)
-
 			/// If they sent the correct password
 			if Array(params.values)[0] == password {
 
@@ -442,7 +451,7 @@ struct ContentView: View {
 		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
 		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
 
-		let f = Array(params.keys)[0]
+		let f = Array(params.keys)[0] as String
 
 		if f == "person" || f == "num" || f == "offset" || f == "read" || f == "from" {
 			/// requesting messages from a specific person
@@ -504,31 +513,31 @@ struct ContentView: View {
 			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 
 			return encodeToJson(object: ret_val, title: "photos")
-		} else if f == "delete" || f == "delete_chat" {
+		} else if f == "tapback" || f == "tap_guid" || f == "tap_in_chat" || f == "remove_tap" {
+
+			guard params["tapback"] != nil && params["tap_guid"] != nil && params["tap_in_chat"] != nil else {
+				return "Please include parameters 'tapback', 'tap_guid', and 'tap_in_chat' in your request"
+			}
+
+			var reaction: Int = (Int(params["tapback"] ?? "-1") ?? -1) + 2000 /// reactions are 2000 - 2005
+			let text_guid: String = params["tap_guid"] ?? "0"
+			let chat: String = params["tap_in_chat"] ?? "0"
+			let remove = (params["remove"] ?? "false") == "true"
+
+			if reaction > 2005 || reaction < 2000 { return "tapback value must be at least 0 and no greater than 5" }
+
+			if remove { reaction += 1000 }
+
+			ContentView.sender.sendTapback(reaction as NSNumber, forGuid: text_guid, inChat: chat)
+			return "true"
+		} /*else if f == "delete" || f == "delete_chat" {
 			/// Deletes a conversation or text
 			guard let id: String = params["delete"] else { return "Please enter at least one identifier" }
 			let is_chat = (params["delete_chat"] ?? "true") == "true"
 
 			ContentView.sender.removeObject(id, isChat: is_chat)
 			return "true"
-		} else if f == "reaction" || f == "to_guid" || f == "in_chat" || f == "remove" {
-			/// Haven't got the `libsmserver` side of this to work yet, so I'm disabling it for this version.
-			/// Hopefully I'll have it good and done by next version
-
-			guard params["reaction"] != nil && params["to_guid"] != nil && params["in_chat"] != nil else {
-				return "Please include parameters 'reaction', 'to_guid', and 'in_chat' in your request"
-			}
-
-			var reaction: Int = (Int(params["reaction"] ?? "0") ?? 0) + 2000 /// reactions are 2000 - 2005
-			let textGuid: String = params["to_guid"] ?? "0"
-			let chat: String = params["in_chat"] ?? "0"
-			let remove = (params["remove"] ?? "false") == "true"
-
-			if remove { reaction += 1000 }
-
-			ContentView.sender.sendReaction(reaction as NSNumber, forGuid: textGuid, inChat: chat)
-			return "true"
-		}
+		}*/
 
 		self.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
 
@@ -554,11 +563,15 @@ struct ContentView: View {
 		self.has_root = ContentView.sender.setUID() == uid_t(0)
 
 		self.watcher.setTexts = { value in
-			self.setNewestTexts(value ?? "None")
+			self.sentOrReceivedNewText(value ?? "None")
 		}
 
 		self.watcher.setTyping = { value in
 			self.setPartyTyping(value ?? "None")
+		}
+
+		self.watcher.sentTapback = { tapback, guid in
+			self.sentTapback(tapback, guid: guid ?? "")
 		}
 
 		socket.watcher = self.watcher
