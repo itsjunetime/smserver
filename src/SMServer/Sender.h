@@ -5,10 +5,12 @@
 
 @property (copy) void(^setTexts)(NSString *);
 @property (copy) void(^setTyping)(NSString *);
+@property (copy) void(^sentTapback)(int, NSString *);
 + (instancetype)sharedInstance;
 - (instancetype)init;
 - (void)handleReceivedTextWithCallback:(NSString *)chat_id;
 - (void)handlePartyTypingWithCallback:(NSString *)chat_id;
+- (void)handleSentTapbackWithCallback:(NSDictionary *)vals;
 
 @end
 
@@ -21,14 +23,15 @@
 - (uid_t)setUID;
 - (void)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths;
 - (void)markConvoAsRead:(NSString *)chat_id;
-- (void)sendReaction:(NSNumber *)reaction forGuid:(NSString *)guid inChat:(NSString *)chat;
+- (void)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat;
 - (void)sendTyping:(BOOL)isTyping forChat:(NSString *)chat;
 - (void)removeObject:(NSString *)identifier isChat:(BOOL)isChat;
 //- (NSArray *)getPinnedChats;
 
 @end
 
-/*@interface IMPinnedConversationsController
+/*
+@interface IMPinnedConversationsController
 + (id)sharedInstance;
 - (NSOrderedSet *)pinnedConversationIdentifierSet;
 @end
@@ -36,9 +39,8 @@
 @interface IMDaemonController
 + (id)sharedController;
 - (BOOL)connectToDaemon;
-- (void)sendQueryWithReply:(BOOL)arg1 query:(void (^)(void))arg2;
 @end
-*/
+ */
 
 @interface CKConversationList
 + (id)sharedConversationList;
@@ -48,6 +50,5 @@
 @interface CKConversation
 - (void)setLocalUserIsTyping:(_Bool)arg1;
 @end
-
 
 #endif /* Obj_h */

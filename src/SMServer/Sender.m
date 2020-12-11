@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 #import "MRYIPCCenter.h"
 
-#import "Obj.h"
+#import "Sender.h"
 
 #define c(a) NSClassFromString(@#a)
 
@@ -24,12 +24,13 @@
 		_center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
 		[_center addTarget:self action:@selector(handleReceivedTextWithCallback:)];
 		[_center addTarget:self action:@selector(handlePartyTypingWithCallback:)];
+		[_center addTarget:self action:@selector(handleSentTapbackWithCallback:)];
 	}
 	return self;
 }
 
 - (void)handleReceivedTextWithCallback:(NSString *)guid {
-	/// This is the function that is called when a new text is received.
+	/// This is the function that is called when a new text is received, or you send a text through SMServer.
 	/// _setTexts is a block that is set somewhere around line 554 in ContentView.swift, in loadFuncs().
 	_setTexts(guid);
 }
@@ -38,6 +39,12 @@
 	/// This is called when someone else starts typing
 	/// _setTyping is a block that is set somewhere around line 559 in ContentView.swift, in loadFuncs().
 	_setTyping(chat_id);
+}
+
+- (void)handleSentTapbackWithCallback:(NSDictionary *)vals {
+	/// This is called when you send a reaction through SMServer
+	/// _sentTapback is a block that is set somewhere around line 563 in ContentView.swift, in loadFuncs().
+	_sentTapback([[vals objectForKey:@"tapback"] intValue], [vals objectForKey:@"guid"]);
 }
 
 @end
@@ -74,8 +81,8 @@
 	}
 }
 
-- (void)sendReaction:(NSNumber *)reaction forGuid:(NSString *)guid inChat:(NSString *)chat {
-	[self.center callExternalVoidMethod:@selector(sendReaction:) withArguments:@{@"reaction": reaction, @"guid": guid, @"chat": chat}];
+- (void)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat {
+	[self.center callExternalVoidMethod:@selector(sendTapback:) withArguments:@{@"tapback": tapback, @"guid": guid, @"chat": chat}];
 }
 
 - (void)sendTyping:(BOOL)isTyping forChat:(NSString *)chat {
@@ -105,15 +112,11 @@
  IMDaemonController* controller = [c(IMDaemonController) sharedController];
  __block NSArray* pins = [NSArray array];
 
- if ([controller connectToDaemon]) {
-	[controller sendQueryWithReply:NO query:^{
-		if ([[NSProcessInfo processInfo] operatingSystemVersion].majorVersion >= 14) {
-			IMPinnedConversationsController* pinnedController = [c(IMPinnedConversationsController) sharedInstance];
-			NSOrderedSet* set = [pinnedController pinnedConversationIdentifierSet];
+ if ([controller connectToDaemon] && [[NSProcessInfo processInfo] operatingSystemVersion].majorVersion >= 14) {
+	IMPinnedConversationsController* pinnedController = [c(IMPinnedConversationsController) sharedInstance];
+	NSOrderedSet* set = [pinnedController pinnedConversationIdentifierSet];
 
-			pins = [set array];
-		}
-	}];
+	pins = [set array];
  }
 
  return pins;

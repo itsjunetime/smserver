@@ -36,6 +36,7 @@
 			var current_chat_id = "";
 			var typing_sleep = 10000;
 			var load_icon = '<i class="fas fa-chevron-circle-up"></i>';
+			var fa_icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>', '<i class="fas fa-grin-tears"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
 
 			var doc_url = window.location.href.split("/")[2].split(":")[0];
 			var socket_address = doc_url;
@@ -68,7 +69,7 @@
 				var date = a.getDate();
 				var hour = a.getHours();
 				var min = a.getMinutes();
-				var time = `${date} ${month} ${year} ${(hour < 10 ? '0' : '')}${hour}:${(min < 10 ? '0' : '')}${min}`;
+				var time = `${date} ${month} ${year} ${hour < 10 ? '0' : ''}${hour}:${min < 10 ? '0' : ''}${min}`;
 				return time;
 			}
 
@@ -121,7 +122,7 @@
 					var rets = [];
 
 					var classes = "text";
-					classes += `${(text.is_from_me === "0" ? " is_from_them" : " is_from_me")} ${text.service}`;
+					classes += `${text.is_from_me === "0" ? " is_from_them" : " is_from_me"} ${text.service}`;
 
 					t.className = classes;
 					t.id = text.guid;
@@ -129,20 +130,20 @@
 					t.setAttribute("date_read", text.date_read);
 					t.setAttribute("date", text.date);
 					t.innerHTML = "";
+					t.setAttribute("onclick", `showTapbackDialog("${text.guid}");`);
 
 					/// it's a rich link
-					if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider" && text.attachment_file !== undefined) {
+					if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider" && text.attachments.length > 0) {
 						t.className += " noPadding richLink";
 
 						var img = document.createElement("img");
-						var attachment_splits = text.attachment_file.split(":");
-						img.src = `${prefix}/data?path=${(attachment_splits[1].length > 0 ? attachment_splits[1] : attachment_splits[0])}`;
+						img.src = `${prefix}/data?path=${text.attachments.length > 1 ? text.attachments[1].filename : text.attachments[0].filename}`;
 
 						var under = document.createElement("a");
 						under.href = (text.text.match(/^https{0,1}:\/\//) ? "" : "http://") + text.text;
 						under.className = "richLinkUnder";
 
-						if (attachment_splits[1].length > 0) {
+						if (text.attachments.length > 1) {
 							t.appendChild(img);
 							t.appendChild(document.createElement("br"));
 						} else {
@@ -158,7 +159,7 @@
 						title.className = "richLinkTitle";
 						desc.appendChild(title);
 
-						if (attachment_splits[1].length > 0) {
+						if (text.attachments.length > 1) {
 							var subtitle = document.createElement("div");
 							subtitle.innerText = text.link_subtitle;
 							subtitle.className = "richLinkSubtitle";
@@ -172,7 +173,7 @@
 							icon.className = "richLinkIcon";
 
 							var ii = document.createElement("img");
-							ii.src = `${prefix}/data?path=${attachment_splits[0]}`;
+							ii.src = `${prefix}/data?path=${text.attachments[0].filename}`;
 							icon.appendChild(ii);
 							under.appendChild(icon);
 						}
@@ -181,40 +182,37 @@
 						return t;
 					}
 
-					if (text.hasOwnProperty("attachment_file") && text.attachment_file.length != 0) {
+					if (text.hasOwnProperty("attachments") && text.attachments.length > 0) {
 
-						var files = text.attachment_file.split(":");
-						var types = text.attachment_type.split(":");
-
-						for (var l = 0; l < files.length; ++l) {
+						for (var l = 0; l < text.attachments.length; ++l) {
 							var c = t.cloneNode();
 							if (l !== 0) c.id += `-${String(l)}`;
-							var bigType = types[l].split("/")[0];
-							var smallType = types[l].split("/")[1];
+							var bigType = text.attachments[l].mime_type.split("/")[0];
+							var smallType = text.attachments[l].mime_type.split("/")[1];
 
 							if (bigType === "image") {
-								c.innerHTML = `<img src="${prefix}/data?path=${files[l]}"><br>`;
+								c.innerHTML = `<img src="${prefix}/data?path=${text.attachments[l].filename}"><br>`;
 							} else if (bigType === "video") {
-								c.innerHTML = `<video controls="controls" src="${prefix}/data?path=${files[l]}"></video>`;
+								c.innerHTML = `<video controls="controls" src="${prefix}/data?path=${text.attachments[l].filename}"></video>`;
 							} else if (bigType === "audio") {
-								c.innerHTML = `<audio controls="controls" src="${prefix}/data?path=${files[l]}"></audio>`;
-							} else if (files[l].length != 0) {
-								var splits = files[l].split("/");
+								c.innerHTML = `<audio controls="controls" src="${prefix}/data?path=${text.attachments[l].filename}"></audio>`;
+							} else if (text.attachments[l].length !== 0){
+								var splits = text.attachments[l].filename.split("/");
 								var link = document.createElement("a");
-								link.href = `${prefix}/data?path=${files[l].replace(/ /g, "%20")}`;
-								link.setAttribute("mime_type", types[l]);
+								link.href = `${prefix}/data?path=${text.attachments[l].filename.replace(/ /g, "%20")}`;
+								link.setAttribute("mime_type", text.attachments[l].mime_type);
 								link.className = "inlineAttachment";
 
 								var fa = "file";
 
-								if (faLoaded && types[l].length != 0 && smallType !== undefined) {
+								if (faLoaded && text.attachments[l].mime_type.length > 0 && smallType !== undefined) {
 									var dict = {'pdf': 'file-pdf', 'vcard': 'id-card', 'x-debian-package': 'archive', 'x-sh': 'file-code', 'zip': 'file-archive', 'x-python-script': 'file-code'};
 									if (dict[smallType] !== undefined) fa = dict[smallType];
 								}
 
 								var icon = `<i class="fas fa-${fa}"></i>`;
 
-								link.innerHTML = `${icon} <span>${splits[splits.length - 1]}${(faLoaded ? "" : "(" + files[l] + ")")}</span>`;
+								link.innerHTML = `${icon} <span>${splits[splits.length - 1]}${faLoaded ? "" : "(" + text.attachments[l].mime_type + ")"}</span>`;
 								c.innerHTML += link.outerHTML;
 							}
 							if (bigType === "image" || bigType === "video" || bigType === "audio")
@@ -250,28 +248,28 @@
 
 					if (original === null || original === undefined) return document.createElement("span");
 
-					var reac = document.createElement("span");
-					reac.className = "reaction";
-					reac.setAttribute("reactionType", text.associated_message_type);
+					var tap = document.createElement("span");
+					tap.className = `tapback ${text.is_from_me === "1" ? "tapFromMe" : "tapFromThem"}`;
+					tap.setAttribute("tapbackType", text.associated_message_type);
+					tap.setAttribute("sender", text.sender);
 
 					var icons = ["Love", "Thumbs up", "Thumbs down", "Haha", "!!", "??"];
 
-					if (faLoaded) icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>',
-					'<i class="fas fa-grin-tears"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
+					if (faLoaded) icons = fa_icons;
 
-					reac.innerHTML = icons[Number(text.associated_message_type) - 2000];
+					tap.innerHTML = icons[Number(text.associated_message_type) - 2000];
 
 					var elder = original.parentNode;
 					if (elder.className.includes("text-area")) {
-						var ln = elder.getElementsByClassName("reaction").length;
-						var mg = ` -${String(ln * 2)}6px;`;
-						mg += `z-index: ${String(9 < (ln + 2) ? 9 : (ln + 2))};`;
+						var ln = elder.getElementsByClassName("tapback").length;
+						var mg = ` -${ln * 2}6px;`;
+						mg += `z-index: ${9 < (ln + 2) ? 9 : (ln + 2)};`;
 						if (elder.className.includes("from_them")) {
-							reac.setAttribute("style", `left:${mg}`);
-							elder.appendChild(reac);
+							tap.setAttribute("style", `left:${mg}`);
+							elder.appendChild(tap);
 						} else {
-							reac.setAttribute("style", `right:${mg}`);
-							elder.insertBefore(reac, elder.firstChild);
+							tap.setAttribute("style", `right:${mg}`);
+							elder.insertBefore(tap, elder.firstChild);
 						}
 					} else {
 						var next = original.nextElementSibling;
@@ -284,9 +282,9 @@
 
 						if (copy.className.includes("is_from_them")) {
 							area.appendChild(copy);
-							area.appendChild(reac);
+							area.appendChild(tap);
 						} else {
-							area.appendChild(reac);
+							area.appendChild(tap);
 							area.appendChild(copy);
 						}
 
@@ -300,7 +298,7 @@
 						var area = box.parentNode;
 
 						for (var i = 0; i < area.children.length; i++) {
-							if (Number(area.children[i].getAttribute("reactionType")) + 1000 === Number(text.associated_message_type)) {
+							if (Number(area.children[i].getAttribute("tapbackType")) + 1000 === Number(text.associated_message_type)) {
 								area.children[i].outerHTML = "";
 								break;
 							}
@@ -321,14 +319,21 @@
 
 				b.setAttribute("addresses", (chat.addresses !== undefined && chat.addresses !== "" ? chat.addresses : chat.chat_identifier));
 
-				var i = document.createElement("img");
-				i.src = `${prefix}/data?chat_id=${chat.chat_identifier}`
+				var i = document.createElement("span");
+
+				var cimg = document.createElement("img");
+				cimg.src = `${prefix}/data?chat_id=${chat.chat_identifier}`
+				cimg.setAttribute("onerror", `javascript:setProfileImageAsText("${chat.chat_identifier}");`);
+				i.appendChild(cimg);
 
 				var classes = chat.has_unread === "true" ? "unread" : "";
 
 				var n = document.createElement("div");
 				n.className = "chat-name";
-				n.innerText = (chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name);
+
+				var sp = document.createElement("span");
+				sp.innerText = chat.display_name.length === 0 ? chat.chat_identifier : chat.display_name;
+				n.appendChild(sp);
 
 				if (chat.pinned === "false") {
 					b.appendChild(i);
@@ -383,6 +388,24 @@
 				return b;
 			}
 
+			function setProfileImageAsText(chat_id, is_title = false) {
+				var c = document.querySelector(`[addresses*="${chat_id}"]`);
+				var im = is_title ? document.getElementById("messagesTitleText").firstChild : c.querySelector("img");
+				var dn = c.getElementsByClassName("chat-name")[0].firstChild.innerText;
+
+				var i = document.createElement("span");
+				i.className = "chat-image";
+
+				var cil = document.createElement("span");
+				cil.className = "chat-image-letters";
+
+				var name_split = dn.replace(/\p{Extended_Pictographic}/gu, "").split(" ");
+				cil.innerText = `${name_split[0].substr(0, 1)}${name_split.length > 1 ? name_split[name_split.length - 1].substr(0, 1) : ""}`;
+				i.appendChild(cil);
+
+				im.outerHTML = i.outerHTML;
+			}
+
 			function printListOfTexts(texts, append = true, is_group = false) {
 				/// If append is true, then it places this list of texts under the existing ones. Else, it places them above the existing ones.
 				/// the Last element in `texts` will always be the farthest from the texts that were here when this was called
@@ -392,6 +415,7 @@
 				var tc = document.getElementById("text-content");
 				var et = document.getElementsByClassName("text");
 				var orig_len = et.length;
+				var printed = false;
 
 				var spacer = document.createElement("div");
 				spacer.className = "spacer";
@@ -404,6 +428,8 @@
 					if (fts.length === undefined && fts.outerHTML === "<span></span>") continue;
 					var ft = fts.length === undefined ? [fts] : fts;
 					if (ft.length === 0) continue;
+
+					printed = true;
 
 					if (!append) ft.reverse();
 
@@ -527,14 +553,14 @@
 					}
 				}
 
-				if (append) tc.lastChild.scrollIntoView();
+				if (append && printed) tc.lastChild.scrollIntoView();
 			}
 
 			async function getLatestText(from = 1, chat = current_chat_id, read = false) {
 				if (debug) console.log(`Getting latest text for chat ${chat}`);
 				var text;
 
-				let url = `${prefix}/requests?person=${chat}&num=1&read=${(read ? "true" : "false")}&from=${from}`;
+				let url = `${prefix}/requests?person=${chat}&num=1&read=${read ? "true" : "false"}&from=${from}`;
 
 				let textPromise = await fetchFromURL(url);
 				var text = textPromise.texts[0];
@@ -606,7 +632,9 @@
 				}
 
 				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${(unread_chats > 0 ? " (" + String(unread_chats) + ")" : "")}`
+				document.title = `SMServer${unread_chats > 0 ? " (" + String(unread_chats) + ")" : ""}`
+
+				console.log("There will probably be a significant amount of 404 errors here, ignore them. They've been handled :)");
 			}
 
 			const getMoreChats = async (offset = printed_chats) => {
@@ -622,6 +650,8 @@
 					var b = getChatElement(new_items[i], num_texts_to_load);
 					doc.insertBefore(b, document.getElementById("morechatsbutton"));
 				}
+
+				console.log("There will probably be a significant amount of 404 errors here, ignore them. They've been handled :)");
 			}
 
 			const getTexts = async (chat_id, num_texts, addresses = "") => {
@@ -639,24 +669,25 @@
 				var orig_btn = document.querySelector(`[addresses*="${chat_id}"]`);
 				orig_btn.className = orig_btn.className.replace(/unread/g, "") + " selected";
 				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${(unread_chats > 0 ? " (" + String(unread_chats) + ")" : "")}`;
+				document.title = `SMServer${unread_chats > 0 ? " (" + String(unread_chats) + ")" : ""}`;
 
 				if (!orig_btn.className.includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
 					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
 
 				var chat_title = orig_btn.getElementsByClassName("chat-name")[0];
 				var title_doc = document.getElementsByClassName("title-content")[0];
-				if (chat_title.children.length > 0) title_doc.innerHTML = `<p>${chat_title.textContent.replace(chat_title.children[0].innerText, "")}</p>`;
+				if (chat_title.children.length > 0) title_doc.innerHTML = `<p>${chat_title.firstChild.textContent}</p>`;
 				else title_doc.innerHTML = `<p>${chat_title.textContent}</p>`;
 
 				current_chat_id = chat_id;
 
 				var img = document.createElement("img");
 				img.src = `${prefix}/data?chat_id=${chat_id}`;
+				img.setAttribute("onerror", `javascript:setProfileImageAsText("${chat_id}", true);`);
 
 				title_doc.insertBefore(img, title_doc.firstChild);
 
-				let url = `${prefix}/requests?person=${(addresses === "" ? chat_id : addresses)}&num=${num_texts}`;
+				let url = `${prefix}/requests?person=${addresses === "" ? chat_id : addresses}&num=${num_texts}`;
 
 				let textsPromise = await fetchFromURL(url);
 				this.texts = textsPromise.texts;
@@ -871,11 +902,11 @@
 
 				var btn = document.querySelector(`[addresses*="${chat}"]`);
 
-				var name = ""; //await getTextFromURL(`${prefix}/requests?name=${chat}`);
+				var name = "";
 
 				if (notif_text.is_from_me === "0") {
 					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-						new_text = `Attachment: ${notif_text.attachment_type.split(":")[0]}`
+						new_text = `Attachment: ${notif_text.attachments[0].mime_type.split("/")[0]}`
 
 					if (notif_text.sender !== undefined && notif_text.sender !== "nil") {
 						name = notif_text.sender;
@@ -922,7 +953,7 @@
 				}
 
 				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${(unread_chats > 0 ? " (" + String(unread_chats) + ")" : "")}`;
+				document.title = `SMServer${unread_chats > 0 ? " (" + String(unread_chats) + ")" : ""}`;
 			}
 
 			async function setChatAsTop(chat, new_text = "") {
@@ -1187,6 +1218,43 @@
 				window.location.href = `${prefix}/requests?search=${term}`; /// uhh simple stuff; use default settings for now
 			}
 
+			function showTapbackDialog(guid) {
+				var existing = document.getElementById(`${guid}-tapback`);
+				if (existing !== undefined && existing !== null) {
+					existing.outerHTML = "";
+					return;
+				}
+
+				var text = document.getElementById(guid);
+				var dialog = document.createElement("span");
+				dialog.className = "text tapback_dialog";
+				dialog.classList.add(text.className.includes("is_from_them") ? "is_from_them" : "is_from_me");
+				dialog.classList.add(text.className.includes("iMessage") ? "iMessage" : "SMS");
+				dialog.id = `${guid}-tapback`
+
+				for (var i = 0; i < fa_icons.length; i++) {
+					var choice = document.createElement("span");
+					choice.className = "tapback_choice";
+					choice.innerHTML = fa_icons[i];
+					choice.setAttribute("onclick", `sendTapback("${guid}", ${i}, "${current_chat_id}");`);
+
+					dialog.appendChild(choice);
+				}
+
+				if (text.parentNode.className.includes("text-area"))
+					document.getElementById("text-content").insertBefore(dialog, text.parentNode);
+				else
+					document.getElementById("text-content").insertBefore(dialog, text);
+			}
+
+			async function sendTapback(guid, tapback, chat = current_chat_id) {
+				var res = await getTextFromURL(`${prefix}/requests?tapback=${tapback}&tap_guid=${guid}&tap_in_chat=${chat}`);
+				if (res !== "true")
+					alert("didn't send tapback :(");
+
+				document.getElementById(`${guid}-tapback`).outerHTML = "";
+			}
+
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
 				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
@@ -1195,7 +1263,7 @@
 				var _ = fetchFromURL(`${prefix}/requests?person=${current_chat_id}&num=1`);
 
 				var unreads = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${(unreads > 0 ? " (" + String(unreads) + ")" : "")}`;
+				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
 			});
 
 			function setUpDND() {
@@ -1237,7 +1305,7 @@
 
 		</script>
 		<!-- These next links are for fontawesome; it's how I display the reactions and various other glyphs. It's safe to remove them, but then the reactions will appear as text instead of icons, and some other things won't appear as pretty-->
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="document.addEventListener('DOMContentLoaded', () => { setFALoaded(); });">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="setFALoaded();">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/fontawesome.css">
 		<link rel="stylesheet" type="text/css" href="style?main">
 		<link rel="stylesheet" type="text/css" href="style?custom">
