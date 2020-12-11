@@ -8,29 +8,29 @@ Requests to all of these API endpoints besides `/requests?password` will return 
 
 # `/requests` requests:
 
-All requests to `/requests` besides `?password` and `?name` return JSON information. The other two return plain text.
+Most requests to `/requests` return information in the form of a JSON object, but some return plain text. Each group of query parameters specifies specifically iwhich type it returns.
 
 The below sections detail the query key/value pairs that you can combine to get the information you need from the API.
 
 ## `password`
 
-Authenticates with the server, so that you can retrieve more information from it.
+Authenticates with the server, so that you can retrieve more information from it. This returns plain text.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
 | password | Yes | String | If you pass in a different password from what is specified in the main view of the app for this key, it will return `false` as plain text. If it is the same password, it will return `true`, and you will be able to make further requests to other API endpoints. |
 
-Example queries:
+__Example queries:__
 - /requests?password=toor
 
-Example return:
+__Example return:__
 ```json
 true
 ```
 
 ## `person`, `num`, `offset`, `read`, `from`
 
-Retrieves the most recent `num` messages to or from `person`, offset by `offset`.
+Retrieves the most recent `num` messages to or from `person`, offset by `offset`. Returns a JSON object.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
@@ -40,65 +40,80 @@ Retrieves the most recent `num` messages to or from `person`, offset by `offset`
 | read | No | Bool | If value is `true`, this conversation will be marked as read on the device (or, if you pass in multiple values for `person`, all will be marked as read on the device). If this key is not included in the query, the conversation(s) will be marked as read only if you have the `Automatically mark as read` setting toggled on in the host device's settings.
 | from | No | Int | This value must either be a 0, 1, or 2. If it is 0 or the key is not included in the query, it will return all messages to and from you in this conversation. If it is 1, if will return only texts that are from you, and if it is 2, it will return only texts that are to you.
 
-Example queries:
+__Example queries:__
 - /requests?person=chat192370112946281736&num=500
 - /requests?person=+15202621138&from=2
 - /requests?person=email@icloud.com&num=50&offset=100&read=false
 - /requests?person=person@gmail.com&offset=200
 - /requests?person=email@icloud.com,+15202621138,person@gmail.com&num=100&read=true
 
-Example return:
+__Example return:__
 ```json
 { "texts": [
 	{
-		"date" : "628152966581388032",
-		"is_from_me" : "0",
-		"date_read" : "628152966982129024",
-		"guid" : "82485D1E-0AA7-40A1-B6BC-9A2FB9DB0D7A",
-		"subject" : "",
-		"ROWID" : "176225",
-		"cache_has_attachments" : "0",
-		"associated_message_guid" : "bp:ED180020-AEF5-4E2F-9991-E5C227B648C3",
-		"service" : "iMessage",
-		"associated_message_type" : "2000",
-		"text" : "Loved “https:\/\/open.spotify.com\/track\/1yyIxshSIfW89EPTW0xkPH?si=D-S1TWN5S4CjjR65x9LBjg”",
-		"balloon_bundle_id" : ""
-	},
-	{
-		"date" : "628152957708999936",
-		"associated_message_guid" : "",
-		"date_read" : "628152958118957952",
-		"cache_has_attachments" : "0",
-		"subject" : "",
-		"ROWID" : "176224",
-		"is_from_me" : "1",
-		"associated_message_type" : "0",
+		"date" : "628153075801778048",
 		"balloon_bundle_id" : "",
-		"text" : "Hey! You should check out this song that I really like!",
-		"service" : "iMessage",
-		"guid" : "DBC43A7C-C8A9-42CB-838A-B574F7857FE3"
-	},
-	{
-		"balloon_bundle_id" : "com.apple.messages.URLBalloonProvider",
-		"attachment_file" : "Attachments\/e8\/08\/88BB7DB7-D78D-4A8C-91EF-9934D2DFEF26\/AFC76D4C-2664-4555-BA7A-7DCA3B21A502.pluginPayloadAttachment:Attachments\/cc\/12\/B46F7234-68A5-40B8-8B7C-66DE078B5A97\/10A2FC94-5732-453A-B4CE-040D275B2477.pluginPayloadAttachment:",
-		"link_subtitle" : "Hobo Johnson · Song · 2019",
-		"service" : "iMessage",
-		"associated_message_guid" : "",
-		"associated_message_type" : "0",
-		"link_type" : "Website",
-		"ROWID" : "176223",
-		"text" : "https:\/\/open.spotify.com\/track\/1yyIxshSIfW89EPTW0xkPH?si=D-S1TWN5S4CjjR65x9LBjg",
-		"attachment_type" : "::",
+		"attachments" : [
+			{
+				"mime_type" : "text\/x-python-script",
+				"filename" : "Attachments\/79\/09\/6B094BD9-430C-4B16-8810-6E45FF409F02\/clean_up.py"
+			}
+		],
 		"cache_has_attachments" : "1",
-		"link_title" : "Mover Awayer",
-		"guid" : "ED180020-AEF5-4E2F-9991-E5C227B648C3",
-		"date" : "628152944292000000",
+		"associated_message_type" : "0",
+		"associated_message_guid" : "",
+		"subject" : "",
+		"is_from_me" : "0",
+		"service" : "iMessage",
+		"date_read" : "628153077592212992",
+		"guid" : "06F2E807-3607-4A97-A7E8-DC2BD051DEE9",
+		"ROWID" : "176227",
+		"text" : "￼Oh and here’s the python file you were asking for earlier"
+	  },
+	  {
 		"is_from_me" : "1",
+		"date" : "628152957708999936",
+		"subject" : "",
+		"cache_has_attachments" : "0",
+		"associated_message_type" : "0",
+		"guid" : "DBC43A7C-C8A9-42CB-838A-B574F7857FE3",
+		"text" : "Hey! You should check out this song that I really like!",
+		"balloon_bundle_id" : "",
+		"ROWID" : "176224",
+		"date_read" : "628152958118957952",
+		"associated_message_guid" : "",
+		"service" : "iMessage"
+	  },
+	  {
+		"ROWID" : "176223",
+		"attachments" : [
+			{
+				"filename" : "Attachments\/e8\/08\/88BB7DB7-D78D-4A8C-91EF-9934D2DFEF26\/AFC76D4C-2664-4555-BA7A-7DCA3B21A502.pluginPayloadAttachment",
+				"mime_type" : ""
+			},
+			{
+				"filename" : "Attachments\/cc\/12\/B46F7234-68A5-40B8-8B7C-66DE078B5A97\/10A2FC94-5732-453A-B4CE-040D275B2477.pluginPayloadAttachment",
+				"mime_type" : ""
+			}
+		],
+		"balloon_bundle_id" : "com.apple.messages.URLBalloonProvider",
+		"link_title" : "Mover Awayer",
+		"link_subtitle" : "Hobo Johnson · Song · 2019",
+		"link_type" : "Website",
+		"cache_has_attachments" : "1",
+		"service" : "iMessage",
+		"subject" : "",
 		"date_read" : "0",
-		"subject" : ""
-	},
+		"associated_message_guid" : "",
+		"date" : "628152944292000000",
+		"associated_message_type" : "0",
+		"is_from_me" : "1",
+		"guid" : "ED180020-AEF5-4E2F-9991-E5C227B648C3",
+		"text" : "https:\/\/open.spotify.com\/track\/1yyIxshSIfW89EPTW0xkPH?si=D-S1TWN5S4CjjR65x9LBjg"
+	}
 ]}
 ```
+
 ### Return fields description
 | Key | Description |
 | - | - |
@@ -111,8 +126,7 @@ Example return:
 | cache_has_attachments | "1" if the text has any attachments, "0" if it has no attachments. |
 | service | "iMessage" if the text is an iMessage, "SMS" if it is an SMS.
 | text | The body of the text, the most important part. |
-| associated_message_type | "0" unless it is a type of reaction (either a reaction adding or removal). 2000 = love, 2001 = thumbs up, 2002 = thumbs down, 2003 = Haha, 2004 = Exclamation, 2005 = Question. If it is above 3000, then it is removing a reaction of type `associated_message_type - 1000` (e.g. if it is 3003, it is removing a 'Haha' reaction).
-| associated_message_guid | Normally empty, but if the text with this key is a reaction, the last 36 characters of this key will contain the guid of the text to which it is reacting. |
+| attachments | This is an array of the attachments associated with this text. `filename` is the path of this attachment in the host device's filesystem, minus the prefix of `/private/var/mobile/Library/SMS/`. `mime_type` contains the mime type of this attachment. |
 | balloon_bundle_id | Generally empty, but is something for special types of messages. This is "com.apple.messages.URLBalloonProvider" for rich links, and "com.apple.DigitalTouchBalloonProvder" for digital touch messages. |
 | link_type | Only exists on rich link messages. Specifies what type of content the link leads to, generally. For most spotify links, for example, it is "Music", and for youtube videos, it is "Video". Generally is just "Website", though.
 | link_title | The title of the link, that generally shows up right underneath the rich link preview image. |
@@ -121,11 +135,11 @@ Example return:
 
 ## `chat`, `num_chats`, `chats_offset`
 
-Retrieves the latest `num_chats` conversations
+Retrieves the latest `num_chats` conversations. Returns a JSON object.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
-| chat | Yes | Any | Value is inconsequential. Including this key in the request simply specifies that you are asking fora list of the conversations on the device |
+| chat | Yes | Any | Value is inconsequential. Including this key in the request simply specifies that you are asking for a list of the conversations on the device |
 | num_chats | No | Int | Specifies how many conversations to the information of. If this key is not included in the query, it will default to the device's default, which is specified in the settings of the host app.
 | chats_offset | No | Int | Specifies the offset of the list of conversations that you want to retrieve. For example, if you have already retrieved the first 100 conversations, and would like to retrieve the next 100, you would set the value for this key to `100`, and that would get you what you want. If this key is not included in the query, it will default to 0 for the offset.
 
@@ -163,7 +177,7 @@ __Return fields description__
 | addresses | If the `Merge contact addresses` option is turned on in the host device's settings, this field will contain all of the email addresses and phone numbers that are associated with the contact who holds this `chat_identifier`. |
 
 ## `name`
-Retrieves the contact name that accompanies chat_identifier `name`. Returns plain text, not JSON.
+Retrieves the contact name that accompanies chat_identifier `name`. Returns plain text.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
@@ -174,13 +188,13 @@ __Example queries:__
 - /requests?name=+12761938272
 - /requests?name=chat193827462058278283
 
-Example Return
+__Example return:__
 ```json
 John Smith
 ```
 
 ## `search`, `case_sensitive`, `bridge_gaps`, `group_by`
-This searches for the term `search` in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options.
+This searches for the term `search` in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options. Returns a JSON object.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
@@ -193,7 +207,8 @@ __Example queries:__
 - /requests?search=hello%20world&case_sensitive=true&bridge_gaps=false
 - /requests?search=hello_there
 
-__Example return:__ \
+__Example return:__
+
 With `group_by=time`
 
 ```json
@@ -232,7 +247,7 @@ See above, in the `person` query return value descriptions for how to understand
 
 ## `photos`, `offset`, `most_recent`
 
-If `most_recent == "true"`, this retrieves a list of information about the most recent `photos` (`photos` is an integer) photos, offset by `offset` (`offset` is also an integer). If most_recent != "true", this retrieves a list of the oldest `photos` photos, offset by `offset`
+If `most_recent == "true"`, this retrieves a list of information about the most recent `photos` (`photos` is an integer) photos, offset by `offset` (`offset` is also an integer). If most_recent != "true", this retrieves a list of the oldest `photos` photos, offset by `offset`. Returns a JSON object.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
@@ -245,7 +260,7 @@ __Example queries:__
 - /requests?photos=40&offset=120&most_recent=false
 - /requests?photos=1&most_recent=false
 
-__Example Return:__
+__Example return:__
 ```json
 { "photos": [
   {
@@ -265,6 +280,26 @@ __Return fields Description:__
 | is_favorite | Tells whether or not the photo is favorited on the host device. |
 | URL | This value holds the URL of the photo on the host device, minus the prefix of `/var/mobile/Media/` |
 
+## `tapback`, `tap_guid`, `tap_in_chat`, `remove_tap`
+
+Sends a tapback for the message with `tap_guid`, in `tap_in_chat` chat. If something is incorrect about the query, it will return a warning message instead of "true". Returns plain text.
+
+| Key | Required | Type | Description |
+| - | - | - | - |
+| tapback | Yes | Int | This should be an int, describing the reaction to send. "Heart" is 0, "Thumbs up" is 1, "Thumbs down" is 2, "Haha" is 3, "Emphasis" is 4, and "Question" is 5. If this number is greater than 5 or less than 0 or is not an int, the tapback will fail to send.
+| tap_guid | Yes | String | Must be the guid of the message that the tapback is being sent for. |
+| tap_in_chat | Yes | String | Must be the chat_identifier of the conversation in which the tapback is being sent. |
+| remove_tap | No | String | Must be either true or false. If it is neither, it defaults to false. When this is `true`, it removes the tapback with the above attributes instead of adding it. |
+
+__Example queries:__
+- /requests?tapback=1&tap_guid=0AD2418E-19E4-47B1-9380-DB8E0A90B30C&tap_in_chat=+11231231234
+- /requests?tapback=0&tap_guid=D11C0838-02F0-4917-AE38-AC7628E1DBCC&tap_in_chat=email@email.com&remove_tap=true
+
+__Example return:__
+```json
+true
+```
+
 # `/data` requests
 
 Requests to this URL return image data, which is why they have to be sent to a different url from /requests
@@ -277,7 +312,7 @@ You should use this to get attachments from a conversation; it will simply retur
 | - | - | - | - |
 | path | Yes | String | Should contain the path of the file to get, minus the attachment prefix URL (`/private/var/mobile/Library/SMS/Attachments/`). The server also filters out all instances of `../` to prevent LFI. |
 
-Example queries:
+__Example queries:__
 - /data?path=00/D8/172BC809-BA7A-118D-18BCF0DEF/IMG_9841.JPEG
 
 ## `chat_id`
@@ -286,9 +321,9 @@ This query key can be used to get the profile picture for a certain chat.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
-| chat_id | Yes | String | This should contain the chat_id of the conversation for which you want the profile picture. It should be in the same format as the `person` paramter above |
+| chat_id | Yes | String | This should contain the chat_id of the conversation for which you want the profile picture. It should be in the same format as the `person` parameter above. If there is no profile picture associated with the specified `chat_id`, it will return a 404. If you pass in `default` for this parameter or give it a `chat_id` that corresponds with a group chat, it will return a generic profile picture. |
 
-Example queries:
+__Example queries:__
 - /data?chat_id=+15204458272
 
 ## `photo`
@@ -299,7 +334,7 @@ This will return an image from the image library, specifically from the `/var/mo
 | - | - | - | - |
 | photo | Yes | String | Should be the raw path of the photo in the filesystem, excluding the prefix of `/var/mobile/Media`. |
 
-Example queries:
+__Example queries:__
 - /data?photo=DCIM/109APPLE/IMG_8273.JPEG
 
 # `/send` requests
