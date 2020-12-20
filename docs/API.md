@@ -35,10 +35,10 @@ Retrieves the most recent `num` messages to or from `person`, offset by `offset`
 | Key | Required | Type | Description |
 | - | - | - | - |
 | person | Yes | String | Must be chat_identifier of the conversation in question (either full phone number or email address for single person conversations, or `chat` followed by 16-20 integers for group chats). You can pass multiple chat_identifiers in for the value for this paramter, delimited by commas. |
-| num | No | Int | Will be number of the most recent messages that are returned for this conversation. If it is 0, it will return all the messages for this conversation, and if this key is not included in the query, it will return the default number of messages as is specified in the settings of the app
-| offset | No | Int | Will be the offset of messages that you want to receive. For example, if you already retrieved the latest 100 messages from this contact, you could set offset to 100 to get the next 100. If this key is not included in the query, offset will be 0.
-| read | No | Bool | If value is `true`, this conversation will be marked as read on the device (or, if you pass in multiple values for `person`, all will be marked as read on the device). If this key is not included in the query, the conversation(s) will be marked as read only if you have the `Automatically mark as read` setting toggled on in the host device's settings.
-| from | No | Int | This value must either be a 0, 1, or 2. If it is 0 or the key is not included in the query, it will return all messages to and from you in this conversation. If it is 1, if will return only texts that are from you, and if it is 2, it will return only texts that are to you.
+| num | No | Int | Will be number of the most recent messages that are returned for this conversation. If it is 0, it will return all the messages for this conversation, and if this key is not included in the query, it will return the default number of messages as is specified in the settings of the app. |
+| offset | No | Int | Will be the offset of messages that you want to receive. For example, if you already retrieved the latest 100 messages from this contact, you could set offset to 100 to get the next 100. If this key is not included in the query, offset will be 0. |
+| read | No | Bool | If value is `true`, this conversation will be marked as read on the device (or, if you pass in multiple values for `person`, all will be marked as read on the device). If this key is not included in the query, the conversation(s) will be marked as read only if you have the `Automatically mark as read` setting toggled on in the host device's settings. |
+| from | No | Int | This value must either be a 0, 1, or 2. If it is 0 or the key is not included in the query, it will return all messages to and from you in this conversation. If it is 1, if will return only texts that are from you, and if it is 2, it will return only texts that are to you. |
 
 __Example queries:__
 - /requests?person=chat192370112946281736&num=500
@@ -117,18 +117,18 @@ __Example return:__
 ### Return fields description
 | Key | Description |
 | - | - |
-| date | This is the date when the text was sent, in apple's own way of storing dates (to get a unix timestamp from it, do `(date / 1000000000) + 978307200`
-| is_from_me | "1" if it is from you, "0" if it was sent to you
-| date_read | Theoretically the date at which the message was read by the other party. Is only something other than "0" if the text in question is a regular text (not a rich link, not a reaction, not just an attachment, etc), and either the other party sends read receipts or the text is to you.
-| guid | The guid of the text. Will become relevant in the case of reactions, which specify guid of the text which they are reacting to.
+| date | This is the date when the text was sent, in apple's own way of storing dates (to get a unix timestamp from it, do `(date / 1000000000) + 978307200`. |
+| is_from_me | "1" if it is from you, "0" if it was sent to you. |
+| date_read | Theoretically the date at which the message was read by the other party. Is only something other than "0" if the text in question is a regular text (not a rich link, not a reaction, not just an attachment, etc), and either the other party sends read receipts or the text is to you. |
+| guid | The guid of the text. Will become relevant in the case of reactions, which specify guid of the text which they are reacting to. |
 | subject | The subject of the text, as opposed to the body. |
 | ROWID | The rowid of the text. Normally irrelevant, but can be useful for checking order of texts, if that is something that can help you. |
 | cache_has_attachments | "1" if the text has any attachments, "0" if it has no attachments. |
-| service | "iMessage" if the text is an iMessage, "SMS" if it is an SMS.
+| service | "iMessage" if the text is an iMessage, "SMS" if it is an SMS. |
 | text | The body of the text, the most important part. |
 | attachments | This is an array of the attachments associated with this text. `filename` is the path of this attachment in the host device's filesystem, minus the prefix of `/private/var/mobile/Library/SMS/`. `mime_type` contains the mime type of this attachment. |
 | balloon_bundle_id | Generally empty, but is something for special types of messages. This is "com.apple.messages.URLBalloonProvider" for rich links, and "com.apple.DigitalTouchBalloonProvder" for digital touch messages. |
-| link_type | Only exists on rich link messages. Specifies what type of content the link leads to, generally. For most spotify links, for example, it is "Music", and for youtube videos, it is "Video". Generally is just "Website", though.
+| link_type | Only exists on rich link messages. Specifies what type of content the link leads to, generally. For most spotify links, for example, it is "Music", and for youtube videos, it is "Video". Generally is just "Website", though. |
 | link_title | The title of the link, that generally shows up right underneath the rich link preview image. |
 | link_subtitle | The subtitle of the link, that generally shows up right underneath the title of the rich link. |
 
@@ -294,6 +294,24 @@ Sends a tapback for the message with `tap_guid`, in `tap_in_chat` chat. If somet
 __Example queries:__
 - /requests?tapback=1&tap_guid=0AD2418E-19E4-47B1-9380-DB8E0A90B30C&tap_in_chat=+11231231234
 - /requests?tapback=0&tap_guid=D11C0838-02F0-4917-AE38-AC7628E1DBCC&tap_in_chat=email@email.com&remove_tap=true
+
+__Example return:__
+```json
+true
+```
+
+## `delete_chat`, `delete_text`
+
+This will delete either a conversation or a single message. If the content of the `delete_text` value has a length greater than 0, it will delete the text with the guid of the value in `delete_text`. Otherwise, it will delete the conversation with the `chat_identifier` which is in the value of `delete_chat`. If there is something incorrect about the query, it will return a warning message instead of "true". Returns plain text.
+
+| Key | Required | Type | Description |
+| - | - | - | - |
+| delete_chat | Yes | String | Must be the `chat_identifier` of the conversation to be deleted, or the `chat_identifier` of the conversation in which the message which is to be deleted resides. Either way, it must be included. |
+| delete_text | No | String | Must be the `guid` of the message which is to be deleted. If this value is not included, or its length is 0, the conversation which has the `chat_identifier` that is included in the `delete_chat` parameter of this request will be deleted. |
+
+__Example queries:__
+- /requests?delete_chat=+11231231234&delete_text=473EED50-D302-473C-920B-3353A43C6B75
+- /requests?delete_chat=email@email.org
 
 __Example return:__
 ```json

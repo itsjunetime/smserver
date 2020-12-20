@@ -1,9 +1,6 @@
 import SwiftUI
 
 struct SettingsView: View {
-	@State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-	@State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-
 	@State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
 	@State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
 	@State var default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
@@ -26,6 +23,7 @@ struct SettingsView: View {
 	private let picker_options: [String] = ["Dark", "Light", "Nord"]
 
 	@State private var display_ssl_alert: Bool = false
+	@State private var display_port_alert: Bool = false
 
 	private func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
@@ -58,8 +56,12 @@ struct SettingsView: View {
 		let socket_binding = Binding<Int>(get: {
 			self.socket_port
 		}, set: {
-			self.socket_port = Int($0)
-			UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
+			if String($0) == UserDefaults.standard.object(forKey: "port") as? String ?? "8741" {
+				self.display_port_alert = true
+			} else {
+				self.socket_port = Int($0)
+				UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
+			}
 		})
 
 		let theme_binding = Binding<Int>(get: {
@@ -241,6 +243,9 @@ struct SettingsView: View {
 				}.alert(isPresented: $display_ssl_alert, content: {
 					Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
 				})
+				.alert(isPresented: $display_port_alert, content: {
+					Alert(title: Text("Error"), message: Text("The websocket port must be different from the main server port. Please change it to fix this."))
+				})
 
 				Section {
 
@@ -261,6 +266,10 @@ struct SettingsView: View {
 
 						Spacer()
 					}
+
+					Spacer().frame(height: 10)
+
+					Text("Compatible with libSMServer 0.5.3")
 				}
 
 				Spacer()

@@ -63,13 +63,6 @@
 	[self.center callExternalVoidMethod:@selector(launchSMS) withArguments:nil];
 }
 
-- (uid_t)setUID {
-	setuid(0);
-	setgid(0);
-
-	return getuid() + getgid();
-}
-
 - (void)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths {
 	[self.center callExternalVoidMethod:@selector(sendText:) withArguments:@{@"body": body, @"subject": subject, @"address": address, @"attachment": paths}];
 }
@@ -95,8 +88,8 @@
 	[convo setLocalUserIsTyping:isTyping];
 }
 
-- (void)removeObject:(NSString *)identifier isChat:(BOOL)isChat {
-	[self.center callExternalVoidMethod:@selector(delete:) withArguments:@{@"id": identifier, @"is_chat": isChat ? @"true" : @"false"}];
+- (void)removeObject:(NSString *)chat text:(NSString *)text {
+	[self.center callExternalVoidMethod:@selector(delete:) withArguments:@{@"chat": chat, @"text": text}];
 }
 
 /// This is not being used, but I am leaving it here for future versions in case I figure out how to make it work well.
