@@ -124,7 +124,7 @@ final class ChatDelegate {
 		self.log("parsing texts with length \(texts.count)")
 
 		for i in 0..<texts.count {
-			
+
 			if texts[i]["cache_has_attachments"] as! String == "1" && texts[i]["ROWID"] != nil {
 				let att = getAttachmentFromMessage(mid: (texts[i]["ROWID"] as? String ?? "")) /// get list of attachments
 				texts[i]["attachments"] = att

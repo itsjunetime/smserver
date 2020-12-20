@@ -9,10 +9,9 @@
 
 ## Features
 - Viewing all texts & iMessages from another device
+- Sending texts, iMessages, attachments, camera roll pictures, and tapbacks remotely
 - TLS
 - Desktop Notifications upon new text arrival
-- Sending iMessages remotely, without on-device interaction
-- Sending all types of attachments from desktop
 - Ability to browse and send attachments from host device camera roll
 - Authentication to protect against spying eyes
 - Background operation of server for unlimited time, with screen on or off
@@ -23,6 +22,9 @@
 - Easy switching between Light, Dark, and Nord themes
 - Typing indicators when you or other party starts composing
 - Information on web interface about battery level and charging state
+
+### Dislaimer
+$\qquad$ Reminder that software this comes with **no warranty** and is provided **as is**. Although I do my best to prevent it from harming your device (feel free to contact me if you would like details on how I do this), I cannot ensure that it will do no harm, and I cannot be held liable if such damage occurs.
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
@@ -66,7 +68,8 @@ The source code may be updated past the latest released version, so don't be sur
 - [x] Display when other party starts typing
 - [x] Ability to send chat indicators when you start typing
 - [x] Subject lines for texts on web interface
-- [ ] Ability to send reactions from web interface - This is nearly done
+- [x] Ability to send reactions from web interface
+- [x] Ability to delete texts from the web interface
 - [ ] Search through messages from browser - This has been implemented in the API
 - [ ] Ability to delete conversations from the web interface-->
 

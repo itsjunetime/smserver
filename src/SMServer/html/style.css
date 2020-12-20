@@ -241,6 +241,10 @@ i#chargingSymbol {
 	grid-column: 1;
 	margin: 0 auto 10px auto;
 }
+.chats button.pinned .chat-top > span {
+	grid-row: 1/3;
+	grid-column: 1;
+}
 .chats button.pinned .chat-text {
 	background-color: #7776;
 	color: white;
@@ -252,7 +256,7 @@ i#chargingSymbol {
 	margin: 0;
 	grid-row: 1;
 	grid-column: 1;
-	height: 26px;
+	height: max-content;
 }
 .chats button.pinned.unread .chat-name:before,
 .unread .chat-nonpic:before {
@@ -489,6 +493,9 @@ i#chargingSymbol {
 	margin: 0 8px;
 	border-radius: 100%;
 	text-shadow: 2px 2px var(--body-background);
+}
+.trash_text * {
+	color: crimson;
 }
 .spacer {
 	min-height: 10px;

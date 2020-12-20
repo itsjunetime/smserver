@@ -8,5 +8,7 @@
 	<true/>
 	<key>get-task-allow</key>
 	<true/>
+	<key>com.apple.messages.pinned</key>
+	<true/>
 </dict>
 </plist>

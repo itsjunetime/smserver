@@ -1,4 +1,14 @@
 # Changelog
+0.6.2 &rightarrow; Unreleased
+ - Added ability to delete texts in the web interface and through the API
+ - Added checking to ensure that the websocket and server are not run on the same port
+ - Added support for showing tabpack icons when not connected to the internet
+ - Added information about which versions of libSMServer it supports
+ - Removed unnecessary functions that run on load
+ - Removed unnecessary functions from web interface
+ - Fixed issue that would cause a time display to appear when it shouldn't
+ - Fixed issues with placement of new text banner on pinned chats
+
 0.6.1 &rightarrow; 0.6.2
  - Added support for sending reactions in the web interface and through the API
  - Conversation profile pictures now show initials instead of default image if there's no profile for non-group chats

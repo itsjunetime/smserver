@@ -44,7 +44,7 @@ IMDaemonController* controller = [%c(IMDaemonController) sharedController];
 /// Attempt to connect directly to the daemon
 if ([controller connectToDaemon]) {
 	/// Do your IMCore/ChatKit stuff here
-	/// e.g. send a text, send a reaction, create a new conversation, etc
+	/// e.g. send a text, send a tapback, create a new conversation, etc
 } else {
 	/// If it failed to connect to the daemon for whatever reason
 	NSLog(@"Couldn't connect to daemon :(");
@@ -148,47 +148,37 @@ CKConversation* convo = [sharedList conversationForExistingChatWithGroupID:@"+11
 ```
 
 ## Sending a tapback
-&nbsp;&nbsp;&nbsp;&nbsp; Now, this is something that I actually don't know how to do quite yet. I almost have it, but I'm missing just one crucial part. For the tapback, you need to know two (or maybe three) things: what reaction you want to send, the guid of the message that you want to send it for, and (maybe) the chat identifier of the conversation in which the message resides. I'll just paste here the code that I've figured out so far, and if you happen to know the part that I don't, I'd more than appreciate a pull request or tip on what I need to do. Here's the code:
+&nbsp;&nbsp;&nbsp;&nbsp; Although this one took me a while to figure out, I finally cracked it and included this feature in version 0.6.2 of SMServer. For this to work, you need the `chat_identifier` of the conversation which you want to send the tapback in, the `guid` of the message to which the tapback is reacting (so to speak), and the corresponding int value to the type of tapback you want to send (see code snippet below for specifics). In this case, `address` is the `chat_identifier`, `guid` is the `guid`, and `tapback` is the tapback value. Assuming that everything works perfectly the first time you call it, here's the code you need:
 
 ```objectivec
 NSString *address = @"11231231234";
 NSString *guid = @"12345678-1234-1234-1234-123456789012";
 /*
-Love reaction: send: 2000, remove: 3000
+Love tapback: send: 2000, remove: 3000
 Thumbs up: 2001, 3001
 Thumbs down: 2002, 3002
 Haha: 2003, 3003
 Exclamation: 2004, 3004
 Question: 2005, 3005
 */
-long long int reaction = 2000;
+long long int tapback = 2000;
 
 IMChat *chat = [[%c(IMChatRegistry) sharedInstance] existingChatWithChatIdentifier:address];
 
-IMMessageItem *item = nil;
-bool repeat = true;
-
-while (repeat) { // Sometimes it takes a few tries to actually load the messages correctly
-	[chat loadMessagesUpToGUID:nil date:nil limit:1000 loadImmediately:YES];
-
-	for (int i = 0; item == nil && i < 100; i++) { /// Sometimes it takes a few tries here as well
-		item = [chat messageItemForGUID:guid];
-	}
-
-	if (item != nil)
-		repeat = false;
-	else if (!repeat)
-		return;
-}
+/// You may need to load more than 1000. I haven't yet tested this for texts
+/// more than 1000 back so it may not work.
+[chat loadMessagesUpToGUID:nil date:nil limit:1000 loadImmediately:YES];
+IMMessageItem *item = [chat messageItemForGUID:guid];
 
 IMTextMessagePartChatItem *pci = [[%c(IMTextMessagePartChatItem) alloc] _initWithItem:item text:[item body] index:0 messagePartRange:NSMakeRange(0, [[item body] length]) subject:[item subject]];
 
-if ([[[UIDevice currentDevice] systemVersion] floatValue] < 14.0)
-	[chat sendMessageAcknowledgment:reaction forChatItem:pci withMessageSummaryInfo:nil]; /// I honestly have no idea if this will work. No way to test
-else
-	[chat sendMessageAcknowledgment:reaction forChatItem:pci withAssociatedMessageInfo:@{@"amc": @1, @"ams": [[item body] string]}];
-
+if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 14.0)
+	[chat sendMessageAcknowledgment:tapback forChatItem:pci withAssociatedMessageInfo:@{@"amc": @1, @"ams": [[item body] string]}];
 ```
+
+&nbsp;&nbsp;&nbsp;&nbsp; Many of the methods in the above snippet regularly return `nil`, most commonly `[chat messageItemForGUID:]` (which you sometimes have to run up to 100 times before it actually gives you the message item), and `[chat loadMessagesUpToGUID:...]` (which sometimes just doesn't load the messages). If you are to make this reliable, you'll probably need to add quite a lot of error checking.
+
+&nbsp;&nbsp;&nbsp;&nbsp; I don't yet know how to send tapbacks on iOS 13-, since the last method used in the code snippet above (`[chat sendMessageAcknowledgment: forChatItem: withAssociatedMessageInfo:]`) doesn't exist in anything before iOS 14. However, there are very similar methods, so I'm fairly certain that it wouldn't be too hard to figure it out. Let me know if you do, and I can add the information here (if you'd like).
 
 ## Getting pinned chats
 &nbsp;&nbsp;&nbsp;&nbsp; I am actually fairly certain this is the best way to get the list of pinned chats. It's short and easy, so here's the code:
@@ -207,7 +197,20 @@ return [NSArray array];
 ```
 
 ## Receiving texts
-&nbsp;&nbsp;&nbsp;&nbsp; There is one way that I definitely know of to achieve this, and another that I'm fairly certain of but not totally sold on. The first method that I know definitely works resides in the MobileSMS app, and I'm fairly certain (though I could be wrong) that you have to have it running (at least in the background) for this method to work. Here's the code:
+&nbsp;&nbsp;&nbsp;&nbsp; There are two easy methods to achieve this: they both should work just fine, but the second requires you to leave the MobileSMS app running, while the first one doesn't. The first one simply requires adding a notification listener for the name `__kIMChatReceivedNotification`. Here's a code snippet to demonstrate:
+
+```objectivec
+[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receivedText:) name:@"__kIMChatMessageReceivedNotification" object:nil];
+
+- (void)receivedText:(NSConcreteNotification *)notif {
+	IMMessage *msg = [[notif userInfo] objectForKey:@"__kIMChatValueKey"];
+	NSString* guid = [msg guid];
+	/// I use the guid of the message that was just received, but since you can get an
+	/// IMMessage, you can use any of the details of that that you'd like.
+}
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp; Once again, this second method requires that the MobileSMS be running at least in the background the entire time, so I wouldn't recommend it. However, if you would like to use it regardless, here it is:
 
 ```objectivec
 %hook SMSApplication
@@ -217,13 +220,12 @@ return [NSArray array];
 
 	IMChat* chat = (IMChat *)[(NSConcreteNotification *)arg1 object];
 	NSString* identifier = chat.identifier;
-	/// Do whatever you want with the identifier
+	/// Do whatever you want with the identifier; it's the `chat_identifier` 
+	/// of the conversation that just sent the text
 }
 
 %end
 ```
-
-&nbsp;&nbsp;&nbsp;&nbsp; Now, in the course of writing this article, I realized that since `arg1` in the above function is of type `NSConcreteNotification`, this function is probably the selector in an `NSNotificationCenter` observer. I logged all the observers added when you open the MobileSMS app, and I'm fairly certain this observer was added for the name `__kIMChatReceivedNotification` but I have yet to explore that more.
 
 ## Setting a conversation as read
 &nbsp;&nbsp;&nbsp;&nbsp; I'm also fairly certain that I know the best way to do this; it's very straightforward (you just need the chat identifier for the conversation which you want to mark as read), so here's the code:

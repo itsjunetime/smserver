@@ -51,7 +51,7 @@
 				socket_address = prefix.split("/")[2].split(":")[0];
 				debug = true;
 				subject = false;
-				document.getElementById("sendform").setAttribute("action", prefix + "/send");
+				document.getElementById("sendform").setAttribute("action", `${prefix}/send`);
 			}
 
 			function timeConverter(t, ts_only = false, apple = true, rev = false) {
@@ -404,6 +404,7 @@
 				i.appendChild(cil);
 
 				im.outerHTML = i.outerHTML;
+				console.log("Don't worry about these 404 errors, they're expected and handled :)");
 			}
 
 			function printListOfTexts(texts, append = true, is_group = false) {
@@ -554,20 +555,6 @@
 				}
 
 				if (append && printed) tc.lastChild.scrollIntoView();
-			}
-
-			async function getLatestText(from = 1, chat = current_chat_id, read = false) {
-				if (debug) console.log(`Getting latest text for chat ${chat}`);
-				var text;
-
-				let url = `${prefix}/requests?person=${chat}&num=1&read=${read ? "true" : "false"}&from=${from}`;
-
-				let textPromise = await fetchFromURL(url);
-				var text = textPromise.texts[0];
-
-				var is_group = chat.substring(0, 4) === "chat" && !chat.includes("@");
-
-				printListOfTexts([text], true, is_group);
 			}
 
 			function clearTextContent() {
@@ -941,14 +928,15 @@
 						}
 
 					}
+
 					if (chat === current_chat_id) {
-						printListOfTexts([notif_text], true, notif_text.room_name.length > 0);
 						var typ = document.getElementById("typingIndicator");
 						if (typ !== undefined && typ !== null) {
 							var typing_outer = notif_text.is_from_me === "1" ? typing_outer = typ.outerHTML : "";
 							typ.outerHTML = "";
 							document.getElementById("text-content").innerHTML += typing_outer;
 						}
+						printListOfTexts([notif_text], true, notif_text.room_name.length > 0);
 					}
 				}
 
@@ -1232,14 +1220,22 @@
 				dialog.classList.add(text.className.includes("iMessage") ? "iMessage" : "SMS");
 				dialog.id = `${guid}-tapback`
 
-				for (var i = 0; i < fa_icons.length; i++) {
+				var icons = faLoaded ? fa_icons : ["♡", "👍", "👎", "😂", "!!", "?"];
+
+				for (var i = 0; i < icons.length; i++) {
 					var choice = document.createElement("span");
 					choice.className = "tapback_choice";
-					choice.innerHTML = fa_icons[i];
+					choice.innerHTML = icons[i];
 					choice.setAttribute("onclick", `sendTapback("${guid}", ${i}, "${current_chat_id}");`);
 
 					dialog.appendChild(choice);
 				}
+
+				var trash = document.createElement("span");
+				trash.className = "tapback_choice trash_text";
+				trash.innerHTML = faLoaded ? '<i class="fas fa-trash-alt"></i>' : "🗑";
+				trash.setAttribute("onclick", `deleteText("${guid}", "${current_chat_id}");`);
+				dialog.appendChild(trash);
 
 				if (text.parentNode.className.includes("text-area"))
 					document.getElementById("text-content").insertBefore(dialog, text.parentNode);
@@ -1253,6 +1249,24 @@
 					alert("didn't send tapback :(");
 
 				document.getElementById(`${guid}-tapback`).outerHTML = "";
+			}
+
+			async function deleteText(guid, chat = current_chat_id) {
+				if (!confirm("Are you sure you want to delete the selected text?"))
+					return;
+
+				var res = await getTextFromURL(`${prefix}/requests?delete_chat=${chat}&delete_text=${guid}`);
+				document.getElementById(`${guid}-tapback`).outerHTML = "";
+
+				if (res !== "true") {
+					alert("Couldn't delete chat :(");
+				} else {
+					var txt = document.getElementById(guid);
+					if (txt.parentNode.className.includes("text-content"))
+						txt.outerHTML = "";
+					else
+						txt.parentNode.outerHTML = "";
+				}
 			}
 
 			window.addEventListener("focus", function(event) {
