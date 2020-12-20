@@ -28,7 +28,6 @@ struct ContentView: View {
 	@State var view_settings: Bool = false
 	@State var server_running: Bool = false
 	@State var alert_connected: Bool = false
-	@State var has_root: Bool = false
 	@State var show_picker: Bool = false
 
 	static let chat_delegate = ChatDelegate()
@@ -85,9 +84,6 @@ struct ContentView: View {
 			self.stopServer()
 			self.log("Server was already running, stopped.")
 		}
-
-		/// The mobileSMS App must be running to hijack receiving texts, so we launch it.
-		//ContentView.sender.launchMobileSMS()
 
 		self.log("launched MobileSMS")
 
@@ -151,6 +147,7 @@ struct ContentView: View {
 
 			/// Handle different types of requests
 			if f == "chat_id" {
+				/// This gets profile pictures. The value for this key has to be the `chat_identifier` of the profile picture you want.
 
 				let q = req.query
 				let data = ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? "")
@@ -159,6 +156,7 @@ struct ContentView: View {
 				if data.isEmpty { res.setStatusCode(404, description: "No profile image for chat_id \(q["chat_id"] ?? "")") }
 				res.send(data)
 			} else if f == "path" {
+				/// This gets attachments. The value for this key must be the 
 
 				let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
 				let type = ContentView.chat_delegate.getAttachmentType(path: req.query["path"] ?? "")
@@ -530,14 +528,17 @@ struct ContentView: View {
 
 			ContentView.sender.sendTapback(reaction as NSNumber, forGuid: text_guid, inChat: chat)
 			return "true"
-		} /*else if f == "delete" || f == "delete_chat" {
+		} else if f == "delete_chat" || f == "delete_text" {
 			/// Deletes a conversation or text
-			guard let id: String = params["delete"] else { return "Please enter at least one identifier" }
-			let is_chat = (params["delete_chat"] ?? "true") == "true"
+			guard let chat: String = params["delete_chat"] else {
+				return "Please enter at least one identifier"
+			}
 
-			ContentView.sender.removeObject(id, isChat: is_chat)
+			let text: String = params["delete_text"] ?? ""
+
+			ContentView.sender.removeObject(chat, text: text)
 			return "true"
-		}*/
+		}
 
 		self.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
 
@@ -559,8 +560,6 @@ struct ContentView: View {
 		/// All the functions that run on scene load
 
 		self.loadFiles()
-
-		self.has_root = ContentView.sender.setUID() == uid_t(0)
 
 		self.watcher.setTexts = { value in
 			self.sentOrReceivedNewText(value ?? "None")

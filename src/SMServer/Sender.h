@@ -20,12 +20,11 @@
 
 - (id)init;
 - (void)launchMobileSMS;
-- (uid_t)setUID;
 - (void)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths;
 - (void)markConvoAsRead:(NSString *)chat_id;
 - (void)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat;
 - (void)sendTyping:(BOOL)isTyping forChat:(NSString *)chat;
-- (void)removeObject:(NSString *)identifier isChat:(BOOL)isChat;
+- (void)removeObject:(NSString *)chat text:(NSString *)text;
 //- (NSArray *)getPinnedChats;
 
 @end
@@ -35,12 +34,12 @@
 + (id)sharedInstance;
 - (NSOrderedSet *)pinnedConversationIdentifierSet;
 @end
+*/
 
 @interface IMDaemonController
 + (id)sharedController;
 - (BOOL)connectToDaemon;
 @end
- */
 
 @interface CKConversationList
 + (id)sharedConversationList;
@@ -49,6 +48,15 @@
 
 @interface CKConversation
 - (void)setLocalUserIsTyping:(_Bool)arg1;
+@end
+
+@interface IMChat
+- (void)markAllMessagesAsRead;
+@end
+
+@interface IMChatRegistry
++ (id)sharedInstance;
++ (IMChat *)existingChatWithChatIdentifier:(NSString *)chat_id;
 @end
 
 #endif /* Obj_h */
