@@ -784,16 +784,22 @@ final class ChatDelegate {
 		statement = nil
 
 		/// Always under object `$objects`
-		let objects: [Any] = plistData["$objects"] as! [Any]
+		let objects = plistData["$objects"] as! NSMutableArray
 
 		guard objects.count > 5 else {
 			return ret_dict
 		}
-
-		if let title: String = objects[6] as? String {
+		
+		if objects.count > 30 && objects[21] as? String ?? "" == "GamePigeon" {
+			ret_dict["title"] = objects[18] as? String ?? ""
+		} else if objects.count >= 19 && (objects[19] as? [String:AnyObject] ?? [String:AnyObject]())["$classname"] as? String ?? "" == "LPiTunesMediaPodcastEpisodeMetadata" {
+			ret_dict["title"] = objects[9] as? String ?? "Episode"
+			ret_dict["subtitle"] = objects[10] as? String ?? "Podcast"
+			ret_dict["type"] = "podcast"
+		} else if let title: String = objects[6] as? String {
 			ret_dict["title"] = title
 			let subtitle = objects[4] as? String ?? "//website/"
-			ret_dict["subtitle"] = String(subtitle.split(separator: "/")[1])
+			ret_dict["subtitle"] = subtitle.split(separator: "/").count > 1 ? String(subtitle.split(separator: "/")[1]) : subtitle
 			ret_dict["type"] = objects[9] as? String ?? "website"
 		} else if objects.count > 9 {
 			ret_dict["title"] = objects[8] as? String ?? "No Title Available"

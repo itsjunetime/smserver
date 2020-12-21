@@ -74,6 +74,7 @@
 			}
 
 			async function getTextFromURL(url) {
+				if (debug) console.log(`getting text from url ${url}`);
 				var return_text = "";
 				await fetch(url).then(response => response.text())
 				.then((response) => {
@@ -88,6 +89,7 @@
 			}
 
 			async function fetchFromURL(url) {
+				if (debug) console.log(`fetching url ${url}`);
 				var ret = "";
 				await fetch(url).then(response => {
 					if (!response.ok) throw new Error(`HTTP error ${response.status}`);
@@ -373,6 +375,7 @@
 			}
 
 			function setProfileImageAsText(chat_id, is_title = false) {
+				if (debug) console.log(`settings profile image for ${chat_id} as text, is_title: ${is_title}`);
 				var c = document.querySelector(`[addresses*="${chat_id}"]`);
 				var im = is_title ? document.getElementById("messagesTitleText").firstChild : c.querySelector("img");
 				var dn = c.getElementsByClassName("chat-name")[0].firstChild.innerText;
@@ -395,7 +398,7 @@
 				/// If append is true, then it places this list of texts under the existing ones. Else, it places them above the existing ones.
 				/// the Last element in `texts` will always be the farthest from the texts that were here when this was called
 				/// Also this function is a nightmare; if something is going terribly wrong it may be easier to just rewrite it than troubleshoot
-				if (debug) console.log(`printing List of texts ${String(texts.length)}, appending: ${String(append ? "true" : "false")}`);
+				if (debug) console.log(`printing List of texts ${texts.length}, appending: ${append}`);
 
 				var tc = document.getElementById("text-content");
 				var et = document.getElementsByClassName("text");
@@ -551,6 +554,7 @@
 			}
 
 			function clearTextContent() {
+				if (debug) console.log("clearing text content");
 				document.getElementById("text-content").innerHTML = '<div class="centered"> Select a chat on the left to view your messages :)</div>';
 				printed_texts = 0;
 				document.getElementById("messagesTitleText").innerHTML = "";
@@ -1164,6 +1168,7 @@
 			}
 
 			function enableSubject() {
+				if (debug) console.log("enabling subject");
 				var tbox = document.getElementById("sendbox");
 				var ntbox = tbox.cloneNode(false);
 				ntbox.className = "subjectInput";
@@ -1198,6 +1203,7 @@
 			}
 
 			function showTapbackDialog(guid) {
+				if (debug) console.log(`showing tapback dialog for guid ${guid}`);
 				var existing = document.getElementById(`${guid}-tapback`);
 				if (existing !== undefined && existing !== null) {
 					existing.outerHTML = "";
@@ -1237,6 +1243,7 @@
 			}
 
 			async function sendTapback(guid, tapback, chat = current_chat_id, remove = false) {
+				if (debug) console.log(`sending tapback ${tapback} for guid ${guid} in chat ${chat}, remove: ${remove}`);
 				var res = await getTextFromURL(`${prefix}/requests?tapback=${tapback}&tap_guid=${guid}&tap_in_chat=${chat}&remove_tap=${remove}`);
 				if (res !== "true")
 					alert("didn't send tapback :(");
@@ -1245,6 +1252,7 @@
 			}
 
 			async function deleteText(guid, chat = current_chat_id) {
+				if (debug) console.log(`attempting to delete text ${guid} in chat ${chat}`);
 				if (!confirm("Are you sure you want to delete the selected text?"))
 					return;
 
@@ -1262,18 +1270,8 @@
 				}
 			}
 
-			window.addEventListener("focus", function(event) {
-				if (current_chat_id.length === 0) return;
-				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
-				if (bt === undefined || bt === null || !bt.className.includes("unread")) return;
-				bt.className = bt.className.replace(/unread/g, "");
-				var _ = fetchFromURL(`${prefix}/requests?person=${current_chat_id}&num=1`);
-
-				var unreads = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
-			});
-
 			function setUpDND() {
+				if (debug) console.log("setting up dnd");
 				var input_form = document.getElementById("sendform");
 				input_form.ondragover = input_form.ondragenter = function(evt) {
 					evt.preventDefault();
@@ -1287,6 +1285,18 @@
 					evt.preventDefault();
 				}
 			}
+
+			window.addEventListener("focus", function(event) {
+				if (current_chat_id.length === 0) return;
+				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
+				if (bt === undefined || bt === null || !bt.className.includes("unread")) return;
+				bt.className = bt.className.replace(/unread/g, "");
+				var _ = fetchFromURL(`${prefix}/requests?person=${current_chat_id}&num=1`);
+
+				var unreads = document.getElementsByClassName("unread").length;
+				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
+			});
+
 
 			document.addEventListener("DOMContentLoaded", () => {
 				if (!window.Notification || Notification.permission === "granted")
