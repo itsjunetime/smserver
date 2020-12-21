@@ -1,4 +1,4 @@
-<html>
+<!DOCTYPE html>
 	<head>
 		<meta charset="utf-8" />
 		<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?" />
@@ -23,7 +23,6 @@
 			var has_shown_camera_roll = false;
 			var notifications = false;
 			var has_shown_new_warning = false;
-			var faLoaded = false;
 			var currently_typing = false;
 			var called_typing_wait = false;
 			var shown_ws_alert = false;
@@ -37,6 +36,7 @@
 			var typing_sleep = 10000;
 			var load_icon = '<i class="fas fa-chevron-circle-up"></i>';
 			var fa_icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>', '<i class="fas fa-grin-tears"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
+			var taps_to_print = [];
 
 			var doc_url = window.location.href.split("/")[2].split(":")[0];
 			var socket_address = doc_url;
@@ -99,18 +99,6 @@
 				})
 
 				return ret;
-			}
-
-			function setFALoaded() {
-				faLoaded = true;
-				var b = [["cameraroll", "camera", ""], ["unhidden", "paperclip", ""], ["morechats", "chevron-circle-down", " More"], ["composeshow", "plus-circle", " New"]];
-				for (var i = 0; i < b.length; i++) {
-					var btn = document.getElementById(`${b[i][0]}button`);
-					if (btn !== undefined) btn.innerHTML = `<i class="fas fa-${b[i][1]}"></i>${b[i][2]}`;
-					else document.addEventListener("DOMContentLoaded", () => { 
-						document.getElementById(b[i][0] + "button").innerHTML = `<i class="fas fa-${b[i][1]}"></i>${b[i][2]}`; 
-					});
-				}
 			}
 
 			function getTextElement(text) {
@@ -205,14 +193,14 @@
 
 								var fa = "file";
 
-								if (faLoaded && text.attachments[l].mime_type.length > 0 && smallType !== undefined) {
+								if (text.attachments[l].mime_type.length > 0 && smallType !== undefined) {
 									var dict = {'pdf': 'file-pdf', 'vcard': 'id-card', 'x-debian-package': 'archive', 'x-sh': 'file-code', 'zip': 'file-archive', 'x-python-script': 'file-code'};
 									if (dict[smallType] !== undefined) fa = dict[smallType];
 								}
 
 								var icon = `<i class="fas fa-${fa}"></i>`;
 
-								link.innerHTML = `${icon} <span>${splits[splits.length - 1]}${faLoaded ? "" : "(" + text.attachments[l].mime_type + ")"}</span>`;
+								link.innerHTML = `${icon} <span>${splits[splits.length - 1]}</span>`;
 								c.innerHTML += link.outerHTML;
 							}
 							if (bigType === "image" || bigType === "video" || bigType === "audio")
@@ -250,14 +238,10 @@
 
 					var tap = document.createElement("span");
 					tap.className = `tapback ${text.is_from_me === "1" ? "tapFromMe" : "tapFromThem"}`;
-					tap.setAttribute("tapbackType", text.associated_message_type);
+					tap.setAttribute("tapbackType", String(Number(text.associated_message_type) - 2000));
 					tap.setAttribute("sender", text.sender);
 
-					var icons = ["Love", "Thumbs up", "Thumbs down", "Haha", "!!", "??"];
-
-					if (faLoaded) icons = fa_icons;
-
-					tap.innerHTML = icons[Number(text.associated_message_type) - 2000];
+					tap.innerHTML = fa_icons[Number(text.associated_message_type) - 2000];
 
 					var elder = original.parentNode;
 					if (elder.className.includes("text-area")) {
@@ -425,6 +409,11 @@
 				for (; lnr > 0 && texts[lnr].associated_message_type !== "0"; lnr--) {}
 
 				for (var i = 0; i < texts.length; i++) {
+					if (Number(texts[i].associated_message_type) > 1999 && Number(texts[i].associated_message_type) < 3006) {
+						taps_to_print.push(texts[i]);
+						continue;
+					}
+
 					var fts = getTextElement(texts[i]);
 					if (fts.length === undefined && fts.outerHTML === "<span></span>") continue;
 					var ft = fts.length === undefined ? [fts] : fts;
@@ -552,6 +541,10 @@
 						if (lt === tc.lastChild) tc.appendChild(nrr);
 						else tc.insertBefore(nrr, lt.nextSibling);
 					}
+				}
+
+				for (var i = 0; i < taps_to_print.length; i++) {
+					getTextElement(taps_to_print[i]);
 				}
 
 				if (append && printed) tc.lastChild.scrollIntoView();
@@ -684,7 +677,7 @@
 				var more = document.createElement("button");
 				more.setAttribute("onclick", "getMoreTexts()");
 				more.id = "moretextsbutton";
-				more.innerHTML = faLoaded ? '<i class="fas fa-chevron-circle-up"></i> More' : "+ More Texts";
+				more.innerHTML = '<i class="fas fa-chevron-circle-up"></i> More';
 				myNode.appendChild(more);
 
 				printed_texts = texts.length;
@@ -758,7 +751,7 @@
 					}
 
 					document.getElementById("attachmentbutton").value = "";
-					document.getElementById("unhiddenbutton").innerHTML = faLoaded ? '<i class="fas fa-paperclip"></i>' : "📎";
+					document.getElementById("unhiddenbutton").innerHTML = '<i class="fas fa-paperclip"></i>';
 					hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
 					photos.value = "";
 
@@ -893,7 +886,7 @@
 
 				if (notif_text.is_from_me === "0") {
 					if (notif_text.text.replace(/￼/g, "").trim() === "" && notif_text.cache_has_attachments === "1")
-						new_text = `Attachment: ${notif_text.attachments[0].mime_type.split("/")[0]}`
+						new_text = `Attachment: ${notif_text.attachments[0].mime_type.split("/")[0]}`;
 
 					if (notif_text.sender !== undefined && notif_text.sender !== "nil") {
 						name = notif_text.sender;
@@ -931,12 +924,13 @@
 
 					if (chat === current_chat_id) {
 						var typ = document.getElementById("typingIndicator");
+						var typing_outer = "";
 						if (typ !== undefined && typ !== null) {
-							var typing_outer = notif_text.is_from_me === "1" ? typing_outer = typ.outerHTML : "";
+							if (notif_text.is_from_me === "1") typing_outer = typ.outerHTML;
 							typ.outerHTML = "";
-							document.getElementById("text-content").innerHTML += typing_outer;
 						}
 						printListOfTexts([notif_text], true, notif_text.room_name.length > 0);
+						if (typing_outer !== "") document.getElementById("text-content").innerHTML += typing_outer;
 					}
 				}
 
@@ -1026,8 +1020,7 @@
 				if (photo.is_favorite === "true") {
 					var h = document.createElement("span");
 					h.className = "favorite-heart";
-					h.innerHTML = faLoaded ? '<i class="fas fa-heart"></i>' : "❤";
-					if (faLoaded) h.setAttribute("style", "padding-right: 24px"); /// It's annoyingly specific, 1px off from using unicode
+					h.innerHTML = '<i class="fas fa-heart"></i>';
 					p.appendChild(h);
 				}
 				return p;
@@ -1085,7 +1078,7 @@
 				for (var i = p.length - 1; i >= 0; --i)
 					p[i].className = p[i].className.replace(/selected-photo/g, "");
 
-				document.getElementById("camerarollbutton").innerHTML = faLoaded ? '<i class="fas fa-camera"></i>' : "📷";
+				document.getElementById("camerarollbutton").innerHTML = '<i class="fas fa-camera"></i>';
 			}
 
 			function selectCameraRollPhotos() {
@@ -1114,18 +1107,16 @@
 				} else {
 					var dbl = ~~Number(level);
 
-					if (faLoaded) {
-						if (dbl < 5)
-							symbol = ' <i id="levelSymbol" class="fas fa-battery-empty"></i>';
-						else if (dbl < 25)
-							symbol = ' <i id="levelSymbol" class="fas fa-battery-quarter"></i>';
-						else if (dbl < 50)
-							symbol = ' <i id="levelSymbol" class="fas fa-battery-half"></i>';
-						else if (dbl < 75)
-							symbol = ' <i id="levelSymbol" class="fas fa-battery-three-quarters"></i>';
-						else
-							symbol = ' <i id="levelSymbol" class="fas fa-battery-full"></i>';
-					}
+					if (dbl < 5)
+						symbol = ' <i id="levelSymbol" class="fas fa-battery-empty"></i>';
+					else if (dbl < 25)
+						symbol = ' <i id="levelSymbol" class="fas fa-battery-quarter"></i>';
+					else if (dbl < 50)
+						symbol = ' <i id="levelSymbol" class="fas fa-battery-half"></i>';
+					else if (dbl < 75)
+						symbol = ' <i id="levelSymbol" class="fas fa-battery-three-quarters"></i>';
+					else
+						symbol = ' <i id="levelSymbol" class="fas fa-battery-full"></i>';
 
 					var lvs = document.getElementById("levelSymbol");
 					if (lvs !== undefined && lvs !== null)
@@ -1215,36 +1206,38 @@
 
 				var text = document.getElementById(guid);
 				var dialog = document.createElement("span");
+				var is_area = text.parentNode.className.includes("text-area");
 				dialog.className = "text tapback_dialog";
 				dialog.classList.add(text.className.includes("is_from_them") ? "is_from_them" : "is_from_me");
 				dialog.classList.add(text.className.includes("iMessage") ? "iMessage" : "SMS");
 				dialog.id = `${guid}-tapback`
 
-				var icons = faLoaded ? fa_icons : ["♡", "👍", "👎", "😂", "!!", "?"];
+				var sel = -1;
+				if (is_area) {
+					var my_taps = text.parentNode.getElementsByClassName("tapFromMe");
+					if (my_taps.length > 0) var sel = Number(my_taps[0].getAttribute("tapbackType"));
+				}
 
-				for (var i = 0; i < icons.length; i++) {
+				for (var i = 0; i < fa_icons.length; i++) {
 					var choice = document.createElement("span");
-					choice.className = "tapback_choice";
-					choice.innerHTML = icons[i];
-					choice.setAttribute("onclick", `sendTapback("${guid}", ${i}, "${current_chat_id}");`);
+					choice.className = `tapback_choice${i === sel ? " tapback_chosen" : ""}`;
+					choice.innerHTML = fa_icons[i];
+					choice.setAttribute("onclick", `sendTapback("${guid}", ${i}, "${current_chat_id}", ${i === sel});`);
 
 					dialog.appendChild(choice);
 				}
 
 				var trash = document.createElement("span");
 				trash.className = "tapback_choice trash_text";
-				trash.innerHTML = faLoaded ? '<i class="fas fa-trash-alt"></i>' : "🗑";
+				trash.innerHTML = '<i class="fas fa-trash-alt"></i>';
 				trash.setAttribute("onclick", `deleteText("${guid}", "${current_chat_id}");`);
 				dialog.appendChild(trash);
 
-				if (text.parentNode.className.includes("text-area"))
-					document.getElementById("text-content").insertBefore(dialog, text.parentNode);
-				else
-					document.getElementById("text-content").insertBefore(dialog, text);
+				document.getElementById("text-content").insertBefore(dialog, is_area ? text.parentNode : text);
 			}
 
-			async function sendTapback(guid, tapback, chat = current_chat_id) {
-				var res = await getTextFromURL(`${prefix}/requests?tapback=${tapback}&tap_guid=${guid}&tap_in_chat=${chat}`);
+			async function sendTapback(guid, tapback, chat = current_chat_id, remove = false) {
+				var res = await getTextFromURL(`${prefix}/requests?tapback=${tapback}&tap_guid=${guid}&tap_in_chat=${chat}&remove_tap=${remove}`);
 				if (res !== "true")
 					alert("didn't send tapback :(");
 
@@ -1290,7 +1283,7 @@
 					var file_box = document.getElementById("attachmentbutton");
 					file_box.files = evt.dataTransfer.files;
 					if (file_box.files.length > 0) document.getElementById('unhiddenbutton').innerHTML = file_box.files.length;
-					else document.getElementById("unhiddenbutton").innerHTML = faLoaded ? '<i class="fas fa-paperclip"></i>' : '📷';
+					else document.getElementById("unhiddenbutton").innerHTML = '<i class="fas fa-paperclip"></i>';
 					evt.preventDefault();
 				}
 			}
@@ -1318,9 +1311,8 @@
 			}
 
 		</script>
-		<!-- These next links are for fontawesome; it's how I display the reactions and various other glyphs. It's safe to remove them, but then the reactions will appear as text instead of icons, and some other things won't appear as pretty-->
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/solid.css" onload="setFALoaded();">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/fontawesome.css">
+		<link rel="stylesheet" type="text/css" href="style?fa_solid">
+		<link rel="stylesheet" type="text/css" href="style?font_awesome">
 		<link rel="stylesheet" type="text/css" href="style?main">
 		<link rel="stylesheet" type="text/css" href="style?custom">
 		<!--theme optional section; next line must remain as comment-->
@@ -1342,10 +1334,10 @@
 				<div class="chats-search">
 					<input type="text" id="searchBox" placeholder="Search" onkeydown="if (event.keyCode === 13) submitSearch();"></input>
 					<button onclick="Notification.requestPermission();" id="notificationbutton">Notifications</button>
-					<button onclick="showPopup();" id="composeshowbutton">+ New</button>
+					<button onclick="showPopup();" id="composeshowbutton"><i class="fas fa-plus-circle"></i> New</button>
 				</div>
 				<div class="chats-list">
-					<button onclick="getMoreChats()" id="morechatsbutton"><p>+ More Chats</p></button>
+					<button onclick="getMoreChats()" id="morechatsbutton"><i class="fas fa-chevron-circle-down"></i> More</button>
 				</div>
 			</div>
 			<div class="messages">
@@ -1357,8 +1349,8 @@
 				</div>
 				<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
 				<form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
-					<button type="button" onclick="displayCameraRoll();" id="camerarollbutton">&#128247</button>
-					<button type="button" onclick="document.getElementById('attachmentbutton').click();" id="unhiddenbutton">&#128206</button>
+					<button type="button" onclick="displayCameraRoll();" id="camerarollbutton"><i class="fas fa-camera"></i></button>
+					<button type="button" onclick="document.getElementById('attachmentbutton').click();" id="unhiddenbutton"><i class="fas fa-paperclip"></i></button>
 					<input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').innerHTML = document.getElementById('attachmentbutton').files.length;"></input>
 					<input type="text" name="photos" id="hiddenphotobutton" style="display: none;">
 					<textarea id="sendbox" class="input" name="text" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
