@@ -3,6 +3,8 @@
  - Added ability to delete texts in the web interface and through the API
  - Added ability to remove previously sent tapbacks
  - Added checking to ensure that the websocket and server are not run on the same port
+ - Added support for GamePidgeon & Podcast Rich Links
+ - Added extra error checking to prevent crashes on failed rich link parsings
  - Added offline usage of Font Awesome, for much faster loading times
  - Added information about which versions of libSMServer it supports
  - Optimized text retrieval for group chats
@@ -11,6 +13,7 @@
  - Fixed issue where tapbacks would not appear on the web interface because the message which they were reacting to had not been printed yet.
  - Fixed issue that would cause a time display to appear when it shouldn't
  - Fixed issues with placement of new text banner on pinned chats
+ - Fixed small issues with display of body of texts
 
 0.6.1 &rightarrow; 0.6.2
  - Added support for sending reactions in the web interface and through the API

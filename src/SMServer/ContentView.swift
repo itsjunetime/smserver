@@ -293,7 +293,7 @@ struct ContentView: View {
 					let font_data = try Data.init(contentsOf: f)
 					res.send(font_data)
 				} catch {
-					log("WARNING: Can't get font for \(font)", warning: true)
+					self.log("WARNING: Can't get font for \(font)", warning: true)
 					res.send("")
 				}
 			} else {

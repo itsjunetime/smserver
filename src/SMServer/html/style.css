@@ -372,6 +372,9 @@ i#chargingSymbol {
 	padding: 7px 12px;
 	line-height: 21px; /* Specific but that's what it is */
 }
+.text > span {
+	word-break: break-word;
+}
 .text:before, .text:after {
 	content: '';
 	position: absolute;
@@ -832,7 +835,6 @@ i#chargingSymbol {
 	margin-right: 10px;
 	max-height: 32px;
 	max-width: 32px;
-	border-radius: 0 !important;
 }
 .richLinkUnder.richLinkSmall .richLinkDescription {
 	margin: auto 0;

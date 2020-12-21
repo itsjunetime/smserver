@@ -22,7 +22,7 @@
 #camerarollbutton, #unhiddenbutton {
 	background-color: var(--light-button-background);
 }
-.is_from_me * {
+.is_from_me.text span {
 	color: #e6e6e6;
 }
 .is_from_them {
