@@ -249,7 +249,11 @@ struct SettingsView: View {
 
 				Section {
 
-					Spacer().frame(height: 30)
+					Text("Compatible with libSMServer 0.5.3")
+						.font(.callout)
+						.foregroundColor(.gray)
+
+					Spacer().frame(height: 15)
 
 					HStack {
 						Spacer()
@@ -266,16 +270,9 @@ struct SettingsView: View {
 
 						Spacer()
 					}
-
-					Spacer().frame(height: 10)
-
-					Text("Compatible with libSMServer 0.5.3")
 				}
 
-				Spacer()
-
 			}.padding()
-			.animation(.easeOut(duration: 0.16))
 		}
 	}
 }
