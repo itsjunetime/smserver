@@ -184,7 +184,6 @@ i#chargingSymbol {
 	border-bottom: 1px solid var(--chats-border);
 	display: grid;
 	grid-template-columns: 1fr max-content max-content;
-	grid-gap: 6px;
 }
 .chats-list {
 	grid-row: 3;
@@ -494,6 +493,9 @@ i#chargingSymbol {
 	border-radius: 100%;
 	text-shadow: 2px 2px var(--body-background);
 }
+.tapback_chosen * {
+	color: dodgerblue;
+}
 .trash_text * {
 	color: crimson;
 }
@@ -541,7 +543,6 @@ i#chargingSymbol {
 	font-size: calc(var(--send-box-size) - 8px);
 	height: var(--send-box-size);
 	padding: 5px calc(var(--send-button-size) + 10px) 0 10px;
-	margin: 0;
 }
 #sendbox.input {
 	grid-column: 3/5;
@@ -676,16 +677,14 @@ i#chargingSymbol {
 }
 #composeshowbutton {
 	padding: 0px 8px;
-	margin-right: -6px;
 }
 #searchBox {
-	width: 100%;
-	height: 100%;
 	outline: none;
 	border: none;
 	background-color: var(--light-button-background);
 	border-radius: 3px;
 	padding-left: 6px;
+	margin-right: 6px;
 }
 #notificationbutton {
 	width: max-content;
@@ -751,7 +750,7 @@ i#chargingSymbol {
 	position: relative;
 	opacity: 0.8;
 	margin-left: -40px;
-	padding-right: 25px;
+	padding-right: 24px;
 	top: -20px;
 }
 .readreceipt {
