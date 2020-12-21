@@ -1,5 +1,5 @@
 # Changelog
-0.6.2 &rightarrow; Unreleased
+0.6.2 &rightarrow; 0.6.3
  - Added ability to delete texts in the web interface and through the API
  - Added ability to remove previously sent tapbacks
  - Added checking to ensure that the websocket and server are not run on the same port

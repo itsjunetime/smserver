@@ -249,7 +249,7 @@ struct SettingsView: View {
 
 				Section {
 
-					Text("Compatible with libSMServer 0.5.3")
+					Text("Compatible with libSMServer 0.5.4")
 						.font(.callout)
 						.foregroundColor(.gray)
 
