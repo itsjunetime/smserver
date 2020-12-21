@@ -123,6 +123,8 @@ final class ChatDelegate {
 	final func parseTexts(_ texts: inout [[String:Any]], db: OpaquePointer?, contact_db: OpaquePointer?, is_group: Bool = false) {
 		self.log("parsing texts with length \(texts.count)")
 
+		var names = [String:String]() /// key: id, val: display name.
+
 		for i in 0..<texts.count {
 
 			if texts[i]["cache_has_attachments"] as! String == "1" && texts[i]["ROWID"] != nil {
@@ -133,11 +135,17 @@ final class ChatDelegate {
 			}
 
 			if is_group && texts[i]["is_from_me"] as? String ?? "0" == "0" && (texts[i]["id"] as? String)?.count != 0 {
-				let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: (texts[i]["id"] as? String) ?? "")
-				texts[i]["sender"] = name
+				if names[texts[i]["id"] as! String] != nil {
+					texts[i]["sender"] = names[texts[i]["id"] as! String]
+				} else {
+					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: (texts[i]["id"] as? String) ?? "")
+					texts[i]["sender"] = name
+					names[texts[i]["id"] as! String] = name
+				}
 			}
 
-			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 && (texts[i]["balloon_bundle_id"] as? String) != "com.apple.DigitalTouchBalloonProvder" && texts[i]["ROWID"] != nil {
+			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 &&
+				(texts[i]["balloon_bundle_id"] as? String) != "com.apple.DigitalTouchBalloonProvder" && texts[i]["ROWID"] != nil {
 				texts[i]["balloon_bundle_id"] = "com.apple.messages.URLBalloonProvider"
 				let link_info = getLinkInfo(texts[i]["ROWID"] as? String ?? "", db: db)
 

@@ -67,6 +67,12 @@ struct ContentView: View {
 	@State var nord_style =
 	"""
 	"""
+	@State var fa_solid_style =
+	"""
+	"""
+	@State var fa_style =
+	"""
+	"""
 
 	func log(_ s: String, warning: Bool = false) {
 		/// This logs to syslog
@@ -93,7 +99,7 @@ struct ContentView: View {
 			server.password = cert_pass
 		}
 
-		server.add("/") { (req, res, next) in
+		server.add("/") { (req, res, _) in
 			let ip = req.connection?.remoteAddress ?? ""
 			res.setValue("text/html", forHTTPHeaderField: "Content-type")
 
@@ -104,8 +110,8 @@ struct ContentView: View {
 
 		server.add("/requests") { (req, res, _) in
 			/// There is no authentication handler here 'cause it handles that within parseAndReturn()
-			/// since they send the password auth request to this subdirectory
-			/// This handler is part of the API, and returns JSON info.
+			/// since they send the password auth request to this subdirectory.
+			/// This handler is part of the API, and mostly returns JSON info with some plain text mixed in.
 
 			self.log("Getting requests..")
 
@@ -130,7 +136,7 @@ struct ContentView: View {
 			}
 		}
 
-		server.add("/data") { (req, res, next) in
+		server.add("/data") { (req, res, _) in
 			/// This handler returns attachment data and profile/attachment/photo images.
 			let ip = req.connection?.remoteAddress ?? ""
 			self.log("GET data: " + ip)
@@ -156,7 +162,8 @@ struct ContentView: View {
 				if data.isEmpty { res.setStatusCode(404, description: "No profile image for chat_id \(q["chat_id"] ?? "")") }
 				res.send(data)
 			} else if f == "path" {
-				/// This gets attachments. The value for this key must be the 
+				/// This gets attachments. The value for this key must be the path at which the attachment resides,
+				/// minus the prefix of `/private/var/mobile/Library/SMS/`
 
 				let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
 				let type = ContentView.chat_delegate.getAttachmentType(path: req.query["path"] ?? "")
@@ -165,6 +172,8 @@ struct ContentView: View {
 				res.setValue("inline; filename=\(String(req.query["path"]?.split(separator: "/").last ?? ""))", forHTTPHeaderField: "Content-Disposition")
 				res.send(dataResponse)
 			} else if f == "photo" {
+				/// This gets an image from the camera roll. The value for this key must be the path at which the image resides,
+				/// minus the prefix of `/var/mobile/Media/`
 
 				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 				res.send(ContentView.chat_delegate.getPhotoDatafromPath(path: req.query["photo"] ?? ""))
@@ -174,7 +183,7 @@ struct ContentView: View {
 			}
 		}
 
-		server.add("/send") { (req, res, next) in
+		server.add("/send") { (req, res, _) in
 			/// This handles a post request to send a text
 			let ip = req.connection?.remoteAddress ?? ""
 			self.log("POST uploads: " + ip)
@@ -237,7 +246,7 @@ struct ContentView: View {
 			res.send(send ? "true" : "false")
 		}
 
-		server.add("/style") { (req, res, next) in
+		server.add("/style") { (req, res, _) in
 			/// Returns the style.css file as text
 			let ip = req.connection?.remoteAddress ?? ""
 
@@ -259,6 +268,36 @@ struct ContentView: View {
 				res.send(self.light_style)
 			} else if s == "nord" {
 				res.send(self.nord_style)
+			} else if s == "fa_solid" {
+				res.send(self.fa_solid_style)
+			} else if s == "font_awesome" {
+				res.send(self.fa_style)
+			}
+		}
+
+		server.add("/webfonts") { (req, res, _) in
+			/// Gets the fonts necessary for fontawesome
+			let ip = req.connection?.remoteAddress ?? ""
+
+			self.log("GET webfonts: \(ip)")
+
+			if !self.checkIfAuthenticated(ras: ip) {
+				res.send("")
+				return
+			}
+
+			let font = Array(req.query.keys)[0]
+
+			if let f = Bundle.main.url(forResource: font, withExtension: "", subdirectory: "html/webfonts") {
+				do {
+					let font_data = try Data.init(contentsOf: f)
+					res.send(font_data)
+				} catch {
+					log("WARNING: Can't get font for \(font)", warning: true)
+					res.send("")
+				}
+			} else {
+				res.send("")
 			}
 		}
 
@@ -343,7 +382,9 @@ struct ContentView: View {
 		   let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
 		   let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html"),
 		   let l = Bundle.main.url(forResource: "light_theme", withExtension: "css", subdirectory: "html"),
-		   let n = Bundle.main.url(forResource: "nord_theme", withExtension: "css", subdirectory: "html") {
+		   let n = Bundle.main.url(forResource: "nord_theme", withExtension: "css", subdirectory: "html"),
+		   let fa = Bundle.main.url(forResource: "font_awesome", withExtension: "css", subdirectory: "html/fontawesome"),
+		   let fs = Bundle.main.url(forResource: "fa_solid", withExtension: "css", subdirectory: "html/fontawesome") {
 			do {
 				/// Set up all the pages as multi-line string variables, set values within them.
 				self.main_page = try String(contentsOf: h, encoding: .utf8)
@@ -360,6 +401,8 @@ struct ContentView: View {
 				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
 				self.light_style = try String(contentsOf: l, encoding: .utf8)
 				self.nord_style = try String(contentsOf: n, encoding: .utf8)
+				self.fa_style = try String(contentsOf: fa, encoding: .utf8)
+				self.fa_solid_style = try String(contentsOf: fs, encoding: .utf8)
 			} catch {
 				self.log("WARNING: ran into an error with loading the files, try again.")
 			}
@@ -520,7 +563,7 @@ struct ContentView: View {
 			var reaction: Int = (Int(params["tapback"] ?? "-1") ?? -1) + 2000 /// reactions are 2000 - 2005
 			let text_guid: String = params["tap_guid"] ?? "0"
 			let chat: String = params["tap_in_chat"] ?? "0"
-			let remove = (params["remove"] ?? "false") == "true"
+			let remove = (params["remove_tap"] ?? "false") == "true"
 
 			if reaction > 2005 || reaction < 2000 { return "tapback value must be at least 0 and no greater than 5" }
 
