@@ -17,13 +17,19 @@ struct SettingsView: View {
 	@State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
 	@State var send_typing: Bool = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
 	@State var combine_contacts: Bool = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
+	@State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
 
 	var grey_box = Color("BeginningBlur")
 
 	private let picker_options: [String] = ["Dark", "Light", "Nord"]
 
+	private let cl_red = 0.60
+	private let cl_grn = 0.65
+
 	@State private var display_ssl_alert: Bool = false
 	@State private var display_port_alert: Bool = false
+
+	@State private var rect: CGRect = CGRect()
 
 	private func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
@@ -137,6 +143,13 @@ struct SettingsView: View {
 			UserDefaults.standard.setValue($0, forKey: "override_no_wifi")
 		})
 
+		let load_binding = Binding<Bool>(get: {
+			self.start_on_load
+		}, set: {
+			self.start_on_load = $0
+			UserDefaults.standard.setValue($0, forKey: "start_on_load")
+		})
+
 		return ScrollView {
 			VStack(alignment: .leading, spacing: 16) {
 				Text("Settings")
@@ -190,6 +203,7 @@ struct SettingsView: View {
 
 				HStack {
 					Text("Theme")
+						.font(.headline)
 
 					Spacer().frame(width: 20)
 
@@ -234,6 +248,7 @@ struct SettingsView: View {
 							Toggle("Enable backgrounding", isOn: background_binding)
 							Toggle("Enable SSL", isOn: secure_binding)
 							Toggle("Allow operation off of Wifi", isOn: override_binding)
+							Toggle("Start server on app launch", isOn: load_binding)
 
 						}
 					}.padding(10)
@@ -248,31 +263,117 @@ struct SettingsView: View {
 				})
 
 				Section {
+					VStack {
+						Button(action: {
+							let url = URL.init(string: "https://github.com/iandwelker/smserver/blob/master/docs/API.md")
+							guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
+							UIApplication.shared.open(github_url)
+						}) {
+							ZStack {
+								LinearGradient(
+									gradient: Gradient(
+										colors: [
+											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 240.0) / 255),
+											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 270.0) / 255)
+										]
+									),
+									startPoint: .topLeading, endPoint: .bottomTrailing
+								).mask(
+									HStack {
+										Text("View API Documentation")
+											.aspectRatio(contentMode: .fill)
+										Spacer()
+										Image(systemName: "doc.text")
+											.resizable()
+											.aspectRatio(contentMode: .fit)
+									}
+								).frame(height: 20)
+							}
+						}
 
-					Text("Compatible with libSMServer 0.5.4")
-						.font(.callout)
-						.foregroundColor(.gray)
+						Spacer().frame(height: 20)
 
-					Spacer().frame(height: 15)
+						Button(action: {
+							let url = URL.init(string: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD")
+							guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
+							UIApplication.shared.open(github_url)
+						}) {
+							ZStack {
+								LinearGradient(
+									gradient: Gradient(
+										colors: [
+											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 260.0) / 255),
+											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 290.0) / 255)
+										]
+									),
+									startPoint: .topLeading, endPoint: .bottomTrailing
+								).mask(
+									HStack {
+										Text("Donate to support SMServer")
+										Spacer()
+										Image(systemName: "link")
+											.resizable()
+											.aspectRatio(contentMode: .fit)
+									}
+								).frame(height: 20)
+							}
+						}
 
-					HStack {
-						Spacer()
+						Spacer().frame(height: 20)
 
 						Button(action: {
 							self.resetDefaults()
 						}) {
-							Text("Reset Defaults")
-								.padding(.init(top: 8, leading: 24, bottom: 8, trailing: 24))
-								.background(Color.blue)
-								.cornerRadius(8)
-								.foregroundColor(Color.white)
+							ZStack {
+								LinearGradient(
+									gradient: Gradient(
+										colors: [
+											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 280.0) / 255),
+											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 310.0) / 255)
+										]
+									),
+									startPoint: .topLeading, endPoint: .bottomTrailing
+								).mask(
+									HStack {
+										Text("Reset Settings to Default")
+										Spacer()
+										Image(systemName: "arrow.clockwise")
+											.resizable()
+											.aspectRatio(contentMode: .fit)
+									}
+								).frame(height: 20)
+							}
 						}
 
-						Spacer()
-					}
+					}.padding(10)
+					.background(grey_box)
+					.cornerRadius(8)
+					.background(GeometryGetter(rect: $rect))
+
+					Text("Compatible with libSMServer 0.6.0")
+						.font(.callout)
+						.foregroundColor(.gray)
 				}
 
 			}.padding()
 		}
+	}
+}
+
+struct GeometryGetter: View {
+	@Binding var rect: CGRect
+
+	var body: some View {
+		return GeometryReader { geometry in
+			self.makeView(geometry: geometry)
+		}
+	}
+
+	func makeView(geometry: GeometryProxy) -> some View {
+		DispatchQueue.main.async {
+			self.rect = geometry.frame(in: .global)
+		}
+
+		return Rectangle().fill(Color.clear)
 	}
 }
