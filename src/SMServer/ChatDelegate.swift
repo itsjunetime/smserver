@@ -2,30 +2,16 @@ import Foundation
 import SQLite3
 import SwiftUI
 import Photos
-import os
 
 final class ChatDelegate {
 	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-	let prefix: String = "SMServer_app: "
-
-	static let addressBookAddress: String = "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb"
-	static let attachmentStoragePrefix: String = "/private/var/mobile/Library/SMS/"
-	static let photoStoragePrefix: String = "/var/mobile/Media/"
-	static let userHomeString: String = "/private/var/mobile/"
-
-	final func log(_ s: String, warning: Bool = false) {
-		/// Logs to syslog/console
-		if self.debug || warning {
-			os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
-		}
-	}
 
 	final func refreshVars() {
 		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	}
 
-	final func createConnection(connection_string: String = "/private/var/mobile/Library/SMS/sms.db") -> OpaquePointer? {
-		/// This simply returns an opaque pointer to the database at $connection_string, allowing for sqlite connections.
+	final func createConnection(connection_string: String = Const.sms_db_address) -> OpaquePointer? {
+		/// This simply returns an opaque pointer to the database at `connection_string`, allowing for sqlite connections.
 
 		var db: OpaquePointer?
 
@@ -33,7 +19,7 @@ final class ChatDelegate {
 		let return_code = sqlite3_open_v2(connection_string, &db, SQLITE_OPEN_READONLY, nil)
 
 		if return_code != SQLITE_OK {
-			self.log("WARNING: error opening database at \(connection_string): \(return_code)")
+			Const.log("WARNING: error opening database at \(connection_string): \(return_code)", debug: self.debug)
 			sqlite3_close(db)
 			db = nil
 			return db
@@ -41,7 +27,7 @@ final class ChatDelegate {
 
 		sqlite3_busy_timeout(db, 20)
 
-		self.log("opened database")
+		Const.log("opened database", debug: self.debug)
 
 		/// Return pointer to the database
 		return db
@@ -50,41 +36,65 @@ final class ChatDelegate {
 	final func closeDatabase(_ db: inout OpaquePointer?) {
 		let close_code = sqlite3_close(db)
 		if close_code != SQLITE_OK {
-			self.log("WARNING: error closing database. Errror: \(close_code)", warning: true)
+			Const.log("WARNING: error closing database. Errror: \(close_code)", debug: self.debug, warning: true)
 		}
 		db = nil
 	}
 
-	final func selectFromSql(db: OpaquePointer?, columns: [String], table: String, condition: String = "", num_items: Int = -1, offset: Int = 0, split_ids: Bool = false) -> [[String:String]] {
-		/// This executes an SQL query, specifically 'SELECT $columns from $table $condition LIMIT $offset, $num_items', on $db
+	/// It's just too big to do one line
+	final func selectFromSql(
+		db: OpaquePointer?,
+		columns: [String],
+		table: String,
+		condition: String = "",
+		args: [Any] = [Any](),
+		num_items: Int = -1,
+		offset: Int = 0,
+		split_ids: Bool = false
+	) -> [[String:String]] {
+		/// This executes an SQL query, basically 'SELECT `column` from `table` `condition` LIMIT `offset`, `num_items`', on `db`
 		/// If you join tables, you may need to use stuff like `SELECT m.attr, h.otherattr from table m inner join othertable h;`.
-		/// If you leave $split_ids as false, it will return the nested dicts with their original select columns, e.g. `m.attr` and `h.otherattr`
+		/// If you leave `split_ids` as false, it will return the nested dicts with their original select columns, e.g. `m.attr` and `h.otherattr`
 		/// However, if you set it to true, it will return them without the table identifier, e.g. `attr` and `otherattr`. Be conscious of that.
 
+		/// You also must be very careful of inserting values into the condition: For every place that you want to insert a String or Int into the
+		/// condition (e.g. `LIKE "STRING"`), you need to place a `?` in the `condition` string, and place the Strings/Ints that need to replace them
+		/// into the `args` array.
+		/// For example, to do `... WHERE text LIKE "HELLO" AND ROWID IS 4`, you'll want `condition == "... WHERE text like ? AND ROWID IS ?`
+		/// and `args == ["HELLO", 4]`. This will allow them to be sanitized and inserted correctly.
+
 		/// Construct the query
-		var sqlString = "SELECT " + columns.joined(separator: ", ")
-		sqlString += " from " + table
+		var sqlString = "SELECT \(columns.joined(separator: ", ")) from \(table)"
 		if condition != "" {
-			sqlString += " " + condition
+			sqlString += " \(condition)"
 		}
 		if num_items > 0 || offset != 0 {
-			sqlString += " LIMIT \(offset), \(String(num_items))"
+			sqlString += " LIMIT \(offset), \(num_items)"
 		}
 		sqlString += ";"
 
-		self.log("full sql query: " + sqlString)
+		Const.log("full sql query: \(sqlString)", debug: self.debug)
 
 		var statement: OpaquePointer?
 
-		self.log("opened statement")
+		Const.log("opened statement", debug: self.debug)
 
 		var main_return = [[String:String]]()
 
-		/// Prepare the database for querying $sqlString
+		/// Prepare the database for querying `sqlString`
 		if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(db)!)
-			self.log("WARNING: error preparing select: \(errmsg)", warning: true)
+			Const.log("WARNING: error preparing select: \(errmsg)", debug: self.debug, warning: true)
 			return main_return
+		}
+
+		for i in 0..<args.count {
+			let arg = args[i]
+			if arg is Int {
+				sqlite3_bind_int(statement, Int32(i + 1), Int32(arg as! Int))
+			} else if arg is String {
+				sqlite3_bind_text(statement, Int32(i + 1), NSString(string: arg as! String).utf8String, -1, nil)
+			}
 		}
 
 		var i = 0
@@ -110,18 +120,18 @@ final class ChatDelegate {
 		/// Finalize; has to be done after getting info.
 		if sqlite3_finalize(statement) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(db)!)
-			self.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
+			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", debug: self.debug, warning: true)
 		}
 
 		statement = nil
-		self.log("destroyed statement")
+		Const.log("destroyed statement", debug: self.debug)
 
-		/// Since we passed $db in as a parameter, we don't close the database here, but rather in the function where $db was constructed
+		/// Since we passed `db` in as a parameter, we don't close the database here, but rather in the function where `db` was constructed
 		return main_return
 	}
 
 	final func parseTexts(_ texts: inout [[String:Any]], db: OpaquePointer?, contact_db: OpaquePointer?, is_group: Bool = false) {
-		self.log("parsing texts with length \(texts.count)")
+		Const.log("parsing texts with length \(texts.count)", debug: self.debug)
 
 		var names = [String:String]() /// key: id, val: display name.
 
@@ -130,8 +140,6 @@ final class ChatDelegate {
 			if texts[i]["cache_has_attachments"] as! String == "1" && texts[i]["ROWID"] != nil {
 				let att = getAttachmentFromMessage(mid: (texts[i]["ROWID"] as? String ?? "")) /// get list of attachments
 				texts[i]["attachments"] = att
-			} else {
-				texts[i]["attachments"] = [[String:String]]()
 			}
 
 			if is_group && texts[i]["is_from_me"] as? String ?? "0" == "0" && (texts[i]["id"] as? String)?.count != 0 {
@@ -155,16 +163,24 @@ final class ChatDelegate {
 			}
 
 			texts[i].removeValue(forKey: "payload_data")
+
+			/// Change values that shouldn't be strings to the correct type
+			if texts[i]["ROWID"] != nil { texts[i]["ROWID"] = Int(texts[i]["ROWID"] as! String) }
+			if texts[i]["is_from_me"] != nil { texts[i]["is_from_me"] = texts[i]["is_from_me"] as! String == "1" }
+			if texts[i]["date"] != nil { texts[i]["date"] = Int(texts[i]["date"] as! String) }
+			if texts[i]["date_read"] != nil { texts[i]["date_read"] = Int(texts[i]["date_read"] as! String) }
+			if texts[i]["cache_has_attachments"] != nil { texts[i]["cache_has_attachments"] = texts[i]["cache_has_attachments"] as! String == "1" }
+			if texts[i]["associated_message_type"] != nil { texts[i]["associated_message_type"] = Int(texts[i]["associated_message_type"] as! String) }
 		}
 	}
 
 	final func getDisplayName(chat_id: String) -> String {
 		/// This does the same thing as getDisplayName, but doesn't take db as an argument. This allows for fetching of a single name,
 		/// when you don't need to get a lot of names at once.
-		self.log("Getting display name for \(chat_id)")
+		Const.log("Getting display name for \(chat_id)", debug: self.debug)
 
 		/// Connect to contact database
-		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
+		var contact_db = createConnection(connection_string: Const.contacts_address)
 		var sms_db = createConnection()
 		if contact_db == nil || sms_db == nil { return "" }
 
@@ -175,21 +191,21 @@ final class ChatDelegate {
 		closeDatabase(&sms_db)
 		closeDatabase(&contact_db)
 
-		self.log("destroyed dbs")
+		Const.log("destroyed dbs", debug: self.debug)
 
 		return name
 	}
 
 	final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String) -> String {
-		/// Gets the first + last name of a contact with the phone number or email of $chat_id
+		/// Gets the first + last name of a contact with the phone number or email of `chat_id`
 
-		self.log("Getting display name for \(chat_id) with db")
+		Const.log("Getting display name for \(chat_id) with db", debug: self.debug)
 
 		var display_name_array = [[String:String]]()
 
 		/// Support for group chats
 		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20 {
-			let check_name = selectFromSql(db: sms_db, columns: ["display_name"], table: "chat", condition: "where chat_identifier is \"\(chat_id)\"", num_items: 1)
+			let check_name = selectFromSql(db: sms_db, columns: ["display_name"], table: "chat", condition: "where chat_identifier is ?", args: [chat_id], num_items: 1)
 
 			if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
 				let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
@@ -201,15 +217,15 @@ final class ChatDelegate {
 		}
 
 		if chat_id.contains("@") { /// if an email
-			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"")
+			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE ?", args: ["%\(chat_id)%"])
 		} else if chat_id.contains("+") {
-			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
+			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE ?", args: ["%\(chat_id)%"], num_items: 1)
 		} else {
-			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"")
+			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE ? and c16Phone NOT LIKE \"%+%\"", args: ["%\(chat_id) "])
 		}
 
 		if display_name_array.count == 0 {
-			let unc = selectFromSql(db: sms_db, columns: ["uncanonicalized_id"], table: "handle", condition: "WHERE id is \"\(chat_id)\"")
+			let unc = selectFromSql(db: sms_db, columns: ["uncanonicalized_id"], table: "handle", condition: "WHERE id is ?", args: [chat_id])
 
 			guard unc.count > 0, let ret = unc[0]["uncanonicalized_id"] else {
 				return chat_id
@@ -219,18 +235,18 @@ final class ChatDelegate {
 		}
 
 		/// combine first name and last name
-		let full_name: String = (display_name_array[0]["c0First"] ?? "no_first") + " " + (display_name_array[0]["c1Last"] ?? "no_last")
+		let full_name: String = "\(display_name_array[0]["c0First"] ?? "no_first") \(display_name_array[0]["c1Last"] ?? "no_last")"
 
-		self.log("full name for \(chat_id) is \(full_name)")
+		Const.log("full name for \(chat_id) is \(full_name)", debug: self.debug)
 
 		return full_name
 	}
 
 	final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
 
-		self.log("Getting group chat recipients for \(ci)")
+		Const.log("Getting group chat recipients for \(ci)", debug: self.debug)
 
-		let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is \"\(ci)\"))")
+		let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is ?))", args: [ci])
 
 		var ret_val = [String]()
 
@@ -241,24 +257,23 @@ final class ChatDelegate {
 			ret_val.append((ds == "" ? i["id"] : ds) ?? "")
 		}
 
-		self.log("Finished retrieving recipients for \(ci)")
+		Const.log("Finished retrieving recipients for \(ci)", debug: self.debug)
 
 		return ret_val
 	}
 
 	final func loadMessages(num: String, num_items: Int, offset: Int = 0, from: Int = 0, surrounding: Int? = nil) -> [[String:Any]] {
-		/// This loads the latest $num_items messages from/to $num, offset by $offset.
+		/// This loads the latest `num_items` messages from/to `num`, offset by `offset`.
 
-		self.log("getting messages for \(num)")
+		Const.log("getting messages for \(num)", debug: self.debug)
 
 		/// Create connection to text and contact databases
 		var db = createConnection()
-		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
+		var contact_db = createConnection(connection_string: Const.contacts_address)
 		if db == nil || contact_db == nil { return [[String:String]]() }
 
 		/// check if it's a group chat
 		let is_group = num.prefix(4) == "chat" && !num.contains("@") && num.count >= 20
-		var messages = [[String:Any]]()
 		var from_string: String = ""
 		var fixed_num = num
 
@@ -271,11 +286,7 @@ final class ChatDelegate {
 			from_string = " and \(is_group ? "m." : "")is_from_me is \(from == 1 ? 1 : 0)"
 		}
 
-		if is_group {
-			messages = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \"\(fixed_num)\"\(from_string))) order by m.date desc", num_items: num_items, offset: offset, split_ids: true)
-		} else {
-			messages = selectFromSql(db: db, columns: ["ROWID", "guid", "text", "subject", "is_from_me", "date", "date_read", "service", "cache_has_attachments", "balloon_bundle_id", "payload_data", "associated_message_guid", "associated_message_type"], table: "message", condition: "WHERE ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id IN (SELECT ROWID from chat WHERE chat_identifier is \"\(fixed_num)\"\(from_string)) ORDER BY message_date DESC) ORDER BY date DESC", num_items: num_items, offset: offset)
-		}
+		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is ?\(from_string))) order by m.date desc", args: [fixed_num], num_items: num_items, offset: offset, split_ids: true)
 
 		parseTexts(&messages, db: db, contact_db: contact_db, is_group: is_group)
 
@@ -283,19 +294,19 @@ final class ChatDelegate {
 		closeDatabase(&db)
 		closeDatabase(&contact_db)
 
-		self.log("destroyed db; returning messages")
+		Const.log("destroyed db; returning messages", debug: self.debug)
 
 		return messages
 	}
 
-	final func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:String]] {
-		/// This loads the most recent $num_to_load conversations, offset by $offset
+	final func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:Any]] {
+		/// This loads the most recent `num_to_load` conversations, offset by `offset`
 
-		self.log("Getting \(String(num_to_load)) chats")
+		Const.log("Getting \(String(num_to_load)) chats", debug: self.debug)
 
-		var pinned_chats: [String] = [""]
+		var pinned_chats: [String]? = nil
 		let combine = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
-		var return_array = [[String:String]]()
+		var return_array = [[String:Any]]()
 
 		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
 			DispatchQueue.global(qos: .default).async {
@@ -306,14 +317,14 @@ final class ChatDelegate {
 
 		/// Create connections
 		var db = createConnection()
-		var contacts_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
+		var contacts_db = createConnection(connection_string: Const.contacts_address)
 		if db == nil || contacts_db == nil { return return_array }
 
 		var addresses = [[String:String]]()
 		var chat_identifiers = [String:[String]]()
 		var checked = [String]()
 
-		let chats = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
+		let chats: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
 
 		inner: if combine {
 			/// This `if` gets all the addresses associated with your contacts, parses them with regex to get all possible `chat_identifier`s,
@@ -321,8 +332,7 @@ final class ChatDelegate {
 			/// This section is probably not very optimized and probably also inaccurate. That's why it's optional.
 
 			addresses = selectFromSql(db: contacts_db, columns: ["c16Phone", "c17Email"], table: "ABPersonFullTextSearch_content")
-			let identifier_array = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat")
-			let identifiers: [String] = identifier_array.map({$0["chat_identifier"] ?? ""})
+			let identifiers = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat").map({$0["chat_identifier"] ?? ""})
 
 			for i in addresses {
 				var personal_addresses = i["c17Email"]?.split(separator: " ").map({String($0)}) ?? [String]()
@@ -357,82 +367,80 @@ final class ChatDelegate {
 		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
 			DispatchQueue.main.sync {
 				/// It's all async stuff so normally this doesn't even get executed but we still have to have it just in case
-				while pinned_chats == [""] {
+				while pinned_chats == nil {
 					usleep(2000)
 				}
 			}
 		}
 
 		for i in chats {
-			self.log("Beginning to iterate through chats for \(i["c.chat_identifier"]!)")
+			Const.log("Beginning to iterate through chats for \(i["c.chat_identifier"] as! String)", debug: self.debug)
 
-			var new_chat = [String:String]()
+			var new_chat = [String:Any]()
 
 			if combine {
-				if checked.contains(i["c.chat_identifier"] ?? "") { continue }
+				if checked.contains(i["c.chat_identifier"] as! String) { continue }
 
-				let these_addresses: [String] = chat_identifiers[i["c.chat_identifier"] ?? ""] ?? [String]()
+				let these_addresses: [String] = chat_identifiers[i["c.chat_identifier"] as! String] ?? [String]()
 				new_chat["addresses"] = these_addresses.joined(separator: ",")
 				for j in these_addresses {
 					checked.append(j)
 				}
 			} else {
-				new_chat["addresses"] = i["c.chat_identifier"]
+				new_chat["addresses"] = i["c.chat_identifier"] as? String
 			}
 
 			/// Check for if it has unread. It has to fit all these specific things.
-			new_chat["has_unread"] = String(i["m.is_from_me"] == "0" && i["m.date_read"] == "0" && i["m.text"] != nil && i["m.is_read"] == "0" && i["m.item_type"] == "0")
+			new_chat["has_unread"] = i["m.is_from_me"] as! String == "0" && i["m.date_read"] as! String == "0" && i["m.text"] != nil && i["m.is_read"] as! String == "0" && i["m.item_type"] as! String == "0"
 
 			/// Content of the most recent text. If a text has attachments, `i["m.text"]` will look like `\u{ef}`. this checks for that.
 			new_chat["latest_text"] = ""
-			if i["m.text"]?.replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil).trimmingCharacters(in: .whitespacesAndNewlines).count != 0 {
+			if (i["m.text"] as! String).replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil).trimmingCharacters(in: .whitespacesAndNewlines).count != 0 {
 				new_chat["latest_text"] = i["m.text"]
-			} else if i["m.cache_has_attachments"] != "0" {
-				let att = getAttachmentFromMessage(mid: i["m.ROWID"] ?? "")
+			} else if i["m.cache_has_attachments"] as! String != "0" {
+				let att = getAttachmentFromMessage(mid: i["m.ROWID"] as! String)
 
 				/// Make it say like `Attachment: Image` if there's no text
 				if att.count != 0 && att[0].count == 2 && att[0]["mime_type"]?.count ?? 0 > 0 {
-					new_chat["latest_text"] = "Attachment: " + String(att[0]["mime_type"]?.split(separator: "/").first ?? "1 File")
+					new_chat["latest_text"] = "Attachment: \(att[0]["mime_type"]?.split(separator: "/").first ?? "1 File")"
 				} else {
 					new_chat["latest_text"] = "Attachment: 1 File"
 				}
-			} else if i["m.balloon_bundle_id"] == "com.apple.DigitalTouchBalloonProvder" {
+			} else if i["m.balloon_bundle_id"] as! String == "com.apple.DigitalTouchBalloonProvder" {
 				new_chat["latest_text"] = "Digital Touch Message"
 			}
 
 			/// Get name for chat
-			if i["c.display_name"]!.count == 0 {
-				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"]!)
+			if (i["c.display_name"] as! String).count == 0 {
+				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"] as! String)
 			} else {
 				new_chat["display_name"] = i["c.display_name"]
 			}
 
-			new_chat["is_group"] = i["c.room_name"]?.count == 0 ? "false" : "true"
-			new_chat["chat_identifier"] = i["c.chat_identifier"]
-			new_chat["time_marker"] = i["m.date"]
-			new_chat["pinned"] = "false"
-
-			for c in 0..<pinned_chats.count {
-				if i["c.chat_identifier"] == pinned_chats[c] {
-					new_chat["pinned"] = "true"
-					pinned_chats.remove(at: c)
-					break
-				}
+			if pinned_chats != nil {
+				new_chat["pinned"] = pinned_chats!.contains(i["c.chat_identifier"] as! String)
+				pinned_chats!.removeAll(where: { $0 == i["c.chat_identifier"] as! String })
+			} else {
+				new_chat["pinned"] = false
 			}
 
-			let t: Double = ((Double(i["m.date"] ?? "0") ?? 0.0) / 1000000000.0) + 978307200.0
+			let t: Double = ((Double(i["m.date"] as! String) ?? 0.0) / 1000000000.0) + 978307200.0
 			let d = Date(timeIntervalSince1970: t)
 
 			new_chat["relative_time"] = formatter.localizedString(for: d, relativeTo: Date())
+
+			new_chat["is_group"] = (i["c.room_name"] as! String) == "" ? false : true
+			new_chat["chat_identifier"] = i["c.chat_identifier"]
+			new_chat["time_marker"] = Int(i["m.date"] as! String)
 
 			return_array.append(new_chat)
 		}
 
 		/// Just in case your pinned chats aren't in your most recent texts
-		if offset == 0 && pinned_chats != [""] {
-			for i in pinned_chats {
-				var new_chat = [String:String]()
-				new_chat["pinned"] = "true"
+		if offset == 0, let pins = pinned_chats {
+			for i in pins {
+				var new_chat = [String:Any]()
+				new_chat["pinned"] = true
 				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i)
 
 				return_array.append(new_chat)
@@ -443,19 +451,19 @@ final class ChatDelegate {
 		closeDatabase(&contacts_db)
 		closeDatabase(&db)
 
-		self.log("destroyed db")
+		Const.log("destroyed db", debug: self.debug)
 
 		return return_array
 	}
 
-	final func returnImageData(chat_id: String) -> Data {
-		/// This does the same thing as returnImageDataDB, but without the contact_db and image_db as arguments, if you just need to get like 1 image
+	final func returnImageData(chat_id: String) -> Data? {
+		/// This does the same thing as returnImageDataDB, but without the `contact_db` and `image_db` as arguments, if you just need to get like 1 image
 
-		self.log("Getting image data for chat_id \(chat_id)")
+		Const.log("Getting image data for chat_id \(chat_id)", debug: self.debug)
 
 		/// Make connections
-		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
-		var image_db = createConnection(connection_string: "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb")
+		var contact_db = createConnection(connection_string: Const.contacts_address)
+		var image_db = createConnection(connection_string: Const.contact_images_address)
 		if contact_db == nil || image_db == nil { return Data.init(capacity: 0) }
 
 		/// get image data with dbs as parameters
@@ -468,10 +476,10 @@ final class ChatDelegate {
 		return return_val
 	}
 
-	final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data {
-		/// This returns the profile picture for someone with the phone number or email $chat_id as pure image data
+	final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data? {
+		/// This returns the profile picture for someone with the phone number or email `chat_id` as pure image data
 
-		self.log("Getting image data with db for chat_id \(chat_id)")
+		Const.log("Getting image data with db for chat_id \(chat_id)", debug: self.debug)
 
 		if chat_id == "default" || (chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20) {
 			let image = UIImage(named: "profile")
@@ -485,19 +493,19 @@ final class ChatDelegate {
 		var fixed_num = chat_id
 		if chat_id.contains(",") {
 			/// Just turns it into a proper sql condition based on if the specific address is an email or number
-			let splits = chat_id.split(separator: ",").map({String($0).contains("@") ? "c17Email like \"%\(String($0))%\"" : "c16Phone like \"%\(String($0))%\""})
+			let splits = chat_id.split(separator: ",").map({(String($0).contains("@") ? "c17Email" : "c16Phone") + " like ?"})
 			fixed_num = splits.joined(separator: " or ")
 		}
 
 		/// get docid. docid is the identifier that corresponds to each contact, allowing for us to get their image
 		if chat_id.contains(",") { /// Multiple addresses in one
-			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE \(fixed_num)", num_items: 1)
+			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE \(fixed_num)", args: chat_id.split(separator: ",").map({"%\($0)%"}), num_items: 1)
 		} else if chat_id.contains("@") { /// if an email
-			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE \"%\(chat_id)%\"", num_items: 1)
+			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE ?", args: ["%\(chat_id)%"], num_items: 1)
 		} else if chat_id.contains("+") {
-			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id)%\"", num_items: 1)
+			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE ?", args: ["%\(chat_id)%"], num_items: 1)
 		} else {
-			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE \"%\(chat_id) \" and c16Phone NOT LIKE \"%+%\"", num_items: 1)
+			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE ? and c16Phone NOT LIKE \"%+%\"", args: ["%\(chat_id) "], num_items: 1)
 		}
 
 		guard docid.count > 0 else { return Data.init(capacity: 0) }
@@ -508,16 +516,17 @@ final class ChatDelegate {
 
 		var statement: OpaquePointer?
 
-		self.log("opened statement")
+		Const.log("opened statement", debug: self.debug)
 
 		if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-			self.log("WARNING: error preparing select: \(errmsg)", warning: true)
+			Const.log("WARNING: error preparing select: \(errmsg)", debug: self.debug, warning: true)
 
-			return Data.init(capacity: 0)
+			//return Data.init(capacity: 0)
+			return nil
 		}
 
-		var pngdata: Data
+		var pngdata: Data? = nil
 
 		if sqlite3_step(statement) == SQLITE_ROW {
 			if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
@@ -527,42 +536,33 @@ final class ChatDelegate {
 				let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
 
 				pngdata = dat as Data
-
-			} else {
-				self.log("No profile picture found. Using default.")
-
-				/// Use default profile if you don't have a profile image set for them
-				let image_dat = UIImage(named: "profile")
-				pngdata = (image_dat?.pngData())!
 			}
-		} else {
-			pngdata = Data.init(capacity: 0)
 		}
 
 		if sqlite3_finalize(statement) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-			self.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
+			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", debug: self.debug, warning: true)
 		}
 
 		statement = nil
-		self.log("destroyed statement")
+		Const.log("destroyed statement", debug: self.debug)
 
 		return pngdata
 	}
 
 	final func getAttachmentFromMessage(mid: String) -> [[String:String]] {
-		/// This returns the file path for all attachments associated with a certain message with the message_id of $mid
+		/// This returns the file path for all attachments associated with a certain message with the message_id of `mid`
 
-		self.log("Getting attachment for mid \(mid)")
+		Const.log("Getting attachment for mid \(mid)", debug: self.debug)
 
 		/// create connection, get attachments information
 		var db = createConnection()
 		if db == nil { return [[String:String]]() }
 
-		var files = selectFromSql(db: db, columns: ["filename", "mime_type"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is \(mid))")
+		var files = selectFromSql(db: db, columns: ["filename", "mime_type"], table: "attachment", condition: "WHERE ROWID in (SELECT attachment_id from message_attachment_join WHERE message_id is ?)", args: [Int(mid) ?? 0])
 
 		for i in 0..<files.count {
-			files[i]["filename"] = String(files[i]["filename"]?.dropFirst(ChatDelegate.attachmentStoragePrefix.count - ChatDelegate.userHomeString.count + 2) ?? "")
+			files[i]["filename"] = String(files[i]["filename"]?.dropFirst(Const.attachment_address_prefix.count - Const.user_home_url.count + 2) ?? "")
 		}
 
 		closeDatabase(&db)
@@ -571,53 +571,52 @@ final class ChatDelegate {
 	}
 
 	final func getAttachmentType(path: String) -> String {
-		/// This gets the file type of the attachment at $path
+		/// This gets the file type of the attachment at `path`
 
-		self.log("Getting attachment type for @ \(path)")
+		Const.log("Getting attachment type for @ \(path)", debug: self.debug)
 
 		var db = createConnection()
 		if db == nil { return "" }
 
-		let file_type_array = selectFromSql(db: db, columns: ["mime_type"], table: "attachment", condition: "WHERE filename like \"%\(path)%\"", num_items: 1)
-		var return_val = "image/jpeg" /// Most likely thing
-
-		if file_type_array.count > 0 {
-			return_val = file_type_array[0]["mime_type"]!
-		}
+		let file_type_array = selectFromSql(db: db, columns: ["mime_type"], table: "attachment", condition: "WHERE filename like ?", args: ["%\(path)%"], num_items: 1)
+		let return_val = file_type_array.count > 0 ? file_type_array[0]["mime_type"] ?? "image/jpeg" : "image/jpeg"
 
 		closeDatabase(&db)
 
 		return return_val
 	}
 
-	final func getAttachmentDataFromPath(path: String) -> Data {
-		/// This returns the pure data of a file (attachment) at $path
+	//final func getAttachmentDataFromPath(path: String) -> Data {
+	final func getAttachmentDataFromPath(path: String) -> [Any] { /// [0] = data, [1] = mime_type
+		/// This returns the pure data of a file (attachment) at `path`
 
-		self.log("Getting attachment data from path \(path)")
+		Const.log("Getting attachment data from path \(path)", debug: self.debug)
 
-		let parsed_path = path.replacingOccurrences(of: "../", with: "") /// To prevent LFI
+		let parsed_path = path.replacingOccurrences(of: "/../", with: "/") /// To prevent LFI
+		let type = getAttachmentType(path: parsed_path)
+		var info: [Any] = [Data.init(capacity: 0), type]
 
 		do {
 			/// Pretty straightforward -- get data and return it
-			if (getAttachmentType(path: parsed_path) == "image/heic") { /// Since they're used so much
-				let attachment_data = UIImage(contentsOfFile: ChatDelegate.attachmentStoragePrefix + parsed_path)
-				return attachment_data?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
+			if (type == "image/heic") { /// Since they're used so much
+				let attachment_data = UIImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)
+				info[0] = attachment_data?.jpegData(compressionQuality: 0) as Any
 			} else {
-				let attachment_data = try Data.init(contentsOf: URL(fileURLWithPath: ChatDelegate.attachmentStoragePrefix + parsed_path))
-				return attachment_data
+				info[0] = try Data.init(contentsOf: URL(fileURLWithPath: Const.attachment_address_prefix + parsed_path))
 			}
 		} catch {
-			self.log("WARNING: failed to load image for path \(ChatDelegate.attachmentStoragePrefix + path)", warning: true)
-			return Data.init(capacity: 0)
+			Const.log("WARNING: failed to load image for path \(Const.attachment_address_prefix + parsed_path)", debug: self.debug, warning: true)
 		}
+
+		return info
 	}
 
 	final func searchForString(term: String, case_sensitive: Bool = false, bridge_gaps: Bool = true, group_by_time: Bool = true) -> Any {
-		/// This gets all texts with $term in them; case_sensitive, bridge_gaps, and group_by_time are customization options
+		/// This gets all texts with `term` in them; `case_sensitive`, `bridge_gaps`, and `group_by_time` are customization options
 
 		/// Create Connections
 		var db = createConnection()
-		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
+		var contact_db = createConnection(connection_string: Const.contacts_address)
 		if db == nil || contact_db == nil { return [String:[[String:String]]]() }
 
 		/// Replacing percentages with escaped so that they don't act as wildcard characters
@@ -626,28 +625,19 @@ final class ChatDelegate {
 		/// replace spaces with wildcard characters if bridge_gaps == true
 		if bridge_gaps { upperTerm = upperTerm.split(separator: " ").joined(separator: "%") }
 
-		var return_texts = [String:[[String:String]]]()
-		var names = [String:String]()
+		var return_texts = [String:[[String:Any]]]()
 
-		var texts = selectFromSql(db: db, columns: ["c.chat_identifier", "c.display_name", "m.ROWID", "m.text", "m.service", "m.date", "m.cache_has_attachments"], table: "message m", condition: "inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID WHERE text like \"%\(upperTerm)\" order by m.date desc", split_ids: true)
+		var texts: [[String:Any]] = selectFromSql(db: db, columns: ["c.chat_identifier", "c.display_name", "m.ROWID", "m.text", "m.service", "m.date", "m.cache_has_attachments"], table: "message m", condition: "inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID WHERE text like ? order by m.date desc", args: ["%\(upperTerm)%"], split_ids: true)
 
 		/// If case sensitive, remove those who don't exactly match. sqlite select is hardcoded case insensitive
-		if case_sensitive { texts.removeAll(where: { !($0["text"]?.contains(term) ?? true) })}
+		if case_sensitive { texts.removeAll(where: { !(($0["text"] as! String).contains(term)) })}
 
-		for var i in texts {
+		parseTexts(&texts, db: db, contact_db: contact_db)
+
+		for i in texts {
 
 			/// get sender for this text
-			let chat = i["chat_identifier"] ?? "(null)"
-
-			if i["display_name"]?.count == 0 {
-				if names[i["chat_identifier"] ?? ""] == nil {
-					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["chat_identifier"] ?? "")
-					names[i["chat_identifier"] ?? ""] = name
-					i["display_name"] = name
-				} else {
-					i["display_name"] = names[i["chat_identifier"] ?? ""]
-				}
-			}
+			let chat = i["chat_identifier"] as! String
 
 			/// Add this text onto the list of texts from this person that match term if grouping by person and not time
 			if !group_by_time {
@@ -666,9 +656,9 @@ final class ChatDelegate {
 		return group_by_time ? texts : return_texts
 	}
 
-	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: String]] {
-		/// This gets a list of the $num (most_recent ? most recent : oldest) photos, offset by $offset.
-		self.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
+	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: Any]] {
+		/// This gets a list of the `num` (most_recent ? most recent : oldest) photos, offset by `offset`.
+		Const.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")", debug: self.debug)
 
 		/// make sure that we have access to the photos library
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
@@ -677,13 +667,13 @@ final class ChatDelegate {
 			PHPhotoLibrary.requestAuthorization({ auth in
 				if auth != PHAuthorizationStatus.authorized {
 					con = false
-					self.log("App is not authorized to view photos. Please grant access.", warning: true)
+					Const.log("App is not authorized to view photos. Please grant access.", debug: self.debug, warning: true)
 				}
 			})
-			guard con else { return [[String:String]]() }
+			guard con else { return [[String:Any]]() }
 		}
 
-		var ret_val = [[String:String]]()
+		var ret_val = [[String:Any]].init(repeating: [String:Any](), count: num)
 		let fetchOptions = PHFetchOptions()
 
 		/// sort photos by most recent
@@ -693,46 +683,58 @@ final class ChatDelegate {
 		/// get images!
 		let result = PHAsset.fetchAssets(with: PHAssetMediaType.image, options: fetchOptions)
 		let total = result.countOfAssets(with: PHAssetMediaType.image)
+		let group = DispatchGroup()
 
+		/// Here we iterate through the images and get their url
 		for i in offset..<total {
 
-			var local_result = [String:String]()
+			/// We have to use a dispatch group here to get all the image urls in order, since each uses an asynchronous callback to get them.
+			group.enter()
 
+			var local_result = [String:Any]()
 			let image = result.object(at: i)
-			var img_url = ""
 
-			image.getURL(completionHandler: { url in
-				/// get url of each image
-				if url != nil {
-					img_url = url!.path.replacingOccurrences(of: ChatDelegate.photoStoragePrefix, with: "")
-				} else {
-					img_url = "nil" /// Cause it has to be something to continue
-				}
+			/// Set up the options to grab the Image
+			let options: PHContentEditingInputRequestOptions = PHContentEditingInputRequestOptions()
+
+			options.canHandleAdjustmentData = { (adjustmeta: PHAdjustmentData) -> Bool in
+				return true
+			}
+
+			/// Get the url here in this callback
+			image.requestContentEditingInput(with: options, completionHandler: {(contentEditingInput: PHContentEditingInput?, info: [AnyHashable : Any]) -> Void in
+
+				let url = contentEditingInput?.fullSizeImageURL as URL?
+
+				/// Insert all the values into the return
+				local_result["URL"] = url?.path.replacingOccurrences(of: Const.photo_address_prefix, with: "") ?? ""
+				local_result["is_favorite"] = image.isFavorite
+
+				/// Since we initialized `ret_val` to a set number of spaces, we can insert these at their correct index,
+				/// instead of just appending them (and thus messing up the order)
+				ret_val[i - offset] = local_result
+
+				/// Leave the dispatch grop that we entered at the beginning of this iteration
+				group.leave()
 			})
-
-			/// This is hacky and kinda hurts performance but it seems the most reliable way to load images in order + with the amount requested.
-			while img_url == "" {}
-
-			/// append vals to return value
-			local_result["URL"] = img_url
-			local_result["is_favorite"] = String(image.isFavorite)
-
-			ret_val.append(local_result)
 		}
+
+		/// Wait until there is nobody left in the group. This will occur once every image has been iterated through, and the url has been grabbed.
+		group.wait()
 
 		return ret_val
 	}
 
 	final func getPhotoDatafromPath(path: String) -> Data {
-		/// This returns the pure data of a photo at $path
+		/// This returns the pure data of a photo at `path`
 
-		self.log("Getting photo data from path \(path)")
+		Const.log("Getting photo data from path \(path)", debug: self.debug)
 
 		/// To prevent LFI
 		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "")
 
 		/// get and return photo data
-		let image = UIImage(contentsOfFile: ChatDelegate.photoStoragePrefix + parsed_path)
+		let image = UIImage(contentsOfFile: Const.photo_address_prefix + parsed_path)
 
 		/// Compress image to a jpeg with horrible quality since they're only thumbnails
 		let photo_data = image?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
@@ -747,12 +749,12 @@ final class ChatDelegate {
 		var statement: OpaquePointer?
 		var ret_dict = ["title": "Title", "subtitle": "Subtitle", "type": "Website"]
 
-		self.log("Opened statement in getLinkTitle")
+		Const.log("Opened statement in getLinkTitle", debug: self.debug)
 
 		/// Prepare sql statement
 		var ret_code = sqlite3_prepare_v2(db, sqlString, -1, &statement, nil)
 		if ret_code != SQLITE_OK {
-			self.log("WARNING: error preparing select: \(ret_code)", warning: true)
+			Const.log("WARNING: error preparing select: \(ret_code)", debug: self.debug, warning: true)
 		}
 
 		var data: NSData = NSData.init()
@@ -768,7 +770,7 @@ final class ChatDelegate {
 		/// finalize sqlite statement
 		ret_code = sqlite3_finalize(statement)
 		if ret_code != SQLITE_OK {
-			self.log("WARNING: error finalizing statement: \(ret_code)", warning: true)
+			Const.log("WARNING: error finalizing statement: \(ret_code)", debug: self.debug, warning: true)
 		}
 
 		/// Blob data is technically an NSKeyedArchiver plist file. We just gotta serialize it and extract values
@@ -777,7 +779,7 @@ final class ChatDelegate {
 		do {
 			plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as! [String : AnyObject]
 		} catch {
-			self.log("WARNING: failed to decode plist for ROWID \(mid)", warning: true)
+			Const.log("WARNING: failed to decode plist for ROWID \(mid)", debug: self.debug, warning: true)
 			return ret_dict
 		}
 
@@ -789,7 +791,9 @@ final class ChatDelegate {
 		guard objects.count > 5 else {
 			return ret_dict
 		}
-		
+
+		/// Since I haven't found a way to programatically find the correct values for these, I kinda have to hardcode
+		/// some of the most-used values, such as rich links, podcast episodes, and gamepigeon messages.
 		if objects.count > 30 && objects[21] as? String ?? "" == "GamePigeon" {
 			ret_dict["title"] = objects[18] as? String ?? ""
 		} else if objects.count >= 19 && (objects[19] as? [String:AnyObject] ?? [String:AnyObject]())["$classname"] as? String ?? "" == "LPiTunesMediaPodcastEpisodeMetadata" {
@@ -810,19 +814,19 @@ final class ChatDelegate {
 	}
 
 	final func getTextByGUID(_ guid: String) -> [String:Any] {
-		self.log("Getting text at guid \(guid)")
+		Const.log("Getting text at guid \(guid)", debug: self.debug)
 
 		var db = createConnection()
-		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
+		var contact_db = createConnection(connection_string: Const.contacts_address)
 
 		if db == nil || contact_db == nil { return [String:String]() }
 
-		var text_array: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is \"\(guid)\"", num_items: 1, offset: 0, split_ids: true)
+		var text_array: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is ?", args: [guid], num_items: 1, offset: 0, split_ids: true)
 
 		for _ in 0..<10 {
 			usleep(useconds_t(50000))  /// I hate race conditions so much but I have no idea how to avoid it for this
 
-			text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is \"\(guid)\"", num_items: 1, offset: 0, split_ids: true)
+			text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is ?", args: [guid], num_items: 1, offset: 0, split_ids: true)
 
 			if text_array.count > 0 { break }
 		}
@@ -835,7 +839,7 @@ final class ChatDelegate {
 
 		let text = text_array[0]
 
-		self.log("Closing databases and destroying pointers")
+		Const.log("Closing databases and destroying pointers", debug: self.debug)
 		closeDatabase(&db)
 		db = nil
 
@@ -848,18 +852,18 @@ final class ChatDelegate {
 	final func getTapbackInformation(_ tapback: Int32, guid: String) -> [String:Any] {
 		/// This gets the text information for a tapback with the value `tapback` and on the text with the guid `guid`
 
-		self.log("Getting tapback information with value \(tapback) and guid \(guid)")
+		Const.log("Getting tapback information with value \(tapback) and guid \(guid)", debug: self.debug)
 
 		var db = createConnection()
-		var contact_db = createConnection(connection_string: ChatDelegate.addressBookAddress)
+		var contact_db = createConnection(connection_string: Const.contacts_address)
 		if db == nil { return [String:String]() }
 
-		var text_array: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.associated_message_guid like \"%\(guid)%\" and m.associated_message_type is \(tapback)", num_items: 1, split_ids: true)
+		var text_array: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.associated_message_guid like ? and m.associated_message_type is ?", args: ["%\(guid)%", Int(tapback)], num_items: 1, split_ids: true)
 
 		for _ in 0..<10 {
 			usleep(useconds_t(50000))  /// I hate race conditions so much but I have no idea how to avoid it for this
 
-			text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.associated_message_guid like \"%\(guid)%\" and m.associated_message_type is \(tapback)", num_items: 1, split_ids: true)
+			text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.associated_message_guid like ? and m.associated_message_type is ?", args: ["%\(guid)%", Int(tapback)], num_items: 1, split_ids: true)
 
 			if text_array.count > 0 { break }
 		}
@@ -869,7 +873,7 @@ final class ChatDelegate {
 		parseTexts(&text_array, db: db, contact_db: contact_db, is_group: (text_array[0]["room_name"] as? String)?.count ?? 0 > 0)
 		let text = text_array[0]
 
-		self.log("Closing connections and destroying pointers")
+		Const.log("Closing connections and destroying pointers", debug: self.debug)
 		closeDatabase(&contact_db)
 		contact_db = nil
 
@@ -877,33 +881,5 @@ final class ChatDelegate {
 		db = nil
 
 		return text
-	}
-}
-
-extension PHAsset {
-
-	final func getURL(completionHandler : @escaping ((_ responseURL : URL?) -> Void)) {
-		/// This allows for retrieval of a PHAsset's URL in the filesystem.
-
-		if self.mediaType == .image {
-			let options: PHContentEditingInputRequestOptions = PHContentEditingInputRequestOptions()
-			options.canHandleAdjustmentData = {(adjustmeta: PHAdjustmentData) -> Bool in
-				return true
-			}
-			self.requestContentEditingInput(with: options, completionHandler: {(contentEditingInput: PHContentEditingInput?, info: [AnyHashable : Any]) -> Void in
-				completionHandler(contentEditingInput?.fullSizeImageURL as URL?)
-			})
-		} else if self.mediaType == .video {
-			let options: PHVideoRequestOptions = PHVideoRequestOptions()
-			options.version = .original
-			PHImageManager.default().requestAVAsset(forVideo: self, options: options, resultHandler: {(asset: AVAsset?, audioMix: AVAudioMix?, info: [AnyHashable : Any]?) -> Void in
-				if let urlAsset = asset as? AVURLAsset {
-					let localVideoUrl: URL = urlAsset.url as URL
-					completionHandler(localVideoUrl)
-				} else {
-					completionHandler(nil)
-				}
-			})
-		}
 	}
 }

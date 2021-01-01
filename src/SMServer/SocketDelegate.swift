@@ -1,6 +1,5 @@
 import Foundation
 import Telegraph
-import os
 
 class SocketDelegate : ServerWebSocketDelegate {
 
@@ -15,12 +14,6 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 	var debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	var send_typing = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
-
-	func log(_ s: String, warning: Bool = false) {
-		if self.debug || warning {
-			os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
-		}
-	}
 
 	func refreshVars() {
 		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
@@ -38,25 +31,24 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 		do {
 			try server?.start(port: port)
-			self.log("Started websocket successfully.")
+			Const.log("Started websocket successfully.", debug: self.debug)
 
 		} catch {
-			self.log("WARNING: The websocket failed to start. This will prevent you from receiving new messages.", warning: true)
+			Const.log("WARNING: The websocket failed to start. This will prevent you from receiving new messages.", debug: self.debug, warning: true)
 		}
-
-		// add observer for name "__kIMChatMessageReceivedNotification"
 	}
 
 	func stopServer() {
 		server?.stop()
 
-		self.log("Socket stopped")
+		Const.log("Socket stopped", debug: self.debug)
 	}
 
-	func sendTyping(chat: String) {
+	func sendTyping(_ chat: String, typing: Bool = true) {
 		if server != nil {
+			let send_str = "\(typing ? "typing" : "idle"):\(chat)"
 			for i in server!.webSockets {
-				i.send(text: "typing:" + chat)
+				i.send(text: send_str)
 			}
 		}
 	}
@@ -94,14 +86,14 @@ class SocketDelegate : ServerWebSocketDelegate {
 		// A web socket connected, you can extract additional information from the handshake request
 		let ip = webSocket.remoteEndpoint?.host ?? ""
 
-		self.log("\(ip) is trying to connect...")
+		Const.log("\(ip) is trying to connect...", debug: self.debug)
 
 		if !verify_auth(ip) {
-			self.log("\(ip) is not verified. Disconnecting.")
+			Const.log("\(ip) is not verified. Disconnecting.", debug: self.debug)
 			webSocket.close(immediately: true)
 		}
 
-		self.log("\(ip) was allowed to connect")
+		Const.log("\(ip) was allowed to connect", debug: self.debug)
 
 		UIDevice.current.isBatteryMonitoringEnabled = true
 
@@ -121,7 +113,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
 		// One of our web sockets disconnected
-		self.log("Socket disconnected")
+		Const.log("Socket at \(webSocket.remoteEndpoint?.host ?? "") disconnected", debug: self.debug)
 	}
 
 	func server(_ server: Server, webSocket: WebSocket, didReceiveMessage message: WebSocketMessage) {
@@ -129,18 +121,18 @@ class SocketDelegate : ServerWebSocketDelegate {
 		guard message.payload.data != nil else {
 			return
 		}
-		self.log("Received message: \(message)")
+		Const.log("Received message: \(message)", debug: self.debug)
 		switch message.payload {
 			case .text(let msg):
 				let context = msg.split(separator: ":")[0]
 
 				if (context == "typing" || context == "idle") && self.send_typing {
 					let content = msg.split(separator: ":")[1]
-					ContentView.sender.sendTyping(String(context) == "typing", forChat: String(content))
+					ServerDelegate.sender.sendTyping(String(context) == "typing", forChat: String(content))
 				}
 			default:
 				if message.opcode == WebSocketOpcode.binaryFrame || message.opcode == WebSocketOpcode.textFrame {
-					log("WARNING: can't handle message: \(message)", warning: true)
+					Const.log("WARNING: can't handle message: \(message)", debug: self.debug, warning: true)
 				}
 		}
 	}

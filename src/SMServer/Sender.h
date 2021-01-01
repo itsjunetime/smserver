@@ -4,12 +4,12 @@
 @interface IPCTextWatcher : NSObject
 
 @property (copy) void(^setTexts)(NSString *);
-@property (copy) void(^setTyping)(NSString *);
+@property (copy) void(^setTyping)(NSDictionary *);
 @property (copy) void(^sentTapback)(int, NSString *);
 + (instancetype)sharedInstance;
 - (instancetype)init;
 - (void)handleReceivedTextWithCallback:(NSString *)chat_id;
-- (void)handlePartyTypingWithCallback:(NSString *)chat_id;
+- (void)handlePartyTypingWithCallback:(NSDictionary *)vals;
 - (void)handleSentTapbackWithCallback:(NSDictionary *)vals;
 
 @end
@@ -20,11 +20,11 @@
 
 - (id)init;
 - (void)launchMobileSMS;
-- (void)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths;
-- (void)markConvoAsRead:(NSString *)chat_id;
-- (void)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat;
+- (BOOL)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths;
+- (BOOL)markConvoAsRead:(NSString *)chat_id;
+- (BOOL)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat;
 - (void)sendTyping:(BOOL)isTyping forChat:(NSString *)chat;
-- (void)removeObject:(NSString *)chat text:(NSString *)text;
+- (BOOL)removeObject:(NSString *)chat text:(NSString *)text;
 //- (NSArray *)getPinnedChats;
 
 @end
@@ -34,12 +34,12 @@
 + (id)sharedInstance;
 - (NSOrderedSet *)pinnedConversationIdentifierSet;
 @end
-*/
 
 @interface IMDaemonController
 + (id)sharedController;
 - (BOOL)connectToDaemon;
 @end
+*/
 
 @interface CKConversationList
 + (id)sharedConversationList;
@@ -50,6 +50,7 @@
 - (void)setLocalUserIsTyping:(_Bool)arg1;
 @end
 
+/*
 @interface IMChat
 - (void)markAllMessagesAsRead;
 @end
@@ -58,5 +59,6 @@
 + (id)sharedInstance;
 + (IMChat *)existingChatWithChatIdentifier:(NSString *)chat_id;
 @end
+*/
 
 #endif /* Obj_h */

@@ -1,360 +1,40 @@
 import Foundation
 import SwiftUI
-import Criollo
 import Photos
-import os
 
 struct ContentView: View {
-	let server = CRHTTPServer()
-	let socket = SocketDelegate()
-	let prefix = "SMServer_app: "
+	let server = ServerDelegate()
 	let geo_width: CGFloat = 0.6
 	let font_size: CGFloat = 25
-	let identity = Bundle.main.path(forResource: "identity", ofType: "pfx")
-	let cert_pass = PKCS12Identity.pass  /// This is in a hidden file, not in the git repository, so that nobody can steal the private key of my cert.
 
-	@State var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
-	@State var custom_css = UserDefaults.standard.object(forKey: "custom_css") as? String ?? ""
 	@State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
 	@State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-	@State var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
 
 	@State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	@State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
 	@State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
 	@State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
+	@State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
 
-	@State var mark_when_read: Bool = true
 	@State var view_settings: Bool = false
 	@State var server_running: Bool = false
-	@State var alert_connected: Bool = false
 	@State var show_picker: Bool = false
+	@State var show_oseven_update: Bool = false
 
-	static let chat_delegate = ChatDelegate()
-	static let sender: IWSSender = IWSSender.init()
-	@State var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
-
-	let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
-	let photos_prefix = "/var/mobile/Media/"
-
-	let requests_page = """
-	<!DOCTYPE html>
-		<body style="background-color: #000;">
-			<p style="color: #fff; font-family: Verdana; font-size: 24px; padding: 20px;">
-				This is the requests page! Thanks for visiting :)
-			</p>
-		</body>
-	</html>
-	"""
-	@State var main_page =
-	"""
-	"""
-	@State var main_page_style =
-	"""
-	"""
-	@State var main_page_script =
-	"""
-	"""
-	@State var gatekeeper_page =
-	"""
-	"""
-	@State var custom_style =
-	"""
-	"""
-	@State var light_style =
-	"""
-	"""
-	@State var nord_style =
-	"""
-	"""
-	@State var fa_solid_style =
-	"""
-	"""
-	@State var fa_style =
-	"""
-	"""
-
-	func log(_ s: String, warning: Bool = false) {
-		/// This logs to syslog
-		if self.debug || warning {
-			os_log("%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, self.prefix, s)
-		}
-	}
-
-	func loadServer(port_num: UInt16) {
+	func loadServer() {
 		/// This starts the server at port $port_num
+		Const.log("Attempting to load server and socket...", debug: self.debug)
 
-		self.log("Loading server at port \(String(port_num))")
+		self.server_running = server.startServers()
 
-		if server.isListening {
-			self.stopServer()
-			self.log("Server was already running, stopped.")
-		}
-
-		self.log("launched MobileSMS")
-
-		if UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true {
-			server.isSecure = true
-			server.identityPath = identity
-			server.password = cert_pass
-		}
-
-		server.add("/") { (req, res, _) in
-			let ip = req.connection?.remoteAddress ?? ""
-			res.setValue("text/html", forHTTPHeaderField: "Content-type")
-
-			self.log("GET main: " + ip)
-
-			res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
-		}
-
-		server.add("/requests") { (req, res, _) in
-			/// There is no authentication handler here 'cause it handles that within parseAndReturn()
-			/// since they send the password auth request to this subdirectory.
-			/// This handler is part of the API, and mostly returns JSON info with some plain text mixed in.
-
-			self.log("Getting requests..")
-
-			let query = req.query
-
-			if query.count == 0 {
-				/// If there are no parameters, return default blank page
-
-				res.setValue("text/html", forHTTPHeaderField: "Content-type")
-				res.send(self.requests_page)
-			} else {
-
-				let address = req.connection?.remoteAddress ?? ""
-
-				self.log("GET /requests: \(address)")
-
-				/// parseAndReturn() manages retrieving info for the API
-				let response = self.parseAndReturn(params: query, address: address)
-
-				self.log("Returning from /requests")
-				res.send(response)
-			}
-		}
-
-		server.add("/data") { (req, res, _) in
-			/// This handler returns attachment data and profile/attachment/photo images.
-			let ip = req.connection?.remoteAddress ?? ""
-			self.log("GET data: " + ip)
-
-			if !self.checkIfAuthenticated(ras: ip) {
-				/// Return nil if they haven't authenticated
-				res.send("")
-				return
-			}
-
-			self.log("returning data")
-
-			let f = req.query.keys.first
-
-			/// Handle different types of requests
-			if f == "chat_id" {
-				/// This gets profile pictures. The value for this key has to be the `chat_identifier` of the profile picture you want.
-
-				let q = req.query
-				let data = ContentView.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? "")
-
-				res.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
-				if data.isEmpty { res.setStatusCode(404, description: "No profile image for chat_id \(q["chat_id"] ?? "")") }
-				res.send(data)
-			} else if f == "path" {
-				/// This gets attachments. The value for this key must be the path at which the attachment resides,
-				/// minus the prefix of `/private/var/mobile/Library/SMS/`
-
-				let dataResponse = ContentView.chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
-				let type = ContentView.chat_delegate.getAttachmentType(path: req.query["path"] ?? "")
-
-				res.setValue(type, forHTTPHeaderField: "Content-Type")
-				res.setValue("inline; filename=\(String(req.query["path"]?.split(separator: "/").last ?? ""))", forHTTPHeaderField: "Content-Disposition")
-				res.send(dataResponse)
-			} else if f == "photo" {
-				/// This gets an image from the camera roll. The value for this key must be the path at which the image resides,
-				/// minus the prefix of `/var/mobile/Media/`
-
-				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
-				res.send(ContentView.chat_delegate.getPhotoDatafromPath(path: req.query["photo"] ?? ""))
-			} else {
-				//if they don't have any of the above parameters, return nothing.
-				res.send("")
-			}
-		}
-
-		server.add("/send") { (req, res, _) in
-			/// This handles a post request to send a text
-			let ip = req.connection?.remoteAddress ?? ""
-			self.log("POST uploads: " + ip)
-
-			if !self.checkIfAuthenticated(ras: ip) {
-				res.send("")
-				return
-			}
-
-			/// send text
-			let params = req.body as? Dictionary<String, Any> ?? [String:Any]()
-			var files_to_fix = [CRUploadedFile]()
-			var files = [String]()
-
-			if let f = req.files?["attachments"] as? [CRUploadedFile] {
-				files_to_fix = f
-			} else if let f = req.files?["attachments"] as? CRUploadedFile {
-				files_to_fix.append(f)
-			}
-
-			let fm = FileManager.default
-
-			for file in files_to_fix {
-				do {
-					/// get info about uploaded file
-					let attr = try fm.attributesOfItem(atPath: file.temporaryFileURL.path)
-					let fileSize = attr[FileAttributeKey.size] as! UInt64
-
-					/// Don't send file if it is empty; fixes an issue where it would sometimes think null files were being uploaded?
-					if fileSize == 0 { continue }
-				} catch {
-					self.log("couldn't get filesize", warning: true)
-				}
-
-				let temp = file.temporaryFileURL.path
-				let newFilePath = temp.prefix(upTo: temp.lastIndex(of: "/") ?? temp.endIndex) + "/" + file.name.replacingOccurrences(of: " ", with: "_")
-
-				/// Move file from temporary path to new type so that it displays original name and extension when sent
-				if fm.fileExists(atPath: newFilePath) {
-					do {
-						try fm.removeItem(atPath: newFilePath)
-					} catch {
-						self.log("Couldn't remove file from path: \(newFilePath), for whatever reason", warning: true)
-					}
-				}
-				do {
-					try fm.moveItem(at: file.temporaryFileURL, to: URL(fileURLWithPath: newFilePath))
-				} catch {
-					self.log("failed to move file; won't send text", warning: true)
-				}
-
-				/// Append to files array
-				files.append(newFilePath)
-			}
-
-			let send = self.sendText(params: params, new_files: files)
-
-			self.log("Returning from sending text")
-
-			res.send(send ? "true" : "false")
-		}
-
-		server.add("/style") { (req, res, _) in
-			/// Returns the style.css file as text
-			let ip = req.connection?.remoteAddress ?? ""
-
-			self.log("GET style: \(ip)")
-
-			if !self.checkIfAuthenticated(ras: ip) {
-				res.send("")
-				return
-			}
-
-			let s = Array(req.query.keys)[0]
-			res.setValue("text/css", forHTTPHeaderField: "Content-Type")
-
-			if s == "main" {
-				res.send(self.main_page_style)
-			} else if s == "custom" {
-				res.send(self.custom_style)
-			} else if s == "light" {
-				res.send(self.light_style)
-			} else if s == "nord" {
-				res.send(self.nord_style)
-			} else if s == "fa_solid" {
-				res.send(self.fa_solid_style)
-			} else if s == "font_awesome" {
-				res.send(self.fa_style)
-			}
-		}
-
-		server.add("/webfonts") { (req, res, _) in
-			/// Gets the fonts necessary for fontawesome
-			let ip = req.connection?.remoteAddress ?? ""
-
-			self.log("GET webfonts: \(ip)")
-
-			if !self.checkIfAuthenticated(ras: ip) {
-				res.send("")
-				return
-			}
-
-			let font = Array(req.query.keys)[0]
-
-			if let f = Bundle.main.url(forResource: font, withExtension: "", subdirectory: "html/webfonts") {
-				do {
-					let font_data = try Data.init(contentsOf: f)
-					res.send(font_data)
-				} catch {
-					self.log("WARNING: Can't get font for \(font)", warning: true)
-					res.send("")
-				}
-			} else {
-				res.send("")
-			}
-		}
-
-		server.add("/favicon.ico") { (req, res, next) in
-			/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
-			let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
-			res.setValue("image/png", forHTTPHeaderField: "Content-Type")
-			res.send(data)
-		}
-
-		self.log("Got past adding all the handlers.")
-
-		let port = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-		server.startListening(nil, portNumber: UInt(port) ?? 8741)
-
-		/// Start the websocket
-		socket.startServer(port: self.socket_port)
-
-		self.server_running = server.isListening
-
-		self.log("Successfully started server and launched MobileSMS")
-	}
-
-	func sendText(params: [String:Any], new_files: [String]) -> Bool {
-
-		let body: String = params["text"] as? String ?? ""
-		var address: String = params["chat"] as? String ?? ""
-		let subject: String = params["subject"] as? String ?? ""
-		var files = new_files
-
-		if params["photos"] != nil {
-			let ph = (params["photos"] as? String ?? "").split(separator: ":")
-			for i in ph {
-				files.append(self.photos_prefix + String(i))
-			}
-		}
-
-		if address.prefix(1) == "+" { /// Make sure there are no unnecessary characters like parenthesis
-			address = "+" + address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-		}
-
-		/// Make sure there's actually some content
-		if body != "" || files.count > 0 || subject != "" {
-			/// Send the information the obj-c function
-			ContentView.sender.sendIPCText(body, withSubject: subject, toAddress: address, withAttachments: files)
-
-			return true
-		}
-
-		return false
-
+		Const.log(self.server_running ? "Successfully started server and socket" : "Failed to start server and socket", debug: self.debug, warning: !self.server_running)
 	}
 
 	func enteredBackground() {
 		/// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
-		if !background || !self.server.isListening {
-			self.log("sceneDidEnterBackground, starting kill timer")
+		//if !background || !self.server.isListening {
+		if !background || !self.server.isRunning() {
+			Const.log("sceneDidEnterBackground, starting kill timer", debug: self.debug)
 			DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: {
 				if UIApplication.shared.applicationState == .background {
 					exit(0)
@@ -363,306 +43,32 @@ struct ContentView: View {
 		}
 	}
 
-	func loadFiles() {
-		/// This sets the website page files to local variables
-
-		let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
-
-		let subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
-		let light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
-		let nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
-
-		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-		self.background = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
-		self.mark_when_read = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
-
-		if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
-		   let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
-		   let g = Bundle.main.url(forResource: "gatekeeper", withExtension: "html", subdirectory: "html"),
-		   let l = Bundle.main.url(forResource: "light_theme", withExtension: "css", subdirectory: "html"),
-		   let n = Bundle.main.url(forResource: "nord_theme", withExtension: "css", subdirectory: "html"),
-		   let fa = Bundle.main.url(forResource: "font_awesome", withExtension: "css", subdirectory: "html/fontawesome"),
-		   let fs = Bundle.main.url(forResource: "fa_solid", withExtension: "css", subdirectory: "html/fontawesome") {
-			do {
-				/// Set up all the pages as multi-line string variables, set values within them.
-				self.main_page = try String(contentsOf: h, encoding: .utf8)
-					.replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(default_num_messages);")
-					.replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
-					.replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(default_num_photos);")
-					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(String(socket_port));")
-					.replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug ? "true" : "false");")
-					.replacingOccurrences(of: "var subject;", with: "var subject = \(subjects_enabled ? "true" : "false");")
-					.replacingOccurrences(of: "<!--light-->", with: light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
-					.replacingOccurrences(of: "<!--nord-->", with: nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
-
-				self.main_page_style = try String(contentsOf: s, encoding: .utf8)
-				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
-				self.light_style = try String(contentsOf: l, encoding: .utf8)
-				self.nord_style = try String(contentsOf: n, encoding: .utf8)
-				self.fa_style = try String(contentsOf: fa, encoding: .utf8)
-				self.fa_solid_style = try String(contentsOf: fs, encoding: .utf8)
-			} catch {
-				self.log("WARNING: ran into an error with loading the files, try again.")
-			}
-		}
-
-		/// Have to do custom style in a different do {} block, since it'll fail everything if the file doesn't exist/is empty
-		do {
-			self.custom_style = try String(contentsOf: self.custom_css_path, encoding: .utf8)
-		} catch {
-			self.log("Could not load custom css file", warning: true)
-		}
-	}
-
-	func sentOrReceivedNewText(_ guid: String) {
-		/// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
-		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
-
-		let text = ContentView.chat_delegate.getTextByGUID(guid);
-		let json = encodeToJson(object: text, title: "text")
-
-		socket.sendNewText(info: json)
-	}
-
-	func sentTapback(_ tapback: Int32, guid: String) {
-		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
-
-		let tb = ContentView.chat_delegate.getTapbackInformation(tapback, guid: guid)
-		let json = encodeToJson(object: tb, title: "text")
-
-		socket.sendNewText(info: json)
-	}
-
-	func setPartyTyping(_ chat_id: String) {
-		/// Theoretically called when someone else starts typing. Theoretically.
-		socket.sendTyping(chat: chat_id)
-	}
-
-	func checkIfAuthenticated(ras: String) -> Bool {
-		/// This checks if the ip address $ras has already authenticated with the host
-		let require_authentication = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
-
-		return !require_authentication || self.authenticated_addresses.contains(ras)
-	}
-
-	func encodeToJson(object: Any, title: String) -> String {
-		/// This encodes $object (normally like an array of dictionary or dictionary of dictionaries) to JSON, with the title of $title
-
-		guard let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted) else {
-			return ""
-		}
-		var data_string = String(decoding: data, as: UTF8.self)
-		data_string = "{ \"\(title)\": \(data_string)\n}"
-		return data_string
-	}
-
-	func parseAndReturn(params: [String:String], address: String = "") -> String {
-		/// This function handles all the requests to the /requests subdirectory, and returns stuff like conversations, messages, and can send texts.
-
-		if self.debug {
-			for i in Array(params.keys) {
-				self.log("parsing \(i) and \(String(describing: params[i]))")
-			}
-		}
-
-		if Array(params.keys)[0] == "password" {
-			/// If they're sending over the password to authenticate
-			let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-
-			/// If they sent the correct password
-			if Array(params.values)[0] == password {
-
-				if !authenticated_addresses.contains(address) {
-					authenticated_addresses.append(address)
-				}
-				return "true"
-			}
-			/// default
-			return "false"
-		}
-
-		/// If they're not authenticated
-		if !self.checkIfAuthenticated(ras: address) {
-			return ""
-		}
-
-		let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
-
-		let f = Array(params.keys)[0] as String
-
-		if f == "person" || f == "num" || f == "offset" || f == "read" || f == "from" {
-			/// requesting messages from a specific person
-			var person = params["person"] ?? ""
-
-			if (params["read"] == nil && self.mark_when_read) || (params["read"] != nil && params["read"] == "true") {
-				ContentView.sender.markConvo(asRead: person)
-			}
-
-			let num_texts = Int(params["num"] ?? String(default_num_messages)) ?? default_num_messages
-			let offset = Int(params["offset"] ?? "0") ?? 0
-			let from = Int(params["from"] ?? "0") ?? 0 /// 0 for either, 1 for me, 2 for them
-
-			self.log( "selecting person: " + person + ", num: " + String(num_texts))
-
-			person = person.replacingOccurrences(of: "\"", with: "") /// In case they decide to capture it in quotes
-
-			let texts_array = ContentView.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset, from: from)
-			let texts = encodeToJson(object: texts_array, title: "texts")
-			return texts
-
-		} else if f == "chat" || f == "num_chats"  || f == "chats_offset" {
-			/// Requesting most recent conversations
-			let chats_offset = Int(params["chats_offset"] ?? "0") ?? 0
-			let num_texts = Int(params["num_chats"] ?? String(default_num_chats)) ?? default_num_chats
-
-			self.log("num chats: \(num_texts), offset: \(chats_offset)")
-
-			let chats_array = ContentView.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
-			let chats = encodeToJson(object: chats_array, title: "chats")
-
-			return chats
-
-		} else if f == "name" {
-			/// Requesting name for a chat_id
-			let chat_id = params["name"] ?? ""
-
-			let name = ContentView.chat_delegate.getDisplayName(chat_id: chat_id)
-			return name
-
-		} else if f == "search" || f == "case_sensitive" || f == "bridge_gaps" || f == "group_by" {
-			/// Searching for a specific term
-			let case_sensitive = (params["case_sensitive"] ?? "false") == "true"
-			let bridge_gaps = (params["bridge_gaps"] ?? "true") == "true"
-			let group_by_time = (params["group_by"] ?? "time") == "time" // if false, group by person.
-			let term = params["search"] ?? ""
-
-			let responses = ContentView.chat_delegate.searchForString(term: term , case_sensitive: case_sensitive, bridge_gaps: bridge_gaps, group_by_time: group_by_time)
-
-			let ret_val = encodeToJson(object: responses, title: "matches")
-
-			return ret_val
-		} else if f == "photos" || f == "photo_offset" || f == "most_recent" {
-			/// Retrieving most recent photos
-			let most_recent = (params["most_recent"] ?? "true") == "true"
-			let offset = Int(params["photo_offset"] ?? "0") ?? 0
-			let num = Int(params["photos"] ?? String(default_num_photos)) ?? default_num_photos
-
-			let ret_val = ContentView.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
-
-			return encodeToJson(object: ret_val, title: "photos")
-		} else if f == "tapback" || f == "tap_guid" || f == "tap_in_chat" || f == "remove_tap" {
-
-			guard params["tapback"] != nil && params["tap_guid"] != nil && params["tap_in_chat"] != nil else {
-				return "Please include parameters 'tapback', 'tap_guid', and 'tap_in_chat' in your request"
-			}
-
-			var reaction: Int = (Int(params["tapback"] ?? "-1") ?? -1) + 2000 /// reactions are 2000 - 2005
-			let text_guid: String = params["tap_guid"] ?? "0"
-			let chat: String = params["tap_in_chat"] ?? "0"
-			let remove = (params["remove_tap"] ?? "false") == "true"
-
-			if reaction > 2005 || reaction < 2000 { return "tapback value must be at least 0 and no greater than 5" }
-
-			if remove { reaction += 1000 }
-
-			ContentView.sender.sendTapback(reaction as NSNumber, forGuid: text_guid, inChat: chat)
-			return "true"
-		} else if f == "delete_chat" || f == "delete_text" {
-			/// Deletes a conversation or text
-			guard let chat: String = params["delete_chat"] else {
-				return "Please enter at least one identifier"
-			}
-
-			let text: String = params["delete_text"] ?? ""
-
-			ContentView.sender.removeObject(chat, text: text)
-			return "true"
-		}
-
-		self.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
-
-		return ""
-	}
-
-	func stopServer() {
-		/// Stops the server & and de-authenticates all ip addresses
-
-		self.server.stopListening()
-		socket.stopServer()
-		self.log("Stopped Server")
-
-		self.authenticated_addresses = [String]()
-		server_running = server.isListening
-	}
-
 	func loadFuncs() {
 		/// All the functions that run on scene load
 
-		self.loadFiles()
-
-		self.watcher.setTexts = { value in
-			self.sentOrReceivedNewText(value ?? "None")
-		}
-
-		self.watcher.setTyping = { value in
-			self.setPartyTyping(value ?? "None")
-		}
-
-		self.watcher.sentTapback = { tapback, guid in
-			self.sentTapback(tapback, guid: guid ?? "")
-		}
-
-		socket.watcher = self.watcher
-		socket.authenticated_addresses = self.authenticated_addresses
-		socket.verify_auth = self.checkIfAuthenticated
+		self.server.loadFuncs()
 
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
 			PHPhotoLibrary.requestAuthorization({ auth in
 				if auth != PHAuthorizationStatus.authorized {
-					self.log("App is not authorized to view photos. Please grant access.", warning: true)
+					Const.log("App is not authorized to view photos. Please grant access.", debug: self.debug, warning: true)
 				}
 			})
 		}
+
+		if !(UserDefaults.standard.value(forKey: "shown_oseven_update_msg") as? Bool ?? false) {
+			UserDefaults.standard.setValue(true, forKey: "shown_oseven_update_msg")
+			self.show_oseven_update = true
+		}
+
+		if self.start_on_load && (Const.getWiFiAddress() != nil || self.override_no_wifi)  {
+			loadServer()
+		}
 	}
 
-	func getWiFiAddress() -> String? {
-		/// Gets the private IP of the host device
-
-		var address : String?
-
-		// Get list of all interfaces on the local machine:
-		var ifaddr : UnsafeMutablePointer<ifaddrs>?
-		guard getifaddrs(&ifaddr) == 0 else { return nil }
-		guard let firstAddr = ifaddr else { return nil }
-
-		// For each interface ...
-		for ifptr in sequence(first: firstAddr, next: { $0.pointee.ifa_next }) {
-			let interface = ifptr.pointee
-
-			// Check for IPv4 or IPv6 interface:
-			let addrFamily = interface.ifa_addr.pointee.sa_family
-			if addrFamily == UInt8(AF_INET) {
-
-				// Check interface name:
-				let name = String(cString: interface.ifa_name)
-				if  name == "en0" {
-
-					// Convert interface address to a human readable string:
-					var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-					getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
-								&hostname, socklen_t(hostname.count),
-								nil, socklen_t(0), NI_NUMERICHOST)
-					address = String(cString: hostname)
-				}
-			}
-		}
-		freeifaddrs(ifaddr)
-
-		return address
+	func reloadVars() {
+		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+		self.server.reloadVars()
 	}
 
 	func getHostname() -> String {
@@ -681,9 +87,7 @@ struct ContentView: View {
 				HStack {
 					HStack {
 						Button(action: {
-							self.loadFiles()
-							ContentView.chat_delegate.refreshVars()
-							self.socket.refreshVars()
+							self.reloadVars()
 						}) {
 							Image(systemName: "goforward")
 								.font(.system(size: self.font_size))
@@ -693,7 +97,7 @@ struct ContentView: View {
 						Spacer().frame(width: 24)
 
 						Button(action: {
-							if self.server_running { self.stopServer() }
+							if self.server_running { self.server.stopServers() }
 						}) {
 							Image(systemName: "stop.fill")
 								.font(.system(size: self.font_size))
@@ -703,8 +107,8 @@ struct ContentView: View {
 						Spacer().frame(width: 30)
 
 						Button(action: {
-							if !self.server_running && (self.getWiFiAddress() != nil || self.override_no_wifi) {
-								self.loadServer(port_num: UInt16(self.port)!)
+							if !self.server_running && (Const.getWiFiAddress() != nil || self.override_no_wifi) {
+								self.loadServer()
 							}
 							UserDefaults.standard.setValue(true, forKey: "has_run")
 						}) {
@@ -770,8 +174,8 @@ struct ContentView: View {
 			}.padding()
 			.padding(.top, 14)
 
-			if self.getWiFiAddress() != nil || override_no_wifi {
-				Text("Visit http\(secure ? "s" : "")://\(self.getWiFiAddress() ?? self.getHostname()):\(port) in your browser to view your messages!")
+			if Const.getWiFiAddress() != nil || override_no_wifi {
+				Text("Visit http\(secure ? "s" : "")://\(Const.getWiFiAddress() ?? self.getHostname()):\(port) in your browser to view your messages!")
 					.font(Font.custom("smallTitle", size: 22))
 					.padding()
 			} else {
@@ -834,14 +238,11 @@ struct ContentView: View {
 								let picker = DocPicker(
 									supportedTypes: ["public.text"],
 									onPick: { url in
-										self.log("document chosen")
 										do {
-											try FileManager.default.copyItem(at: url, to: self.custom_css_path)
+											try FileManager.default.copyItem(at: url, to: Const.custom_css_path)
 										} catch {
-											self.log("Couldn't move custom css", warning: true)
+											Const.log("Couldn't move custom css", debug: self.debug, warning: true)
 										}
-									}, onDismiss: {
-										self.log("picker dismissed")
 									}
 								)
 								UIApplication.shared.windows.first?.rootViewController?.present(picker, animated: true)
@@ -857,10 +258,10 @@ struct ContentView: View {
 
 							Button(action: {
 								do {
-									try FileManager.default.removeItem(at: self.custom_css_path)
-									self.log("Removed custom css file")
+									try FileManager.default.removeItem(at: Const.custom_css_path)
+									Const.log("Removed custom css file", debug: self.debug)
 								} catch {
-									self.log("Failed to remove custom css file", warning: true)
+									Const.log("Failed to remove custom css file", debug: self.debug, warning: true)
 								}
 							}) {
 								Image(systemName: "trash")
@@ -895,17 +296,18 @@ struct ContentView: View {
 		}
 		.background(Color(UIColor.secondarySystemBackground))
 		.edgesIgnoringSafeArea(.all)
+		.alert(isPresented: $show_oseven_update, content: {
+			Alert(title: Text("0.7.0 Update"), message: Text("SMServer was recently updated to version 0.7.0. In this update, many parts of the API were rewritten to be easier to use and more robust.\n\nIf you are using the API of this app in any way outside of the built-in web interface, I would recommend that you check the API documentation (link in Settings) and verify that what you've made is still compatible"), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_oseven_update = false }))
+		})
 	}
 }
 
 class DocPicker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
 	/// Document Picker
 
-	private let onDismiss: () -> Void
 	private let onPick: (URL) -> ()
 
-	init(supportedTypes: [String], onPick: @escaping (URL) -> Void, onDismiss: @escaping () -> Void) {
-		self.onDismiss = onDismiss
+	init(supportedTypes: [String], onPick: @escaping (URL) -> Void) {
 		self.onPick = onPick
 
 		super.init(documentTypes: supportedTypes, in: .open)
@@ -920,8 +322,5 @@ class DocPicker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
 
 	func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
 		onPick(urls.first ?? URL(fileURLWithPath: ""))
-	}
-	func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-		onDismiss()
 	}
 }
