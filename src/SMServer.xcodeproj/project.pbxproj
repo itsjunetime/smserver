@@ -13,11 +13,13 @@
 		3C03DDE224E32EA90017A265 /* libmryipc.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3C11174E24CC9F050065894F /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C11174D24CC9F050065894F /* SocketDelegate.swift */; };
 		3C11175024CCF3AC0065894F /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */; };
+		3C128FD9259FB1F70072CFD3 /* ServerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C128FD8259FB1F70072CFD3 /* ServerDelegate.swift */; };
 		3C13F91D255DFDE600DB77F6 /* IdentityPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C13F91C255DFDE600DB77F6 /* IdentityPass.swift */; };
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3C69EB2F24E77F1D00F48291 /* cert.der in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB2E24E77F1D00F48291 /* cert.der */; };
 		3C69EB3124E77F7800F48291 /* identity.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB3024E77F7800F48291 /* identity.pfx */; };
+		3C732C672599A2EF007F8E9F /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C732C662599A2EF007F8E9F /* Constants.swift */; };
 		3C760E87245BCFE000EF24FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E86245BCFE000EF24FE /* AppDelegate.swift */; };
 		3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E88245BCFE000EF24FE /* SceneDelegate.swift */; };
 		3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E8A245BCFE000EF24FE /* ContentView.swift */; };
@@ -63,6 +65,7 @@
 /* Begin PBXFileReference section */
 		3C11174D24CC9F050065894F /* SocketDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketDelegate.swift; sourceTree = "<group>"; };
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		3C128FD8259FB1F70072CFD3 /* ServerDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerDelegate.swift; sourceTree = "<group>"; };
 		3C13F91C255DFDE600DB77F6 /* IdentityPass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityPass.swift; sourceTree = "<group>"; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
 		3C69EB2E24E77F1D00F48291 /* cert.der */ = {isa = PBXFileReference; lastKnownFileType = file; path = cert.der; sourceTree = "<group>"; };
@@ -70,6 +73,7 @@
 		3C6A5FB124B3E3FF00102AE2 /* MRYIPCCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MRYIPCCenter.h; sourceTree = "<group>"; };
 		3C6A5FB224B3E94600102AE2 /* Sender.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Sender.h; sourceTree = "<group>"; };
 		3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libmryipc.dylib; sourceTree = "<group>"; };
+		3C732C662599A2EF007F8E9F /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		3C760E83245BCFE000EF24FE /* SMServer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C760E86245BCFE000EF24FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3C760E88245BCFE000EF24FE /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -159,9 +163,11 @@
 				3C760E86245BCFE000EF24FE /* AppDelegate.swift */,
 				3C760E88245BCFE000EF24FE /* SceneDelegate.swift */,
 				3C760E8A245BCFE000EF24FE /* ContentView.swift */,
+				3C128FD8259FB1F70072CFD3 /* ServerDelegate.swift */,
 				3CC4184F24B1327400A98288 /* SettingsView.swift */,
 				3CC4185324B135B500A98288 /* ChatDelegate.swift */,
 				3C11174D24CC9F050065894F /* SocketDelegate.swift */,
+				3C732C662599A2EF007F8E9F /* Constants.swift */,
 				3C13F91C255DFDE600DB77F6 /* IdentityPass.swift */,
 				3C69EB3024E77F7800F48291 /* identity.pfx */,
 				3C69EB2E24E77F1D00F48291 /* cert.der */,
@@ -388,9 +394,11 @@
 				3CC4185024B1327400A98288 /* SettingsView.swift in Sources */,
 				3C760E89245BCFE000EF24FE /* SceneDelegate.swift in Sources */,
 				3C11174E24CC9F050065894F /* SocketDelegate.swift in Sources */,
+				3C128FD9259FB1F70072CFD3 /* ServerDelegate.swift in Sources */,
 				3C760E8B245BCFE000EF24FE /* ContentView.swift in Sources */,
 				3C13F91D255DFDE600DB77F6 /* IdentityPass.swift in Sources */,
 				3CC4185424B135B500A98288 /* ChatDelegate.swift in Sources */,
+				3C732C672599A2EF007F8E9F /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

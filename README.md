@@ -78,7 +78,6 @@ If there are any issues, questions, or feature requests at all, don't hesitate t
 
 ### Acknowledged issues:
 - Read receipts don't update until you reload a conversation. This is being worked on.
-- Although typing indicators do appear when the other party starts typing, they don't always disappear when they stop typing. This is also being worked on.
 
 ### To file an issue:
 Please include the following information:
@@ -102,5 +101,7 @@ Also, if the app did not crash on startup, but rather crashed after it was alrea
 There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
 
 ## Donations
-If you'd like to support development of this project, I really appreciate that, but I would ask that you instead consider donating to more worthy causes, such as [Save the Children](https://support.savethechildren.org/site/Donation2?df_id=2521&2521.donation=form1), who are helping with the humanitarian crisis in Yemen, or [Diasporans against SARS](https://www.gofundme.com/f/4ppyfs-diasporans-against-sars?utm_source=twitter&utm_medium=social&utm_campaign=m_pd+share-sheet), fighting injustice in Nigeria. \
-Lastly, if you are a supporter of blue lives matter, Donald Trump, or any hateful organization such as the Proud Boys, you are not welcome to use my software. I would not like to shut down conversation, and would really love to discuss these issues with you. However, racism and hatred have festered long enough in the US, and supporting the aforementioned organizations and individual(s) does nothing but exacerbate these problems.
+Feel free to donate below to support development of this project :) \
+[![Paypal Donations](https://img.shields.io/static/v1?label=Donations&message=Paypal&color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD)
+
+If you have money to spare, I would also suggest that you donate to causes such as [Save the Children](https://support.savethechildren.org/site/Donation2?df_id=2521&2521.donation=form1), who are helping with the humanitarian crisis in Yemen, or [Diasporans against SARS](https://www.gofundme.com/f/4ppyfs-diasporans-against-sars?utm_source=twitter&utm_medium=social&utm_campaign=m_pd+share-sheet), who are fighting injustice in Nigeria. These are very worth causes whom I would highly recommend helping out.

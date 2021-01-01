@@ -31,14 +31,14 @@
 
 - (void)handleReceivedTextWithCallback:(NSString *)guid {
 	/// This is the function that is called when a new text is received, or you send a text through SMServer.
-	/// _setTexts is a block that is set somewhere around line 554 in ContentView.swift, in loadFuncs().
+	/// _setTexts is a block that is set somewhere around line 554 in `ContentView.swift`, in `loadFuncs()`.
 	_setTexts(guid);
 }
 
-- (void)handlePartyTypingWithCallback:(NSString *)chat_id {
+- (void)handlePartyTypingWithCallback:(NSDictionary *)vals {
 	/// This is called when someone else starts typing
-	/// _setTyping is a block that is set somewhere around line 559 in ContentView.swift, in loadFuncs().
-	_setTyping(chat_id);
+	/// `_setTyping` is a block that is set somewhere around line 559 in `ContentView.swift`, in `loadFuncs()`.
+	_setTyping(vals);
 }
 
 - (void)handleSentTapbackWithCallback:(NSDictionary *)vals {
@@ -63,19 +63,23 @@
 	[self.center callExternalVoidMethod:@selector(launchSMS) withArguments:nil];
 }
 
-- (void)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths {
-	[self.center callExternalVoidMethod:@selector(sendText:) withArguments:@{@"body": body, @"subject": subject, @"address": address, @"attachment": paths}];
+- (BOOL)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths {
+	NSDictionary* args = @{@"body": body, @"subject": subject, @"address": address, @"attachment": paths};
+	return [self.center callExternalMethod:@selector(sendText:) withArguments:args];
 }
 
-- (void)markConvoAsRead:(NSString *)chat_id {
+- (BOOL)markConvoAsRead:(NSString *)chat_id {
 	NSArray* chats = [chat_id componentsSeparatedByString:@","]; /// To allow marking multiple convos as read
 	for (NSString* chat in chats) {
-		[self.center callExternalVoidMethod:@selector(setAllAsRead:) withArguments:chat];
+		if (![[self.center callExternalMethod:@selector(setAllAsRead:) withArguments:chat] boolValue])
+			return NO;
 	}
+	return YES;
 }
 
-- (void)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat {
-	[self.center callExternalVoidMethod:@selector(sendTapback:) withArguments:@{@"tapback": tapback, @"guid": guid, @"chat": chat}];
+- (BOOL)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat {
+	NSDictionary* args = @{@"tapback": tapback, @"guid": guid, @"chat": chat};
+	return [self.center callExternalMethod:@selector(sendTapback:) withArguments:args];
 }
 
 - (void)sendTyping:(BOOL)isTyping forChat:(NSString *)chat {
@@ -88,8 +92,9 @@
 	[convo setLocalUserIsTyping:isTyping];
 }
 
-- (void)removeObject:(NSString *)chat text:(NSString *)text {
-	[self.center callExternalVoidMethod:@selector(delete:) withArguments:@{@"chat": chat, @"text": text}];
+- (BOOL)removeObject:(NSString *)chat text:(NSString *)text {
+	NSDictionary* args = @{@"chat": chat, @"text": text};
+	return [self.center callExternalMethod:@selector(delete:) withArguments:args];
 }
 
 /// This is not being used, but I am leaving it here for future versions in case I figure out how to make it work well.

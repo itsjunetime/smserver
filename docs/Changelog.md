@@ -1,4 +1,23 @@
 # Changelog
+0.6.3 &rightarrow; 0.7.0
+ - Re-added option to start the server upon app launch
+ - Server auto-restarts itself without de-authenticating any clients automatically when the host device's network changes
+ - Added security improvements to prevent brute-forcing of password
+ - Added significantly more error checking for private API functions
+ - Added API Documentation & Donation link in Settings
+ - Significantly improved typing indicator detection method
+ - Significantly improved speed of photo list retrieval (about 2.5x as fast now)
+ - Optimized attachment data retrieval
+ - Optimized sending texts
+ - Completely overhauled API responses
+ - Fixed security issues to prevent SQL Injection
+ - Fixed issue where typing indicators would never disappear
+ - Fixed issue that would cause reactions to duplicate instead of replace old ones
+ - Fixed issue where tapbacks would not be sent if message was 1001+ messages in
+ - Fixed issue with marking conversations as read when it shouldn't
+ - Fixed an issue where Custom CSS wouldn't be cleared
+ - Commented all my code much more :)
+
 0.6.2 &rightarrow; 0.6.3
  - Added ability to delete texts in the web interface and through the API
  - Added ability to remove previously sent tapbacks
