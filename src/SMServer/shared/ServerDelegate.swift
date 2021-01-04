@@ -4,6 +4,7 @@ import Criollo
 class ServerDelegate {
 	let server = CRHTTPServer()
 	let socket = SocketDelegate()
+	let settings = Settings.shared()
 	let identity = Bundle.main.path(forResource: "identity", ofType: "pfx")
 	let cert_pass = PKCS12Identity.pass  /// This is in a hidden file, not in the git repository, so that nobody can steal the private key of my cert.
 
@@ -12,7 +13,6 @@ class ServerDelegate {
 	var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
 
 	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-	var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
 	var restarted_recently: Bool = false
 
 	var main_page: String = ""
@@ -30,8 +30,10 @@ class ServerDelegate {
 	</html>
 	"""
 
-	var authenticated_addresses = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
-
+	init() {
+		loadFuncs()
+	}
+	
 	func loadFuncs() {
 		self.loadFiles()
 
@@ -48,8 +50,9 @@ class ServerDelegate {
 		}
 
 		socket.watcher = self.watcher
-		socket.authenticated_addresses = self.authenticated_addresses
 		socket.verify_auth = self.checkIfAuthenticated
+		
+		self.debug = settings.debug
 
 		/// Here we set up notification observers for when the network changes, so that we can automatically restart the server on the new network & with the new IP.
 		/// This is kinda a hacky way sending the notification into a `CFNotificationCallback`, which then posts a notification in the `NSNotificationCenter`), but
@@ -72,11 +75,10 @@ class ServerDelegate {
 		Const.log("Disconnected from wifi, restarting server with current auth list...", debug: self.debug)
 
 		restarted_recently = true
-		let override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
 
 		self.stopServers(clear_auth: false)
 
-		if override_no_wifi || Const.getWiFiAddress() != nil {
+		if settings.override_no_wifi || Const.getWiFiAddress() != nil {
 			_ = self.startServers()
 		}
 
@@ -86,7 +88,7 @@ class ServerDelegate {
 	}
 
 	func reloadVars() {
-		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+		self.debug = settings.debug
 		self.loadFiles()
 		ServerDelegate.chat_delegate.refreshVars()
 		self.socket.refreshVars()
@@ -94,17 +96,6 @@ class ServerDelegate {
 
 	func loadFiles() {
 		/// This sets the website page files to local variables
-		let socket_port = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
-
-		let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
-
-		let subjects_enabled = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
-		let light_theme = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
-		let nord_theme = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
-
-		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 
 		if let h = Bundle.main.url(forResource: "chats", withExtension: "html", subdirectory: "html"),
 		   let s = Bundle.main.url(forResource: "style", withExtension: "css", subdirectory: "html"),
@@ -116,14 +107,14 @@ class ServerDelegate {
 			do {
 				/// Set up all the pages as multi-line string variables, set values within them.
 				self.main_page = try String(contentsOf: h, encoding: .utf8)
-					.replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(default_num_messages);")
-					.replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(default_num_chats);")
-					.replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(default_num_photos);")
-					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(socket_port);")
-					.replacingOccurrences(of: "var debug;", with: "var debug = \(self.debug);")
-					.replacingOccurrences(of: "var subject;", with: "var subject = \(subjects_enabled);")
-					.replacingOccurrences(of: "<!--light-->", with: light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
-					.replacingOccurrences(of: "<!--nord-->", with: nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
+					.replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(settings.default_num_messages);")
+					.replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(settings.default_num_chats);")
+					.replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(settings.default_num_photos);")
+					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(settings.socket_port);")
+					.replacingOccurrences(of: "var debug;", with: "var debug = \(settings.debug);")
+					.replacingOccurrences(of: "var subject;", with: "var subject = \(settings.subjects_enabled);")
+					.replacingOccurrences(of: "<!--light-->", with: settings.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
+					.replacingOccurrences(of: "<!--nord-->", with: settings.nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
 
 				self.main_page_style = try String(contentsOf: s, encoding: .utf8)
 				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
@@ -146,15 +137,13 @@ class ServerDelegate {
 	}
 
 	func startServers() -> Bool {
-		let server_port = UserDefaults.standard.object(forKey: "port") as? Int ?? 8741
-		let socket_port = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
 
 		if server.isListening {
 			self.stopServers()
 			Const.log("Server was already running, stopped.", debug: debug, warning: false)
 		}
 
-		if UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true {
+		if settings.is_secure {
 			server.isSecure = true
 			server.identityPath = identity
 			server.password = cert_pass
@@ -246,12 +235,16 @@ class ServerDelegate {
 				/// This gets an image from the camera roll. The value for this key must be the path at which the image resides,
 				/// minus the prefix of `/var/mobile/Media/`
 
+				#if os(iOS)
 				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 				let data = ServerDelegate.chat_delegate.getPhotoDatafromPath(path: req.query["photo"] ?? "")
 
 				if data.isEmpty {
 					res.setStatusCode(404, description: "No photo exists at the specified URL")
 				}
+				#elseif os(macOS)
+				let data = Data()
+				#endif
 
 				res.send(data)
 			} else {
@@ -394,15 +387,20 @@ class ServerDelegate {
 
 		server.add("/favicon.ico") { (req, res, next) in
 			/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
+			#if os(macOS)
+			let data = NSImage(named: "favicon")?.tiffRepresentation ?? Data.init(capacity: 0)
+			#elseif os(iOS)
 			let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
+			#endif
+			
 			res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 			res.send(data)
 		}
 
 		Const.log("Got past adding all the handlers.", debug: self.debug)
 
-		server.startListening(nil, portNumber: UInt(server_port))
-		socket.startServer(port: socket_port)
+		server.startListening(nil, portNumber: UInt(settings.server_port) ?? 8741)
+		socket.startServer(port: settings.socket_port)
 
 		return isRunning()
 	}
@@ -414,7 +412,7 @@ class ServerDelegate {
 		self.socket.stopServer()
 		Const.log("Stopped Server", debug: self.debug)
 
-		if clear_auth { self.authenticated_addresses = [String]() }
+		if clear_auth { settings.authenticated_addresses = [String]() }
 	}
 
 	func isRunning() -> Bool {
@@ -423,9 +421,7 @@ class ServerDelegate {
 
 	func checkIfAuthenticated(ras: String) -> Bool {
 		/// This checks if the ip address `ras` has already authenticated with the host
-		let require_authentication = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
-
-		return !require_authentication || self.authenticated_addresses.contains(ras)
+		return !settings.require_authentication || settings.authenticated_addresses.contains(ras)
 	}
 
 	func encodeToJson(object: Any, title: String) -> String {
@@ -446,12 +442,14 @@ class ServerDelegate {
 		let subject: String = params["subject"] as? String ?? ""
 		var files = new_files
 
+		#if os(iOS)
 		if params["photos"] != nil {
 			let ph = (params["photos"] as? String ?? "").split(separator: ":")
 			for i in ph {
 				files.append(Const.photo_address_prefix + String(i))
 			}
 		}
+		#endif
 
 		if address.prefix(1) == "+" { /// Make sure there are no unnecessary characters like parenthesis
 			address = "+\(address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())"
@@ -520,11 +518,10 @@ class ServerDelegate {
 		}
 		if params.keys.first == "password" {
 			/// If they're sending over the password to authenticate
-			let password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
 			/// If they sent the correct password
-			if params.values.first == password {
-				if !authenticated_addresses.contains(address) {
-					authenticated_addresses.append(address)
+			if params.values.first == settings.password {
+				if !settings.authenticated_addresses.contains(address) {
+					settings.authenticated_addresses.append(address)
 				}
 				return [200, "true"]
 			}
@@ -540,22 +537,18 @@ class ServerDelegate {
 			return [403, "Please authenticate"]
 		}
 
-		let default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-		let default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-		let default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
-
 		let f = Array(params.keys)[0] as String
 
 		if Const.api_msg_vals.contains(f) {
 			/// requesting messages from a specific person
 			var person = params[Const.api_msg_req] ?? ""
 
-			if (params[Const.api_msg_read] == nil && self.mark_when_read) || (params[Const.api_msg_read] != nil && params[Const.api_msg_read] == "true") {
+			if (params[Const.api_msg_read] == nil && settings.mark_when_read) || (params[Const.api_msg_read] != nil && params[Const.api_msg_read] == "true") {
 				/// yeah so this does return a `BOOL` but I don't really know what to do if it returns `NO`...
 				ServerDelegate.sender.markConvo(asRead: person)
 			}
 
-			let num_texts = Int(params[Const.api_msg_num] ?? String(default_num_messages)) ?? default_num_messages
+			let num_texts = Int(params[Const.api_msg_num] ?? String(settings.default_num_messages)) ?? settings.default_num_messages
 			let offset = Int(params[Const.api_msg_off] ?? "0") ?? 0
 			let from = Int(params[Const.api_msg_from] ?? "0") ?? 0 /// 0 for either, 1 for me, 2 for them
 			person = person.replacingOccurrences(of: "\"", with: "") /// In case they decide to capture it in quotes
@@ -570,7 +563,7 @@ class ServerDelegate {
 			/// Requesting most recent conversations
 
 			let chats_offset = Int(params[Const.api_chat_off] ?? "0") ?? 0
-			let num_texts = Int(params[Const.api_chat_req] ?? String(default_num_chats)) ?? default_num_chats
+			let num_texts = Int(params[Const.api_chat_req] ?? String(settings.default_num_chats)) ?? settings.default_num_chats
 			Const.log("num chats: \(num_texts), offset: \(chats_offset)", debug: self.debug)
 
 			let chats_array = ServerDelegate.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
@@ -600,12 +593,12 @@ class ServerDelegate {
 			/// Retrieving most recent photos
 			let most_recent = (params[Const.api_photo_recent] ?? "true") == "true"
 			let offset = Int(params[Const.api_photo_off] ?? "0") ?? 0
-			let num = Int(params[Const.api_photo_req] ?? String(default_num_photos)) ?? default_num_photos
+			let num = Int(params[Const.api_photo_req] ?? String(settings.default_num_photos)) ?? settings.default_num_photos
 
 			let ret_val = ServerDelegate.chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
 			let photos = encodeToJson(object: ret_val, title: "photos")
 
-			return[200, photos]
+			return [200, photos]
 		}
 
 		Const.log("WARNING: We haven't implemented this functionality yet, sorry :/", debug: self.debug, warning: true)

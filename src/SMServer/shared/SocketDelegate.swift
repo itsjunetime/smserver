@@ -6,22 +6,24 @@ class SocketDelegate : ServerWebSocketDelegate {
 	static let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
 	/// This passphrase is found in a hidden file that doesn't exist in the git repo. This is so that nobody can extract the private key from the pfx file
 	static let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: PKCS12Identity.pass)
+	let settings = Settings.shared()
 	var server: Server? = nil
 	var watcher: IPCTextWatcher? = nil
-	var authenticated_addresses = [String]()
 	var verify_auth: (String)->(Bool) = { _ in return false } /// nil init
 	let prefix: String = "SMServer_app: "
 
 	var debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-	var send_typing = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
 
+	init() {
+		self.debug = settings.debug
+	}
+	
 	func refreshVars() {
-		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-		self.send_typing = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
+		self.debug = settings.debug
 	}
 
 	func startServer(port: Int) {
-		if UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true {
+		if settings.is_secure {
 			self.server = Server(identity: SocketDelegate.identity!, caCertificates: [SocketDelegate.cert!])
 		} else {
 			self.server = Server()
@@ -58,8 +60,11 @@ class SocketDelegate : ServerWebSocketDelegate {
 	}
 
 	func sendNewBattery() {
-		let percent = UIDevice.current.batteryLevel * 100
-		let charging_state = UIDevice.current.batteryState
+		/*let percent = UIDevice.current.batteryLevel * 100
+		let charging_state = UIDevice.current.batteryState*/
+		let percent = Const.getBatteryLevel()
+		let charging_state = Const.getBatteryState()
+		
 		var state_string = "charging"
 		if charging_state == .unplugged || charging_state == .unknown {
 			state_string = "unplugged"
@@ -95,10 +100,12 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 		Const.log("\(ip) was allowed to connect", debug: self.debug)
 
+		#if os(iOS)
 		UIDevice.current.isBatteryMonitoringEnabled = true
+		#endif
 
-		let battery_level = UIDevice.current.batteryLevel * 100
-		let charging_state = UIDevice.current.batteryState
+		let battery_level = Const.getBatteryLevel() * 100
+		let charging_state = Const.getBatteryState()
 		var state_string = "charging"
 		if charging_state == .unplugged || charging_state == .unknown {
 			state_string = "unplugged"
@@ -107,8 +114,17 @@ class SocketDelegate : ServerWebSocketDelegate {
 		webSocket.send(text: "battery:\(String(battery_level))")
 		webSocket.send(text: "battery:\(state_string)")
 
+		#if os(iOS)
 		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
 		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryStateDidChangeNotification, object: nil)
+		#elseif os(macOS)
+		DispatchQueue.main.async {
+			while true { /// yes. This is terrible.
+				sleep(10)
+				self.sendNewBattery()
+			}
+		}
+		#endif
 	}
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
@@ -126,7 +142,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 			case .text(let msg):
 				let context = msg.split(separator: ":")[0]
 
-				if (context == "typing" || context == "idle") && self.send_typing {
+				if (context == "typing" || context == "idle") && settings.send_typing {
 					let content = msg.split(separator: ":")[1]
 					ServerDelegate.sender.sendTyping(String(context) == "typing", forChat: String(content))
 				}

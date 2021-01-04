@@ -31,19 +31,19 @@
 
 - (void)handleReceivedTextWithCallback:(NSString *)guid {
 	/// This is the function that is called when a new text is received, or you send a text through SMServer.
-	/// _setTexts is a block that is set somewhere around line 554 in `ContentView.swift`, in `loadFuncs()`.
+	/// _setTexts is a block that is set somewhere around line 38 in `ServerDelegate.swift`, in `loadFuncs()`.
 	_setTexts(guid);
 }
 
 - (void)handlePartyTypingWithCallback:(NSDictionary *)vals {
 	/// This is called when someone else starts typing
-	/// `_setTyping` is a block that is set somewhere around line 559 in `ContentView.swift`, in `loadFuncs()`.
+	/// `_setTyping` is a block that is set somewhere around line 42 in `ServerDelegate.swift`, in `loadFuncs()`.
 	_setTyping(vals);
 }
 
 - (void)handleSentTapbackWithCallback:(NSDictionary *)vals {
 	/// This is called when you send a reaction through SMServer
-	/// _sentTapback is a block that is set somewhere around line 563 in ContentView.swift, in loadFuncs().
+	/// _sentTapback is a block that is set somewhere around line 46 in `ServerDelegate.swift`, in loadFuncs().
 	_sentTapback([[vals objectForKey:@"tapback"] intValue], [vals objectForKey:@"guid"]);
 }
 

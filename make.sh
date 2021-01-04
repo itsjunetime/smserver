@@ -112,7 +112,7 @@ then
 
 	rm key.pem cert.pem
 
-	echo -en "class PKCS12Identity {\n\tstatic let pass: String = \"${pass}\"\n}" > ${ROOTDIR}/src/SMServer/IdentityPass.swift
+	echo -en "class PKCS12Identity {\n\tstatic let pass: String = \"${pass}\"\n}" > ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift
 fi
 
 if [ "$deb" = true ] || [ "$ipa" = true ]

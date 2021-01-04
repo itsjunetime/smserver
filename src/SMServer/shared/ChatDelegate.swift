@@ -5,9 +5,10 @@ import Photos
 
 final class ChatDelegate {
 	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+	let settings = Settings.shared()
 
 	final func refreshVars() {
-		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+		self.debug = settings.debug
 	}
 
 	final func createConnection(connection_string: String = Const.sms_db_address) -> OpaquePointer? {
@@ -216,6 +217,8 @@ final class ChatDelegate {
 			}
 		}
 
+		#if os(iOS)
+		
 		if chat_id.contains("@") { /// if an email
 			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE ?", args: ["%\(chat_id)%"])
 		} else if chat_id.contains("+") {
@@ -223,6 +226,14 @@ final class ChatDelegate {
 		} else {
 			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE ? and c16Phone NOT LIKE \"%+%\"", args: ["%\(chat_id) "])
 		}
+		
+		#elseif os(macOS)
+		
+		let arg_string = chat_id.contains("@") ? "%\(chat_id)%" : "% \(chat_id.replacingOccurrences(of: "+", with: "")) "
+		
+		display_name_array = selectFromSql(db: contact_db, columns: ["ZFIRSTNAME", "ZLASTNAME"], table: "ZABCDRECORD", condition: "WHERE ZCONTACTINDEX IN (SELECT Z_PK FROM ZABCDCONTACTINDEX WHERE ZSTRINGFORINDEXING LIKE ?)", args: [arg_string])
+		
+		#endif
 
 		if display_name_array.count == 0 {
 			let unc = selectFromSql(db: sms_db, columns: ["uncanonicalized_id"], table: "handle", condition: "WHERE id is ?", args: [chat_id])
@@ -305,14 +316,25 @@ final class ChatDelegate {
 		Const.log("Getting \(String(num_to_load)) chats", debug: self.debug)
 
 		var pinned_chats: [String]? = nil
-		let combine = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
 		var return_array = [[String:Any]]()
-
-		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
-			DispatchQueue.global(qos: .default).async {
-				let center = MRYIPCCenter.init(named: "com.ianwelker.smserver")
-				pinned_chats = center?.callExternalMethod(Selector(("getPinnedChats")), withArguments: nil) as? [String] ?? [String]()
+		let dp_group = DispatchGroup()
+		
+		if offset == 0 {
+			let os_version = Const.getOSVersion()
+			#if os(iOS)
+			if os_version >= 14.0 {
+				DispatchQueue.global(qos: .default).async {
+					dp_group.enter()
+					let center = MRYIPCCenter.init(named: "com.ianwelker.smserver")
+					pinned_chats = center?.callExternalMethod(Selector(("getPinnedChats")), withArguments: nil) as? [String] ?? [String]()
+					dp_group.leave()
+				}
 			}
+			#elseif os(macOS)
+			if os_version >= 10.15 {
+				pinned_chats = [String]() /// TEMPORARY. FIX.
+			}
+			#endif
 		}
 
 		/// Create connections
@@ -326,7 +348,7 @@ final class ChatDelegate {
 
 		let chats: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
 
-		inner: if combine {
+		inner: if settings.combine_contacts {
 			/// This `if` gets all the addresses associated with your contacts, parses them with regex to get all possible `chat_identifier`s,
 			/// then puts them into a nested array. Later on, the conversations check themselves with the nested arrays to find the associated `chat_identifier`s.
 			/// This section is probably not very optimized and probably also inaccurate. That's why it's optional.
@@ -362,23 +384,14 @@ final class ChatDelegate {
 			}
 		}
 
-		let formatter = RelativeDateTimeFormatter()
-
-		if offset == 0 && Float(UIDevice.current.systemVersion) ?? 13.0 >= 14.0 {
-			DispatchQueue.main.sync {
-				/// It's all async stuff so normally this doesn't even get executed but we still have to have it just in case
-				while pinned_chats == nil {
-					usleep(2000)
-				}
-			}
-		}
-
+		dp_group.wait()
+		
 		for i in chats {
 			Const.log("Beginning to iterate through chats for \(i["c.chat_identifier"] as! String)", debug: self.debug)
 
 			var new_chat = [String:Any]()
 
-			if combine {
+			if settings.combine_contacts {
 				if checked.contains(i["c.chat_identifier"] as! String) { continue }
 
 				let these_addresses: [String] = chat_identifiers[i["c.chat_identifier"] as! String] ?? [String]()
@@ -423,13 +436,10 @@ final class ChatDelegate {
 			} else {
 				new_chat["pinned"] = false
 			}
+			
+			new_chat["relative_time"] = Const.getRelativeTime(ts: Double(i["m.date"] as! String) ?? 0.0)
 
-			let t: Double = ((Double(i["m.date"] as! String) ?? 0.0) / 1000000000.0) + 978307200.0
-			let d = Date(timeIntervalSince1970: t)
-
-			new_chat["relative_time"] = formatter.localizedString(for: d, relativeTo: Date())
-
-			new_chat["is_group"] = (i["c.room_name"] as! String) == "" ? false : true
+			new_chat["is_group"] = (i["c.room_name"] as! String) != ""
 			new_chat["chat_identifier"] = i["c.chat_identifier"]
 			new_chat["time_marker"] = Int(i["m.date"] as! String)
 
@@ -460,9 +470,11 @@ final class ChatDelegate {
 		/// This does the same thing as returnImageDataDB, but without the `contact_db` and `image_db` as arguments, if you just need to get like 1 image
 
 		Const.log("Getting image data for chat_id \(chat_id)", debug: self.debug)
-
+		
 		/// Make connections
 		var contact_db = createConnection(connection_string: Const.contacts_address)
+
+		#if os(iOS)
 		var image_db = createConnection(connection_string: Const.contact_images_address)
 		if contact_db == nil || image_db == nil { return Data.init(capacity: 0) }
 
@@ -470,9 +482,29 @@ final class ChatDelegate {
 		let return_val = returnImageDataDB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!)
 
 		/// close
-		closeDatabase(&contact_db)
 		closeDatabase(&image_db)
-
+		
+		#elseif os(macOS)
+		let image_name = selectFromSql(db: contact_db, columns: ["ZUNIQUEID"], table: "ZABCDRECORD", condition: "WHERE ZCONTACTINDEX IN (SELECT Z_PK from ZABCDCONTACTINDEX WHERE ZSTRINGFORINDEXING LIKE ?)", args: ["%\(chat_id)%"], num_items: 1)
+		let return_val: Data
+		
+		if image_name.count == 0 || image_name[0].count == 0 {
+			return_val = NSImage(named: "profile")?.tiffRepresentation ?? Data()
+		} else {
+			let image_name_string = (image_name[0]["ZUNIQUEID"] ?? "").split(separator: ":")[0]
+			let image_path = URL(fileURLWithPath: Const.contact_images_address + image_name_string)
+			
+			do {
+				return_val = try Data.init(contentsOf: image_path)
+			} catch {
+				return_val = NSImage(named: "profile")?.tiffRepresentation ?? Data()
+			}
+		}
+		
+		#endif
+		
+		closeDatabase(&contact_db)
+		
 		return return_val
 	}
 
@@ -482,10 +514,13 @@ final class ChatDelegate {
 		Const.log("Getting image data with db for chat_id \(chat_id)", debug: self.debug)
 
 		if chat_id == "default" || (chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20) {
-			let image = UIImage(named: "profile")
-			let pngdata = (image?.pngData())!
+			#if os(iOS)
+			let pngdata = UIImage(named: "profile")?.pngData()
+			#elseif os(macOS)
+			let pngdata = NSImage(named: "profile")?.tiffRepresentation
+			#endif
 
-			return pngdata
+			return pngdata ?? Data.init(capacity: 0)
 		}
 
 		var docid = [[String:String]]()
@@ -585,8 +620,7 @@ final class ChatDelegate {
 
 		return return_val
 	}
-
-	//final func getAttachmentDataFromPath(path: String) -> Data {
+	
 	final func getAttachmentDataFromPath(path: String) -> [Any] { /// [0] = data, [1] = mime_type
 		/// This returns the pure data of a file (attachment) at `path`
 
@@ -599,8 +633,13 @@ final class ChatDelegate {
 		do {
 			/// Pretty straightforward -- get data and return it
 			if (type == "image/heic") { /// Since they're used so much
-				let attachment_data = UIImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)
-				info[0] = attachment_data?.jpegData(compressionQuality: 0) as Any
+				#if os(iOS)
+				let attachment_data = UIImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)?.jpegData(compressionQuality: 0) ?? Data()
+				#elseif os(macOS)
+				let attachment_data = NSImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)?.tiffRepresentation
+				#endif
+				
+				info[0] = attachment_data as Any
 			} else {
 				info[0] = try Data.init(contentsOf: URL(fileURLWithPath: Const.attachment_address_prefix + parsed_path))
 			}
@@ -655,11 +694,18 @@ final class ChatDelegate {
 
 		return group_by_time ? texts : return_texts
 	}
+	
+	//#if os(iOS)
 
 	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: Any]] {
 		/// This gets a list of the `num` (most_recent ? most recent : oldest) photos, offset by `offset`.
+		
+		#if os(macOS)
+		guard #available(OSX 10.15, *) else { return [[String:Any]]() }
+		#endif
+		
 		Const.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")", debug: self.debug)
-
+		
 		/// make sure that we have access to the photos library
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
 			var con = true;
@@ -733,13 +779,18 @@ final class ChatDelegate {
 		/// To prevent LFI
 		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "")
 
-		/// get and return photo data
+		#if os(iOS)
 		let image = UIImage(contentsOfFile: Const.photo_address_prefix + parsed_path)
-
-		/// Compress image to a jpeg with horrible quality since they're only thumbnails
 		let photo_data = image?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
+		#elseif os(macOS)
+		let image = NSImage(contentsOfFile: Const.photo_address_prefix + parsed_path)
+		let photo_data = image?.tiffRepresentation ?? Data.init(capacity: 0)
+		#endif
+		
 		return photo_data
 	}
+
+	//#endif
 
 	final func getLinkInfo(_ mid: String, db: OpaquePointer?) -> [String:String] {
 		/// This get a Rich Link's title text from the sql database. Was quite the pain to get working.

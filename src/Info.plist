@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>SMServer</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict/>
@@ -25,7 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
+	<false/>
+	<key>NSMainStoryboardFile</key>
+	<string>LaunchScreen</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>To view &amp; send your photos from the web interface</string>
 	<key>UIApplicationSceneManifest</key>
@@ -47,12 +51,17 @@
 	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>continuous</string>
+		<string>audio</string>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+		<string>external-accessory</string>
 		<string>fetch</string>
+		<string>location</string>
 		<string>processing</string>
 		<string>remote-notification</string>
-		<string>unboundedTaskCompletion</string>
 		<string>voip</string>
+		<string>continuous</string>
+		<string>unboundedTaskCompletion</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

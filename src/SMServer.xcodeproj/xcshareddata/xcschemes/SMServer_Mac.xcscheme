@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3C760E82245BCFE000EF24FE"
-               BuildableName = "SMServer.app"
-               BlueprintName = "SMServer"
+               BlueprintIdentifier = "3C128FDC259FEE4F0072CFD3"
+               BuildableName = "SMServer_Mac.app"
+               BlueprintName = "SMServer_Mac"
                ReferencedContainer = "container:SMServer.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,26 +28,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3C760E98245BCFE100EF24FE"
-               BuildableName = "SMServerTests.xctest"
-               BlueprintName = "SMServerTests"
-               ReferencedContainer = "container:SMServer.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3C760EA3245BCFE100EF24FE"
-               BuildableName = "SMServerUITests.xctest"
-               BlueprintName = "SMServerUITests"
-               ReferencedContainer = "container:SMServer.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -59,21 +39,20 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
-      enableGPUValidationMode = "1"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3C760E82245BCFE000EF24FE"
-            BuildableName = "SMServer.app"
-            BlueprintName = "SMServer"
+            BlueprintIdentifier = "3C128FDC259FEE4F0072CFD3"
+            BuildableName = "SMServer_Mac.app"
+            BlueprintName = "SMServer_Mac"
             ReferencedContainer = "container:SMServer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -82,9 +61,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3C760E82245BCFE000EF24FE"
-            BuildableName = "SMServer.app"
-            BlueprintName = "SMServer"
+            BlueprintIdentifier = "3C128FDC259FEE4F0072CFD3"
+            BuildableName = "SMServer_Mac.app"
+            BlueprintName = "SMServer_Mac"
             ReferencedContainer = "container:SMServer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

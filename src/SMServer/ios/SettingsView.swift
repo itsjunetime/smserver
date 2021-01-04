@@ -1,24 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
-	@State var default_num_chats = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-	@State var default_num_messages = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-	@State var default_num_photos = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
-	@State var socket_port = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
-
-	@State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-	@State var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
-	@State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
-	@State var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
-	@State var nord_theme: Bool = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
-	@State var is_secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
-	@State var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
-	@State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
-	@State var subjects_enabled: Bool = UserDefaults.standard.object(forKey: "subjects_enabled") as? Bool ?? false
-	@State var send_typing: Bool = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
-	@State var combine_contacts: Bool = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
-	@State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
-
+	let settings = Settings.shared()
+	
 	var grey_box = Color("BeginningBlur")
 
 	private let picker_options: [String] = ["Dark", "Light", "Nord"]
@@ -39,114 +23,114 @@ struct SettingsView: View {
 	var body: some View {
 
 		let chats_binding = Binding<Int>(get: {
-			self.default_num_chats
+			self.settings.default_num_chats
 		}, set: {
-			self.default_num_chats = Int($0)
+			self.settings.default_num_chats = Int($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_chats")
 		})
 
 		let messages_binding = Binding<Int>(get: {
-			self.default_num_messages
+			self.settings.default_num_messages
 		}, set: {
-			self.default_num_messages = Int($0)
+			self.settings.default_num_messages = Int($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_messages")
 		})
 
 		let photos_binding = Binding<Int>(get: {
-			self.default_num_photos
+			self.settings.default_num_photos
 		}, set: {
-			self.default_num_photos = Int($0)
+			self.settings.default_num_photos = Int($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_photos")
 		})
 
 		let socket_binding = Binding<Int>(get: {
-			self.socket_port
+			self.settings.socket_port
 		}, set: {
-			if String($0) == UserDefaults.standard.object(forKey: "port") as? String ?? "8741" {
+			if String($0) == self.settings.server_port {
 				self.display_port_alert = true
 			} else {
-				self.socket_port = Int($0)
+				self.settings.socket_port = Int($0)
 				UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
 			}
 		})
 
 		let theme_binding = Binding<Int>(get: {
-			self.light_theme ? 1 : (self.nord_theme ? 2 : 0)
+			self.settings.light_theme ? 1 : (self.settings.nord_theme ? 2 : 0)
 		}, set: {
-			self.light_theme = $0 == 1
-			self.nord_theme = $0 == 2
-			UserDefaults.standard.setValue(self.light_theme, forKey: "light_theme")
-			UserDefaults.standard.setValue(self.nord_theme, forKey: "nord_theme")
+			self.settings.light_theme = $0 == 1
+			self.settings.nord_theme = $0 == 2
+			UserDefaults.standard.setValue(self.settings.light_theme, forKey: "light_theme")
+			UserDefaults.standard.setValue(self.settings.nord_theme, forKey: "nord_theme")
 		})
 
 		let subject_binding = Binding<Bool>(get: {
-			self.subjects_enabled
+			self.settings.subjects_enabled
 		}, set: {
-			self.subjects_enabled = $0
+			self.settings.subjects_enabled = $0
 			UserDefaults.standard.setValue($0, forKey: "subjects_enabled")
 		})
 
 		let typing_binding = Binding<Bool>(get: {
-			self.send_typing
+			self.settings.send_typing
 		}, set: {
-			self.send_typing = $0
+			self.settings.send_typing = $0
 			UserDefaults.standard.setValue($0, forKey: "send_typing")
 		})
 
 		let read_binding = Binding<Bool>(get: {
-			self.mark_when_read
+			self.settings.mark_when_read
 		}, set: {
-			self.mark_when_read = $0
+			self.settings.mark_when_read = $0
 			UserDefaults.standard.setValue($0, forKey: "mark_when_read")
 		})
 
 		let auth_binding = Binding<Bool>(get: {
-			self.require_authentication
+			self.settings.require_authentication
 		}, set: {
-			self.require_authentication = $0
+			self.settings.require_authentication = $0
 			UserDefaults.standard.setValue($0, forKey: "require_auth")
 		})
 
 		let contacts_binding = Binding<Bool>(get: {
-			self.combine_contacts
+			self.settings.combine_contacts
 		}, set: {
-			self.combine_contacts = $0
+			self.settings.combine_contacts = $0
 			UserDefaults.standard.setValue($0, forKey: "combine_contacts")
 		})
 
 		let debug_binding = Binding<Bool>(get: {
-			self.debug
+			self.settings.debug
 		}, set: {
-			self.debug = $0
+			self.settings.debug = $0
 			UserDefaults.standard.setValue($0, forKey: "debug")
 		})
 
 		let background_binding = Binding<Bool>(get: {
-			self.background
+			self.settings.background
 		}, set: {
-			self.background = $0
+			self.settings.background = $0
 			UserDefaults.standard.setValue($0, forKey: "enable_backgrounding")
 		})
 
 		let secure_binding = Binding<Bool>(get: {
-			self.is_secure
+			self.settings.is_secure
 		}, set: {
-			self.is_secure = $0
+			self.settings.is_secure = $0
 			UserDefaults.standard.setValue($0, forKey: "is_secure")
 			self.display_ssl_alert = true
 		})
 
 		let override_binding = Binding<Bool>(get: {
-			self.override_no_wifi
+			self.settings.override_no_wifi
 		}, set: {
-			self.override_no_wifi = $0
+			self.settings.override_no_wifi = $0
 			UserDefaults.standard.setValue($0, forKey: "override_no_wifi")
 		})
 
 		let load_binding = Binding<Bool>(get: {
-			self.start_on_load
+			self.settings.start_on_load
 		}, set: {
-			self.start_on_load = $0
+			self.settings.start_on_load = $0
 			UserDefaults.standard.setValue($0, forKey: "start_on_load")
 		})
 

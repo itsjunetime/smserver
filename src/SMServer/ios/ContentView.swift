@@ -4,17 +4,11 @@ import Photos
 
 struct ContentView: View {
 	let server = ServerDelegate()
+	let settings = Settings.shared()
 	let geo_width: CGFloat = 0.6
 	let font_size: CGFloat = 25
-
-	@State var port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
-	@State var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-
+	
 	@State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-	@State var secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
-	@State var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
-	@State var background: Bool = UserDefaults.standard.object(forKey: "enable_backgrounding") as? Bool ?? true
-	@State var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
 
 	@State var view_settings: Bool = false
 	@State var server_running: Bool = false
@@ -33,7 +27,7 @@ struct ContentView: View {
 	func enteredBackground() {
 		/// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
 		//if !background || !self.server.isListening {
-		if !background || !self.server.isRunning() {
+		if !settings.background || !self.server.isRunning() {
 			Const.log("sceneDidEnterBackground, starting kill timer", debug: self.debug)
 			DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: {
 				if UIApplication.shared.applicationState == .background {
@@ -45,8 +39,8 @@ struct ContentView: View {
 
 	func loadFuncs() {
 		/// All the functions that run on scene load
-
-		self.server.loadFuncs()
+		
+		self.debug = settings.debug
 
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
 			PHPhotoLibrary.requestAuthorization({ auth in
@@ -61,13 +55,13 @@ struct ContentView: View {
 			self.show_oseven_update = true
 		}
 
-		if self.start_on_load && (Const.getWiFiAddress() != nil || self.override_no_wifi)  {
+		if settings.start_on_load && (Const.getWiFiAddress() != nil || settings.override_no_wifi)  {
 			loadServer()
 		}
 	}
 
 	func reloadVars() {
-		self.debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
+		self.debug = settings.debug
 		self.server.reloadVars()
 	}
 
@@ -98,6 +92,7 @@ struct ContentView: View {
 
 						Button(action: {
 							if self.server_running { self.server.stopServers() }
+							self.server_running = false
 						}) {
 							Image(systemName: "stop.fill")
 								.font(.system(size: self.font_size))
@@ -107,7 +102,7 @@ struct ContentView: View {
 						Spacer().frame(width: 30)
 
 						Button(action: {
-							if !self.server_running && (Const.getWiFiAddress() != nil || self.override_no_wifi) {
+							if !self.server_running && (Const.getWiFiAddress() != nil || self.settings.override_no_wifi) {
 								self.loadServer()
 							}
 							UserDefaults.standard.setValue(true, forKey: "has_run")
@@ -149,19 +144,19 @@ struct ContentView: View {
 	var body: some View {
 
 		let port_binding = Binding<String>(get: {
-			self.port
+			self.settings.server_port
 		}, set: {
 			let new_port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().count > 3 ?
 				$0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined() :
-				UserDefaults.standard.object(forKey: "port") as? String ?? "8741" /// To make sure it's an available port
-			self.port = new_port
+				self.settings.server_port /// To make sure it's an available port
+			self.settings.server_port = new_port
 			UserDefaults.standard.setValue(new_port, forKey: "port")
 		})
 
 		let pass_binding = Binding<String>(get: {
-			self.password
+			self.settings.password
 		}, set: {
-			self.password = $0
+			self.settings.password = $0
 			UserDefaults.standard.setValue($0, forKey: "password")
 		})
 
@@ -174,8 +169,8 @@ struct ContentView: View {
 			}.padding()
 			.padding(.top, 14)
 
-			if Const.getWiFiAddress() != nil || override_no_wifi {
-				Text("Visit http\(secure ? "s" : "")://\(Const.getWiFiAddress() ?? self.getHostname()):\(port) in your browser to view your messages!")
+			if Const.getWiFiAddress() != nil || settings.override_no_wifi {
+				Text("Visit http\(settings.is_secure ? "s" : "")://\(Const.getWiFiAddress() ?? self.getHostname()):\(settings.server_port) in your browser to view your messages!")
 					.font(Font.custom("smallTitle", size: 22))
 					.padding()
 			} else {
