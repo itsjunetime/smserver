@@ -79,10 +79,12 @@ int CRApplicationMain(int argc, const char * argv[], id<CRApplicationDelegate> d
 	Class class;
 	if(!CRApp) {
         if(!(class = NSBundle.mainBundle.principalClass)) {
+			NSLog(@"Main bundle does not define an existing principal class: %@", [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSPrincipalClass"]);
 			class = self;
 		}
         
 		if(![class isSubclassOfClass:self.class]) {
+			NSLog(@"Principal class (%@) of main bundle is not subclass of %@", NSStringFromClass(class), NSStringFromClass(self.class) );
 		}
         
         CRApp = [[class alloc] initWithDelegate:CRAppDelegate];

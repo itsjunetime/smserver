@@ -8,4 +8,5 @@ implement.md
 .xcode-version
 
 src/SMServer/IdentityPass.swift
+src/SMServer/shared/IdentityPass.swift
 src/SMServer/identity.pfx

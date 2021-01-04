@@ -1,0 +1,6 @@
+framework module Criollo {
+  umbrella header "Criollo-macOS-umbrella.h"
+
+  export *
+  module * { export * }
+}

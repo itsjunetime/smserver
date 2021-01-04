@@ -25,7 +25,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<false/>
+	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>To view &amp; send your photos from the web interface</string>
 	<key>UIApplicationSceneManifest</key>
@@ -47,17 +47,12 @@
 	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>audio</string>
-		<string>bluetooth-central</string>
-		<string>bluetooth-peripheral</string>
-		<string>external-accessory</string>
+		<string>continuous</string>
 		<string>fetch</string>
-		<string>location</string>
 		<string>processing</string>
 		<string>remote-notification</string>
-		<string>voip</string>
-		<string>continuous</string>
 		<string>unboundedTaskCompletion</string>
+		<string>voip</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

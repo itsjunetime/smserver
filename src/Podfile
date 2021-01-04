@@ -1,21 +1,26 @@
 # Uncomment the next line to define a global platform for your project
-platform :ios, '13.0'
+# platform :ios, '13.0'
 
 target 'SMServer' do
+  platform :ios, '13.0'
+	
   # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
 
   # Pods for SMServer
   pod 'Telegraph'
-  pod 'Criollo', '~> 1.0'
+  # I'm sorry that it's a local repo; this podspec is also available online for you to download:
+  # https://raw.githubusercontent.com/iandwelker/Criollo/master/Criollo.podspec
+  pod 'Criollo', :podspec => '/Users/ian/Documents/Coding/foss/Criollo/Criollo.podspec'
 
-  # target 'SMServerTests' do
-  #   inherit! :search_paths
-    # Pods for testing
-  # end
+end
 
-  # target 'SMServerUITests' do
-    # Pods for testing
-  # end
+target 'SMServer_Mac' do
+  platform :osx, '10.13'
+
+  use_frameworks!
+
+  pod 'Telegraph'
+  pod 'Criollo', :podspec => '/Users/ian/Documents/Coding/foss/Criollo/Criollo.podspec'
 
 end
