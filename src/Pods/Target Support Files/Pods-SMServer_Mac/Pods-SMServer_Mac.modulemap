@@ -1,0 +1,6 @@
+framework module Pods_SMServer_Mac {
+  umbrella header "Pods-SMServer_Mac-umbrella.h"
+
+  export *
+  module * { export * }
+}

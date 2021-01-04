@@ -1,0 +1,5 @@
+${PODS_ROOT}/Target Support Files/Pods-SMServer_Mac/Pods-SMServer_Mac-frameworks.sh
+${BUILT_PRODUCTS_DIR}/CocoaAsyncSocket-macOS/CocoaAsyncSocket.framework
+${BUILT_PRODUCTS_DIR}/Criollo-macOS/Criollo.framework
+${BUILT_PRODUCTS_DIR}/HTTPParserC-macOS/HTTPParserC.framework
+${BUILT_PRODUCTS_DIR}/Telegraph-macOS/Telegraph.framework
