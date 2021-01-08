@@ -17,7 +17,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 	init() {
 		self.debug = settings.debug
 	}
-	
+
 	func refreshVars() {
 		self.debug = settings.debug
 	}
@@ -36,7 +36,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 			Const.log("Started websocket successfully.", debug: self.debug)
 
 		} catch {
-			Const.log("WARNING: The websocket failed to start. This will prevent you from receiving new messages.", debug: self.debug, warning: true)
+			Const.log("The websocket failed to start. This will prevent you from receiving new messages.", debug: self.debug, warning: true)
 		}
 	}
 
@@ -64,7 +64,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 		let charging_state = UIDevice.current.batteryState*/
 		let percent = Const.getBatteryLevel()
 		let charging_state = Const.getBatteryState()
-		
+
 		var state_string = "charging"
 		if charging_state == .unplugged || charging_state == .unknown {
 			state_string = "unplugged"
@@ -104,7 +104,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 		UIDevice.current.isBatteryMonitoringEnabled = true
 		#endif
 
-		let battery_level = Const.getBatteryLevel() * 100
+		let battery_level = Const.getBatteryLevel()
 		let charging_state = Const.getBatteryState()
 		var state_string = "charging"
 		if charging_state == .unplugged || charging_state == .unknown {

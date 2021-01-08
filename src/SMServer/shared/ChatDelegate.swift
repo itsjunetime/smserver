@@ -3,6 +3,10 @@ import SQLite3
 import SwiftUI
 import Photos
 
+#if os(macOS)
+import Contacts
+#endif
+
 final class ChatDelegate {
 	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	let settings = Settings.shared()
@@ -135,6 +139,7 @@ final class ChatDelegate {
 		Const.log("parsing texts with length \(texts.count)", debug: self.debug)
 
 		var names = [String:String]() /// key: id, val: display name.
+		let bad_bundles = ["com.apple.DigitalTouchBalloonProvider", "com.apple.Handwriting.HandwritingProvider"]
 
 		for i in 0..<texts.count {
 
@@ -153,9 +158,8 @@ final class ChatDelegate {
 				}
 			}
 
-			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 &&
-				(texts[i]["balloon_bundle_id"] as? String) != "com.apple.DigitalTouchBalloonProvder" && texts[i]["ROWID"] != nil {
-				texts[i]["balloon_bundle_id"] = "com.apple.messages.URLBalloonProvider"
+			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 && !bad_bundles.contains(texts[i]["balloon_bundle_id"] as! String) && texts[i]["ROWID"] != nil {
+				//texts[i]["balloon_bundle_id"] = "com.apple.messages.URLBalloonProvider"
 				let link_info = getLinkInfo(texts[i]["ROWID"] as? String ?? "", db: db)
 
 				texts[i]["link_title"] = link_info["title"]
@@ -202,8 +206,6 @@ final class ChatDelegate {
 
 		Const.log("Getting display name for \(chat_id) with db", debug: self.debug)
 
-		var display_name_array = [[String:String]]()
-
 		/// Support for group chats
 		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20 {
 			let check_name = selectFromSql(db: sms_db, columns: ["display_name"], table: "chat", condition: "where chat_identifier is ?", args: [chat_id], num_items: 1)
@@ -217,8 +219,13 @@ final class ChatDelegate {
 			}
 		}
 
+		/// For iOS, I extract info from the Address book database. I could use the Contacts framework, but it adds ~0.5 seconds per ~40 chats.
+		/// So this is is a bit more code, but it is significantly faster, and I have yet to come to a circumstance where it's less accurate.
+		/// I think it's definitely worth it.
 		#if os(iOS)
-		
+
+		var display_name_array = [[String:String]]()
+
 		if chat_id.contains("@") { /// if an email
 			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE ?", args: ["%\(chat_id)%"])
 		} else if chat_id.contains("+") {
@@ -226,14 +233,6 @@ final class ChatDelegate {
 		} else {
 			display_name_array = selectFromSql(db: contact_db, columns: ["c0First", "c1Last"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE ? and c16Phone NOT LIKE \"%+%\"", args: ["%\(chat_id) "])
 		}
-		
-		#elseif os(macOS)
-		
-		let arg_string = chat_id.contains("@") ? "%\(chat_id)%" : "% \(chat_id.replacingOccurrences(of: "+", with: "")) "
-		
-		display_name_array = selectFromSql(db: contact_db, columns: ["ZFIRSTNAME", "ZLASTNAME"], table: "ZABCDRECORD", condition: "WHERE ZCONTACTINDEX IN (SELECT Z_PK FROM ZABCDCONTACTINDEX WHERE ZSTRINGFORINDEXING LIKE ?)", args: [arg_string])
-		
-		#endif
 
 		if display_name_array.count == 0 {
 			let unc = selectFromSql(db: sms_db, columns: ["uncanonicalized_id"], table: "handle", condition: "WHERE id is ?", args: [chat_id])
@@ -247,6 +246,38 @@ final class ChatDelegate {
 
 		/// combine first name and last name
 		let full_name: String = "\(display_name_array[0]["c0First"] ?? "no_first") \(display_name_array[0]["c1Last"] ?? "no_last")"
+
+		#elseif os(macOS)
+
+		let pred = chat_id.contains("@") ? CNContact.predicateForContacts(matchingEmailAddress: chat_id) : CNContact.predicateForContacts(matching: CNPhoneNumber(stringValue: chat_id))
+		let keys: [CNKeyDescriptor] = [CNContactFormatter.descriptorForRequiredKeys(for: .fullName), CNContactPhoneNumbersKey] as! [CNKeyDescriptor]
+		let store = CNContactStore()
+		var con_access = true
+
+		let dp_group = DispatchGroup()
+		dp_group.enter()
+
+		store.requestAccess(for: CNEntityType.contacts, completionHandler: { accepted, _ in
+			con_access = accepted
+			dp_group.leave()
+		})
+
+		dp_group.wait()
+
+		var full_name = chat_id
+
+		if con_access {
+			do {
+				let contacts = try store.unifiedContacts(matching: pred, keysToFetch: keys)
+				if contacts.count > 0 {
+					full_name = "\(contacts[0].givenName) \(contacts[0].familyName)"
+				}
+			} catch {
+				print("no... :(") /// will fix
+			}
+		}
+
+		#endif
 
 		Const.log("full name for \(chat_id) is \(full_name)", debug: self.debug)
 
@@ -318,7 +349,7 @@ final class ChatDelegate {
 		var pinned_chats: [String]? = nil
 		var return_array = [[String:Any]]()
 		let dp_group = DispatchGroup()
-		
+
 		if offset == 0 {
 			let os_version = Const.getOSVersion()
 			#if os(iOS)
@@ -332,7 +363,7 @@ final class ChatDelegate {
 			}
 			#elseif os(macOS)
 			if os_version >= 10.15 {
-				pinned_chats = [String]() /// TEMPORARY. FIX.
+				pinned_chats = [String]() /// TEMPORARY. Will fix.
 			}
 			#endif
 		}
@@ -385,7 +416,7 @@ final class ChatDelegate {
 		}
 
 		dp_group.wait()
-		
+
 		for i in chats {
 			Const.log("Beginning to iterate through chats for \(i["c.chat_identifier"] as! String)", debug: self.debug)
 
@@ -436,7 +467,7 @@ final class ChatDelegate {
 			} else {
 				new_chat["pinned"] = false
 			}
-			
+
 			new_chat["relative_time"] = Const.getRelativeTime(ts: Double(i["m.date"] as! String) ?? 0.0)
 
 			new_chat["is_group"] = (i["c.room_name"] as! String) != ""
@@ -470,7 +501,7 @@ final class ChatDelegate {
 		/// This does the same thing as returnImageDataDB, but without the `contact_db` and `image_db` as arguments, if you just need to get like 1 image
 
 		Const.log("Getting image data for chat_id \(chat_id)", debug: self.debug)
-		
+
 		/// Make connections
 		var contact_db = createConnection(connection_string: Const.contacts_address)
 
@@ -483,28 +514,28 @@ final class ChatDelegate {
 
 		/// close
 		closeDatabase(&image_db)
-		
+
 		#elseif os(macOS)
 		let image_name = selectFromSql(db: contact_db, columns: ["ZUNIQUEID"], table: "ZABCDRECORD", condition: "WHERE ZCONTACTINDEX IN (SELECT Z_PK from ZABCDCONTACTINDEX WHERE ZSTRINGFORINDEXING LIKE ?)", args: ["%\(chat_id)%"], num_items: 1)
 		let return_val: Data
-		
+
 		if image_name.count == 0 || image_name[0].count == 0 {
 			return_val = NSImage(named: "profile")?.tiffRepresentation ?? Data()
 		} else {
 			let image_name_string = (image_name[0]["ZUNIQUEID"] ?? "").split(separator: ":")[0]
 			let image_path = URL(fileURLWithPath: Const.contact_images_address + image_name_string)
-			
+
 			do {
 				return_val = try Data.init(contentsOf: image_path)
 			} catch {
 				return_val = NSImage(named: "profile")?.tiffRepresentation ?? Data()
 			}
 		}
-		
+
 		#endif
-		
+
 		closeDatabase(&contact_db)
-		
+
 		return return_val
 	}
 
@@ -620,7 +651,7 @@ final class ChatDelegate {
 
 		return return_val
 	}
-	
+
 	final func getAttachmentDataFromPath(path: String) -> [Any] { /// [0] = data, [1] = mime_type
 		/// This returns the pure data of a file (attachment) at `path`
 
@@ -638,7 +669,7 @@ final class ChatDelegate {
 				#elseif os(macOS)
 				let attachment_data = NSImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)?.tiffRepresentation
 				#endif
-				
+
 				info[0] = attachment_data as Any
 			} else {
 				info[0] = try Data.init(contentsOf: URL(fileURLWithPath: Const.attachment_address_prefix + parsed_path))
@@ -694,18 +725,18 @@ final class ChatDelegate {
 
 		return group_by_time ? texts : return_texts
 	}
-	
+
 	//#if os(iOS)
 
 	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: Any]] {
 		/// This gets a list of the `num` (most_recent ? most recent : oldest) photos, offset by `offset`.
-		
+
 		#if os(macOS)
 		guard #available(OSX 10.15, *) else { return [[String:Any]]() }
 		#endif
-		
+
 		Const.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")", debug: self.debug)
-		
+
 		/// make sure that we have access to the photos library
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
 			var con = true;
@@ -786,7 +817,7 @@ final class ChatDelegate {
 		let image = NSImage(contentsOfFile: Const.photo_address_prefix + parsed_path)
 		let photo_data = image?.tiffRepresentation ?? Data.init(capacity: 0)
 		#endif
-		
+
 		return photo_data
 	}
 
@@ -847,16 +878,16 @@ final class ChatDelegate {
 		/// some of the most-used values, such as rich links, podcast episodes, and gamepigeon messages.
 		if objects.count > 30 && objects[21] as? String ?? "" == "GamePigeon" {
 			ret_dict["title"] = objects[18] as? String ?? ""
-		} else if objects.count >= 19 && (objects[19] as? [String:AnyObject] ?? [String:AnyObject]())["$classname"] as? String ?? "" == "LPiTunesMediaPodcastEpisodeMetadata" {
+		} else if objects.count >= 20 && (objects[19] as? [String:AnyObject] ?? [String:AnyObject]())["$classname"] as? String ?? "" == "LPiTunesMediaPodcastEpisodeMetadata" {
 			ret_dict["title"] = objects[9] as? String ?? "Episode"
 			ret_dict["subtitle"] = objects[10] as? String ?? "Podcast"
 			ret_dict["type"] = "podcast"
-		} else if let title: String = objects[6] as? String {
+		} else if let title: String = objects[6] as? String, objects.count >= 10 {
 			ret_dict["title"] = title
 			let subtitle = objects[4] as? String ?? "//website/"
 			ret_dict["subtitle"] = subtitle.split(separator: "/").count > 1 ? String(subtitle.split(separator: "/")[1]) : subtitle
 			ret_dict["type"] = objects[9] as? String ?? "website"
-		} else if objects.count > 9 {
+		} else if objects.count >= 10 {
 			ret_dict["title"] = objects[8] as? String ?? "No Title Available"
 			ret_dict["subtitle"] = objects[9] as? String ?? "No subtitle available"
 		}

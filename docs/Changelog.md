@@ -5,6 +5,8 @@
  - Added security improvements to prevent brute-forcing of password
  - Added significantly more error checking for private API functions
  - Added API Documentation & Donation link in Settings
+ - Added support for running SMServer behind a reverse proxy where it does not reside at the root directory & documentation for how to easily do so
+ - Added special view for Digital Touch Messages and Handwritten Messages to show that they cannot be displayed in the web interface
  - Significantly improved typing indicator detection method
  - Significantly improved speed of photo list retrieval (about 2.5x as fast now)
  - Optimized attachment data retrieval
@@ -16,6 +18,7 @@
  - Fixed issue where tapbacks would not be sent if message was 1001+ messages in
  - Fixed issue with marking conversations as read when it shouldn't
  - Fixed an issue where Custom CSS wouldn't be cleared
+ - Fixed issue that could cause crashes when parsing special messages (e.g. handwritten, digital touch, etc)
  - Commented all my code much more :)
 
 0.6.2 &rightarrow; 0.6.3
