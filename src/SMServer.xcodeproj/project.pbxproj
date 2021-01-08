@@ -76,6 +76,9 @@
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		3C128FFB259FEE4F0072CFD3 /* SMServer_Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer_Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C128FFC259FEE4F0072CFD3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = /Users/ian/Documents/Coding/Personal/swift/SMServer/src/Info.plist; sourceTree = "<absolute>"; };
+		3C17D59B25A3A80F00D27CFE /* IPCTextWatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IPCTextWatcher.m; sourceTree = "<group>"; };
+		3C17D59D25A3A83E00D27CFE /* IPCTextWatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IPCTextWatcher.h; sourceTree = "<group>"; };
+		3C17D59F25A3AEAA00D27CFE /* PrivateHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrivateHeaders.h; sourceTree = "<group>"; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
 		3C69EB2E24E77F1D00F48291 /* cert.der */ = {isa = PBXFileReference; lastKnownFileType = file; path = cert.der; sourceTree = "<group>"; };
 		3C69EB3024E77F7800F48291 /* identity.pfx */ = {isa = PBXFileReference; lastKnownFileType = file; path = identity.pfx; sourceTree = "<group>"; };
@@ -218,6 +221,7 @@
 				3CA58667259FF1E90063963B /* SMServer-Bridging-Header.h */,
 				3CA58669259FF1E90063963B /* ServerDelegate.swift */,
 				3CA5866A259FF1E90063963B /* SocketDelegate.swift */,
+				3C17D59F25A3AEAA00D27CFE /* PrivateHeaders.h */,
 			);
 			path = shared;
 			sourceTree = "<group>";
@@ -228,6 +232,8 @@
 				3C79640325A1288D006AFD7C /* Sender.h */,
 				3C79640125A12705006AFD7C /* Sender.m */,
 				3C79640425A128EC006AFD7C /* main.swift */,
+				3C17D59B25A3A80F00D27CFE /* IPCTextWatcher.m */,
+				3C17D59D25A3A83E00D27CFE /* IPCTextWatcher.h */,
 			);
 			path = mac;
 			sourceTree = "<group>";

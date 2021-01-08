@@ -33,9 +33,13 @@ class ServerDelegate {
 	init() {
 		loadFuncs()
 	}
-	
+
 	func loadFuncs() {
 		self.loadFiles()
+
+		#if os(macOS)
+		watcher.setUpHooks()
+		#endif
 
 		self.watcher.setTexts = { value in
 			self.sentOrReceivedNewText(value ?? "None")
@@ -51,7 +55,7 @@ class ServerDelegate {
 
 		socket.watcher = self.watcher
 		socket.verify_auth = self.checkIfAuthenticated
-		
+
 		self.debug = settings.debug
 
 		/// Here we set up notification observers for when the network changes, so that we can automatically restart the server on the new network & with the new IP.
@@ -115,6 +119,12 @@ class ServerDelegate {
 					.replacingOccurrences(of: "var subject;", with: "var subject = \(settings.subjects_enabled);")
 					.replacingOccurrences(of: "<!--light-->", with: settings.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
 					.replacingOccurrences(of: "<!--nord-->", with: settings.nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
+
+				if var subdir = settings.socket_subdirectory {
+					if subdir.prefix(1) == "/" { subdir = String(subdir.suffix(subdir.count - 1)) }
+					if subdir.suffix(1) != "/" { subdir += "/" }
+					self.main_page = self.main_page.replacingOccurrences(of: "var socket_subdir;", with: "var socket_subdir = \"\(subdir)\";")
+				}
 
 				self.main_page_style = try String(contentsOf: s, encoding: .utf8)
 				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
@@ -392,7 +402,7 @@ class ServerDelegate {
 			#elseif os(iOS)
 			let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
 			#endif
-			
+
 			res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 			res.send(data)
 		}

@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 #import "MRYIPCCenter.h"
-
+#import "PrivateHeaders.h"
 #import "Sender.h"
 
 #define c(a) NSClassFromString(@#a)
@@ -59,10 +59,6 @@
 	return self;
 }
 
-- (void)launchMobileSMS {
-	[self.center callExternalVoidMethod:@selector(launchSMS) withArguments:nil];
-}
-
 - (BOOL)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths {
 	NSDictionary* args = @{@"body": body, @"subject": subject, @"address": address, @"attachment": paths};
 	return [self.center callExternalMethod:@selector(sendText:) withArguments:args];
@@ -86,10 +82,13 @@
 	NSBundle* imcore = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
 	[imcore load];
 
-	CKConversationList* sharedList = [c(CKConversationList) sharedConversationList];
-	CKConversation* convo = [sharedList conversationForExistingChatWithGroupID:chat];
+	//CKConversationList* sharedList = [c(CKConversationList) sharedConversationList];
+	IMChatRegistry* registry = [c(IMChatRegistry) sharedInstance];
+	//CKConversation* convo = [sharedList conversationForExistingChatWithGroupID:chat];
+	IMChat* imchat = [registry existingChatWithChatIdentifier:chat];
 
-	[convo setLocalUserIsTyping:isTyping];
+	//[convo setLocalUserIsTyping:isTyping];
+	[imchat setLocalUserIsTyping:isTyping];
 }
 
 - (BOOL)removeObject:(NSString *)chat text:(NSString *)text {

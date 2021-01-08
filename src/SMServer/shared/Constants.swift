@@ -75,33 +75,33 @@ struct Const {
 	]
 
 	static let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
-	
+
 	#if os(iOS)
-	
+
 	static let contacts_address: String = "/private/var/mobile/Library/AddressBook/AddressBook.sqlitedb"
 	static let contact_images_address: String = "/private/var/mobile/Library/AddressBook/AddressBookImages.sqlitedb"
 	static let sms_db_address: String = "/private/var/mobile/Library/SMS/sms.db"
 	static let attachment_address_prefix: String = "/private/var/mobile/Library/SMS/"
 	static let photo_address_prefix: String = "/var/mobile/Media/"
 	static let user_home_url: String = "/private/var/mobile/"
-	
+
 	#elseif os(macOS)
-	
+
 	#if DEBUG
-	static let user_home_url: String = "/Users/ian"
+	static let user_home_url: String = "/Users/ian/"
 	#else
 	static let user_home_url: String = FileManager.default.homeDirectoryForCurrentUser.path
 	#endif
-	
-	static let sources_dir = user_home_url + "/Library/Application Support/AddressBook/Sources/"
+
+	static let sources_dir = user_home_url + "Library/Application Support/AddressBook/Sources/"
 	static let address_book_path: String = sources_dir + (FileManager.default.subpaths(atPath: sources_dir)?[0] ?? "*") + "/"
-	
+
 	static let contacts_address: String = address_book_path + "AddressBook-v22.abcddb"
 	static let contact_images_address: String = address_book_path + "Images/"
-	static let sms_db_address: String = user_home_url + "/Library/Messages/chat.db"
-	static let attachment_address_prefix: String = user_home_url + "/Library/Messages/"
+	static let sms_db_address: String = user_home_url + "Library/Messages/chat.db"
+	static let attachment_address_prefix: String = user_home_url + "Library/Messages/"
 	static let photo_address_prefix: String = ""
-	
+
 	static let config_file_url: URL = URL(fileURLWithPath: user_home_url + "/.config/smserver/server.yaml") /// subject to change
 	static let html_dir: URL = URL(fileURLWithPath: user_home_url + "/.smserver/")
 
@@ -117,7 +117,7 @@ struct Const {
 	static let cmd_password: String = "--password"
 	static let cmd_theme: String = "--theme"
 	static let cmd_theme_short: String = "-t"
-	
+
 	static let cmd_theme_options: [String] = [
 		"light", "dark", "nord"
 	]
@@ -176,12 +176,12 @@ struct Const {
 	static let col = "\u{001B}["
 	static let help_string = """
 	usage: \(col)1m./smserver [options]\(col)0m
-	
+
 	\(col)1mOptions:\(col)0m
-	
+
 	\(cmd_server_port_short), \(cmd_server_port):
 		This sets the port that the HTTP server will run on, and requires a value to be passed in immediately after this flag. For example, to set the server port to 4000, you'd run \(col)1msmserver \(cmd_server_port) 4000\(col)0m. The default server port is 8741.
-	
+
 	\(cmd_socket_port_short), \(cmd_socket_port):
 		This sets the port that the websocket will run on, and requires a value to be passed in immediately after this flag. The default socket port is 8740.
 
@@ -190,7 +190,7 @@ struct Const {
 
 	\(cmd_html_dir_short), \(cmd_html_dir):
 		\(col)1mCURRENTLY INEFFECTIVE\(col)0m This sets the directory at which SMServer should look for the web interface files (e.g. chats.html, style.css, etc), and requires a value to be passed in immediately after this flag. The default directory is \(html_dir.path.replacingOccurrences(of: "file://", with: "")).
-	
+
 	\(cmd_password):
 		This sets the password for the server, and requires a value to be passed in immediately after this flag. The default password for the server is 'toor'.
 
@@ -202,7 +202,7 @@ struct Const {
 
 	\(cmd_auth_short), \(cmd_auth), \(cmd_no_auth):
 		This will enable or disable authentication, respective to which flag you pass in. The default is enabled.
-	
+
 	\(cmd_web_short), \(cmd_web), \(cmd_no_web):
 		This will enable or disable the web interface, respective to which flag you pass in. The default is enabled.
 
@@ -214,7 +214,7 @@ struct Const {
 
 	\(cmd_typing_short), \(cmd_typing), \(cmd_no_typing):
 		This will enable or disable sending of typing indicators from the server to other conversations, respective to which flag you pass in. The default is enabled.
-	
+
 	\(cmd_contacts_short), \(cmd_contacts), \(cmd_no_contacts):
 		\(col)1mCURRENTLY INEFFECTIVE\(col)0m If this option is enabled, conversations will be combined with the other conversations that are assigned to the same contact on the host device. If this option is disabled, they will not. The default is disabled.
 	"""
@@ -265,7 +265,7 @@ struct Const {
 
 		return address
 	}
-	
+
 	static func getOSVersion() -> Double {
 		#if os(macOS)
 			return Double("\(ProcessInfo.processInfo.operatingSystemVersion.majorVersion).\(ProcessInfo.processInfo.operatingSystemVersion.minorVersion)") ?? 10.12
@@ -273,30 +273,30 @@ struct Const {
 			return Double(UIDevice.current.systemVersion) ?? 13.0
 		#endif
 	}
-	
+
 	static func getBatteryLevel() -> Double {
 		#if os(macOS)
 			let snapshot = IOPSCopyPowerSourcesInfo().takeRetainedValue()
 			let sources = IOPSCopyPowerSourcesList(snapshot).takeRetainedValue() as Array
 			let info = IOPSGetPowerSourceDescription(snapshot, sources.first).takeUnretainedValue() as! [String: AnyObject]
-		
+
 			return Double(info[kIOPSCurrentCapacityKey] as? Int ?? 0) / Double(info[kIOPSMaxCapacityKey] as? Int ?? 100)
 		#elseif os(iOS)
-			return Double(UIDevice.current.batteryLevel)
+			return Double(UIDevice.current.batteryLevel) * 100
 		#endif
 	}
-	
+
 	static func getBatteryState() -> BatteryState {
 		#if os(macOS)
 			let snapshot = IOPSCopyPowerSourcesInfo().takeRetainedValue()
 			let sources = IOPSCopyPowerSourcesList(snapshot).takeRetainedValue() as Array
 			let info = IOPSGetPowerSourceDescription(snapshot, sources.first).takeUnretainedValue() as! [String: AnyObject]
-		
+
 			if Double(info[kIOPSCurrentCapacityKey] as? Int ?? 0) / Double(info[kIOPSMaxCapacityKey] as? Int ?? 100) > 97 {
 				return .full
 			} else {
 				let charging: Bool? = info[kIOPSIsChargingKey] as? Bool
-				
+
 				if charging == nil {
 					return .unknown
 				} else if charging! == true {
@@ -305,7 +305,7 @@ struct Const {
 					return .unplugged
 				}
 			}
-		
+
 		#elseif os(iOS)
 			if UIDevice.current.batteryState == .charging {
 				return .charging
@@ -318,26 +318,26 @@ struct Const {
 			}
 		#endif
 	}
-	
+
 	static func getRelativeTime(ts: Double) -> String {
 		let unix_ts: Double = (ts / 1000000000.0) + 978307200.0
 		let date = Date(timeIntervalSince1970: unix_ts)
 		let now = Date.init(timeIntervalSinceNow: 0)
 		let calendar = Calendar.current
-		
+
 		let days_from = calendar.dateComponents([.day], from: date, to: now).day!
-		
+
 		if days_from == 0 {
 			let date_dow = calendar.component(.weekday, from: date)
 			let now_dow = calendar.component(.weekday, from: now)
-			
+
 			if date_dow != now_dow {
 				return "Yesterday"
 			}
-			
+
 			let date_hours = calendar.component(.hour, from: date)
 			let date_min = calendar.component(.minute, from: date)
-			
+
 			return "\(date_hours):\(date_min)"
 		} else if days_from <= 8 {
 			let date_dow = calendar.component(.weekday, from: date)
@@ -345,13 +345,13 @@ struct Const {
 			return days[date_dow - 1]
 		} else {
 			let formatter = DateFormatter()
-			
+
 			if Locale.current.identifier == "en_US" {
 				formatter.setLocalizedDateFormatFromTemplate("MM/dd/yy")
 			} else {
 				formatter.setLocalizedDateFormatFromTemplate("dd/MM/yy")
 			}
-			
+
 			return formatter.string(from: date)
 		}
 	}
