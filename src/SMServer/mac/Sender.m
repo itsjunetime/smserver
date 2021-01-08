@@ -1,10 +1,13 @@
 #import <Foundation/Foundation.h>
 #import "MRYIPCCenter.h"
 #import "Sender.h"
+#import "../shared/PrivateHeaders.h"
+
+#include "IPCTextWatcher.m"
 
 #define c(a) NSClassFromString(@#a)
 
-@implementation IPCTextWatcher {
+/*@implementation IPCTextWatcher {
 }
 
 + (instancetype)sharedInstance {
@@ -39,7 +42,7 @@
 	_sentTapback([[vals objectForKey:@"tapback"] intValue], [vals objectForKey:@"guid"]);
 }
 
-@end
+@end*/
 
 @implementation IWSSender
 
@@ -48,14 +51,34 @@
 	return self;
 }
 
-- (void)launchMobileSMS {
-	//[self.center callExternalVoidMethod:@selector(launchSMS) withArguments:nil];
-}
-
 - (BOOL)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths {
-	NSDictionary* args = @{@"body": body, @"subject": subject, @"address": address, @"attachment": paths};
-	//return [self.center callExternalMethod:@selector(sendText:) withArguments:args];
-	return false;
+	NSBundle* imcore = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
+	[imcore load];
+
+	IMDaemonController* controller = [c(IMDaemonController) sharedController];
+	if ([controller connectToDaemon]) {
+		IMChat* chat = [[c(IMChatRegistry) sharedInstance] existingChatWithChatIdentifier:address];
+
+		if (chat == nil) return NO;
+
+		NSAttributedString* text = [[NSAttributedString alloc] initWithString:body];
+		NSAttributedString* subj = [[NSAttributedString alloc] initWithString:subject];
+
+		IMMessage* msg;
+		if (@available(macOS 10.15, *)) {
+			msg = [c(IMMessage) instantMessageWithText:text flags:1048581 threadIdentifier:nil];
+		} else {
+			msg = [c(IMMessage) instantMessageWithText:text flags:1048581];
+		}
+
+		[chat sendMessage:msg];
+
+		NSString* guid = [msg guid];
+	} else {
+		NSLog(@"Failed to connect to daemon to send a text :(");
+	}
+
+	return NO;
 }
 
 - (BOOL)markConvoAsRead:(NSString *)chat_id {

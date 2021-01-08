@@ -2,22 +2,26 @@ import SwiftUI
 
 struct SettingsView: View {
 	let settings = Settings.shared()
-	
-	var grey_box = Color("BeginningBlur")
+
+	var grey_box = Color.init(red: 0.2, green: 0.2, blue: 0.2)
 
 	private let picker_options: [String] = ["Dark", "Light", "Nord"]
 
-	private let cl_red = 0.60
-	private let cl_grn = 0.65
+	private let cl_red = 0.40
+	private let cl_blu = 0.65
 
 	@State private var display_ssl_alert: Bool = false
 	@State private var display_port_alert: Bool = false
+	@State private var display_defaults_alert: Bool = false
 
-	@State private var rect: CGRect = CGRect()
+	/// Ideally we would make this equal to the object in settings that relates to this
+	/// but in iOS, where this file is used, the items in settings always equal their `UserDefaults` counterparts.
+	@State var socket_subdir_enabled: Bool = UserDefaults.standard.object(forKey: "socket_subdirectory") as? String? ?? nil != nil
 
 	private func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
 		UserDefaults.standard.removePersistentDomain(forName: domain)
+		self.display_defaults_alert = true
 	}
 
 	var body: some View {
@@ -96,6 +100,21 @@ struct SettingsView: View {
 		}, set: {
 			self.settings.combine_contacts = $0
 			UserDefaults.standard.setValue($0, forKey: "combine_contacts")
+		})
+
+		let socket_subdir_enabled_binding = Binding<Bool>(get: {
+			self.socket_subdir_enabled
+		}, set: {
+			self.socket_subdir_enabled = $0
+			self.settings.socket_subdirectory = $0 ? "" : nil
+			UserDefaults.standard.setValue($0 ? "" : nil, forKey: "socket_subdirectory")
+		})
+
+		let socket_subdir_binding = Binding<String>(get: {
+			self.settings.socket_subdirectory ?? ""
+		}, set: {
+			self.settings.socket_subdirectory = $0
+			UserDefaults.standard.setValue($0, forKey: "socket_subdirectory")
 		})
 
 		let debug_binding = Binding<Bool>(get: {
@@ -214,11 +233,24 @@ struct SettingsView: View {
 							Toggle("Automatically mark as read", isOn: read_binding)
 							Toggle("Require Authentication", isOn: auth_binding)
 							Toggle("Merge contact addresses (experimental)", isOn: contacts_binding)
+							Toggle("WebSocket Proxy Compatibility", isOn: socket_subdir_enabled_binding)
+
+							if socket_subdir_enabled {
+								HStack {
+									Text("Socket subdirectory")
+									Spacer()
+									TextField("e.g. /sms/socket", text: socket_subdir_binding)
+										.textFieldStyle(RoundedBorderTextFieldStyle())
+										.frame(width: 180)
+										.disableAutocorrection(true)
+								}
+							}
 
 						}
 					}.padding(10)
 					.background(grey_box)
 					.cornerRadius(8)
+					.animation(.easeInOut(duration: 0.2))
 
 					Spacer().frame(height: 8)
 
@@ -245,119 +277,75 @@ struct SettingsView: View {
 				.alert(isPresented: $display_port_alert, content: {
 					Alert(title: Text("Error"), message: Text("The websocket port must be different from the main server port. Please change it to fix this."))
 				})
+				.alert(isPresented: $display_defaults_alert, content: {
+					Alert(title: Text("Settings Reset"), message: Text("Your settings were reset to default"))
+				})
 
-				Section {
-					VStack {
-						Button(action: {
-							let url = URL.init(string: "https://github.com/iandwelker/smserver/blob/master/docs/API.md")
-							guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
-							UIApplication.shared.open(github_url)
-						}) {
-							ZStack {
-								LinearGradient(
-									gradient: Gradient(
-										colors: [
-											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 240.0) / 255),
-											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 270.0) / 255)
-										]
-									),
-									startPoint: .topLeading, endPoint: .bottomTrailing
-								).mask(
+				VStack(alignment: .leading) {
+					GeometryReader { proxy in
+						LinearGradient(
+							gradient: Gradient(
+								colors: [
+									Color.init(red: cl_red, green: (Double(proxy.frame(in: .named("frameLayer")).minY) - 240) / 400, blue: cl_blu),
+									Color.init(red: cl_red, green: (Double(proxy.frame(in: .named("frameLayer")).minY) - 310) / 400, blue: cl_blu)
+								]
+							),
+							startPoint: .topLeading, endPoint: .bottomTrailing
+						).mask(
+							VStack {
+								Button(action: {
+									let github_url = URL.init(string: "https://github.com/iandwelker/smserver/blob/master/docs/API.md")
+									guard let url = github_url, UIApplication.shared.canOpenURL(url) else { return }
+									UIApplication.shared.open(url)
+								}) {
 									HStack {
 										Text("View API Documentation")
 											.aspectRatio(contentMode: .fill)
 										Spacer()
 										Image(systemName: "doc.text")
-											.resizable()
-											.aspectRatio(contentMode: .fit)
 									}
-								).frame(height: 20)
-							}
-						}
+								}
 
-						Spacer().frame(height: 20)
+								Spacer().frame(height: 20)
 
-						Button(action: {
-							let url = URL.init(string: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD")
-							guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
-							UIApplication.shared.open(github_url)
-						}) {
-							ZStack {
-								LinearGradient(
-									gradient: Gradient(
-										colors: [
-											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 260.0) / 255),
-											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 290.0) / 255)
-										]
-									),
-									startPoint: .topLeading, endPoint: .bottomTrailing
-								).mask(
+								Button(action: {
+									let url = URL.init(string: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD")
+									guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
+									UIApplication.shared.open(github_url)
+								}) {
 									HStack {
 										Text("Donate to support SMServer")
 										Spacer()
 										Image(systemName: "link")
-											.resizable()
-											.aspectRatio(contentMode: .fit)
 									}
-								).frame(height: 20)
-							}
-						}
+								}
 
-						Spacer().frame(height: 20)
+								Spacer().frame(height: 20)
 
-						Button(action: {
-							self.resetDefaults()
-						}) {
-							ZStack {
-								LinearGradient(
-									gradient: Gradient(
-										colors: [
-											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 280.0) / 255),
-											Color.init(red: cl_red, green: cl_grn, blue: (Double(rect.minY) - 310.0) / 255)
-										]
-									),
-									startPoint: .topLeading, endPoint: .bottomTrailing
-								).mask(
+								Button(action: {
+									self.resetDefaults()
+								}) {
 									HStack {
 										Text("Reset Settings to Default")
 										Spacer()
 										Image(systemName: "arrow.clockwise")
-											.resizable()
-											.aspectRatio(contentMode: .fit)
 									}
-								).frame(height: 20)
+								}
 							}
-						}
-
+						)
 					}.padding(10)
 					.background(grey_box)
 					.cornerRadius(8)
-					.background(GeometryGetter(rect: $rect))
+					.frame(height: 120) /// yeah don't like this but I think it may be the only thing
 
 					Text("Compatible with libSMServer 0.6.0")
 						.font(.callout)
 						.foregroundColor(.gray)
+
 				}
 
 			}.padding()
-		}
-	}
-}
-
-struct GeometryGetter: View {
-	@Binding var rect: CGRect
-
-	var body: some View {
-		return GeometryReader { geometry in
-			self.makeView(geometry: geometry)
-		}
-	}
-
-	func makeView(geometry: GeometryProxy) -> some View {
-		DispatchQueue.main.async {
-			self.rect = geometry.frame(in: .global)
-		}
-
-		return Rectangle().fill(Color.clear)
+			.animation(.easeInOut(duration: 0.2))
+		}.coordinateSpace(name: "frameLayer")
 	}
 }

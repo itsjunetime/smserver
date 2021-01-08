@@ -7,7 +7,7 @@ struct ContentView: View {
 	let settings = Settings.shared()
 	let geo_width: CGFloat = 0.6
 	let font_size: CGFloat = 25
-	
+
 	@State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 
 	@State var view_settings: Bool = false
@@ -39,7 +39,7 @@ struct ContentView: View {
 
 	func loadFuncs() {
 		/// All the functions that run on scene load
-		
+
 		self.debug = settings.debug
 
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {

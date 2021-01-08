@@ -19,7 +19,6 @@
 @property (strong) MRYIPCCenter* center;
 
 - (id)init;
-- (void)launchMobileSMS;
 - (BOOL)sendIPCText:(NSString *)body withSubject:(NSString *)subject toAddress:(NSString *)address withAttachments:(NSArray *)paths;
 - (BOOL)markConvoAsRead:(NSString *)chat_id;
 - (BOOL)sendTapback:(NSNumber *)tapback forGuid:(NSString *)guid inChat:(NSString *)chat;
@@ -28,37 +27,5 @@
 //- (NSArray *)getPinnedChats;
 
 @end
-
-/*
-@interface IMPinnedConversationsController
-+ (id)sharedInstance;
-- (NSOrderedSet *)pinnedConversationIdentifierSet;
-@end
-
-@interface IMDaemonController
-+ (id)sharedController;
-- (BOOL)connectToDaemon;
-@end
-*/
-
-@interface CKConversationList
-+ (id)sharedConversationList;
-- (id)conversationForExistingChatWithGroupID:(NSString *)arg1;
-@end
-
-@interface CKConversation
-- (void)setLocalUserIsTyping:(_Bool)arg1;
-@end
-
-/*
-@interface IMChat
-- (void)markAllMessagesAsRead;
-@end
-
-@interface IMChatRegistry
-+ (id)sharedInstance;
-+ (IMChat *)existingChatWithChatIdentifier:(NSString *)chat_id;
-@end
-*/
 
 #endif /* Obj_h */

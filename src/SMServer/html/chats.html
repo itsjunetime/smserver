@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 	<head>
 		<meta charset="utf-8" />
-		<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?" />
+		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico?" id="favicon"/>
 		<title>
 			SMServer
 		</title>
 		<script>
-			var new_chats = "";
 			/// These next five lines need to remain without value, since they will be changed when swift parses the file.
 			var num_texts_to_load;
 			var num_chats_to_load;
@@ -14,6 +13,7 @@
 			var socket_port;
 			var debug;
 			var subject;
+			var socket_subdir;
 
 			var printed_texts = 0;
 			var printed_chats = 0;
@@ -27,6 +27,7 @@
 			var called_typing_wait = false;
 			var shown_ws_alert = false;
 
+			var new_chats = "";
 			var items = "";
 			var new_items = "";
 			var shown_name = "";
@@ -38,12 +39,12 @@
 			var fa_icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>', '<i class="fas fa-grin-tears"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
 			var taps_to_print = [];
 
-			var doc_url = window.location.href.split("/")[2].split(":")[0];
-			var socket_address = doc_url;
-			var prefix = "";
+			var doc_url = window.location.href;
+			var socket_address = doc_url.split("/")[2].split(":")[0];
+			var prefix = ""
 
 			if (doc_url === "127.0.0.1" || doc_url === "localhost") { /// when I'm debugging on local computer
-				prefix = "http://192.168.0.180:8741";
+				prefix = "http://192.168.0.180:8741/";
 				num_texts_to_load = 100;
 				num_chats_to_load = 60;
 				num_photos_to_load = 40;
@@ -51,7 +52,6 @@
 				socket_address = prefix.split("/")[2].split(":")[0];
 				debug = true;
 				subject = false;
-				document.getElementById("sendform").setAttribute("action", `${prefix}/send`);
 			}
 
 			function timeConverter(t, ts_only = false, apple = true, rev = false) {
@@ -129,7 +129,7 @@
 						t.className += " noPadding richLink";
 
 						var img = document.createElement("img");
-						img.src = `${prefix}/data?path=${text.attachments.length > 1 ? text.attachments[1].filename : text.attachments[0].filename}`;
+						img.src = `${prefix}data?path=${text.attachments.length > 1 ? text.attachments[1].filename : text.attachments[0].filename}`;
 
 						var under = document.createElement("a");
 						under.href = (text.text.match(/^https{0,1}:\/\//) ? "" : "http://") + text.text;
@@ -165,13 +165,19 @@
 							icon.className = "richLinkIcon";
 
 							var ii = document.createElement("img");
-							ii.src = `${prefix}/data?path=${text.attachments[0].filename}`;
+							ii.src = `${prefix}data?path=${text.attachments[0].filename}`;
 							icon.appendChild(ii);
 							under.appendChild(icon);
 						}
 
 						t.appendChild(under);
 						return t;
+					} else if (text.balloon_bundle_id === "com.apple.DigitalTouchBalloonProvider") {
+						t.innerHTML = '<h3 style="margin: 4px;"><i class="fas fa-fingerprint"></i> &nbsp;Digital Touch Message</h3>This cannot be viewed in SMServer. Please open the MobileSMS app to view the original message.';
+						return t;
+					} else if (text.balloon_bundle_id === "com.apple.Handwriting.HandwritingProvider") {
+						t.innerHTML = '<h3 style="margin: 4px;"><i class="fas fa-paint-brush"></i> &nbsp;Handwritten Message</h3>This cannot be viewed in SMServer. Please open the MobileSMS app to view the original message.';
+ 						return t;
 					}
 
 					if (text.cache_has_attachments) {
@@ -183,15 +189,15 @@
 							var smallType = text.attachments[l].mime_type.split("/")[1];
 
 							if (bigType === "image") {
-								c.innerHTML = `<img src="${prefix}/data?path=${text.attachments[l].filename}"><br>`;
+								c.innerHTML = `<img src="${prefix}data?path=${text.attachments[l].filename}"><br>`;
 							} else if (bigType === "video") {
-								c.innerHTML = `<video controls="controls" src="${prefix}/data?path=${text.attachments[l].filename}"></video>`;
+								c.innerHTML = `<video controls="controls" src="${prefix}data?path=${text.attachments[l].filename}"></video>`;
 							} else if (bigType === "audio") {
-								c.innerHTML = `<audio controls="controls" src="${prefix}/data?path=${text.attachments[l].filename}"></audio>`;
+								c.innerHTML = `<audio controls="controls" src="${prefix}data?path=${text.attachments[l].filename}"></audio>`;
 							} else if (text.attachments[l].length !== 0){
 								var splits = text.attachments[l].filename.split("/");
 								var link = document.createElement("a");
-								link.href = `${prefix}/data?path=${text.attachments[l].filename.replace(/ /g, "%20")}`;
+								link.href = `${prefix}data?path=${text.attachments[l].filename.replace(/ /g, "%20")}`;
 								link.setAttribute("mime_type", text.attachments[l].mime_type);
 								link.className = "inlineAttachment";
 
@@ -316,7 +322,7 @@
 				var i = document.createElement("span");
 
 				var cimg = document.createElement("img");
-				cimg.src = `${prefix}/data?chat_id=${chat.chat_identifier}`
+				cimg.src = `${prefix}data?chat_id=${chat.chat_identifier}`
 				cimg.setAttribute("onerror", `javascript:setProfileImageAsText("${chat.chat_identifier}");`);
 				i.appendChild(cimg);
 
@@ -577,7 +583,7 @@
 
 			async function printChats(offset = 0) {
 				if (debug) console.log("printing Chats");
-				let url = `${prefix}/requests?chats=${num_chats_to_load}&chats_offset=${offset}`;
+				let url = `${prefix}requests?chats=${num_chats_to_load}&chats_offset=${offset}`;
 				let chatPromise = await fetchFromURL(url);
 				this.items = chatPromise.chats;
 
@@ -629,7 +635,7 @@
 
 			const getMoreChats = async (offset = printed_chats) => {
 				if (debug) console.log("getting more chats");
-				let url = `${prefix}/requests?chats=${num_chats_to_load}&chats_offset=${offset}`;
+				let url = `${prefix}requests?chats=${num_chats_to_load}&chats_offset=${offset}`;
 				let chatsPromise = await fetchFromURL(url);
 				new_items = chatsPromise.chats;
 
@@ -672,12 +678,12 @@
 				current_chat_id = chat_id;
 
 				var img = document.createElement("img");
-				img.src = `${prefix}/data?chat_id=${chat_id}`;
+				img.src = `${prefix}data?chat_id=${chat_id}`;
 				img.setAttribute("onerror", `javascript:setProfileImageAsText("${chat_id}", true);`);
 
 				title_doc.insertBefore(img, title_doc.firstChild);
 
-				let url = `${prefix}/requests?messages=${addresses === "" ? chat_id : addresses}&num_messages=${num_texts}`;
+				let url = `${prefix}requests?messages=${addresses === "" ? chat_id : addresses}&num_messages=${num_texts}`;
 
 				let textsPromise = await fetchFromURL(url);
 				this.texts = textsPromise.texts;
@@ -706,7 +712,7 @@
 				if (debug) console.log(`called getMoreText; num === ${num_texts}`);
 				var chat_id = document.querySelector(`[addresses*="${current_chat_id}"]`).getAttribute("addresses");
 
-				let url = `${prefix}/requests?messages=${chat_id}&num_messages=${num_texts_to_load}&messages_offset=${printed_texts}&read_messages=false`;
+				let url = `${prefix}requests?messages=${chat_id}&num_messages=${num_texts_to_load}&messages_offset=${printed_texts}&read_messages=false`;
 				let textPromise = await fetchFromURL(url);
 				this.texts = textPromise.texts;
 
@@ -904,7 +910,7 @@
 					}
 
 					if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id)) {
-						if (name === "") name = await getTextFromURL(`${prefix}/requests?name=${chat}`)[1];
+						if (name === "") name = await getTextFromURL(`${prefix}requests?name=${chat}`)[1];
 						var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
 					}
 				}
@@ -965,7 +971,7 @@
 					var last_text;
 					var selected = false;
 					/// The most recent text from this person has (nearly) all the info we need
-					var url = `${prefix}/requests?messages=${chat}&num_messages=1&read_messages=false`;
+					var url = `${prefix}requests?messages=${chat}&num_messages=1&read_messages=false`;
 					let textPromise = await fetchFromURL(url);
 					last_text = textPromise.texts[0];
 
@@ -986,7 +992,7 @@
 						selected = existingButton.className.includes("selected");
 						existingButton.outerHTML = "";
 					} else {
-						new_chat.display_name = await getTextFromURL(`${prefix}/requests?name=${chat}`)[1];
+						new_chat.display_name = await getTextFromURL(`${prefix}requests?name=${chat}`)[1];
 					}
 
 					var new_box = getChatElement(new_chat);
@@ -1024,7 +1030,7 @@
 				p.setAttribute("width", "160");
 				p.setAttribute("height", "160");
 
-				p.innerHTML = `<img src="${prefix}/data?photo=${photo.URL}">`;
+				p.innerHTML = `<img src="${prefix}data?photo=${photo.URL}">`;
 
 				if (photo.is_favorite) {
 					var h = document.createElement("span");
@@ -1044,7 +1050,7 @@
 				if (!has_shown_camera_roll) {
 					var photos;
 
-					var url = `${prefix}/requests?photos=${num_photos_to_load}`;
+					var url = `${prefix}requests?photos=${num_photos_to_load}`;
 					let photoPromise = await fetchFromURL(url);
 					photos = photoPromise.photos;
 					if (photos.length === 0) {
@@ -1068,7 +1074,7 @@
 				var cr = document.getElementById("camerarollContent");
 				var new_photos;
 
-				var url = `${prefix}/requests?photos=${num_photos_to_load}&photos_offset=${printed_photos}`;
+				var url = `${prefix}requests?photos=${num_photos_to_load}&photos_offset=${printed_photos}`;
 				let photoPromise = await fetchFromURL(url);
 				new_photos = photoPromise.photos;
 				printed_photos += new_photos.length;
@@ -1204,7 +1210,7 @@
 
 			async function submitSearch() {
 				var term = document.getElementById("searchBox").value;
-				window.location.href = `${prefix}/requests?search=${term}`; /// uhh simple stuff; use default settings for now
+				window.location.href = `${prefix}requests?search=${term}`; /// uhh simple stuff; use default settings for now
 			}
 
 			function showTapbackDialog(guid) {
@@ -1249,7 +1255,7 @@
 
 			async function sendTapback(guid, tapback, chat = current_chat_id, remove = false) {
 				if (debug) console.log(`sending tapback ${tapback} for guid ${guid} in chat ${chat}, remove: ${remove}`);
-				var res = await getTextFromURL(`${prefix}/send?tapback=${tapback}&tap_guid=${guid}&tap_in_chat=${chat}&remove_tap=${remove}`);
+				var res = await getTextFromURL(`${prefix}send?tapback=${tapback}&tap_guid=${guid}&tap_in_chat=${chat}&remove_tap=${remove}`);
 				if (res[0] !== 200)
 					alert(`Failed to send tapback: ${res[1]}`);
 
@@ -1261,7 +1267,7 @@
 				if (!confirm("Are you sure you want to delete the selected text?"))
 					return;
 
-				var res = await getTextFromURL(`${prefix}/send?delete_chat=${chat}&delete_text=${guid}`)[1];
+				var res = await getTextFromURL(`${prefix}send?delete_chat=${chat}&delete_text=${guid}`)[1];
 				document.getElementById(`${guid}-tapback`).outerHTML = "";
 
 				if (res !== "true") {
@@ -1291,12 +1297,29 @@
 				}
 			}
 
+			function setUpPrefix() {
+				let styles = ["fa_solid", "font_awesome", "main", "custom"];
+				for (var i = 0; i < styles.length; i++) {
+					let sty = document.getElementById(`style_${styles[i]}`);
+					sty.href = `${prefix}${sty.href}`;
+				}
+
+				let send_form = document.getElementById("sendform");
+				send_form.setAttribute("action", `${prefix}${send_form.getAttribute("action")}`);
+
+				let popup_form = document.getElementById("composeform");
+				popup_form.setAttribute("action", `${prefix}${popup_form.getAttribute("action")}`);
+
+				let favicon = document.getElementById("favicon");
+				favicon.setAttribute("href", `${prefix}${favicon.getAttribute("href")}`);
+			}
+
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
 				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
 				if (bt === undefined || bt === null || !bt.className.includes("unread")) return;
 				bt.className = bt.className.replace(/unread/g, "");
-				var _ = fetchFromURL(`${prefix}/requests?messages=${current_chat_id}&num_messages=1`);
+				var _ = fetchFromURL(`${prefix}requests?messages=${current_chat_id}&num_messages=1`);
 
 				var unreads = document.getElementsByClassName("unread").length;
 				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
@@ -1308,28 +1331,35 @@
 					document.getElementById("notificationbutton").outerHTML = "";
 
 				if (subject) enableSubject();
+				if (prefix !== "") setUpPrefix();
 				setUpDND();
 			});
 
 			printChats();
 
-			let socket_prefix = location.protocol === "https:" ? "wss://" : "ws://";
-			let socket = new WebSocket(`${socket_prefix}${socket_address}:${socket_port}`);
+			var socket_url = "";
+
+			if (socket_subdir !== undefined)
+				socket_url = `${window.location.href.replace(/^http/g, "ws").split("/").splice(0, 3).join("/")}/${socket_subdir}`;
+			else
+				socket_url = `${location.protocol === "https:" ? "wss://" : "ws://"}${socket_address}:${socket_port}`;
+
+			let socket = new WebSocket(socket_url);
 
 			socket.onmessage = function(event) {
 				parseMessage(event.data);
 			}
 
 			socket.onerror = function(event) {
-				if (!shown_ws_alert) alert(`It appears you may not have trusted the websocket certificate yet. Please navigate to https://${socket_address}:${socket_port} and trust the certificate there (If you have already trusted the websocket, you can ignore this message).`);
+				if (!shown_ws_alert) alert(`It appears you may not have trusted the websocket certificate yet. Please navigate to ${socket_url} and trust the certificate there (If you have already trusted the websocket, you can ignore this message).`);
 				shown_ws_alert = true;
 			}
 
 		</script>
-		<link rel="stylesheet" type="text/css" href="style?fa_solid">
-		<link rel="stylesheet" type="text/css" href="style?font_awesome">
-		<link rel="stylesheet" type="text/css" href="style?main">
-		<link rel="stylesheet" type="text/css" href="style?custom">
+		<link rel="stylesheet" type="text/css" href="style?fa_solid" id="style_fa_solid">
+		<link rel="stylesheet" type="text/css" href="style?font_awesome" id="style_font_awesome">
+		<link rel="stylesheet" type="text/css" href="style?main" id="style_main">
+		<link rel="stylesheet" type="text/css" href="style?custom" id="style_custom">
 		<!--theme optional section; next line must remain as comment-->
 		<!--light-->
 		<!--nord-->

@@ -11,7 +11,7 @@ func main() {
 	}
 
 	print(server.startServers() ? "Started server & websocket..." : "Failed to start server and websocket...")
-	
+
 	while let string = readLine() {
 		if string == "q" { break }
 		else {
@@ -23,19 +23,19 @@ func main() {
 func parseArgs() {
 	let settings = Settings.shared()
 	var past_val = false
-	
+
 	#if DEBUG // ugh. Apple. just don't pass in unnecessary cmdline args and everything will be fine.
 	let args = Array(CommandLine.arguments.dropFirst()).filter({ $0 != "-NSDocumentRevisionsDebugMode" })
 	#else
 	let args = Array(CommandLine.arguments.dropFirst())
 	#endif
-	
+
 	for i in 0..<args.count {
 		if past_val {
 			past_val = false
 			continue
 		}
-		
+
 		let opt = args[i]
 
 		if (opt.prefix(2) == "--" && !Const.cmd_req_vals.contains(opt) && !Const.cmd_bool_vals.contains(opt)) || opt.prefix(1) != "-" {
@@ -95,19 +95,19 @@ func parseArgs() {
 					print("Wow. You managed to input an option that both is and isn't in the options that require a value. Very impressive.")
 			}
 		} else {
-			
+
 			/// check if it's a lot of single letter options, like `-aisb`
 			if opt.count > 2 && Array(opt)[1] != "-" {
 				let forbidden: [String] = Const.cmd_req_vals.filter({ $0.count == 2 }).map({ String($0.suffix(1)) })
-				
+
 				for char in String(opt.suffix(opt.count - 1)) {
 					let c = String(char)
-					
+
 					if forbidden.contains(c) {
 						print("Please use option -\(c) by itself, as it requires a value. It will be ignored in this context.")
 						continue
 					}
-					
+
 					switch c {
 						case Const.cmd_auth_short.suffix(1):
 							settings.require_authentication = true

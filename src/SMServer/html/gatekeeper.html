@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico?" id="favicon"/>
 		<title>
 			GateKeeper
 		</title>
@@ -68,11 +69,9 @@
 			async function submitPassword() {
 				var input = document.getElementById("input").value
 
-				var url = '/requests?password=' + input
+				var url = `requests?password=${input}`
 				await fetch(url).then(response => response.text())
-				.then(response => {
-						response_text = response;
-				})
+				.then(response => { response_text = response; })
 
 				if (response_text !== "true") {
 					document.getElementById("input").setAttribute("class", "wrong");
@@ -87,7 +86,7 @@
 		<div class="container">
 			<div class="centered_box">
 				<h1>SMServer</h1>
-				<input class="pass_box" placeholder="Password here" id="input" onKeyDown="if(event.keyCode==13) submitPassword();" autofocus type="password"><br>
+				<input class="pass_box" placeholder="Password here" id="input" onKeyDown="if (event.keyCode==13) submitPassword();" autofocus type="password"><br>
 				<button onclick="submitPassword()">⇢</button>
 			</div>
 		</div>
