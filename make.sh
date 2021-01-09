@@ -117,6 +117,10 @@ fi
 
 if [ "$deb" = true ] || [ "$ipa" = true ]
 then
+	pn "\033[34m==>\033[0m Checking LLVM Version..."
+	llvm_vers=$(llvm-gcc --version | grep -oE "clang\-[0-9]{4,}" | sed 's/clang\-//g')
+	[ ${llvm_vers} -lt 1200 ] && err "Please use llvm >= 12.0.0 to compile"
+	
 	rm -rf ${ROOTDIR}/package/SMServer.xcarchive
 	pn "\033[34m==>\033[0m Cleaning and archiving package..."
 	xcodebuild clean archive -workspace ${ROOTDIR}/src/SMServer.xcworkspace -scheme SMServer -archivePath ${ROOTDIR}/package/SMServer.xcarchive -destination generic/platform=iOS
