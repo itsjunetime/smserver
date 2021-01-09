@@ -24,6 +24,7 @@ class Settings {
 	var send_typing: Bool = UserDefaults.standard.object(forKey: "send_typing") as? Bool ?? true
 	var combine_contacts: Bool = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
 	var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
+	var reload_on_network_change: Bool = UserDefaults.standard.object(forKey: "reload_on_network_change") as? Bool ?? true
 
 	#if os(macOS)
 	var config_file_url: String = Const.config_file_url.path
