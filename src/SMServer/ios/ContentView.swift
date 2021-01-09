@@ -260,7 +260,7 @@ struct ContentView: View {
 								}
 							}) {
 								Image(systemName: "trash")
-									.padding(12)
+									.padding(8)
 									.background(Color.blue)
 									.cornerRadius(40)
 									.foregroundColor(Color.white)

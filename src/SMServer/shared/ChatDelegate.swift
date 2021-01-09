@@ -317,18 +317,18 @@ final class ChatDelegate {
 		/// check if it's a group chat
 		let is_group = num.prefix(4) == "chat" && !num.contains("@") && num.count >= 20
 		var from_string: String = ""
-		var fixed_num = num
+		var fixed_num = "?"
 
 		if num.contains(",") {
 			/// So that you can merge multiple conversations
-			fixed_num = num.split(separator: ",").joined(separator: "\" or chat_identifier is \"")
+			fixed_num = [String](repeating: "?", count: num.split(separator: ",").count).joined(separator: " or chat_identifier is ")
 		}
 
 		if from != 0 {
-			from_string = " and \(is_group ? "m." : "")is_from_me is \(from == 1 ? 1 : 0)"
+			from_string = " and m.is_from_me is \(from == 1 ? 1 : 0)"
 		}
-
-		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is ?\(from_string))) order by m.date desc", args: [fixed_num], num_items: num_items, offset: offset, split_ids: true)
+		
+		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc", args: num.split(separator: ",").map({String($0)}), num_items: num_items, offset: offset, split_ids: true)
 
 		parseTexts(&messages, db: db, contact_db: contact_db, is_group: is_group)
 

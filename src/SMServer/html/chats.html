@@ -883,6 +883,9 @@
 					case "typing":
 						setChatAsTyping(content);
 						break;
+					case "idle":
+						setChatAsIdle(content);
+						break;
 					default:
 						console.log(`cannot handle request: '${msg}'`);
 						break;
@@ -1176,6 +1179,13 @@
 						i.children[c].className = "dot flashing";
 					}, 400);
 				}
+			}
+
+			function setChatAsIdle(chat) {
+				if (debug) console.log(`setting ${chat} as idle`);
+				var current = document.getElementById("typingIndicator");
+				if (chat !== current_chat_id || current === null || current === undefined) return;
+				current.outerHTML = "";
 			}
 
 			function enableSubject() {

@@ -1,7 +1,7 @@
 # Changelog
 0.6.3 &rightarrow; 0.7.0
  - Re-added option to start the server upon app launch
- - Server auto-restarts itself without de-authenticating any clients automatically when the host device's network changes
+ - Added option to automatically restart server without de-authenticating any clients automatically when the host device's network changes
  - Added security improvements to prevent brute-forcing of password
  - Added significantly more error checking for private API functions
  - Added API Documentation & Donation link in Settings

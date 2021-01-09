@@ -152,13 +152,18 @@ struct SettingsView: View {
 			self.settings.start_on_load = $0
 			UserDefaults.standard.setValue($0, forKey: "start_on_load")
 		})
+		
+		let reload_binding = Binding<Bool>(get: {
+			self.settings.reload_on_network_change
+		}, set: {
+			self.settings.reload_on_network_change = $0
+			UserDefaults.standard.setValue($0, forKey: "reload_on_network_change")
+		})
 
 		return ScrollView {
 			VStack(alignment: .leading, spacing: 16) {
 				Text("Settings")
 					.font(.largeTitle)
-
-				Spacer().frame(height: 8)
 
 				Text("Load values")
 					.font(.headline)
@@ -236,12 +241,10 @@ struct SettingsView: View {
 							Toggle("WebSocket Proxy Compatibility", isOn: socket_subdir_enabled_binding)
 
 							if socket_subdir_enabled {
-								HStack {
-									Text("Socket subdirectory")
-									Spacer()
+								VStack(alignment: .leading) {
+									Text("WebSocket subdirectory")
 									TextField("e.g. /sms/socket", text: socket_subdir_binding)
 										.textFieldStyle(RoundedBorderTextFieldStyle())
-										.frame(width: 180)
 										.disableAutocorrection(true)
 								}
 							}
@@ -260,11 +263,12 @@ struct SettingsView: View {
 					Section {
 						VStack(spacing: 8) {
 
-							Toggle("Toggle debug", isOn: debug_binding)
+							Toggle("Enable debug", isOn: debug_binding)
 							Toggle("Enable backgrounding", isOn: background_binding)
 							Toggle("Enable SSL", isOn: secure_binding)
 							Toggle("Allow operation off of Wifi", isOn: override_binding)
 							Toggle("Start server on app launch", isOn: load_binding)
+							Toggle("Restart server on network change", isOn: reload_binding)
 
 						}
 					}.padding(10)
@@ -281,68 +285,79 @@ struct SettingsView: View {
 					Alert(title: Text("Settings Reset"), message: Text("Your settings were reset to default"))
 				})
 
+				/// ok so this VStack still has an absurd amount of padding on the top and bottom when you have a large text size, for some reason.
+				/// I'll fix that eventually
 				VStack(alignment: .leading) {
-					GeometryReader { proxy in
-						LinearGradient(
-							gradient: Gradient(
-								colors: [
-									Color.init(red: cl_red, green: (Double(proxy.frame(in: .named("frameLayer")).minY) - 240) / 400, blue: cl_blu),
-									Color.init(red: cl_red, green: (Double(proxy.frame(in: .named("frameLayer")).minY) - 310) / 400, blue: cl_blu)
-								]
-							),
-							startPoint: .topLeading, endPoint: .bottomTrailing
-						).mask(
-							VStack {
-								Button(action: {
-									let github_url = URL.init(string: "https://github.com/iandwelker/smserver/blob/master/docs/API.md")
-									guard let url = github_url, UIApplication.shared.canOpenURL(url) else { return }
-									UIApplication.shared.open(url)
-								}) {
+					ZStack {
+						GeometryReader { proxy in
+							/// makes vibrant, shiny text thing. Very nice. Padding is :( tho
+							LinearGradient(
+								gradient: Gradient(
+									colors: [
+										Color.init(red: self.cl_red, green: (Double(proxy.frame(in: .named("frameLayer")).minY) - 240) / 400, blue: self.cl_blu),
+										Color.init(red: self.cl_red, green: (Double(proxy.frame(in: .named("frameLayer")).minY) - 310) / 400, blue: self.cl_blu)
+									]
+								),
+								startPoint: .topLeading, endPoint: .bottomTrailing
+							).mask(
+								VStack {
 									HStack {
 										Text("View API Documentation")
 											.aspectRatio(contentMode: .fill)
 										Spacer()
 										Image(systemName: "doc.text")
 									}
-								}
 
-								Spacer().frame(height: 20)
+									Spacer().frame(height: 20)
 
-								Button(action: {
-									let url = URL.init(string: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD")
-									guard let github_url = url, UIApplication.shared.canOpenURL(github_url) else { return }
-									UIApplication.shared.open(github_url)
-								}) {
 									HStack {
 										Text("Donate to support SMServer")
 										Spacer()
 										Image(systemName: "link")
 									}
-								}
 
-								Spacer().frame(height: 20)
+									Spacer().frame(height: 20)
 
-								Button(action: {
-									self.resetDefaults()
-								}) {
 									HStack {
 										Text("Reset Settings to Default")
 										Spacer()
 										Image(systemName: "arrow.clockwise")
 									}
 								}
-							}
-						)
-					}.padding(10)
-					.background(grey_box)
-					.cornerRadius(8)
-					.frame(height: 120) /// yeah don't like this but I think it may be the only thing
+							)
+						}
 
-					Text("Compatible with libSMServer 0.6.0")
-						.font(.callout)
-						.foregroundColor(.gray)
+						VStack {
+							Button(action: {
+								let github_url = URL.init(string: "https://github.com/iandwelker/smserver/blob/master/docs/API.md")
+								guard let url = github_url, UIApplication.shared.canOpenURL(url) else { return }
+								UIApplication.shared.open(url)
+							}) {
+								Text("").foregroundColor(Color.clear)
+							}.padding(.bottom, 10)
 
-				}
+							Button(action: {
+								let paypal_url = URL.init(string: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD")
+								guard let url = paypal_url, UIApplication.shared.canOpenURL(url) else { return }
+								UIApplication.shared.open(url)
+							}) {
+								Text("").foregroundColor(Color.clear)
+							}.padding(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+
+							Button(action: {
+								self.resetDefaults()
+							}) {
+								Text("").foregroundColor(Color.clear)
+							}.padding(.top, 10)
+						}
+					}
+				}.padding(10)
+				.background(grey_box)
+				.cornerRadius(8)
+
+				Text("Compatible with libSMServer 0.6.0")
+					.font(.callout)
+					.foregroundColor(.gray)
 
 			}.padding()
 			.animation(.easeInOut(duration: 0.2))

@@ -62,6 +62,8 @@ class ServerDelegate {
 		/// This is kinda a hacky way sending the notification into a `CFNotificationCallback`, which then posts a notification in the `NSNotificationCenter`), but
 		/// it is necessary. The `CFNotificationCallback` can't capture context, but the `NSNotificationCenter` callback can. We need to capture context for our purposes,
 		/// so this seemed like the most efficient solution to accomplish that.
+		
+		/// However, it does post the notification like 10 times in 5 seconds, so that's why we have to have the special checks in the `reloadServer(_:)` function
 
 		let callback: CFNotificationCallback = { (nc, observer, name, object, info) in
 			NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ianwelker.smserver.system.config.network_change"), object: nil)
@@ -74,7 +76,7 @@ class ServerDelegate {
 	}
 
 	@objc func reloadServer(_: Notification) {
-		if restarted_recently { return }
+		if restarted_recently || !settings.reload_on_network_change { return }
 
 		Const.log("Disconnected from wifi, restarting server with current auth list...", debug: self.debug)
 
