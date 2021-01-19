@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 #import "MRYIPCCenter.h"
-#import "PrivateHeaders.h"
+#import "../shared/PrivateHeaders.h"
 #import "Sender.h"
 
 #define c(a) NSClassFromString(@#a)
@@ -101,6 +101,8 @@
 /// (or something like that) entitlement, but I can't have Xcode automatically sign it with that, so I'd have to
 /// manually codesign each time that I want to debug. That would be a massive hassle so I'm not going to do it until
 /// I find an easier solution
+
+/// also it doesn't work correctly. Look to libSMServer for exactly how to do this correctly
 
 /*- (NSArray *)getPinnedChats {
  NSBundle* imcore = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];

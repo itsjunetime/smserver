@@ -143,23 +143,26 @@ final class ChatDelegate {
 
 		for i in 0..<texts.count {
 
+			/// Get details about attachments if there are any attachments associated with this message
 			if texts[i]["cache_has_attachments"] as! String == "1" && texts[i]["ROWID"] != nil {
 				let att = getAttachmentFromMessage(mid: (texts[i]["ROWID"] as? String ?? "")) /// get list of attachments
 				texts[i]["attachments"] = att
 			}
 
+			/// Get the sender's name for this text if it is a group chat and it's not from me
 			if is_group && texts[i]["is_from_me"] as? String ?? "0" == "0" && (texts[i]["id"] as? String)?.count != 0 {
 				if names[texts[i]["id"] as! String] != nil {
 					texts[i]["sender"] = names[texts[i]["id"] as! String]
 				} else {
-					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: (texts[i]["id"] as? String) ?? "")
+					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: (texts[i]["id"] as? String) ?? "", is_group: is_group)
 					texts[i]["sender"] = name
 					names[texts[i]["id"] as! String] = name
 				}
 			}
 
+			/// This checks if it has anything in the `payload_data` field, which would imply that it is a special message (e.g. rich link, gamepigeon message, etc).
+			/// However, it doesn't enter the `if` if the message is a handwritten message or a digital touch message, since I don't know how to parse those yet.
 			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 && !bad_bundles.contains(texts[i]["balloon_bundle_id"] as! String) && texts[i]["ROWID"] != nil {
-				//texts[i]["balloon_bundle_id"] = "com.apple.messages.URLBalloonProvider"
 				let link_info = getLinkInfo(texts[i]["ROWID"] as? String ?? "", db: db)
 
 				texts[i]["link_title"] = link_info["title"]
@@ -179,7 +182,7 @@ final class ChatDelegate {
 		}
 	}
 
-	final func getDisplayName(chat_id: String) -> String {
+	final func getDisplayName(chat_id: String, is_group: Bool? = nil) -> String {
 		/// This does the same thing as getDisplayName, but doesn't take db as an argument. This allows for fetching of a single name,
 		/// when you don't need to get a lot of names at once.
 		Const.log("Getting display name for \(chat_id)", debug: self.debug)
@@ -190,7 +193,7 @@ final class ChatDelegate {
 		if contact_db == nil || sms_db == nil { return "" }
 
 		/// get name
-		let name = getDisplayNameWithDb(sms_db: sms_db, contact_db: contact_db, chat_id: chat_id)
+		let name = getDisplayNameWithDb(sms_db: sms_db, contact_db: contact_db, chat_id: chat_id, is_group: is_group)
 
 		/// close
 		closeDatabase(&sms_db)
@@ -201,21 +204,23 @@ final class ChatDelegate {
 		return name
 	}
 
-	final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String) -> String {
+	final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String, is_group: Bool? = nil) -> String {
 		/// Gets the first + last name of a contact with the phone number or email of `chat_id`
 
 		Const.log("Getting display name for \(chat_id) with db", debug: self.debug)
 
 		/// Support for group chats
-		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20 {
-			let check_name = selectFromSql(db: sms_db, columns: ["display_name"], table: "chat", condition: "where chat_identifier is ?", args: [chat_id], num_items: 1)
+		if is_group == nil || is_group ?? false {
+			let check_name = selectFromSql(db: sms_db, columns: ["room_name", "display_name"], table: "chat", condition: "where chat_identifier is ?", args: [chat_id], num_items: 1)
 
-			if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
-				let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
+			if check_name.count > 0 && check_name[0]["room_name"]?.count ?? 0 > 0 {
+				if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
+					let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
 
-				return recipients.joined(separator: ", ")
-			} else {
-				return check_name[0]["display_name"]!
+					return recipients.joined(separator: ", ")
+				} else {
+					return check_name[0]["display_name"]!
+				}
 			}
 		}
 
@@ -295,7 +300,7 @@ final class ChatDelegate {
 		for i in recipients {
 
 			/// get name for person
-			let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["id"] ?? "")
+			let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["id"] ?? "", is_group: false)
 			ret_val.append((ds == "" ? i["id"] : ds) ?? "")
 		}
 
@@ -327,8 +332,8 @@ final class ChatDelegate {
 		if from != 0 {
 			from_string = " and m.is_from_me is \(from == 1 ? 1 : 0)"
 		}
-		
-		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc", args: num.split(separator: ",").map({String($0)}), num_items: num_items, offset: offset, split_ids: true)
+
+		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc", args: num.split(separator: ",").map({String($0)}), num_items: num_items, offset: offset, split_ids: true)
 
 		parseTexts(&messages, db: db, contact_db: contact_db, is_group: is_group)
 
@@ -456,7 +461,7 @@ final class ChatDelegate {
 
 			/// Get name for chat
 			if (i["c.display_name"] as! String).count == 0 {
-				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"] as! String)
+				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"] as! String, is_group: (i["c.room_name"] as! String).count > 0)
 			} else {
 				new_chat["display_name"] = i["c.display_name"]
 			}
@@ -479,10 +484,11 @@ final class ChatDelegate {
 
 		/// Just in case your pinned chats aren't in your most recent texts
 		if offset == 0, let pins = pinned_chats {
-			for i in pins {
+			for chat in pins {
 				var new_chat = [String:Any]()
 				new_chat["pinned"] = true
-				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i)
+				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: chat)
+				new_chat["chat_identifier"] = chat
 
 				return_array.append(new_chat)
 			}
@@ -665,12 +671,17 @@ final class ChatDelegate {
 			/// Pretty straightforward -- get data and return it
 			if (type == "image/heic") { /// Since they're used so much
 				#if os(iOS)
-				let attachment_data = UIImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)?.jpegData(compressionQuality: 0) ?? Data()
+				let img = UIImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)
+				let attachment_data = img?.jpegData(compressionQuality: 1) /// ok this is infuriating. It works just fine when I'm debugging, but when I archive it, it only returns complete black. What
+
+				if attachment_data == nil {
+					Const.log("Failed to get JPEG data from HEIC Image at \(Const.attachment_address_prefix + parsed_path).", debug: self.debug, warning: true)
+				}
 				#elseif os(macOS)
 				let attachment_data = NSImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)?.tiffRepresentation
 				#endif
 
-				info[0] = attachment_data as Any
+				info[0] = attachment_data ?? Data() as Any
 			} else {
 				info[0] = try Data.init(contentsOf: URL(fileURLWithPath: Const.attachment_address_prefix + parsed_path))
 			}

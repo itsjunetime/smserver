@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# dpkg doesn't remove the cert pass from your /Applications directory, so we have to do it manually
+
+echo "Cleaning up for SMServer..."
+rm -rf /Applications/SMServer.app/

@@ -5,6 +5,8 @@ class Settings {
 	var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
 	var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
 	var socket_subdirectory: String? = UserDefaults.standard.object(forKey: "socket_subdirectory") as? String? ?? nil
+	/// This passphrase is found in a hidden file that doesn't exist in the git repo. This is so that nobody can extract the private key from the pfx file
+	var cert_pass: String = PKCS12Identity.pass
 
 	var default_num_chats: Int = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
 	var default_num_messages: Int = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
