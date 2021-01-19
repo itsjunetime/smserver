@@ -75,15 +75,19 @@ p, h2, a, button {
 	z-index: 3;
 	background-color: var(--grayblue-background);
 	border-bottom: 1px solid var(--light-button-background);
+	display: flex;
+}
+.messages > .title > i {
+	font-size: calc(var(--messages-title-height) * 0.5);
+	margin: auto 10px;
 }
 .title-content {
 	display: grid;
 	margin: auto;
 	width: max-content;
 	grid-gap: 10px;
-	transform: translateY(calc(var(--messages-title-height) / 8));
 	white-space: nowrap;
-	max-width: calc(100vw - var(--chats-width) - 40px);
+	max-width: calc(100vw - var(--chats-width) - 110px);
 }
 .textbox {
 	display: grid;

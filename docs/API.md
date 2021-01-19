@@ -370,7 +370,7 @@ There are five key/value pairs that can be sent to this URL, and it accepts mult
 | - | - | - | - |
 | text | No | String | Should include the body of the text you want to send. |
 | subject | No | String | Should include the subject of the text you want to send. For it to actually be included with the text, it must be at least one character long (not just ""); if it is 0-length or you simply don't include this key/value pair, the text will still be sent but it won't have a subject. |
-| chat | No | String | Should be the chat_id of the conversation which you want to send this text to. Should be formatted in the same format as the `person` parameter above, under the `/requests` requests subsection.
+| chat | Yes | String | Should be the chat_id of the conversation which you want to send this text to. Should be formatted in the same format as the `person` parameter above, under the `/requests` requests subsection.
 | photos | No | String | This should contain a list of the path of the photos (from the camera roll) that you want to send with this text, dlimited by colons and each without the `/var/mobile/Media/` prefix of their path. For example, if you wanted to send three photos with this text, this parameter may look something like `DCIM/100APPLE/IMG_0001.JPG:DCIM/100APPLE/IMG_0002.JPG:DCIM/100APPLE/IMG_0003.JPG`. |
 | attachments | No | Files | All the files that you send with a text must be attached to the key `attachments`, and you can send multiple files. I have managed to send up to 45mb of files at a time, but anything upwards of ~75mb at a time will fail (in my experience).
 

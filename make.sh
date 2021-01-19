@@ -117,13 +117,25 @@ fi
 
 if [ "$deb" = true ] || [ "$ipa" = true ]
 then
-	pn "\033[34m==>\033[0m Checking LLVM Version..."
+	pn "\033[34m==>\033[0m Checking files and LLVM Version..."
 	llvm_vers=$(llvm-gcc --version | grep -oE "clang\-[0-9]{4,}" | sed 's/clang\-//g')
-	[ ${llvm_vers} -lt 1200 ] && err "Please use llvm >= 12.0.0 to compile"
-	
+	if [ ${llvm_vers} -lt 1200 ]
+	then
+		pn "\033[1;33mWARNING:\033[0m You are using llvm < 1200 (Xcode 11.7 or lower). Using this has, in my experience, created a compiled product that does not have the full intended capabilities of the app."
+		pn "If you would like to stop now and instead build with Xcode 12/llvm >= 1200, you can use \033[1mxcode-select\033[0m to select the Xcode version to use."
+		pn "Would you like to continue building with your currently selected version of llvm? (y/n)"
+
+		read -n1 cont
+
+		[[ "$(echo ${cont} | grep -E "[Nn]")" ]] && exit
+		pn "" # newline time
+	fi
+
+	(! [ -f ${ROOTDIR}/src/SMServer/identity.pfx ] || ! [ -f ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift ]) && err "You haven't created some files necessary to compile this. Please run this script with the \033[1m-n\033[0m or \033[1m--new\033[0m flag first"
+
 	rm -rf ${ROOTDIR}/package/SMServer.xcarchive
 	pn "\033[34m==>\033[0m Cleaning and archiving package..."
-	xcodebuild clean archive -workspace ${ROOTDIR}/src/SMServer.xcworkspace -scheme SMServer -archivePath ${ROOTDIR}/package/SMServer.xcarchive -destination generic/platform=iOS
+	xcodebuild clean archive -workspace ${ROOTDIR}/src/SMServer.xcworkspace -scheme SMServer -archivePath ${ROOTDIR}/package/SMServer.xcarchive -destination generic/platform=iOS -allowProvisioningUpdates
 
 	[ $? -ne 0 ] && err "Failed to archive package. Run again with \033[1m-v\033[0m to see why"
 

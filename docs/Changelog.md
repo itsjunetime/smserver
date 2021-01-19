@@ -1,4 +1,18 @@
 # Changelog
+0.7.0 &rightarrow; Unreleased
+ - Added ability to delete a conversation from the web interface
+ - Web interface now works much better with mobile devices
+ - Certificates are now generated automatically when you install the app from the `.deb` file, making the TLS connection more likely to be secure.
+ - Websocket now attempts to reconnect when it disconnects from the host device (fixes issue of web interface not receiving updates after a while)
+ - Fixed issue that was preventing group chats from showing when they were pinned
+ - Fixed issue that prevented read receipts from showing in the web interface
+ - Fixed issue that prevented names from showing in notifications in the web interface
+ - Fixed issue that could possibly cause infinite recursion when trying to retrieve group chat's recipients
+ - Fixed issue that would prevent server from returning error messages with bad status codes
+ - Fixed issue that would prevent tapbacks with a value of 0 or 5 from being parsed by the server
+ - Fixed issue that prevented users from clicking on the buttons at the bottom of the settings view
+ - Fixed issue that showed the incorrect websocket address in the web interface alert
+
 0.6.3 &rightarrow; 0.7.0
  - Re-added option to start the server upon app launch
  - Added option to automatically restart server without de-authenticating any clients automatically when the host device's network changes

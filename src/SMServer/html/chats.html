@@ -26,6 +26,7 @@
 			var currently_typing = false;
 			var called_typing_wait = false;
 			var shown_ws_alert = false;
+			var mobile = screen.width < screen.height; // eh. it works.
 
 			var new_chats = "";
 			var items = "";
@@ -572,6 +573,7 @@
 				document.getElementById("text-content").innerHTML = '<div class="centered"> Select a chat on the left to view your messages :)</div>';
 				printed_texts = 0;
 				document.getElementById("messagesTitleText").innerHTML = "";
+				document.getElementsByClassName("messages")[0].getElementsByClassName("title")[0].innerHTML = document.getElementById("messagesTitleText").outerHTML;
 				document.getElementById("hiddenchatbox").setAttribute("value", "");
 
 				var sels = document.getElementsByClassName("selected");
@@ -653,6 +655,11 @@
 			const getTexts = async (chat_id, num_texts, addresses = "") => {
 				if (debug) console.log(`getting ${num_texts} for chat ${chat_id}`);
 
+				if (mobile) {
+					document.getElementsByClassName("chats")[0].style.display = "none";
+					document.getElementsByClassName("messages")[0].style.display = "grid";
+				}
+
 				var myNode = document.getElementsByClassName("text-content")[0];
 
 				var selected = document.getElementsByClassName("selected");
@@ -665,13 +672,15 @@
 				var orig_btn = document.querySelector(`[addresses*="${chat_id}"]`);
 				orig_btn.className = orig_btn.className.replace(/unread/g, "") + " selected";
 				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${unread_chats > 0 ? " (" + String(unread_chats) + ")" : ""}`;
+				document.title = `SMServer${unread_chats > 0 ? ` (${unread_chats})` : ""}`;
 
 				if (!orig_btn.className.includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
 					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
 
 				var chat_title = orig_btn.getElementsByClassName("chat-name")[0];
 				var title_doc = document.getElementsByClassName("title-content")[0];
+				var message_title = title_doc.parentNode;
+				var name = chat_title.children.length > 0 ? chat_title.firstChild.textContent : chat_title.textContent;
 				if (chat_title.children.length > 0) title_doc.innerHTML = `<p>${chat_title.firstChild.textContent}</p>`;
 				else title_doc.innerHTML = `<p>${chat_title.textContent}</p>`;
 
@@ -680,8 +689,12 @@
 				var img = document.createElement("img");
 				img.src = `${prefix}data?chat_id=${chat_id}`;
 				img.setAttribute("onerror", `javascript:setProfileImageAsText("${chat_id}", true);`);
-
 				title_doc.insertBefore(img, title_doc.firstChild);
+
+				let back_arrow = '<i class="fas fa-chevron-left" onclick="goBackArrow();"></i>';
+				let trash = '<i class="fas fa-trash" onclick="deleteCurrentConvo();"></i>';
+
+				message_title.innerHTML = back_arrow + title_doc.outerHTML + trash;
 
 				let url = `${prefix}requests?messages=${addresses === "" ? chat_id : addresses}&num_messages=${num_texts}`;
 
@@ -913,7 +926,10 @@
 					}
 
 					if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id)) {
-						if (name === "") name = await getTextFromURL(`${prefix}requests?name=${chat}`)[1];
+						if (name === "") {
+							var name_prom = await getTextFromURL(`${prefix}requests?name=${chat}`);
+							if (name_prom.length > 1) name = name_prom[1];
+						}
 						var n = new Notification(name, { body: new_text, icon: "/favicon.ico"});
 					}
 				}
@@ -976,39 +992,61 @@
 					/// The most recent text from this person has (nearly) all the info we need
 					var url = `${prefix}requests?messages=${chat}&num_messages=1&read_messages=false`;
 					let textPromise = await fetchFromURL(url);
-					last_text = textPromise.texts[0];
+					let last_text_arr = textPromise.texts;
+					if (last_text_arr.length > 0) {
+						let last_text = last_text_arr[0];
 
-					var new_chat = {
-						'time_marker': last_text.date,
-						'pinned': false,
-						'latest_text': new_text.length > 0 ? new_text : last_text.text,
-						'chat_identifier': chat,
-						'display_name': chat,
-						'has_unread': false,
-						'relative_time': 'now',
+						var new_chat = {
+							'time_marker': last_text.date,
+							'pinned': false,
+							'latest_text': new_text.length > 0 ? new_text : last_text.text,
+							'chat_identifier': chat,
+							'display_name': chat,
+							'has_unread': false,
+							'relative_time': 'now',
+						}
+
+						var existingButton = document.querySelector(`[addresses*="${chat}"]`);
+						if (existingButton) {
+							new_chat.pinned = existingButton.className.includes("unpinned") ? false : true;
+							new_chat.display_name = existingButton.getElementsByClassName("chat-name")[0].firstChild.textContent;
+							selected = existingButton.className.includes("selected");
+							existingButton.outerHTML = "";
+						} else {
+							new_chat.display_name = await getTextFromURL(`${prefix}requests?name=${chat}`)[1];
+						}
+
+						var new_box = getChatElement(new_chat);
+						if (selected) new_box.classList.add("selected");
+
+						var pinRows = document.getElementsByClassName("pinRow");
+
+						if (pinRows.length === 0)
+							chatsList.insertBefore(new_box, chatsList.firstChild);
+						else
+							chatsList.insertBefore(new_box, pinRows[pinRows.length - 1].nextSibling);
 					}
-
-					var existingButton = document.querySelector(`[addresses*="${chat}"]`);
-					if (existingButton) {
-						new_chat.pinned = existingButton.className.includes("unpinned") ? false : true;
-						new_chat.display_name = existingButton.getElementsByClassName("chat-name")[0].firstChild.textContent;
-						selected = existingButton.className.includes("selected");
-						existingButton.outerHTML = "";
-					} else {
-						new_chat.display_name = await getTextFromURL(`${prefix}requests?name=${chat}`)[1];
-					}
-
-					var new_box = getChatElement(new_chat);
-					if (selected) new_box.classList.add("selected");
-
-					var pinRows = document.getElementsByClassName("pinRow");
-
-					if (pinRows.length === 0)
-						chatsList.insertBefore(new_box, chatsList.firstChild);
-					else
-						chatsList.insertBefore(new_box, pinRows[pinRows.length - 1].nextSibling);
 				}
+			}
 
+			async function deleteCurrentConvo() {
+				var confirm_val = prompt(`If you would really like to delete this conversation, please enter "${current_chat_id}" in the box below and hit OK`, "");
+				if (confirm_val !== current_chat_id) return;
+
+				let url = `${prefix}send?delete_chat=${current_chat_id}`;
+				let resp = await getTextFromURL(url);
+
+				if (resp[0] !== 200) alert(`Chat not deleted: ${resp[1]}`);
+				else location.reload();
+			}
+
+			function goBackArrow() {
+				if (!mobile) {
+					clearTextContent();
+				} else {
+					document.getElementsByClassName("messages")[0].style.display = "none";
+					document.getElementsByClassName("chats")[0].style.display = "block";
+				}
 			}
 
 			function setSelectedPhoto(url) {
@@ -1324,6 +1362,40 @@
 				favicon.setAttribute("href", `${prefix}${favicon.getAttribute("href")}`);
 			}
 
+			function setUpMobile() {
+				document.body.style.zoom = "200%";
+				document.documentElement.style.setProperty("--chats-width", "100vw");
+
+				document.getElementsByClassName("everything")[0].style.display = "block";
+				document.getElementsByClassName("chats")[0].style.width = "100%";
+
+				document.getElementsByClassName("messages")[0].style.display = "none";
+				document.getElementsByClassName("messages")[0].style.height = "100%";
+				document.getElementById("messagesTitleText").style.maxWidth = "calc(100vw - 110px)";
+			}
+
+			function connectWebSocket() {
+				socket = new WebSocket(socket_url);
+
+				socket.onmessage = function(event) {
+					parseMessage(event.data);
+				};
+
+				socket.onerror = function(event) {
+					if (!shown_ws_alert) alert(`It appears you may not have trusted the websocket certificate yet. Please navigate to ${socket_url.replace(/^ws/, "http")} and trust the certificate there (If you have already trusted the websocket, you can ignore this message).`);
+					shown_ws_alert = true;
+				};
+
+				socket.onclose = async function(event) {
+					if (debug) console.log("Websocket disconnected");
+					await sleep(2000); /// seems to be necessary for some reason?
+					var timeout = setTimeout(function() {
+						if (socket.readyState == WebSocket.OPEN) clearTimeout(timeout);
+						connectWebSocket();
+					}, 1000);
+				};
+			}
+
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
 				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
@@ -1335,13 +1407,13 @@
 				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
 			});
 
-
 			document.addEventListener("DOMContentLoaded", () => {
 				if (!window.Notification || Notification.permission === "granted")
 					document.getElementById("notificationbutton").outerHTML = "";
 
 				if (subject) enableSubject();
 				if (prefix !== "") setUpPrefix();
+				if (mobile) setUpMobile();
 				setUpDND();
 			});
 
@@ -1354,16 +1426,8 @@
 			else
 				socket_url = `${location.protocol === "https:" ? "wss://" : "ws://"}${socket_address}:${socket_port}`;
 
-			let socket = new WebSocket(socket_url);
-
-			socket.onmessage = function(event) {
-				parseMessage(event.data);
-			}
-
-			socket.onerror = function(event) {
-				if (!shown_ws_alert) alert(`It appears you may not have trusted the websocket certificate yet. Please navigate to ${socket_url} and trust the certificate there (If you have already trusted the websocket, you can ignore this message).`);
-				shown_ws_alert = true;
-			}
+			var socket;
+			connectWebSocket();
 
 		</script>
 		<link rel="stylesheet" type="text/css" href="style?fa_solid" id="style_fa_solid">

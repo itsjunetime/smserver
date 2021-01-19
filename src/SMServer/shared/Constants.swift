@@ -84,6 +84,7 @@ struct Const {
 	static let attachment_address_prefix: String = "/private/var/mobile/Library/SMS/"
 	static let photo_address_prefix: String = "/var/mobile/Media/"
 	static let user_home_url: String = "/private/var/mobile/"
+	static let cert_pass_file: String = Bundle.main.bundlePath + "/smserver_cert_pass.txt"
 
 	#elseif os(macOS)
 
@@ -338,7 +339,7 @@ struct Const {
 			let date_hours = calendar.component(.hour, from: date)
 			let date_min = calendar.component(.minute, from: date)
 
-			return "\(date_hours):\(date_min)"
+			return "\(date_hours):\(date_min < 10 ? "0" : "")\(date_min)"
 		} else if days_from <= 8 {
 			let date_dow = calendar.component(.weekday, from: date)
 			let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]

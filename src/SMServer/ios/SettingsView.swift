@@ -10,9 +10,9 @@ struct SettingsView: View {
 	private let cl_red = 0.40
 	private let cl_blu = 0.65
 
-	@State private var display_ssl_alert: Bool = false
-	@State private var display_port_alert: Bool = false
-	@State private var display_defaults_alert: Bool = false
+	@State private var show_alert: Bool = false
+	@State private var alert_title: String = ""
+	@State private var alert_text: String = ""
 
 	/// Ideally we would make this equal to the object in settings that relates to this
 	/// but in iOS, where this file is used, the items in settings always equal their `UserDefaults` counterparts.
@@ -21,7 +21,9 @@ struct SettingsView: View {
 	private func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
 		UserDefaults.standard.removePersistentDomain(forName: domain)
-		self.display_defaults_alert = true
+
+		self.alert_title = "Settings Reset"
+		self.alert_text = "Your settings were reset to default"
 	}
 
 	var body: some View {
@@ -51,7 +53,9 @@ struct SettingsView: View {
 			self.settings.socket_port
 		}, set: {
 			if String($0) == self.settings.server_port {
-				self.display_port_alert = true
+				self.alert_title = "Error"
+				self.alert_text = "The websocket port must be different from the main server port. Please change it to fix this."
+				self.show_alert = true
 			} else {
 				self.settings.socket_port = Int($0)
 				UserDefaults.standard.setValue(Int($0), forKey: "socket_port")
@@ -136,7 +140,9 @@ struct SettingsView: View {
 		}, set: {
 			self.settings.is_secure = $0
 			UserDefaults.standard.setValue($0, forKey: "is_secure")
-			self.display_ssl_alert = true
+			self.alert_title = "Restart"
+			self.alert_text = "Please restart the app for your new settings to take effect"
+			self.show_alert = true
 		})
 
 		let override_binding = Binding<Bool>(get: {
@@ -152,7 +158,7 @@ struct SettingsView: View {
 			self.settings.start_on_load = $0
 			UserDefaults.standard.setValue($0, forKey: "start_on_load")
 		})
-		
+
 		let reload_binding = Binding<Bool>(get: {
 			self.settings.reload_on_network_change
 		}, set: {
@@ -275,14 +281,8 @@ struct SettingsView: View {
 					.background(grey_box)
 					.cornerRadius(8)
 
-				}.alert(isPresented: $display_ssl_alert, content: {
-					Alert(title: Text("Restart"), message: Text("Please restart the app for your new settings to take effect"))
-				})
-				.alert(isPresented: $display_port_alert, content: {
-					Alert(title: Text("Error"), message: Text("The websocket port must be different from the main server port. Please change it to fix this."))
-				})
-				.alert(isPresented: $display_defaults_alert, content: {
-					Alert(title: Text("Settings Reset"), message: Text("Your settings were reset to default"))
+				}.alert(isPresented: $show_alert, content: {
+					Alert(title: Text(self.alert_title), message: Text(self.alert_text))
 				})
 
 				/// ok so this VStack still has an absurd amount of padding on the top and bottom when you have a large text size, for some reason.
@@ -329,33 +329,42 @@ struct SettingsView: View {
 
 						VStack {
 							Button(action: {
-								let github_url = URL.init(string: "https://github.com/iandwelker/smserver/blob/master/docs/API.md")
+								let github_url = URL(string: "https://github.com/iandwelker/smserver/blob/master/docs/API.md")
 								guard let url = github_url, UIApplication.shared.canOpenURL(url) else { return }
 								UIApplication.shared.open(url)
 							}) {
-								Text("").foregroundColor(Color.clear)
-							}.padding(.bottom, 10)
+								HStack {
+									Text("hidden text :)").foregroundColor(Color.clear)
+									Spacer()
+								}
+							}.padding(.bottom, 6)
 
 							Button(action: {
-								let paypal_url = URL.init(string: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD")
+								let paypal_url = URL(string: "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD")
 								guard let url = paypal_url, UIApplication.shared.canOpenURL(url) else { return }
 								UIApplication.shared.open(url)
 							}) {
-								Text("").foregroundColor(Color.clear)
-							}.padding(.init(top: 10, leading: 0, bottom: 10, trailing: 0))
+								HStack {
+									Text("hidden text :)").foregroundColor(Color.clear)
+									Spacer()
+								}
+							}.padding(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
 
 							Button(action: {
 								self.resetDefaults()
 							}) {
-								Text("").foregroundColor(Color.clear)
-							}.padding(.top, 10)
+								HStack {
+									Text("hidden text :)").foregroundColor(Color.clear)
+									Spacer()
+								}
+							}.padding(.top, 6)
 						}
 					}
 				}.padding(10)
 				.background(grey_box)
 				.cornerRadius(8)
 
-				Text("Compatible with libSMServer 0.6.0")
+				Text("Compatible with libSMServer 0.6.1")
 					.font(.callout)
 					.foregroundColor(.gray)
 
