@@ -2,10 +2,6 @@ import Foundation
 import Telegraph
 
 class SocketDelegate : ServerWebSocketDelegate {
-
-	static let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
-	/// This passphrase is found in a hidden file that doesn't exist in the git repo. This is so that nobody can extract the private key from the pfx file
-	static let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: PKCS12Identity.pass)
 	let settings = Settings.shared()
 	var server: Server? = nil
 	var watcher: IPCTextWatcher? = nil
@@ -23,8 +19,11 @@ class SocketDelegate : ServerWebSocketDelegate {
 	}
 
 	func startServer(port: Int) {
+		let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
+		let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: settings.cert_pass)
+
 		if settings.is_secure {
-			self.server = Server(identity: SocketDelegate.identity!, caCertificates: [SocketDelegate.cert!])
+			self.server = Server(identity: identity!, caCertificates: [cert!])
 		} else {
 			self.server = Server()
 		}
@@ -34,7 +33,6 @@ class SocketDelegate : ServerWebSocketDelegate {
 		do {
 			try server?.start(port: port)
 			Const.log("Started websocket successfully.", debug: self.debug)
-
 		} catch {
 			Const.log("The websocket failed to start. This will prevent you from receiving new messages.", debug: self.debug, warning: true)
 		}
@@ -44,12 +42,18 @@ class SocketDelegate : ServerWebSocketDelegate {
 		server?.stop()
 
 		Const.log("Socket stopped", debug: self.debug)
+
+		if let sock = server {
+			for s in sock.webSockets {
+				s.close(immediately: false)
+			}
+		}
 	}
 
 	func sendTyping(_ chat: String, typing: Bool = true) {
-		if server != nil {
+		if let sock = server {
 			let send_str = "\(typing ? "typing" : "idle"):\(chat)"
-			for i in server!.webSockets {
+			for i in sock.webSockets {
 				i.send(text: send_str)
 			}
 		}
@@ -60,8 +64,6 @@ class SocketDelegate : ServerWebSocketDelegate {
 	}
 
 	func sendNewBattery() {
-		/*let percent = UIDevice.current.batteryLevel * 100
-		let charging_state = UIDevice.current.batteryState*/
 		let percent = Const.getBatteryLevel()
 		let charging_state = Const.getBatteryState()
 
@@ -70,8 +72,8 @@ class SocketDelegate : ServerWebSocketDelegate {
 			state_string = "unplugged"
 		}
 
-		if server != nil {
-			for i in server!.webSockets {
+		if let sock = server {
+			for i in sock.webSockets {
 				i.send(text: "battery:\(String(percent))")
 				i.send(text: "battery:\(state_string)")
 			}
@@ -80,8 +82,8 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 	func sendNewText(info: String) {
 		/// If we received a new text
-		if server != nil {
-			for i in server!.webSockets {
+		if let sock = server {
+			for i in sock.webSockets {
 				i.send(text: "text:" + info)
 			}
 		}

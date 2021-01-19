@@ -6,7 +6,6 @@ class ServerDelegate {
 	let socket = SocketDelegate()
 	let settings = Settings.shared()
 	let identity = Bundle.main.path(forResource: "identity", ofType: "pfx")
-	let cert_pass = PKCS12Identity.pass  /// This is in a hidden file, not in the git repository, so that nobody can steal the private key of my cert.
 
 	static let chat_delegate = ChatDelegate()
 	static let sender: IWSSender = IWSSender.init()
@@ -14,6 +13,7 @@ class ServerDelegate {
 
 	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	var restarted_recently: Bool = false
+	var did_start = false;
 
 	var main_page: String = ""
 	var main_page_style: String = ""
@@ -62,11 +62,13 @@ class ServerDelegate {
 		/// This is kinda a hacky way sending the notification into a `CFNotificationCallback`, which then posts a notification in the `NSNotificationCenter`), but
 		/// it is necessary. The `CFNotificationCallback` can't capture context, but the `NSNotificationCenter` callback can. We need to capture context for our purposes,
 		/// so this seemed like the most efficient solution to accomplish that.
-		
+
 		/// However, it does post the notification like 10 times in 5 seconds, so that's why we have to have the special checks in the `reloadServer(_:)` function
 
 		let callback: CFNotificationCallback = { (nc, observer, name, object, info) in
-			NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ianwelker.smserver.system.config.network_change"), object: nil)
+			DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+				NotificationCenter.default.post(name: NSNotification.Name(rawValue: "ianwelker.smserver.system.config.network_change"), object: nil)
+			}
 		}
 
 		CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), nil, callback,
@@ -76,13 +78,13 @@ class ServerDelegate {
 	}
 
 	@objc func reloadServer(_: Notification) {
-		if restarted_recently || !settings.reload_on_network_change { return }
+		if restarted_recently || !settings.reload_on_network_change || (!self.server.isListening && !self.did_start) { return }
 
 		Const.log("Disconnected from wifi, restarting server with current auth list...", debug: self.debug)
 
 		restarted_recently = true
 
-		self.stopServers(clear_auth: false)
+		self.stopServers(from_nc_change: true)
 
 		if settings.override_no_wifi || Const.getWiFiAddress() != nil {
 			_ = self.startServers()
@@ -146,6 +148,13 @@ class ServerDelegate {
 			self.custom_style = ""
 			Const.log("Could not load custom css file", debug: debug, warning: true)
 		}
+
+		do {
+			let pass = try String(contentsOfFile: Const.cert_pass_file, encoding: .utf8)
+			settings.cert_pass = pass
+		} catch {
+			Const.log("Can't get custom certificate password, using default", debug: self.debug)
+		}
 	}
 
 	func startServers() -> Bool {
@@ -158,7 +167,7 @@ class ServerDelegate {
 		if settings.is_secure {
 			server.isSecure = true
 			server.identityPath = identity
-			server.password = cert_pass
+			server.password = settings.cert_pass
 		}
 
 		server.add("/") { (req, res, _) in
@@ -333,7 +342,7 @@ class ServerDelegate {
 				let send_response = self.sendGetRequest(params: req.query)
 
 				if let code: Int = send_response[0] as? Int, code != 200 {
-					res.setStatusCode(UInt(code), description: send_response[0] as? String ?? "")
+					res.setStatusCode(UInt(code), description: send_response[1] as? String ?? "")
 				}
 			}
 
@@ -414,17 +423,22 @@ class ServerDelegate {
 		server.startListening(nil, portNumber: UInt(settings.server_port) ?? 8741)
 		socket.startServer(port: settings.socket_port)
 
+		self.did_start = true
+
 		return isRunning()
 	}
 
-	func stopServers(clear_auth: Bool = true) {
+	func stopServers(from_nc_change: Bool = false) {
 		/// Stops the server & and de-authenticates all ip addresses
 
 		self.server.stopListening()
 		self.socket.stopServer()
 		Const.log("Stopped Server", debug: self.debug)
 
-		if clear_auth { settings.authenticated_addresses = [String]() }
+		if !from_nc_change {
+			settings.authenticated_addresses = [String]()
+			self.did_start = false
+		}
 	}
 
 	func isRunning() -> Bool {
@@ -482,13 +496,13 @@ class ServerDelegate {
 		if Const.api_tap_vals.contains(params.keys.first ?? "") {
 
 			guard let req = params[Const.api_tap_req], let guid = params[Const.api_tap_guid], let chat = params[Const.api_tap_chat] else {
-				return [400, "Please include parameters 'tapback', 'tap_guid', and 'tap_in_chat' in your request"]
+				return [400, "Please include parameters '\(Const.api_tap_req)', '\(Const.api_tap_guid)', and '\(Const.api_tap_chat)' in your request"]
 			}
 
 			var reaction: Int = (Int(req) ?? -1) + 2000 /// reactions are 2000 - 2005
 			let remove = (params[Const.api_tap_rem] ?? "false") == "true"
 
-			guard reaction < 2005 && reaction > 2000 else {
+			guard reaction < 2006 && reaction > 1999 else {
 				return [400, "tapback value must be at least 0 and no greater than 5"]
 			}
 
