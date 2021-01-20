@@ -692,7 +692,7 @@
 				title_doc.insertBefore(img, title_doc.firstChild);
 
 				let back_arrow = '<i class="fas fa-chevron-left" onclick="goBackArrow();"></i>';
-				let trash = '<i class="fas fa-trash" onclick="deleteCurrentConvo();"></i>';
+				let trash = '<i class="fas fa-trash-alt" onclick="deleteCurrentConvo();"></i>';
 
 				message_title.innerHTML = back_arrow + title_doc.outerHTML + trash;
 
@@ -1041,9 +1041,9 @@
 			}
 
 			function goBackArrow() {
-				if (!mobile) {
-					clearTextContent();
-				} else {
+				clearTextContent();
+
+				if (mobile) {
 					document.getElementsByClassName("messages")[0].style.display = "none";
 					document.getElementsByClassName("chats")[0].style.display = "block";
 				}

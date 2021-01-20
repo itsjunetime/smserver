@@ -11,7 +11,6 @@ class ServerDelegate {
 	static let sender: IWSSender = IWSSender.init()
 	var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
 
-	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	var restarted_recently: Bool = false
 	var did_start = false;
 
@@ -56,8 +55,6 @@ class ServerDelegate {
 		socket.watcher = self.watcher
 		socket.verify_auth = self.checkIfAuthenticated
 
-		self.debug = settings.debug
-
 		/// Here we set up notification observers for when the network changes, so that we can automatically restart the server on the new network & with the new IP.
 		/// This is kinda a hacky way sending the notification into a `CFNotificationCallback`, which then posts a notification in the `NSNotificationCenter`), but
 		/// it is necessary. The `CFNotificationCallback` can't capture context, but the `NSNotificationCenter` callback can. We need to capture context for our purposes,
@@ -80,7 +77,7 @@ class ServerDelegate {
 	@objc func reloadServer(_: Notification) {
 		if restarted_recently || !settings.reload_on_network_change || (!self.server.isListening && !self.did_start) { return }
 
-		Const.log("Disconnected from wifi, restarting server with current auth list...", debug: self.debug)
+		Const.log("Disconnected from wifi, restarting server with current auth list...")
 
 		restarted_recently = true
 
@@ -96,10 +93,7 @@ class ServerDelegate {
 	}
 
 	func reloadVars() {
-		self.debug = settings.debug
 		self.loadFiles()
-		ServerDelegate.chat_delegate.refreshVars()
-		self.socket.refreshVars()
 	}
 
 	func loadFiles() {
@@ -137,7 +131,7 @@ class ServerDelegate {
 				self.fa_style = try String(contentsOf: fa, encoding: .utf8)
 				self.fa_solid_style = try String(contentsOf: fs, encoding: .utf8)
 			} catch {
-				Const.log("WARNING: ran into an error with loading the files, try again.", debug: debug, warning: true)
+				Const.log("WARNING: ran into an error with loading the files, try again.", warning: true)
 			}
 		}
 
@@ -146,14 +140,14 @@ class ServerDelegate {
 			self.custom_style = try String(contentsOf: Const.custom_css_path, encoding: .utf8)
 		} catch {
 			self.custom_style = ""
-			Const.log("Could not load custom css file", debug: debug, warning: true)
+			Const.log("Could not load custom css file", warning: true)
 		}
 
 		do {
 			let pass = try String(contentsOfFile: Const.cert_pass_file, encoding: .utf8)
 			settings.cert_pass = pass
 		} catch {
-			Const.log("Can't get custom certificate password, using default", debug: self.debug)
+			Const.log("Can't get custom certificate password, using default")
 		}
 	}
 
@@ -161,7 +155,7 @@ class ServerDelegate {
 
 		if server.isListening {
 			self.stopServers()
-			Const.log("Server was already running, stopped.", debug: debug, warning: false)
+			Const.log("Server was already running, stopped.", warning: false)
 		}
 
 		if settings.is_secure {
@@ -174,7 +168,7 @@ class ServerDelegate {
 			let ip = req.connection?.remoteAddress ?? ""
 			res.setValue("text/html", forHTTPHeaderField: "Content-type")
 
-			Const.log("GET main: \(ip)", debug: self.debug)
+			Const.log("GET main: \(ip)")
 
 			res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
 		}
@@ -187,7 +181,7 @@ class ServerDelegate {
 			let address = req.connection?.remoteAddress ?? ""
 			let query = req.query
 
-			Const.log("GET /requests: \(address)", debug: self.debug)
+			Const.log("GET /requests: \(address)")
 
 			if query.count == 0 {
 				/// If there are no parameters, return default blank page
@@ -208,7 +202,7 @@ class ServerDelegate {
 					res.setStatusCode(UInt(response[0] as? Int ?? 200), description: response[1] as? String ?? "")
 				}
 
-				Const.log("Returning from /requests", debug: self.debug)
+				Const.log("Returning from /requests")
 				res.send(response[1] as? String ?? "")
 			}
 		}
@@ -216,7 +210,7 @@ class ServerDelegate {
 		server.add("/data") { (req, res, _) in
 			/// This handler returns attachment data and profile/attachment/photo images.
 			let ip = req.connection?.remoteAddress ?? ""
-			Const.log("GET data: \(ip)", debug: self.debug)
+			Const.log("GET data: \(ip)")
 
 			if !self.checkIfAuthenticated(ras: ip) {
 				/// Return nil if they haven't authenticated
@@ -225,7 +219,7 @@ class ServerDelegate {
 				return
 			}
 
-			Const.log("returning data", debug: self.debug)
+			Const.log("returning data")
 
 			let f = req.query.keys.first
 
@@ -278,7 +272,7 @@ class ServerDelegate {
 		server.add("/send") { (req, res, _) in
 			/// This handles a post request to send a text
 			let ip = req.connection?.remoteAddress ?? ""
-			Const.log("POST send: \(ip)", debug: self.debug)
+			Const.log("POST send: \(ip)")
 
 			if !self.checkIfAuthenticated(ras: ip) {
 				res.setStatusCode(403, description: "Please authenticate")
@@ -312,7 +306,7 @@ class ServerDelegate {
 						do {
 							try fm.removeItem(atPath: newFilePath)
 						} catch {
-							Const.log("Couldn't remove old file from: \(newFilePath)", debug: self.debug, warning: true)
+							Const.log("Couldn't remove old file from: \(newFilePath)", warning: true)
 							moved_file = false
 						}
 					}
@@ -321,7 +315,7 @@ class ServerDelegate {
 						do {
 							try fm.moveItem(at: file.temporaryFileURL, to: URL(fileURLWithPath: newFilePath))
 						} catch {
-							Const.log("Couldn't move uploaded file to \(newFilePath)", debug: self.debug, warning: true)
+							Const.log("Couldn't move uploaded file to \(newFilePath)", warning: true)
 						}
 					}
 
@@ -337,7 +331,7 @@ class ServerDelegate {
 					res.setStatusCode(UInt(code), description: fail_msg)
 				}
 
-				Const.log("Returning from sending text", debug: self.debug)
+				Const.log("Returning from sending text")
 			} else if req.method == .get {
 				let send_response = self.sendGetRequest(params: req.query)
 
@@ -353,7 +347,7 @@ class ServerDelegate {
 			/// Returns the style.css file as text
 			let ip = req.connection?.remoteAddress ?? ""
 
-			Const.log("GET style: \(ip)", debug: self.debug)
+			Const.log("GET style: \(ip)")
 
 			if !self.checkIfAuthenticated(ras: ip) {
 				res.setStatusCode(403, description: "Please authenticate")
@@ -383,7 +377,7 @@ class ServerDelegate {
 			/// Gets the fonts necessary for fontawesome
 			let ip = req.connection?.remoteAddress ?? ""
 
-			Const.log("GET webfonts: \(ip)", debug: self.debug)
+			Const.log("GET webfonts: \(ip)")
 
 			if !self.checkIfAuthenticated(ras: ip) {
 				res.setStatusCode(403, description: "Please authenticate")
@@ -398,7 +392,7 @@ class ServerDelegate {
 					let font_data = try Data.init(contentsOf: f)
 					res.send(font_data)
 				} catch {
-					Const.log("WARNING: Can't get font for \(font)", debug: self.debug, warning: true)
+					Const.log("WARNING: Can't get font for \(font)", warning: true)
 					res.send("")
 				}
 			} else {
@@ -418,7 +412,7 @@ class ServerDelegate {
 			res.send(data)
 		}
 
-		Const.log("Got past adding all the handlers.", debug: self.debug)
+		Const.log("Got past adding all the handlers.")
 
 		server.startListening(nil, portNumber: UInt(settings.server_port) ?? 8741)
 		socket.startServer(port: settings.socket_port)
@@ -433,7 +427,7 @@ class ServerDelegate {
 
 		self.server.stopListening()
 		self.socket.stopServer()
-		Const.log("Stopped Server", debug: self.debug)
+		Const.log("Stopped Server")
 
 		if !from_nc_change {
 			settings.authenticated_addresses = [String]()
@@ -537,11 +531,9 @@ class ServerDelegate {
 
 	func parseAndReturn(params: [String:String], address: String = "") -> [Any] {
 		/// This function handles all the requests to the /requests subdirectory, and returns stuff like conversations, messages, and can send texts.
-		if self.debug {
-			for i in Array(params.keys) {
-				Const.log("parsing \(i) and \(String(describing: params[i]))", debug: self.debug)
-			}
-		}
+
+		Const.log("parsing \(params as Any)")
+
 		if params.keys.first == "password" {
 			/// If they're sending over the password to authenticate
 			/// If they sent the correct password
@@ -579,7 +571,7 @@ class ServerDelegate {
 			let from = Int(params[Const.api_msg_from] ?? "0") ?? 0 /// 0 for either, 1 for me, 2 for them
 			person = person.replacingOccurrences(of: "\"", with: "") /// In case they decide to capture it in quotes
 
-			Const.log("selecting person: \(person), num: \(num_texts)", debug: self.debug)
+			Const.log("selecting person: \(person), num: \(num_texts)")
 
 			let texts_array = ServerDelegate.chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset, from: from)
 			let texts = encodeToJson(object: texts_array, title: "texts")
@@ -590,7 +582,7 @@ class ServerDelegate {
 
 			let chats_offset = Int(params[Const.api_chat_off] ?? "0") ?? 0
 			let num_texts = Int(params[Const.api_chat_req] ?? String(settings.default_num_chats)) ?? settings.default_num_chats
-			Const.log("num chats: \(num_texts), offset: \(chats_offset)", debug: self.debug)
+			Const.log("num chats: \(num_texts), offset: \(chats_offset)")
 
 			let chats_array = ServerDelegate.chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
 			let chats = encodeToJson(object: chats_array, title: "chats")
@@ -627,7 +619,7 @@ class ServerDelegate {
 			return [200, photos]
 		}
 
-		Const.log("WARNING: We haven't implemented this functionality yet, sorry :/", debug: self.debug, warning: true)
+		Const.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
 		return [404, "There is no functionality in the API that implements these URL query parameters"]
 	}
 

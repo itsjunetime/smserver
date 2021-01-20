@@ -117,17 +117,37 @@ else
 &nbsp;&nbsp;&nbsp;&nbsp; If you haven't yet texted the person in the previous block of code (the one using `CKConversation`), the `CKConversation` from `[CKConversationList conversationForExistingChatWithGroupID]` will be nil. Just check for that, then execute the code in the most previous block, assuming that `chat` is nil (so that you have to go into the if and create a new chat).
 
 ## Typing indicators
-&nbsp;&nbsp;&nbsp;&nbsp; This is probably one of the most unsure things I figured out, meaning that there's definitely a better way but I'm just doing the thing that seems to work semi-ok for me. To hijack when someone starts typing using my method, you'll have to first have the MobileSMS app open, or just running in the background. There may be a more reliable way by working through IMDaemon, but I have yet to find it (or even really look for it). Here's the code:
+&nbsp;&nbsp;&nbsp;&nbsp; This isn't the most elegant solution, but it isn't that bad either. In a nutshell, whenever `isCancelTypingMessage` returns `YES`, someone stopped typing, and whenever `isIncomingTypingMessage` returns `YES`, someone started typing. So if you check their values every time, you can do whever you want each time they return `YES`. The full code is below.
 
 ```objectivec
-%hook IMTypingChatItem
+%hook IMMessageItem
 
-- (id)_initWithItem:(id)arg1 {
-	id orig = %orig;
+- (bool)isCancelTypingMessage {
+	bool orig = %orig;
 
-	NSString *chat = [(IMMessageItem *)arg1 sender];
-	/// Do whatever you want with the chat. Personally, I send it to my app via IPC.
+	/// if `orig` is true here, someone stopped typing.
+	if (orig) {
 
+		/// warning: the `IMMessageItem` that this function is running in gets deallocated very quickly after when
+		/// this function is called and returns `YES`, so if you do any dispatch_async stuff here and try to call
+		/// anything on `self` in the block, it will crash the process this is running in.
+		__block NSString* sender = [self sender];
+		/// do whatever you want with the conversation in which the other party stopped typing
+	}
+
+	return orig;
+}
+
+- (bool)isIncomingTypingMessage {
+	bool orig = %orig;
+
+	/// if `orig` is true here, somebody started typing.
+	if (orig) {
+
+		__block NSString* sender = [self sender];
+		/// `sender` is the chat identifier of the conversation in which the other party started typing.
+		/// you can do whatever you want with it here.
+	}
 	return orig;
 }
 
@@ -165,9 +185,7 @@ long long int tapback = 2000;
 
 IMChat *chat = [[%c(IMChatRegistry) sharedInstance] existingChatWithChatIdentifier:address];
 
-/// You may need to load more than 1000. I haven't yet tested this for texts
-/// more than 1000 back so it may not work.
-[chat loadMessagesUpToGUID:nil date:nil limit:1000 loadImmediately:YES];
+[chat loadMessagesUpToGUID:guid date:nil limit:nil loadImmediately:YES];
 IMMessageItem *item = [chat messageItemForGUID:guid];
 
 IMTextMessagePartChatItem *pci = [[%c(IMTextMessagePartChatItem) alloc] _initWithItem:item text:[item body] index:0 messagePartRange:NSMakeRange(0, [[item body] length]) subject:[item subject]];
@@ -181,16 +199,27 @@ if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 14.0)
 &nbsp;&nbsp;&nbsp;&nbsp; I don't yet know how to send tapbacks on iOS 13-, since the last method used in the code snippet above (`[chat sendMessageAcknowledgment: forChatItem: withAssociatedMessageInfo:]`) doesn't exist in anything before iOS 14. However, there are very similar methods, so I'm fairly certain that it wouldn't be too hard to figure it out. Let me know if you do, and I can add the information here (if you'd like).
 
 ## Getting pinned chats
-&nbsp;&nbsp;&nbsp;&nbsp; I am actually fairly certain this is the best way to get the list of pinned chats. It's short and easy, so here's the code:
+&nbsp;&nbsp;&nbsp;&nbsp; I am actually fairly certain this is the best way to get the list of pinned chats. It's not as short and easy as I previously thought, but it's not too bad either. The following code gets us an array of all the chat identifiers that correspond to the currently pinned chats.
 
 ```objectivec
 /// Pinned chats are only available for iOS 14+, so check that first
 if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 14.0) {
 	IMPinnedConversationsController* pinnedController = [%c(IMPinnedConversationsController) sharedInstance];
-	NSOrderedSet* set = [pinnedController pinnedConversationIdentifierSet];
+	NSArray* pins = [[pinnedController pinnedConversationIdentifierSet] array];
 
-	/// I used it as an array, but obviously you can return it as the NSOrderedSet as well
-	return [set array]; 
+	CKConversationList* list = [%c(CKConversationList) sharedConversationList];
+	NSMutableArray* convos = [NSMutableArray arrayWithCapacity:[pins count]];
+
+	/// So `pins` contains an array of pinning identifiers, not chat identifiers. So we have to iterate through
+	/// and get the chat identifiers that correspond with the pinning identifiers, since SMServer parses them by chat identifier.
+	for (id obj in pins) {
+		CKConversation* convo = (CKConversation *)[list conversationForExistingChatWithPinningIdentifier:obj];
+		if (convo == nil) continue;
+		NSString* identifier = [[convo chat] chatIdentifier];
+		[convos addObject:identifier];
+	}
+
+	return convos;
 }
 
 return [NSArray array];

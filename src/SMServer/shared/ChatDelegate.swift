@@ -8,12 +8,7 @@ import Contacts
 #endif
 
 final class ChatDelegate {
-	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	let settings = Settings.shared()
-
-	final func refreshVars() {
-		self.debug = settings.debug
-	}
 
 	final func createConnection(connection_string: String = Const.sms_db_address) -> OpaquePointer? {
 		/// This simply returns an opaque pointer to the database at `connection_string`, allowing for sqlite connections.
@@ -24,7 +19,7 @@ final class ChatDelegate {
 		let return_code = sqlite3_open_v2(connection_string, &db, SQLITE_OPEN_READONLY, nil)
 
 		if return_code != SQLITE_OK {
-			Const.log("WARNING: error opening database at \(connection_string): \(return_code)", debug: self.debug)
+			Const.log("WARNING: error opening database at \(connection_string): \(return_code)")
 			sqlite3_close(db)
 			db = nil
 			return db
@@ -32,7 +27,7 @@ final class ChatDelegate {
 
 		sqlite3_busy_timeout(db, 20)
 
-		Const.log("opened database", debug: self.debug)
+		Const.log("opened database")
 
 		/// Return pointer to the database
 		return db
@@ -41,7 +36,7 @@ final class ChatDelegate {
 	final func closeDatabase(_ db: inout OpaquePointer?) {
 		let close_code = sqlite3_close(db)
 		if close_code != SQLITE_OK {
-			Const.log("WARNING: error closing database. Errror: \(close_code)", debug: self.debug, warning: true)
+			Const.log("WARNING: error closing database. Errror: \(close_code)", warning: true)
 		}
 		db = nil
 	}
@@ -78,18 +73,18 @@ final class ChatDelegate {
 		}
 		sqlString += ";"
 
-		Const.log("full sql query: \(sqlString)", debug: self.debug)
+		Const.log("full sql query: \(sqlString)")
 
 		var statement: OpaquePointer?
 
-		Const.log("opened statement", debug: self.debug)
+		Const.log("opened statement")
 
 		var main_return = [[String:String]]()
 
 		/// Prepare the database for querying `sqlString`
 		if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(db)!)
-			Const.log("WARNING: error preparing select: \(errmsg)", debug: self.debug, warning: true)
+			Const.log("WARNING: error preparing select: \(errmsg)", warning: true)
 			return main_return
 		}
 
@@ -125,18 +120,18 @@ final class ChatDelegate {
 		/// Finalize; has to be done after getting info.
 		if sqlite3_finalize(statement) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(db)!)
-			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", debug: self.debug, warning: true)
+			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
 		}
 
 		statement = nil
-		Const.log("destroyed statement", debug: self.debug)
+		Const.log("destroyed statement")
 
 		/// Since we passed `db` in as a parameter, we don't close the database here, but rather in the function where `db` was constructed
 		return main_return
 	}
 
 	final func parseTexts(_ texts: inout [[String:Any]], db: OpaquePointer?, contact_db: OpaquePointer?, is_group: Bool = false) {
-		Const.log("parsing texts with length \(texts.count)", debug: self.debug)
+		Const.log("parsing texts with length \(texts.count)")
 
 		var names = [String:String]() /// key: id, val: display name.
 		let bad_bundles = ["com.apple.DigitalTouchBalloonProvider", "com.apple.Handwriting.HandwritingProvider"]
@@ -185,7 +180,7 @@ final class ChatDelegate {
 	final func getDisplayName(chat_id: String, is_group: Bool? = nil) -> String {
 		/// This does the same thing as getDisplayName, but doesn't take db as an argument. This allows for fetching of a single name,
 		/// when you don't need to get a lot of names at once.
-		Const.log("Getting display name for \(chat_id)", debug: self.debug)
+		Const.log("Getting display name for \(chat_id)")
 
 		/// Connect to contact database
 		var contact_db = createConnection(connection_string: Const.contacts_address)
@@ -199,7 +194,7 @@ final class ChatDelegate {
 		closeDatabase(&sms_db)
 		closeDatabase(&contact_db)
 
-		Const.log("destroyed dbs", debug: self.debug)
+		Const.log("destroyed dbs")
 
 		return name
 	}
@@ -207,7 +202,7 @@ final class ChatDelegate {
 	final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String, is_group: Bool? = nil) -> String {
 		/// Gets the first + last name of a contact with the phone number or email of `chat_id`
 
-		Const.log("Getting display name for \(chat_id) with db", debug: self.debug)
+		Const.log("Getting display name for \(chat_id) with db")
 
 		/// Support for group chats
 		if is_group == nil || is_group ?? false {
@@ -284,14 +279,14 @@ final class ChatDelegate {
 
 		#endif
 
-		Const.log("full name for \(chat_id) is \(full_name)", debug: self.debug)
+		Const.log("full name for \(chat_id) is \(full_name)")
 
 		return full_name
 	}
 
 	final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
 
-		Const.log("Getting group chat recipients for \(ci)", debug: self.debug)
+		Const.log("Getting group chat recipients for \(ci)")
 
 		let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is ?))", args: [ci])
 
@@ -304,7 +299,7 @@ final class ChatDelegate {
 			ret_val.append((ds == "" ? i["id"] : ds) ?? "")
 		}
 
-		Const.log("Finished retrieving recipients for \(ci)", debug: self.debug)
+		Const.log("Finished retrieving recipients for \(ci)")
 
 		return ret_val
 	}
@@ -312,7 +307,7 @@ final class ChatDelegate {
 	final func loadMessages(num: String, num_items: Int, offset: Int = 0, from: Int = 0, surrounding: Int? = nil) -> [[String:Any]] {
 		/// This loads the latest `num_items` messages from/to `num`, offset by `offset`.
 
-		Const.log("getting messages for \(num)", debug: self.debug)
+		Const.log("getting messages for \(num)")
 
 		/// Create connection to text and contact databases
 		var db = createConnection()
@@ -341,7 +336,7 @@ final class ChatDelegate {
 		closeDatabase(&db)
 		closeDatabase(&contact_db)
 
-		Const.log("destroyed db; returning messages", debug: self.debug)
+		Const.log("destroyed db; returning messages")
 
 		return messages
 	}
@@ -349,7 +344,7 @@ final class ChatDelegate {
 	final func loadChats(num_to_load: Int, offset: Int = 0) -> [[String:Any]] {
 		/// This loads the most recent `num_to_load` conversations, offset by `offset`
 
-		Const.log("Getting \(String(num_to_load)) chats", debug: self.debug)
+		Const.log("Getting \(String(num_to_load)) chats")
 
 		var pinned_chats: [String]? = nil
 		var return_array = [[String:Any]]()
@@ -423,7 +418,7 @@ final class ChatDelegate {
 		dp_group.wait()
 
 		for i in chats {
-			Const.log("Beginning to iterate through chats for \(i["c.chat_identifier"] as! String)", debug: self.debug)
+			Const.log("Beginning to iterate through chats for \(i["c.chat_identifier"] as! String)")
 
 			var new_chat = [String:Any]()
 
@@ -498,7 +493,7 @@ final class ChatDelegate {
 		closeDatabase(&contacts_db)
 		closeDatabase(&db)
 
-		Const.log("destroyed db", debug: self.debug)
+		Const.log("destroyed db")
 
 		return return_array
 	}
@@ -506,7 +501,7 @@ final class ChatDelegate {
 	final func returnImageData(chat_id: String) -> Data? {
 		/// This does the same thing as returnImageDataDB, but without the `contact_db` and `image_db` as arguments, if you just need to get like 1 image
 
-		Const.log("Getting image data for chat_id \(chat_id)", debug: self.debug)
+		Const.log("Getting image data for chat_id \(chat_id)")
 
 		/// Make connections
 		var contact_db = createConnection(connection_string: Const.contacts_address)
@@ -548,7 +543,7 @@ final class ChatDelegate {
 	final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data? {
 		/// This returns the profile picture for someone with the phone number or email `chat_id` as pure image data
 
-		Const.log("Getting image data with db for chat_id \(chat_id)", debug: self.debug)
+		Const.log("Getting image data with db for chat_id \(chat_id)")
 
 		if chat_id == "default" || (chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20) {
 			#if os(iOS)
@@ -588,11 +583,11 @@ final class ChatDelegate {
 
 		var statement: OpaquePointer?
 
-		Const.log("opened statement", debug: self.debug)
+		Const.log("opened statement")
 
 		if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-			Const.log("WARNING: error preparing select: \(errmsg)", debug: self.debug, warning: true)
+			Const.log("WARNING: error preparing select: \(errmsg)", warning: true)
 
 			//return Data.init(capacity: 0)
 			return nil
@@ -613,11 +608,11 @@ final class ChatDelegate {
 
 		if sqlite3_finalize(statement) != SQLITE_OK {
 			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", debug: self.debug, warning: true)
+			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
 		}
 
 		statement = nil
-		Const.log("destroyed statement", debug: self.debug)
+		Const.log("destroyed statement")
 
 		return pngdata
 	}
@@ -625,7 +620,7 @@ final class ChatDelegate {
 	final func getAttachmentFromMessage(mid: String) -> [[String:String]] {
 		/// This returns the file path for all attachments associated with a certain message with the message_id of `mid`
 
-		Const.log("Getting attachment for mid \(mid)", debug: self.debug)
+		Const.log("Getting attachment for mid \(mid)")
 
 		/// create connection, get attachments information
 		var db = createConnection()
@@ -645,7 +640,7 @@ final class ChatDelegate {
 	final func getAttachmentType(path: String) -> String {
 		/// This gets the file type of the attachment at `path`
 
-		Const.log("Getting attachment type for @ \(path)", debug: self.debug)
+		Const.log("Getting attachment type for @ \(path)")
 
 		var db = createConnection()
 		if db == nil { return "" }
@@ -661,7 +656,7 @@ final class ChatDelegate {
 	final func getAttachmentDataFromPath(path: String) -> [Any] { /// [0] = data, [1] = mime_type
 		/// This returns the pure data of a file (attachment) at `path`
 
-		Const.log("Getting attachment data from path \(path)", debug: self.debug)
+		Const.log("Getting attachment data from path \(path)")
 
 		let parsed_path = path.replacingOccurrences(of: "/../", with: "/") /// To prevent LFI
 		let type = getAttachmentType(path: parsed_path)
@@ -675,7 +670,7 @@ final class ChatDelegate {
 				let attachment_data = img?.jpegData(compressionQuality: 1) /// ok this is infuriating. It works just fine when I'm debugging, but when I archive it, it only returns complete black. What
 
 				if attachment_data == nil {
-					Const.log("Failed to get JPEG data from HEIC Image at \(Const.attachment_address_prefix + parsed_path).", debug: self.debug, warning: true)
+					Const.log("Failed to get JPEG data from HEIC Image at \(Const.attachment_address_prefix + parsed_path).", warning: true)
 				}
 				#elseif os(macOS)
 				let attachment_data = NSImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)?.tiffRepresentation
@@ -686,7 +681,7 @@ final class ChatDelegate {
 				info[0] = try Data.init(contentsOf: URL(fileURLWithPath: Const.attachment_address_prefix + parsed_path))
 			}
 		} catch {
-			Const.log("WARNING: failed to load image for path \(Const.attachment_address_prefix + parsed_path)", debug: self.debug, warning: true)
+			Const.log("WARNING: failed to load image for path \(Const.attachment_address_prefix + parsed_path)", warning: true)
 		}
 
 		return info
@@ -746,7 +741,7 @@ final class ChatDelegate {
 		guard #available(OSX 10.15, *) else { return [[String:Any]]() }
 		#endif
 
-		Const.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")", debug: self.debug)
+		Const.log("Getting list of photos, num: \(num), offset: \(offset), most recent: \(most_recent ? "true" : "false")")
 
 		/// make sure that we have access to the photos library
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
@@ -755,7 +750,7 @@ final class ChatDelegate {
 			PHPhotoLibrary.requestAuthorization({ auth in
 				if auth != PHAuthorizationStatus.authorized {
 					con = false
-					Const.log("App is not authorized to view photos. Please grant access.", debug: self.debug, warning: true)
+					Const.log("App is not authorized to view photos. Please grant access.", warning: true)
 				}
 			})
 			guard con else { return [[String:Any]]() }
@@ -816,7 +811,7 @@ final class ChatDelegate {
 	final func getPhotoDatafromPath(path: String) -> Data {
 		/// This returns the pure data of a photo at `path`
 
-		Const.log("Getting photo data from path \(path)", debug: self.debug)
+		Const.log("Getting photo data from path \(path)")
 
 		/// To prevent LFI
 		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "")
@@ -842,12 +837,12 @@ final class ChatDelegate {
 		var statement: OpaquePointer?
 		var ret_dict = ["title": "Title", "subtitle": "Subtitle", "type": "Website"]
 
-		Const.log("Opened statement in getLinkTitle", debug: self.debug)
+		Const.log("Opened statement in getLinkTitle")
 
 		/// Prepare sql statement
 		var ret_code = sqlite3_prepare_v2(db, sqlString, -1, &statement, nil)
 		if ret_code != SQLITE_OK {
-			Const.log("WARNING: error preparing select: \(ret_code)", debug: self.debug, warning: true)
+			Const.log("WARNING: error preparing select: \(ret_code)", warning: true)
 		}
 
 		var data: NSData = NSData.init()
@@ -863,7 +858,7 @@ final class ChatDelegate {
 		/// finalize sqlite statement
 		ret_code = sqlite3_finalize(statement)
 		if ret_code != SQLITE_OK {
-			Const.log("WARNING: error finalizing statement: \(ret_code)", debug: self.debug, warning: true)
+			Const.log("WARNING: error finalizing statement: \(ret_code)", warning: true)
 		}
 
 		/// Blob data is technically an NSKeyedArchiver plist file. We just gotta serialize it and extract values
@@ -872,7 +867,7 @@ final class ChatDelegate {
 		do {
 			plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as! [String : AnyObject]
 		} catch {
-			Const.log("WARNING: failed to decode plist for ROWID \(mid)", debug: self.debug, warning: true)
+			Const.log("WARNING: failed to decode plist for ROWID \(mid)", warning: true)
 			return ret_dict
 		}
 
@@ -907,7 +902,7 @@ final class ChatDelegate {
 	}
 
 	final func getTextByGUID(_ guid: String) -> [String:Any] {
-		Const.log("Getting text at guid \(guid)", debug: self.debug)
+		Const.log("Getting text at guid \(guid)")
 
 		var db = createConnection()
 		var contact_db = createConnection(connection_string: Const.contacts_address)
@@ -932,7 +927,7 @@ final class ChatDelegate {
 
 		let text = text_array[0]
 
-		Const.log("Closing databases and destroying pointers", debug: self.debug)
+		Const.log("Closing databases and destroying pointers")
 		closeDatabase(&db)
 		db = nil
 
@@ -945,7 +940,7 @@ final class ChatDelegate {
 	final func getTapbackInformation(_ tapback: Int32, guid: String) -> [String:Any] {
 		/// This gets the text information for a tapback with the value `tapback` and on the text with the guid `guid`
 
-		Const.log("Getting tapback information with value \(tapback) and guid \(guid)", debug: self.debug)
+		Const.log("Getting tapback information with value \(tapback) and guid \(guid)")
 
 		var db = createConnection()
 		var contact_db = createConnection(connection_string: Const.contacts_address)
@@ -966,7 +961,7 @@ final class ChatDelegate {
 		parseTexts(&text_array, db: db, contact_db: contact_db, is_group: (text_array[0]["room_name"] as? String)?.count ?? 0 > 0)
 		let text = text_array[0]
 
-		Const.log("Closing connections and destroying pointers", debug: self.debug)
+		Const.log("Closing connections and destroying pointers")
 		closeDatabase(&contact_db)
 		contact_db = nil
 
