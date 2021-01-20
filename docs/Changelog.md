@@ -1,6 +1,7 @@
 # Changelog
 0.7.0 &rightarrow; Unreleased
  - Added ability to delete a conversation from the web interface
+ - Added ability to easily export TLS certificate (e.g. to add to client device store)
  - Web interface now works much better with mobile devices
  - Certificates are now generated automatically when you install the app from the `.deb` file, making the TLS connection more likely to be secure.
  - Websocket now attempts to reconnect when it disconnects from the host device (fixes issue of web interface not receiving updates after a while)

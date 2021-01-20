@@ -224,9 +224,9 @@ struct Const {
 	static let log_prefix: String = "SMServer_app: "
 	static let log_warning: String = "WARNING: "
 
-	static func log(_ s: String, debug: Bool, warning: Bool = false) {
+	static func log(_ s: String, warning: Bool = false) {
 		/// This logs to syslog
-		if debug || warning {
+		if Settings.shared().debug || warning {
 			os_log("%{public}@%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, log_prefix, warning ? log_warning : "", s)
 		}
 	}

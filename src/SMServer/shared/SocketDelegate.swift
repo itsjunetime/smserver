@@ -8,16 +8,6 @@ class SocketDelegate : ServerWebSocketDelegate {
 	var verify_auth: (String)->(Bool) = { _ in return false } /// nil init
 	let prefix: String = "SMServer_app: "
 
-	var debug = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-
-	init() {
-		self.debug = settings.debug
-	}
-
-	func refreshVars() {
-		self.debug = settings.debug
-	}
-
 	func startServer(port: Int) {
 		let cert = Certificate(derURL: (Bundle.main.url(forResource: "cert", withExtension: "der")!))
 		let identity = CertificateIdentity(p12URL: Bundle.main.url(forResource: "identity", withExtension: "pfx")!, passphrase: settings.cert_pass)
@@ -32,16 +22,16 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 		do {
 			try server?.start(port: port)
-			Const.log("Started websocket successfully.", debug: self.debug)
+			Const.log("Started websocket successfully.")
 		} catch {
-			Const.log("The websocket failed to start. This will prevent you from receiving new messages.", debug: self.debug, warning: true)
+			Const.log("The websocket failed to start. This will prevent you from receiving new messages.", warning: true)
 		}
 	}
 
 	func stopServer() {
 		server?.stop()
 
-		Const.log("Socket stopped", debug: self.debug)
+		Const.log("Socket stopped")
 
 		if let sock = server {
 			for s in sock.webSockets {
@@ -93,14 +83,14 @@ class SocketDelegate : ServerWebSocketDelegate {
 		// A web socket connected, you can extract additional information from the handshake request
 		let ip = webSocket.remoteEndpoint?.host ?? ""
 
-		Const.log("\(ip) is trying to connect...", debug: self.debug)
+		Const.log("\(ip) is trying to connect...")
 
 		if !verify_auth(ip) {
-			Const.log("\(ip) is not verified. Disconnecting.", debug: self.debug)
+			Const.log("\(ip) is not verified. Disconnecting.")
 			webSocket.close(immediately: true)
 		}
 
-		Const.log("\(ip) was allowed to connect", debug: self.debug)
+		Const.log("\(ip) was allowed to connect")
 
 		#if os(iOS)
 		UIDevice.current.isBatteryMonitoringEnabled = true
@@ -131,7 +121,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
 		// One of our web sockets disconnected
-		Const.log("Socket at \(webSocket.remoteEndpoint?.host ?? "") disconnected", debug: self.debug)
+		Const.log("Socket at \(webSocket.remoteEndpoint?.host ?? "") disconnected")
 	}
 
 	func server(_ server: Server, webSocket: WebSocket, didReceiveMessage message: WebSocketMessage) {
@@ -139,7 +129,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 		guard message.payload.data != nil else {
 			return
 		}
-		Const.log("Received message: \(message)", debug: self.debug)
+		Const.log("Received message: \(message)")
 		switch message.payload {
 			case .text(let msg):
 				let context = msg.split(separator: ":")[0]
@@ -150,7 +140,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 				}
 			default:
 				if message.opcode == WebSocketOpcode.binaryFrame || message.opcode == WebSocketOpcode.textFrame {
-					Const.log("WARNING: can't handle message: \(message)", debug: self.debug, warning: true)
+					Const.log("WARNING: can't handle message: \(message)", warning: true)
 				}
 		}
 	}
