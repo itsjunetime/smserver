@@ -38,6 +38,11 @@ location /smserver_websocket/ {
 The above block defines that you will be running the main SMServer server at the subdirectory `/smserver/`, and that you will be running the websocket at the subdirectory `/smserver_websocket/`. You are free to change these directories, but make sure to adjust the next step accordingly if you do. \
 3\. Open the settings of the SMServer app on your host device, and enable 'WebSocket Proxy Compatibility' under 'Web interface Settings'. In the box that appears, enter the subdirectory that the websocket resides at in your reverse proxy (in this case, it is `/smserver_websocket/`, but if you change it you'll need to type in what you set it to instead).
 
+### The website stops automatically updating after a while and I have to refresh it to see new texts/an accurate battery percentage.
+
+Try disabling the option "Restart server on network change" in the host device's settings. If you're running SMServer behind a reverse proxy, you may also want to look at [this comment](https://github.com/iandwelker/smserver/issues/73#issuecomment-762618203) to see if it helps.
+If neither of these fix it, feel free to file an issue.
+
 ### How did you make this?
 
 In this same directory, there's a document called `IMCore_and_ChatKit.md` that details how I used ChatKit and IMCore for the backend of this app. It should have most things that you'd be interested in. If there are still other questions you'd like to ask or things you don't understand, feel free to DM me at u/Janshai on reddit, or @Janshaidev on twitter.

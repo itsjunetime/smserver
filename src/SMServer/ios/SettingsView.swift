@@ -10,6 +10,7 @@ struct SettingsView: View {
 	private let cl_red = 0.40
 	private let cl_blu = 0.65
 
+	@State private var show_share_sheet: Bool = false
 	@State private var show_alert: Bool = false
 	@State private var alert_title: String = ""
 	@State private var alert_text: String = ""
@@ -319,6 +320,14 @@ struct SettingsView: View {
 									Spacer().frame(height: 20)
 
 									HStack {
+										Text("Export TLS certificate")
+										Spacer()
+										Image(systemName: "link")
+									}
+
+									Spacer().frame(height: 20)
+
+									HStack {
 										Text("Reset Settings to Default")
 										Spacer()
 										Image(systemName: "arrow.clockwise")
@@ -351,6 +360,15 @@ struct SettingsView: View {
 							}.padding(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
 
 							Button(action: {
+								self.show_share_sheet = true
+							}) {
+								HStack {
+									Text("hidden text :)").foregroundColor(Color.clear)
+									Spacer()
+								}
+							}.padding(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
+
+							Button(action: {
 								self.resetDefaults()
 							}) {
 								HStack {
@@ -363,6 +381,9 @@ struct SettingsView: View {
 				}.padding(10)
 				.background(grey_box)
 				.cornerRadius(8)
+				.sheet(isPresented: $show_share_sheet, content: {
+					ShareSheet(activityItems: [Bundle.main.url(forResource: "cert", withExtension: "der")!])
+				})
 
 				Text("Compatible with libSMServer 0.6.1")
 					.font(.callout)
@@ -371,5 +392,28 @@ struct SettingsView: View {
 			}.padding()
 			.animation(.easeInOut(duration: 0.2))
 		}.coordinateSpace(name: "frameLayer")
+	}
+}
+
+/// stolen from https://developer.apple.com/forums/thread/123951
+struct ShareSheet: UIViewControllerRepresentable {
+	typealias Callback = (_ activityType: UIActivity.ActivityType?, _ completed: Bool, _ returnedItems: [Any]?, _ error: Error?) -> Void
+
+	let activityItems: [Any]
+	let applicationActivities: [UIActivity]? = nil
+	let excludedActivityTypes: [UIActivity.ActivityType]? = nil
+	let callback: Callback? = nil
+
+	func makeUIViewController(context: Context) -> UIActivityViewController {
+		let controller = UIActivityViewController(
+			activityItems: activityItems,
+			applicationActivities: applicationActivities)
+		controller.excludedActivityTypes = excludedActivityTypes
+		controller.completionWithItemsHandler = callback
+		return controller
+	}
+
+	func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+		// nothing to do here
 	}
 }

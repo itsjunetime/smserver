@@ -8,8 +8,6 @@ struct ContentView: View {
 	let geo_width: CGFloat = 0.6
 	let font_size: CGFloat = 25
 
-	@State var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
-
 	@State var view_settings: Bool = false
 	@State var server_running: Bool = false
 	@State var show_picker: Bool = false
@@ -17,18 +15,18 @@ struct ContentView: View {
 
 	func loadServer() {
 		/// This starts the server at port $port_num
-		Const.log("Attempting to load server and socket...", debug: self.debug)
+		Const.log("Attempting to load server and socket...")
 
 		self.server_running = server.startServers()
 
-		Const.log(self.server_running ? "Successfully started server and socket" : "Failed to start server and socket", debug: self.debug, warning: !self.server_running)
+		Const.log(self.server_running ? "Successfully started server and socket" : "Failed to start server and socket", warning: !self.server_running)
 	}
 
 	func enteredBackground() {
 		/// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
 		//if !background || !self.server.isListening {
 		if !settings.background || !self.server.isRunning() {
-			Const.log("sceneDidEnterBackground, starting kill timer", debug: self.debug)
+			Const.log("sceneDidEnterBackground, starting kill timer")
 			DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: {
 				if UIApplication.shared.applicationState == .background {
 					exit(0)
@@ -40,12 +38,10 @@ struct ContentView: View {
 	func loadFuncs() {
 		/// All the functions that run on scene load
 
-		self.debug = settings.debug
-
 		if PHPhotoLibrary.authorizationStatus() != PHAuthorizationStatus.authorized {
 			PHPhotoLibrary.requestAuthorization({ auth in
 				if auth != PHAuthorizationStatus.authorized {
-					Const.log("App is not authorized to view photos. Please grant access.", debug: self.debug, warning: true)
+					Const.log("App is not authorized to view photos. Please grant access.", warning: true)
 				}
 			})
 		}
@@ -61,7 +57,6 @@ struct ContentView: View {
 	}
 
 	func reloadVars() {
-		self.debug = settings.debug
 		self.server.reloadVars()
 	}
 
@@ -236,7 +231,7 @@ struct ContentView: View {
 										do {
 											try FileManager.default.copyItem(at: url, to: Const.custom_css_path)
 										} catch {
-											Const.log("Couldn't move custom css", debug: self.debug, warning: true)
+											Const.log("Couldn't move custom css", warning: true)
 										}
 									}
 								)
@@ -254,9 +249,9 @@ struct ContentView: View {
 							Button(action: {
 								do {
 									try FileManager.default.removeItem(at: Const.custom_css_path)
-									Const.log("Removed custom css file", debug: self.debug)
+									Const.log("Removed custom css file")
 								} catch {
-									Const.log("Failed to remove custom css file", debug: self.debug, warning: true)
+									Const.log("Failed to remove custom css file", warning: true)
 								}
 							}) {
 								Image(systemName: "trash")
