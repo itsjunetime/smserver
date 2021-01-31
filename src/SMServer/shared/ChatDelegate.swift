@@ -174,6 +174,8 @@ final class ChatDelegate {
 			if texts[i]["date_read"] != nil { texts[i]["date_read"] = Int(texts[i]["date_read"] as! String) }
 			if texts[i]["cache_has_attachments"] != nil { texts[i]["cache_has_attachments"] = texts[i]["cache_has_attachments"] as! String == "1" }
 			if texts[i]["associated_message_type"] != nil { texts[i]["associated_message_type"] = Int(texts[i]["associated_message_type"] as! String) }
+			if texts[i]["item_type"] != nil { texts[i]["item_type"] = Int(texts[i]["item_type"] as! String) }
+			if texts[i]["group_action_type"] != nil { texts[i]["group_action_type"] = Int(texts[i]["group_action_type"] as! String) ?? 0 }
 		}
 	}
 
@@ -328,7 +330,7 @@ final class ChatDelegate {
 			from_string = " and m.is_from_me is \(from == 1 ? 1 : 0)"
 		}
 
-		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc", args: num.split(separator: ",").map({String($0)}), num_items: num_items, offset: offset, split_ids: true)
+		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc", args: num.split(separator: ",").map({String($0)}), num_items: num_items, offset: offset, split_ids: true)
 
 		parseTexts(&messages, db: db, contact_db: contact_db, is_group: is_group)
 
@@ -732,8 +734,6 @@ final class ChatDelegate {
 		return group_by_time ? texts : return_texts
 	}
 
-	//#if os(iOS)
-
 	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: Any]] {
 		/// This gets a list of the `num` (most_recent ? most recent : oldest) photos, offset by `offset`.
 
@@ -826,8 +826,6 @@ final class ChatDelegate {
 
 		return photo_data
 	}
-
-	//#endif
 
 	final func getLinkInfo(_ mid: String, db: OpaquePointer?) -> [String:String] {
 		/// This get a Rich Link's title text from the sql database. Was quite the pain to get working.

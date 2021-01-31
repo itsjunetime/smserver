@@ -1,5 +1,10 @@
 # Changelog
-0.7.0 &rightarrow; Unreleased
+0.7.1 &rightarrow; Unreleased
+ - Fixed issue that prevented loading of data for requests that had special characters (e.g. carets, backticks) in their URL.
+ - Fixed issue with sender names being offset by group chat events
+ - Fixed various styling issues on mobile view
+
+0.7.0 &rightarrow; 0.7.1
  - Added ability to delete a conversation from the web interface
  - Added ability to easily export TLS certificate (e.g. to add to client device store)
  - Web interface now works much better with mobile devices

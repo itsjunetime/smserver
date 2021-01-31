@@ -790,6 +790,7 @@ i#chargingSymbol {
 }
 .text-area {
 	display: flex;
+	flex-shrink: 0;
 }
 .text-area.from_me {
 	align-self: flex-end;
