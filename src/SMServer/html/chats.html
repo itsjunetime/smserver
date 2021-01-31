@@ -111,6 +111,9 @@
 			function getTextElement(text) {
 				if (debug) console.log(`Getting text element for text ${text}`);
 
+				if (text.group_action_type !== undefined && text.group_action_type !== 0)
+					return document.createElement("span");
+
 				if (text.associated_message_type < 2000 || text.associated_message_type === undefined) {
 
 					var t = document.createElement("span");
@@ -465,7 +468,7 @@
 								et[et.length-1].classList.add("notLast");
 							else if (texts[i].date - et[et.length-1].getAttribute("date") >= 3600000000000)
 								append_time_display = true;
-							else if (is_group && !sameSender)
+							else if (is_group && !sameSender && texts[i].sender !== undefined)
 								sender_box.innerText = texts[i].sender;
 						} else {
 							var hourTillFirst = texts[i].date - et[0].getAttribute("date") >= 3600000000000;
@@ -485,7 +488,7 @@
 								else notLast = true;
 							}
 
-							if (is_group && !texts[n].is_from_me && texts[i].sender !== texts[n].sender)
+							if (is_group && !texts[n].is_from_me && texts[i].sender !== texts[n].sender && texts[n].sender !== undefined)
 								sender_box.innerText = texts[n].sender;
 						}
 					}
@@ -521,13 +524,14 @@
 
 						if (is_group) {
 							var tds = document.getElementsByClassName("time-display");
-							if (n < texts.length && !texts[n].is_from_me) {
+							if (n < texts.length && !texts[n].is_from_me && texts[n].sender !== undefined) {
 								sender_box.innerText = texts[n].sender;
 								var next = texts[n].sender === texts[i].sender ? tds[0].nextSibling : orig;
 								if (append && i !== 0) next = tds[tds.length - 1].nextSibling;
 								tc.insertBefore(sender_box, next);
 							} 
-							if (((append && i === 0) || (!append && i === lnr)) && !texts[i].is_from_me && (n >= texts.length || texts[i].sender !== texts[n].sender)) {
+							if (((append && i === 0) || (!append && i === lnr)) && !texts[i].is_from_me && 
+								(n >= texts.length || texts[i].sender !== texts[n].sender) && texts[i].sender !== undefined) {
 								var clone = sender_box.cloneNode();
 								clone.innerText = texts[i].sender;
 								tc.insertBefore(clone, tds[0].nextSibling);
@@ -1364,7 +1368,7 @@
 
 			function setUpMobile() {
 				document.body.style.zoom = "200%";
-				document.documentElement.style.setProperty("--chats-width", "100vw");
+				document.documentElement.style.setProperty("--chats-width", "calc(100vw - 16px)");
 
 				document.getElementsByClassName("everything")[0].style.display = "block";
 				document.getElementsByClassName("chats")[0].style.width = "100%";
@@ -1388,7 +1392,7 @@
 
 				socket.onclose = async function(event) {
 					if (debug) console.log("Websocket disconnected");
-					await sleep(2000); /// seems to be necessary for some reason?
+					await sleep(2000); /// seems to be necessary for some reason? I hate race conditions
 					var timeout = setTimeout(function() {
 						if (socket.readyState == WebSocket.OPEN) clearTimeout(timeout);
 						connectWebSocket();
