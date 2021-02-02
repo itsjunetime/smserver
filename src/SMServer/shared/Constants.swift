@@ -86,6 +86,48 @@ struct Const {
 	static let user_home_url: String = "/private/var/mobile/"
 	static let cert_pass_file: String = Bundle.main.bundlePath + "/smserver_cert_pass.txt"
 
+	static let help_string = """
+	usage: \(col)1m./smserver [options]\(col)0m
+
+	\(col)1mOptions:\(col)0m
+
+	\(cmd_server_port_short), \(cmd_server_port):
+		This sets the port that the HTTP server will run on, and requires a value to be passed in immediately after this flag. For example, to set the server port to 4000, you'd run \(col)1msmserver \(cmd_server_port) 4000\(col)0m. The default server port is 8741.
+
+	\(cmd_socket_port_short), \(cmd_socket_port):
+		This sets the port that the websocket will run on, and requires a value to be passed in immediately after this flag. The default socket port is 8740.
+
+	\(cmd_password):
+		This sets the password for the server, and requires a value to be passed in immediately after this flag. The default password for the server is 'toor'.
+
+	\(cmd_theme_short), \(cmd_theme):
+		This sets the theme for the web interface, which must be one of the following: \(cmd_theme_options.joined(separator: ",")), and requires a value to be passed in immediately after this flag.
+
+	\(cmd_def_chats), \(cmd_def_messages), \(cmd_def_photos):
+		This sets the number of chats, messages, or photos to be loaded, respectively (if URL queries don't specify otherwise), and requires a value to be passed in immediately after this flag. The default number of chats is 40, messages is 100, and photos is 40.
+
+	\(cmd_auth_short), \(cmd_auth), \(cmd_no_auth):
+		This will enable or disable authentication, respective to which flag you pass in. The default is enabled.
+
+	\(cmd_web_short), \(cmd_web), \(cmd_no_web):
+		This will enable or disable the web interface, respective to which flag you pass in. The default is enabled.
+
+	\(cmd_secure_short), \(cmd_secure), \(cmd_no_secure):
+		This will enable or disable TLS for the connection with the server, respective to which flag you pass in. The default is enabled.
+
+	\(cmd_subject_short), \(cmd_subject), \(cmd_no_subject):
+		This will enable or disable the subject line in the web interface, respective to which flag you pass in. The default is disabled.
+
+	\(cmd_typing_short), \(cmd_typing), \(cmd_no_typing):
+		This will enable or disable sending of typing indicators from the server to other conversations, respective to which flag you pass in. The default is enabled.
+
+	\(cmd_contacts_short), \(cmd_contacts), \(cmd_no_contacts):
+		If this option is enabled, conversations will be combined with the other conversations that are assigned to the same contact on the host device. If this option is disabled, they will not. The default is disabled.
+
+	\(cmd_background_short), \(cmd_background), \(cmd_no_background):
+	   This will allow the app to run in the background, even after you've exited this terminal session; it must be run in conjunction with the shell backgrounder (\(col)1m&\(col)0m). Without this flag, the server will die as soon as you exit the terminal session.
+	"""
+	
 	#elseif os(macOS)
 
 	#if DEBUG
@@ -105,76 +147,7 @@ struct Const {
 
 	static let config_file_url: URL = URL(fileURLWithPath: user_home_url + "/.config/smserver/server.yaml") /// subject to change
 	static let html_dir: URL = URL(fileURLWithPath: user_home_url + "/.smserver/")
-
-	static let cmd_server_port: String = "--server_port"
-	static let cmd_server_port_short: String = "-p"
-	static let cmd_socket_port: String = "--socket_port"
-	static let cmd_socket_port_short: String = "-w"
-	static let cmd_config_file: String = "--config"
-	static let cmd_config_file_short: String = "-c"
-
-	static let cmd_html_dir: String = "--directory"
-	static let cmd_html_dir_short: String = "-d"
-	static let cmd_password: String = "--password"
-	static let cmd_theme: String = "--theme"
-	static let cmd_theme_short: String = "-t"
-
-	static let cmd_theme_options: [String] = [
-		"light", "dark", "nord"
-	]
-
-	static let cmd_def_chats: String = "--default_chats"
-	static let cmd_def_messages: String = "--default_messages"
-	static let cmd_def_photos: String = "--default_photos"
-
-	static let cmd_auth: String = "--authentication"
-	static let cmd_auth_short: String = "-a"
-	static let cmd_no_auth: String = "--no_authentication"
-	static let cmd_web: String = "--web_interface"
-	static let cmd_web_short: String = "-i"
-	static let cmd_no_web: String = "--no_web_interface"
-	static let cmd_secure: String = "--secure"
-	static let cmd_secure_short: String = "-s"
-	static let cmd_no_secure: String = "--no_secure"
-	static let cmd_debug: String = "--debug"
-	static let cmd_debug_short: String = "-d"
-	static let cmd_no_debug: String = "--no_debug"
-
-	static let cmd_subject: String = "--subject"
-	static let cmd_subject_short: String = "-b"
-	static let cmd_no_subject: String = "--no_subject"
-	static let cmd_typing: String = "--typing"
-	static let cmd_typing_short: String = "-y"
-	static let cmd_no_typing: String = "--no_typing"
-	static let cmd_contacts: String = "--contacts"
-	static let cmd_contacts_short: String = "-o"
-	static let cmd_no_contacts: String = "--no_contacts"
-
-	static let cmd_show_help: String = "--help"
-	static let cmd_show_help_short: String = "-h"
-
-	static let cmd_req_vals = [
-		cmd_server_port, cmd_server_port_short,
-		cmd_socket_port, cmd_socket_port_short,
-		cmd_config_file, cmd_config_file_short,
-		cmd_html_dir, cmd_html_dir_short,
-		cmd_password,
-		cmd_theme, cmd_theme_short,
-		cmd_def_chats, cmd_def_messages, cmd_def_photos
-	]
-
-	static let cmd_bool_vals = [
-		cmd_auth, cmd_auth_short, cmd_no_auth,
-		cmd_web, cmd_web_short, cmd_no_web,
-		cmd_secure, cmd_secure_short, cmd_no_secure,
-		cmd_subject, cmd_subject_short, cmd_no_subject,
-		cmd_typing, cmd_typing_short, cmd_no_subject,
-		cmd_contacts, cmd_contacts_short, cmd_no_contacts,
-		cmd_debug, cmd_debug_short, cmd_no_debug,
-		cmd_show_help, cmd_show_help_short
-	]
-
-	static let col = "\u{001B}["
+	
 	static let help_string = """
 	usage: \(col)1m./smserver [options]\(col)0m
 
@@ -219,7 +192,83 @@ struct Const {
 	\(cmd_contacts_short), \(cmd_contacts), \(cmd_no_contacts):
 		\(col)1mCURRENTLY INEFFECTIVE\(col)0m If this option is enabled, conversations will be combined with the other conversations that are assigned to the same contact on the host device. If this option is disabled, they will not. The default is disabled.
 	"""
+	
 	#endif
+
+	static let cmd_server_port: String = "--server_port"
+	static let cmd_server_port_short: String = "-p"
+	static let cmd_socket_port: String = "--socket_port"
+	static let cmd_socket_port_short: String = "-w"
+	static let cmd_config_file: String = "--config"
+	static let cmd_config_file_short: String = "-c"
+
+	static let cmd_html_dir: String = "--directory"
+	static let cmd_html_dir_short: String = "-d"
+	static let cmd_password: String = "--password"
+	static let cmd_theme: String = "--theme"
+	static let cmd_theme_short: String = "-t"
+
+	static let cmd_theme_options: [String] = [
+		"light", "dark", "nord"
+	]
+
+	static let cmd_def_chats: String = "--default_chats"
+	static let cmd_def_messages: String = "--default_messages"
+	static let cmd_def_photos: String = "--default_photos"
+
+	static let cmd_auth: String = "--authentication"
+	static let cmd_auth_short: String = "-a"
+	static let cmd_no_auth: String = "--no_authentication"
+	static let cmd_web: String = "--web_interface"
+	static let cmd_web_short: String = "-i"
+	static let cmd_no_web: String = "--no_web_interface"
+	static let cmd_secure: String = "--secure"
+	static let cmd_secure_short: String = "-s"
+	static let cmd_no_secure: String = "--no_secure"
+	static let cmd_debug: String = "--debug"
+	static let cmd_debug_short: String = "-d"
+	static let cmd_no_debug: String = "--no_debug"
+
+	static let cmd_subject: String = "--subject"
+	static let cmd_subject_short: String = "-j"
+	static let cmd_no_subject: String = "--no_subject"
+	static let cmd_typing: String = "--typing"
+	static let cmd_typing_short: String = "-y"
+	static let cmd_no_typing: String = "--no_typing"
+	static let cmd_contacts: String = "--contacts"
+	static let cmd_contacts_short: String = "-o"
+	static let cmd_no_contacts: String = "--no_contacts"
+
+	static let cmd_show_help: String = "--help"
+	static let cmd_show_help_short: String = "-h"
+	static let cmd_background: String = "--background"
+	static let cmd_background_short: String = "-b"
+	static let cmd_no_background: String = "--no_background"
+
+	static let cmd_req_vals = [
+		cmd_server_port, cmd_server_port_short,
+		cmd_socket_port, cmd_socket_port_short,
+		cmd_config_file, cmd_config_file_short,
+		cmd_html_dir, cmd_html_dir_short,
+		cmd_password,
+		cmd_theme, cmd_theme_short,
+		cmd_def_chats, cmd_def_messages, cmd_def_photos
+	]
+
+	static let cmd_bool_vals = [
+		cmd_auth, cmd_auth_short, cmd_no_auth,
+		cmd_web, cmd_web_short, cmd_no_web,
+		cmd_secure, cmd_secure_short, cmd_no_secure,
+		cmd_subject, cmd_subject_short, cmd_no_subject,
+		cmd_typing, cmd_typing_short, cmd_no_subject,
+		cmd_contacts, cmd_contacts_short, cmd_no_contacts,
+		cmd_debug, cmd_debug_short, cmd_no_debug,
+		cmd_show_help, cmd_show_help_short,
+		cmd_background, cmd_background_short, cmd_no_background
+	]
+
+	static let col = "\u{001B}["
+	
 
 	static let log_prefix: String = "SMServer_app: "
 	static let log_warning: String = "WARNING: "

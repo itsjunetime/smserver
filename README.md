@@ -44,7 +44,7 @@ The source code may be updated past the latest released version, so don't be sur
 3. Open your browser to the ip/port combo specified at the top of the view
 4. Authenticate with the default password ('toor'), or your own custom password if you already set one
 5. Enjoy!
-6. (Optional) Customize the defaults under the settings section of the app to better fit your needs 
+6. (Optional) Customize the defaults under the settings section of the app to better fit your needs
 
 <!--## TODO
 - [x] View conversations in browser
@@ -68,10 +68,10 @@ The source code may be updated past the latest released version, so don't be sur
 - [x] Display when other party starts typing
 - [x] Ability to send chat indicators when you start typing
 - [x] Subject lines for texts on web interface
-- [x] Ability to send reactions from web interface
+- [x] Ability to send tapbacks from web interface
 - [x] Ability to delete texts from the web interface
-- [ ] Search through messages from browser - This has been implemented in the API
-- [ ] Ability to delete conversations from the web interface-->
+- [x] Ability to delete conversations from the web interface
+- [ ] Search through messages from browser - This has been implemented in the API-->
 
 ## Issues
 If there are any issues, questions, or feature requests at all, don't hesitate to create an issue or pull request here, or email me at contact@ianwelker.com. I will not run into all issues that could possibly come up, so I would really appreciate any issues you let me know about.
@@ -89,16 +89,16 @@ Please include the following information:
  - What version of SMServer & libsmserver you're running
  - And if the app crashed & you can get it, a crash log
 
-Also, if the app did not crash on startup, but rather crashed after it was already up and running, I would appreciate if you could do the following: 
+Also, if the app did not crash on startup, but rather crashed after it was already up and running, I would appreciate if you could do the following:
  - Install the package 'oslog' from your package manager
  - ssh into your device and run (as root): `oslog --debug | grep -i -e "SMServer_app" -e "mryipc"`; do not redirect the output into a file.
- - Enable debug on the app, then hit the purple 'refresh' button in the bottom left of the main view.
+ - Enable debug in the app's settings
  - Start the app and let it reach the error point
  - Manually copy the output from the above command (as much as you can get) into a text file.
- - Email me the file at contact@ianwelker.com. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information. 
+ - Email me the file at contact@ianwelker.com. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information.
 
 ## Companion App
-There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question. 
+There is a [python app](http://github.com/iandwelker/smserver_receiver), based on curses, which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question.
 
 ## Donations
 Feel free to donate below to support development of this project :) \

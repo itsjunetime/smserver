@@ -1,5 +1,9 @@
 # Changelog
 0.7.1 &rightarrow; Unreleased
+ - Added ability to run SMServer as a commandline app or daemon
+ - Fixed issue that would occasionally crash the app when the previous MRYIPCCenter wasn't correctly deallocated
+ - Allowed sending of texts when subject field has text but body field is empty
+ - Cleaned up unnecessary code in web interface
  - Fixed issue that prevented loading of data for requests that had special characters (e.g. carets, backticks) in their URL.
  - Fixed issue with sender names being offset by group chat events
  - Fixed various styling issues on mobile view
@@ -189,7 +193,7 @@
  - Removed unnecessary background functions
  - Added extra error checking to prevent crashing when retrieving photo list
  - Added subject functionality to API (+ setting to toggle on/off)
- - Added support for viewing text subjects in web interface 
+ - Added support for viewing text subjects in web interface
 
 0.4.0 &rightarrow; 0.4.1
  - Fixed up displays of Rich Links to look okay

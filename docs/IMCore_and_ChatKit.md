@@ -31,7 +31,7 @@
 }
 
 %end
-``` 
+```
 
 &nbsp;&nbsp;&nbsp;&nbsp; Since I run my tweak in SpringBoard and `MobileSMS.app`, this gives me the permissions I want without creating a security hole for 3rd-party apps to access your data.
 
@@ -159,7 +159,7 @@ else
 
 ```objectivec
 CKConversationList* sharedList = [%c(CKConversationList) sharedConversationList];
-/// Get the conversation relating to the phone number. 
+/// Get the conversation relating to the phone number.
 /// Change +11231231234 to whatever chat identifier you want
 CKConversation* convo = [sharedList conversationForExistingChatWithGroupID:@"+11231231234"];
 
@@ -249,7 +249,7 @@ return [NSArray array];
 
 	IMChat* chat = (IMChat *)[(NSConcreteNotification *)arg1 object];
 	NSString* identifier = chat.identifier;
-	/// Do whatever you want with the identifier; it's the `chat_identifier` 
+	/// Do whatever you want with the identifier; it's the `chat_identifier`
 	/// of the conversation that just sent the text
 }
 

@@ -12,6 +12,16 @@ leave() {
 		[ -d ${ROOTDIR}/package/Payload ] && rm -r ${ROOTDIR}/package/Payload
 		[ -d ${ROOTDIR}/package/deb/Applications ] && rm -r ${ROOTDIR}/package/deb/Applications
 	fi
+
+	if [ -f ${ROOTDIR}/src/SMServer/html/chats.max.html ]
+	then
+		html_dir="${ROOTDIR}/src/SMServer/html"
+		find "${html_dir}" -name "*.max.*" | while read file
+		do
+			mv "${file}" "$(echo $file | sed 's/\.max//')"
+		done
+	fi
+
 	exit
 }
 
@@ -31,6 +41,10 @@ ipa=false
 vbs=false
 hlp=false
 kep=false
+min=false
+
+stty -echoctl
+trap 'leave' SIGINT
 
 for arg in "$@"
 do
@@ -43,6 +57,7 @@ do
 		[[ "${ng}" == "-help" ]] && hlp=true
 		[[ "${ng}" == "-keep" ]] && kep=true
 		[[ "${ng}" == "-verbose" ]] && vbs=true
+		[[ "${ng}" == "-minify" ]] && min=true
 	else
 		for ((i=0; i<${#ng}; i++))
 		do
@@ -52,6 +67,7 @@ do
 			[[ "${ng:$i:1}" == "v" ]] && vbs=true
 			[[ "${ng:$i:1}" == "h" ]] && hlp=true
 			[[ "${ng:$i:1}" == "k" ]] && kep=true
+			[[ "${ng:$i:1}" == "m" ]] && min=true
 		done
 	fi
 done
@@ -75,6 +91,7 @@ then
         -i, --ipa     : Builds a .ipa
         -v, --verbose : Runs verbose; doesn't hide any output
         -k, --keep    : Don't remove extracted \033[1mSMServer.app\033[0m files when cleaning up
+		-m, --minify  : Minify css & html file when compiling assets using minify (\033[1mbrew install tdewolff/tap/minify\033[0m)
     "
 	exit
 fi
@@ -132,6 +149,27 @@ then
 	fi
 
 	(! [ -f ${ROOTDIR}/src/SMServer/identity.pfx ] || ! [ -f ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift ]) && err "You haven't created some files necessary to compile this. Please run this script with the \033[1m-n\033[0m or \033[1m--new\033[0m flag first"
+
+	if [ "$min" = true ]
+	then
+		! command -v minify && err "Please install minify to minify asset files"
+
+		html_dir="${ROOTDIR}/src/SMServer/html"
+
+		find "$html_dir" -name "*.css" | while read file
+		do
+			new_css="$(echo -- "${file}" | sed 's/\.css$/.max.css')"
+			cp "${file}" "${new_css}"
+			minify "${new_css}" > "${file}"
+		done
+
+		find "$html_dir" -name "*.html" | while read file
+		do
+			new_html="$(echo -- "${file}" | sed 's/\.html$/.max.html')"
+			cp "${file}" "${new_html}"
+			minify --html-keep-comments --html-keep-document-tags --html-keep-end-tags --html-keep-quotes --html-keep-whitespace "${new_html}" > "${file}"
+		done
+	fi
 
 	rm -rf ${ROOTDIR}/package/SMServer.xcarchive
 	pn "\033[34m==>\033[0m Cleaning and archiving package..."

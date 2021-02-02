@@ -6,7 +6,7 @@ There are a few settings available on the app for customization, and are all per
 
 After you change any settings, you'll need to (at least) click the purple 'refresh' button in the bottom left for them to take effect. Some also require a server restart.
 
-## Options: 
+## Options:
 
 ### Port:
 This is the port that the server will be run on. It needs to be completely numeric, and over 1000. One also must restart the server before this takes effect.
@@ -20,11 +20,11 @@ This allows you to upload a file with CSS rules which will be applied to your ma
 ### Initial number of chats to load:
 This is the initial number of conversations that will appear in the sidebar (underneath 'Messages') when you first visit the web interface. Setting this to 0 will load all your chats. The server does not need to be restarted for this to take effect
 
-### Initial number of messages to load: 
+### Initial number of messages to load:
 This is the initial number of messages to load when you select a conversation on the web interface. Setting this to 0 will load all the messages in that conversation (which will inevitably take a very long time if it is a conversation with upwards of 5000 messages.). The server does not need to be restarted for this to take effect.
 
 ### Initial number of photos to load:
-This is the initial number of photos that will load when retrieving photos from the photos library on the device, specifically with the `photos` parameter on the `requests` As of 0-2-0+debug8, this has not yet been implemented into the web interface, but exists in the API. 
+This is the initial number of photos that will load when retrieving photos from the photos library on the device, specifically with the `photos` parameter on the `requests` As of 0-2-0+debug8, this has not yet been implemented into the web interface, but exists in the API.
 
 ### Websocket Port
 This is the port that the webSocket runs on; must not be the same as the server port or outside of the allowable range, or else the app will crash when launching the server. You must restart the server before this takes effect
