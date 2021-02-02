@@ -382,7 +382,7 @@ Sending a text with a subject and no attachments:
 ```python
 from requests import post
 
-# It's safest to explicitly encode spaces as `%20`, since python replaces all spaces with plus signs, 
+# It's safest to explicitly encode spaces as `%20`, since python replaces all spaces with plus signs,
 # which are not filtered out. If your scripting language does not replace spaces with plus signs,
 # you need not manually encode them.
 vals = {'text': 'Hello%20world!', 'subject': 'This%20is%20a%20test', 'chat': 'email@email.org'}
@@ -413,7 +413,7 @@ Sending a text with a subject and a photo from the camera roll:
 from requests import post
 
 # Set the values
-vals = {'chat': '+11231231234', 'text': 'This%20is%20the%20body!', 
+vals = {'chat': '+11231231234', 'text': 'This%20is%20the%20body!',
 	'subject': 'This%20is%20the%20subject!', 'photos': 'DCIM/100APPLE/IMG_0001.JPG'}
 url = 'https://192.168.0.127:8741/send'
 

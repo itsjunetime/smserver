@@ -529,8 +529,8 @@
 								var next = texts[n].sender === texts[i].sender ? tds[0].nextSibling : orig;
 								if (append && i !== 0) next = tds[tds.length - 1].nextSibling;
 								tc.insertBefore(sender_box, next);
-							} 
-							if (((append && i === 0) || (!append && i === lnr)) && !texts[i].is_from_me && 
+							}
+							if (((append && i === 0) || (!append && i === lnr)) && !texts[i].is_from_me &&
 								(n >= texts.length || texts[i].sender !== texts[n].sender) && texts[i].sender !== undefined) {
 								var clone = sender_box.cloneNode();
 								clone.innerText = texts[i].sender;
@@ -755,8 +755,7 @@
 
 				var tbox = document.getElementById("sendbox");
 				var oldval = tbox.value;
-				var gpval = document.getElementById("hiddenchatbox").value;
-				var is_group = gpval.substring(0, 4) === "chat" && !gpval.includes("@");
+				var subjval_len = subject ? document.getElementById("subjectBox").value.length : 0;
 
 				var photos = document.getElementById("hiddenphotobutton");
 				var selected = document.getElementsByClassName("selected-photo");
@@ -764,32 +763,21 @@
 					photos.value += selected[i].id + (i !== selected.length - 1 ? ":" : "");
 				}
 
-				var total_size = 0;
-				var files = document.getElementById("attachmentbutton").files;
-				for (var i = 0; i < files.length; i++) {
-					total_size += files[i].size;
-				}
+				if (oldval.length + selected.length + subjval_len + document.getElementById("attachmentbutton").files.length === 0)
+					return;
 
-				var submit = (oldval.length > 0 || selected.length > 0 || document.getElementById("attachmentbutton").files.length > 0);
-				var has_attachments = (selected.length > 0 || document.getElementById("attachmentbutton").files.length > 0);
+				form.submit();
 
-				if (submit) {
-					form.submit();
+				tbox.value = "";
+				if (subject)
+					document.getElementById("subjectBox").value = "";
 
-					tbox.value = "";
-					var subval = "";
-					if (subject) {
-						subval = document.getElementById("subjectBox").value;
-						document.getElementById("subjectBox").value = "";
-					}
+				document.getElementById("attachmentbutton").value = "";
+				document.getElementById("unhiddenbutton").innerHTML = '<i class="fas fa-paperclip"></i>';
+				hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
+				photos.value = "";
 
-					document.getElementById("attachmentbutton").value = "";
-					document.getElementById("unhiddenbutton").innerHTML = '<i class="fas fa-paperclip"></i>';
-					hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
-					photos.value = "";
-
-					autoGrow();
-				}
+				autoGrow();
 			}
 
 			async function sendComposeForm() {
@@ -837,8 +825,7 @@
 			async function typingWait() {
 				if (!called_typing_wait) {
 					called_typing_wait = true;
-					while (typing_sleep > 0) {
-						typing_sleep -= 200;
+					for (; typing_sleep > 0; typing_sleep -= 200) {
 						await sleep(200);
 					}
 					if (currently_typing) {
@@ -944,10 +931,9 @@
 					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && btn.className.includes("unpinned")) {
 						setChatAsTop(chat, new_text);
 					} else {
-
 						if (chat !== current_chat_id || !document.hasFocus()) btn.classList.add("unread");
-						if (btn.className.includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
 
+						if (btn.className.includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
 							var text = btn.getElementsByClassName("chat-text")[0];
 							if (text !== undefined && new_text.length > 0) text.innerText = new_text;
 						} else if (chat !== current_chat_id) {

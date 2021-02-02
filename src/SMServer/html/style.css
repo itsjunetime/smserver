@@ -376,7 +376,7 @@ i#chargingSymbol {
 	padding: 7px 12px;
 	line-height: 21px; /* Specific but that's what it is */
 }
-.text > span {
+.text span {
 	word-break: break-word;
 }
 .text:before, .text:after {
@@ -550,6 +550,7 @@ i#chargingSymbol {
 	font-size: calc(var(--send-box-size) - 8px);
 	height: var(--send-box-size);
 	padding: 5px calc(var(--send-button-size) + 10px) 0 10px;
+	margin: 0;
 }
 #sendbox.input {
 	grid-column: 3/5;
@@ -618,7 +619,7 @@ i#chargingSymbol {
 	grid-column: 3;
 	background-color: rgba(80, 110, 220, 1)
 }
-#composeHideButton, #composeSendButton, 
+#composeHideButton, #composeSendButton,
 #camerarollHideButton, #camerarollSelectButton {
 	border: none;
 	border-radius: 5px;
