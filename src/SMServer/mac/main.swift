@@ -3,7 +3,7 @@ import Foundation
 func main() {
 	let server = ServerDelegate()
 	let settings = Settings.shared()
-	parseArgs()
+	settings.parseArgs()
 
 	guard !settings.show_help else {
 		print(Const.help_string)

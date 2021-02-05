@@ -1,10 +1,10 @@
 import Foundation
 
 class Settings {
-	var server_port: String = UserDefaults.standard.object(forKey: "port") as? String ?? "8741"
+	var server_port: Int = UserDefaults.standard.object(forKey: "port") as? Int ?? 8741
 	var socket_port: Int = UserDefaults.standard.object(forKey: "socket_port") as? Int ?? 8740
 	var password: String = UserDefaults.standard.object(forKey: "password") as? String ?? "toor"
-	var socket_subdirectory: String? = UserDefaults.standard.object(forKey: "socket_subdirectory") as? String? ?? nil
+	var socket_subdirectory: String? = UserDefaults.standard.object(forKey: "socket_subdirectory") as? String
 	/// This passphrase is found in a hidden file that doesn't exist in the git repo. This is so that nobody can extract the private key from the pfx file
 	var cert_pass: String = PKCS12Identity.pass
 
@@ -27,6 +27,7 @@ class Settings {
 	var combine_contacts: Bool = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
 	var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
 	var reload_on_network_change: Bool = UserDefaults.standard.object(forKey: "reload_on_network_change") as? Bool ?? true
+	var run_web_interface: Bool = UserDefaults.standard.object(forKey: "run_web_interface") as? Bool ?? true
 	
 	var show_help: Bool = false
 	var cli_background: Bool = false
@@ -71,17 +72,29 @@ class Settings {
 
 			if Const.cmd_req_vals.contains(opt) {
 				past_val = true
+				if i == args.count - 1 {
+					print("Please enter a value for the option \(opt)")
+					continue
+				}
+				
 				let val = args[i+1]
 				switch opt {
 					case Const.cmd_server_port, Const.cmd_server_port_short:
-						settings.server_port = val
+						if let num = Int(val) {
+							settings.server_port = num
+						} else {
+							print("Could not convert value \(val) to int. Server port will remain unaffected.")
+						}
 					case Const.cmd_socket_port, Const.cmd_socket_port_short:
-						let num = Int(val)
-						if let num = num {
+						if let num = Int(val) {
 							settings.socket_port = num
 						} else {
 							print("Could not convert value \(val) to int. Socket port will remain unaffected.")
 						}
+					case Const.cmd_socket_subdir:
+						settings.socket_subdirectory = val
+					case Const.cmd_password:
+						settings.password = val
 #if os(macOS)
 					case Const.cmd_config_file, Const.cmd_config_file_short:
 						if !FileManager.default.fileExists(atPath: val) {
@@ -97,8 +110,6 @@ class Settings {
 							settings.html_dir = val
 						}
 #endif
-					case Const.cmd_password:
-						settings.password = val
 					case Const.cmd_theme, Const.cmd_theme_short:
 						if !Const.cmd_theme_options.contains(val) {
 							print("\(val) is not a valid theme. Please enter only one of the following: \(Const.cmd_theme_options.joined(separator: ","))")
@@ -139,10 +150,8 @@ class Settings {
 						switch c {
 							case Const.cmd_auth_short.suffix(1):
 								settings.require_authentication = true
-#if os(macOS)
 							case Const.cmd_web_short.suffix(1):
 								settings.run_web_interface = true
-#endif
 							case Const.cmd_secure_short.suffix(1):
 								settings.is_secure = true
 							case Const.cmd_debug_short.suffix(1):
@@ -165,10 +174,8 @@ class Settings {
 					switch opt {
 						case Const.cmd_auth, Const.cmd_auth_short, Const.cmd_no_auth:
 							settings.require_authentication = opt != Const.cmd_no_auth
-#if os(macOS)
 						case Const.cmd_web, Const.cmd_web_short, Const.cmd_no_web:
 							settings.run_web_interface = opt != Const.cmd_no_web
-#endif
 						case Const.cmd_secure, Const.cmd_secure_short, Const.cmd_no_secure:
 							settings.is_secure = opt != Const.cmd_no_secure
 						case Const.cmd_debug, Const.cmd_debug_short, Const.cmd_no_debug:
@@ -184,7 +191,7 @@ class Settings {
 						case Const.cmd_show_help, Const.cmd_show_help_short:
 							settings.show_help = true
 						default:
-							print("Wow. You managed to input an option that both is and isn't in the options that require no value. Very impressive.")
+							print("Option -\(opt) not recognized. Ignoring...")
 					}
 				}
 			}

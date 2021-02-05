@@ -109,21 +109,6 @@ class ServerDelegate {
 			do {
 				/// Set up all the pages as multi-line string variables, set values within them.
 				self.main_page = try String(contentsOf: h, encoding: .utf8)
-					.replacingOccurrences(of: "var num_texts_to_load;", with: "var num_texts_to_load = \(settings.default_num_messages);")
-					.replacingOccurrences(of: "var num_chats_to_load;", with: "var num_chats_to_load = \(settings.default_num_chats);")
-					.replacingOccurrences(of: "var num_photos_to_load;", with: "var num_photos_to_load = \(settings.default_num_photos);")
-					.replacingOccurrences(of: "var socket_port;", with: "var socket_port = \(settings.socket_port);")
-					.replacingOccurrences(of: "var debug;", with: "var debug = \(settings.debug);")
-					.replacingOccurrences(of: "var subject;", with: "var subject = \(settings.subjects_enabled);")
-					.replacingOccurrences(of: "<!--light-->", with: settings.light_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?light\">" : "")
-					.replacingOccurrences(of: "<!--nord-->", with: settings.nord_theme ? "<link rel=\"stylesheet\" type=\"text/css\" href=\"style?nord\">" : "")
-
-				if var subdir = settings.socket_subdirectory {
-					if subdir.prefix(1) == "/" { subdir = String(subdir.suffix(subdir.count - 1)) }
-					if subdir.suffix(1) != "/" { subdir += "/" }
-					self.main_page = self.main_page.replacingOccurrences(of: "var socket_subdir;", with: "var socket_subdir = \"\(subdir)\";")
-				}
-
 				self.main_page_style = try String(contentsOf: s, encoding: .utf8)
 				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
 				self.light_style = try String(contentsOf: l, encoding: .utf8)
@@ -136,11 +121,13 @@ class ServerDelegate {
 		}
 
 		/// Have to do custom style in a different do {} block, since it'll fail everything if the file doesn't exist/is empty
-		do {
-			self.custom_style = try String(contentsOf: Const.custom_css_path, encoding: .utf8)
-		} catch {
-			self.custom_style = ""
-			Const.log("Could not load custom css file", warning: true)
+		if FileManager.default.fileExists(atPath: Const.custom_css_path.path) {
+			do {
+				self.custom_style = try String(contentsOf: Const.custom_css_path, encoding: .utf8)
+			} catch {
+				self.custom_style = ""
+				Const.log("Could not load custom css file", warning: true)
+			}
 		}
 
 		do {
@@ -162,15 +149,6 @@ class ServerDelegate {
 			server.isSecure = true
 			server.identityPath = identity
 			server.password = settings.cert_pass
-		}
-
-		server.add("/") { (req, res, _) in
-			let ip = req.connection?.remoteAddress ?? ""
-			res.setValue("text/html", forHTTPHeaderField: "Content-type")
-
-			Const.log("GET main: \(ip)")
-
-			res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
 		}
 
 		server.add("/requests") { (req, res, _) in
@@ -343,78 +321,89 @@ class ServerDelegate {
 			res.send("")
 		}
 
-		server.add("/style") { (req, res, _) in
-			/// Returns the style.css file as text
-			let ip = req.connection?.remoteAddress ?? ""
+		if self.settings.run_web_interface {
+			server.add("/") { (req, res, _) in
+				let ip = req.connection?.remoteAddress ?? ""
+				res.setValue("text/html", forHTTPHeaderField: "Content-type")
 
-			Const.log("GET style: \(ip)")
+				Const.log("GET main: \(ip)")
 
-			if !self.checkIfAuthenticated(ras: ip) {
-				res.setStatusCode(403, description: "Please authenticate")
-				res.send("")
-				return
+				res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
 			}
-
-			let s = Array(req.query.keys)[0]
-			res.setValue("text/css", forHTTPHeaderField: "Content-Type")
-
-			if s == "main" {
-				res.send(self.main_page_style)
-			} else if s == "custom" {
-				res.send(self.custom_style)
-			} else if s == "light" {
-				res.send(self.light_style)
-			} else if s == "nord" {
-				res.send(self.nord_style)
-			} else if s == "fa_solid" {
-				res.send(self.fa_solid_style)
-			} else if s == "font_awesome" {
-				res.send(self.fa_style)
-			}
-		}
-
-		server.add("/webfonts") { (req, res, _) in
-			/// Gets the fonts necessary for fontawesome
-			let ip = req.connection?.remoteAddress ?? ""
-
-			Const.log("GET webfonts: \(ip)")
-
-			if !self.checkIfAuthenticated(ras: ip) {
-				res.setStatusCode(403, description: "Please authenticate")
-				res.send("")
-				return
-			}
-
-			let font = Array(req.query.keys)[0]
-
-			if let f = Bundle.main.url(forResource: font, withExtension: "", subdirectory: "html/webfonts") {
-				do {
-					let font_data = try Data.init(contentsOf: f)
-					res.send(font_data)
-				} catch {
-					Const.log("WARNING: Can't get font for \(font)", warning: true)
+			
+			server.add("/style") { (req, res, _) in
+				/// Returns the style.css file as text
+				let ip = req.connection?.remoteAddress ?? ""
+				
+				Const.log("GET style: \(ip)")
+				
+				if !self.checkIfAuthenticated(ras: ip) {
+					res.setStatusCode(403, description: "Please authenticate")
 					res.send("")
+					return
 				}
-			} else {
+				
+				let s = Array(req.query.keys)[0]
+				res.setValue("text/css", forHTTPHeaderField: "Content-Type")
+				
+				if s == "main" {
+					res.send(self.main_page_style)
+				} else if s == "custom" {
+					res.send(self.custom_style)
+				} else if s == "light" {
+					res.send(self.settings.light_theme ? self.light_style : "")
+				} else if s == "nord" {
+					res.send(self.settings.nord_theme ? self.nord_style : "")
+				} else if s == "fa_solid" {
+					res.send(self.fa_solid_style)
+				} else if s == "font_awesome" {
+					res.send(self.fa_style)
+				}
+			}
+
+			server.add("/webfonts") { (req, res, _) in
+				/// Gets the fonts necessary for fontawesome
+				let ip = req.connection?.remoteAddress ?? ""
+				
+				Const.log("GET webfonts: \(ip)")
+				
+				if !self.checkIfAuthenticated(ras: ip) {
+					res.setStatusCode(403, description: "Please authenticate")
+					res.send("")
+					return
+				}
+				
+				let font = Array(req.query.keys)[0]
+				
+				if let f = Bundle.main.url(forResource: font, withExtension: "", subdirectory: "html/webfonts") {
+					do {
+						let font_data = try Data.init(contentsOf: f)
+						res.send(font_data)
+						return
+					} catch {
+						Const.log("WARNING: Can't get font for \(font)", warning: true)
+					}
+				}
+				
 				res.send("")
 			}
-		}
-
-		server.add("/favicon.ico") { (req, res, next) in
-			/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
-			#if os(macOS)
-			let data = NSImage(named: "favicon")?.tiffRepresentation ?? Data.init(capacity: 0)
-			#elseif os(iOS)
-			let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
-			#endif
-
-			res.setValue("image/png", forHTTPHeaderField: "Content-Type")
-			res.send(data)
+			
+			server.add("/favicon.ico") { (req, res, next) in
+				/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
+				#if os(macOS)
+				let data = NSImage(named: "favicon")?.tiffRepresentation ?? Data.init(capacity: 0)
+				#elseif os(iOS)
+				let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
+				#endif
+				
+				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
+				res.send(data)
+			}
 		}
 
 		Const.log("Got past adding all the handlers.")
 
-		server.startListening(nil, portNumber: UInt(settings.server_port) ?? 8741)
+		server.startListening(nil, portNumber: UInt(settings.server_port))
 		socket.startServer(port: settings.socket_port)
 
 		self.did_start = true
@@ -617,6 +606,24 @@ class ServerDelegate {
 			let photos = encodeToJson(object: ret_val, title: "photos")
 
 			return [200, photos]
+		} else if f == "config" {
+			var subdir: String? = nil
+			if let subdirectory = settings.socket_subdirectory {
+				subdir = subdirectory
+				if subdirectory.prefix(1) == "/" { subdir = String(subdirectory.suffix(subdirectory.count - 1)) }
+				if subdirectory.suffix(1) != "/" { subdir! += "/" }
+			}
+			
+			let config: [String:Any?] = [
+				"socket_port": settings.socket_port,
+				"socket_subdirectory": subdir,
+				"debug": settings.debug,
+				"subjects": settings.subjects_enabled,
+			]
+			
+			let ret_config = encodeToJson(object: config, title: "config")
+			
+			return [200, ret_config]
 		}
 
 		Const.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)

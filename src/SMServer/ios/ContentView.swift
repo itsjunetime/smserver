@@ -139,13 +139,13 @@ struct ContentView: View {
 	var body: some View {
 
 		let port_binding = Binding<String>(get: {
-			self.settings.server_port
+			String(self.settings.server_port)
 		}, set: {
-			let new_port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().count > 3 ?
-				$0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined() :
-				self.settings.server_port /// To make sure it's an available port
-			self.settings.server_port = new_port
-			UserDefaults.standard.setValue(new_port, forKey: "port")
+			let new_port = $0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+			if let num = Int(new_port) {
+				self.settings.server_port = num
+				UserDefaults.standard.setValue(num, forKey: "port")
+			}
 		})
 
 		let pass_binding = Binding<String>(get: {
@@ -165,7 +165,7 @@ struct ContentView: View {
 			.padding(.top, 14)
 
 			if Const.getWiFiAddress() != nil || settings.override_no_wifi {
-				Text("Visit http\(settings.is_secure ? "s" : "")://\(Const.getWiFiAddress() ?? self.getHostname()):\(settings.server_port) in your browser to view your messages!")
+				Text(verbatim: "Visit http\(settings.is_secure ? "s" : "")://\(Const.getWiFiAddress() ?? self.getHostname()):\(settings.server_port) in your browser to view your messages!")
 					.font(Font.custom("smallTitle", size: 22))
 					.padding()
 			} else {

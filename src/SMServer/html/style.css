@@ -522,6 +522,7 @@ i#chargingSymbol {
 	transition: linear 0.2s;
 	padding: 6px;
 	font-size: 20px;
+	min-height: max-content;
 }
 #moretextsbutton:hover {
 	box-shadow: none;

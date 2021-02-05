@@ -7,25 +7,33 @@ set -e
 dir="/Applications/SMServer.app"
 
 # If they already have this file, then they're upgrading, so we don't need to generate a new cert
-[ -f "${dir}/smserver_cert_pass.txt" ] && return
-
-echo  "Creating TLS certificate for SMServer..."
-
-if ! command -v openssl >/dev/null
+if ! [ -f "${dir}/smserver_cert_pass.txt" ]
 then
-	echo "Please install openssl and reinstall SMServer"
-	exit
+
+	echo  "Creating TLS certificate for SMServer..."
+
+	if ! command -v openssl >/dev/null
+	then
+		echo "Please install openssl and reinstall SMServer"
+		exit
+	fi
+
+	pass=$(openssl rand -base64 24)
+
+	openssl req -x509 -newkey rsa:4096 -keyout "${dir}/key.pem" -out "${dir}/cert.pem" -days 9999 -nodes -subj "/C=ZZ/ST=./L=./O=./CN=smserver.com"
+	openssl x509 -outform der -in "${dir}/cert.pem" -out "${dir}/cert.der"
+	openssl pkcs12 -export -out "${dir}/identity.pfx" -inkey "${dir}/key.pem" -in "${dir}/cert.pem" -password pass:"${pass}"
+
+	rm "${dir}/key.pem" "${dir}/cert.pem"
+
+	echo -n "${pass}" > "${dir}/smserver_cert_pass.txt"
+
+	echo -e "\nSuccesfully generated certificate\n"
+
 fi
 
-pass=$(openssl rand -base64 24)
+[ -d /var/tmp/com.ianwelker.smserver ] || mkdir -p /var/tmp/com.ianwelker.smserver
+chown -R mobile:mobile /var/tmp/com.ianwelker.smserver
 
-openssl req -x509 -newkey rsa:4096 -keyout "${dir}/key.pem" -out "${dir}/cert.pem" -days 9999 -nodes -subj "/C=ZZ/ST=./L=./O=./CN=smserver.com"
-openssl x509 -outform der -in "${dir}/cert.pem" -out "${dir}/cert.der"
-openssl pkcs12 -export -out "${dir}/identity.pfx" -inkey "${dir}/key.pem" -in "${dir}/cert.pem" -password pass:"${pass}"
-
-rm "${dir}/key.pem" "${dir}/cert.pem"
-
-echo -n "${pass}" > "${dir}/smserver_cert_pass.txt"
-
-echo -e "\nSuccesfully generated certificate"
+echo -e "\nSet up permissions for file uploading"
 echo -e "Thanks for installing and enjoy SMServer :)\n"

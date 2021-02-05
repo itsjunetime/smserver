@@ -13,13 +13,10 @@ leave() {
 		[ -d ${ROOTDIR}/package/deb/Applications ] && rm -r ${ROOTDIR}/package/deb/Applications
 	fi
 
-	if [ -f ${ROOTDIR}/src/SMServer/html/chats.max.html ]
+	if [ -d "${html_tmp}" ]
 	then
-		html_dir="${ROOTDIR}/src/SMServer/html"
-		find "${html_dir}" -name "*.max.*" | while read file
-		do
-			mv "${file}" "$(echo $file | sed 's/\.max//')"
-		done
+		rm -r "${html_dir}" >&3
+		mv "${html_tmp}" "${html_dir}" >&3
 	fi
 
 	exit
@@ -33,6 +30,9 @@ err () {
 OLDDIR="$(pwd)"
 ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [[ "$OLDDIR" == "$ROOTDIR" ]] && ROOTDIR="."
+
+html_dir="${ROOTDIR}/src/SMServer/html"
+html_tmp="${ROOTDIR}/src/SMServer/tmp_html"
 
 vers=$(cat ${ROOTDIR}/package/deb/DEBIAN/control | grep "Version" | cut -d " " -f2)
 new=false
@@ -154,20 +154,17 @@ then
 	then
 		! command -v minify && err "Please install minify to minify asset files"
 
-		html_dir="${ROOTDIR}/src/SMServer/html"
+		pn "\033[34m==>\033[0m Minifying css & html files..."
+		cp -r "${html_dir}/" "${html_tmp}/"
 
-		find "$html_dir" -name "*.css" | while read file
+		find "$html_tmp" -name "*.css" | while read file
 		do
-			new_css="$(echo -- "${file}" | sed 's/\.css$/.max.css')"
-			cp "${file}" "${new_css}"
-			minify "${new_css}" > "${file}"
+			minify "${file}" > "$(echo "${file}" | sed "s+${html_tmp}+${html_dir}+")"
 		done
 
-		find "$html_dir" -name "*.html" | while read file
+		find "$html_tmp" -name "*.html" | while read file
 		do
-			new_html="$(echo -- "${file}" | sed 's/\.html$/.max.html')"
-			cp "${file}" "${new_html}"
-			minify --html-keep-comments --html-keep-document-tags --html-keep-end-tags --html-keep-quotes --html-keep-whitespace "${new_html}" > "${file}"
+			minify --html-keep-comments --html-keep-document-tags --html-keep-end-tags --html-keep-quotes --html-keep-whitespace "${file}" > "$(echo "${file}" | sed "s+${html_tmp}+${html_dir}+")"
 		done
 	fi
 

@@ -1,12 +1,17 @@
 # Changelog
-0.7.1 &rightarrow; Unreleased
+0.7.1 &rightarrow; 0.7.2
  - Added ability to run SMServer as a commandline app or daemon
- - Fixed issue that would occasionally crash the app when the previous MRYIPCCenter wasn't correctly deallocated
  - Allowed sending of texts when subject field has text but body field is empty
+ - Added option to not load web interface when running from command line
+ - Links automatically open in new tabs as opposed to the current tab
+ - App is compiled with minified css/html now
  - Cleaned up unnecessary code in web interface
+ - Fixed warning about custom css file when no custom css file existed
+ - Fixed issue that would occasionally cause crash if libSMServer was being run on the main thread
+ - Fixed some logic in parsing of rich links to hopefully prevent more crashes
  - Fixed issue that prevented loading of data for requests that had special characters (e.g. carets, backticks) in their URL.
  - Fixed issue with sender names being offset by group chat events
- - Fixed various styling issues on mobile view
+ - Fixed various styling issues on mobile view; it should work just fine now
 
 0.7.0 &rightarrow; 0.7.1
  - Added ability to delete a conversation from the web interface

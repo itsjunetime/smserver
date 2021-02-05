@@ -33,4 +33,17 @@
 - (id)guid;
 @end
 
+#if !TARGET_OS_IPHONE
+
+@interface IMDaemonSingleton
++ (id)sharedDaemon;
+@end
+
+@interface IMDaemon
+- (BOOL)daemonInterface:(id)arg1 shouldGrantAccessForPID:(SEL)arg2 auditToken:(id)arg3 portName:(int)arg4 listenerConnection:(id)arg5 setupInfo:(id)arg6 setupResponse:(id*)arg7;
+- (BOOL)daemonInterface:(id)arg1 shouldGrantPlugInAccessForPID:(SEL)arg2 auditToken:(id)arg3 portName:(int)arg4 listenerConnection:(id)arg5 setupInfo:(id)arg6 setupResponse:(id*)arg7;
+@end
+
+#endif
+
 #endif /* PrivateHeaders_h */
