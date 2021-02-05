@@ -14,12 +14,6 @@
 	static dispatch_once_t onceToken = 0;
 	__strong static IPCTextWatcher* sharedInstance = nil;
 	MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
-	if (center != nil) {
-		[center removeMethodForSelector:@selector(handleReceivedTextWithCallback:)];
-		[center removeMethodForSelector:@selector(handlePartyTypingWithCallback:)];
-		[center removeMethodForSelector:@selector(handleSentTapbackWithCallback:)];
-	}
-		
 	dispatch_once(&onceToken, ^{
 		sharedInstance = [[self alloc] init];
 	});

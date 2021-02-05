@@ -4,6 +4,8 @@
 #include "IPCTextWatcher.h"
 #include "../shared/PrivateHeaders.h"
 
+#define Daemon NSClassFromString(@"IMDaemonController")
+
 @implementation IPCTextWatcher
 
 + (instancetype) sharedInstance {
@@ -15,29 +17,42 @@
 	return sharedInstance;
 }
 
-/*unsigned hooked_capabilities(id self, SEL _cmd) {
-	return 17159;
-}*/
-
 - (unsigned int)swizzled_capabilities:(id)listener_id {
 	return 17159;
 }
 
+- (BOOL)swizzledDaemonInterface:(id)arg1 shouldGrantAccessForPID:(SEL)arg2 auditToken:(id)arg3 portName:(int)arg4 listenerConnection:(id)arg5 setupInfo:(id)arg6 setupResponse:(id*)arg7 {
+	return YES;
+}
+
+- (BOOL)swizzledDaemonInterface:(id)arg1 shouldGrantPlugInAccessForPID:(SEL)arg2 auditToken:(id)arg3 portName:(int)arg4 listenerConnection:(id)arg5 setupInfo:(id)arg6 setupResponse:(id*)arg7 {
+	return YES;
+}
+
 - (void)setUpHooks {
-
+	NSBundle *framework = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
+	[framework load];
+	
 	/// Hooking IMDaemon _capabilities
-	//IMP swizzle_imp = (IMP)hooked_capabilities;
-	Method original = class_getInstanceMethod([NSClassFromString(@"IMDaemonController") class], @selector(capabilitiesForListenerID:));
-	Method swizzled = class_getInstanceMethod([self class], @selector(swizzled_capabilities:));
+	Method original_cap = class_getInstanceMethod([Daemon class], @selector(capabilitiesForListenerID:));
+	Method swizzled_cap = class_getInstanceMethod([self class], @selector(swizzled_capabilities:));
+	
+	method_exchangeImplementations(original_cap, swizzled_cap);
+	
+	Method original_grant = class_getInstanceMethod([NSClassFromString(@"IMDaemon") class], @selector(daemonInterface:shouldGrantAccessForPID:auditToken:portName:listenerConnection:setupInfo:setupResponse:));
+	Method swizzled_grant = class_getInstanceMethod([self class], @selector(swizzledDaemonInterface:shouldGrantAccessForPID:auditToken:portName:listenerConnection:setupInfo:setupResponse:));
+	
+	method_exchangeImplementations(original_grant, swizzled_grant);
 
-	//IMP original_imp = method_setImplementation(original_method, swizzle_imp);
-	method_exchangeImplementations(original, swizzled);
-
-	IMDaemonController* controller = [NSClassFromString(@"IMDaemonController") sharedController];
+	IMDaemonController* controller = [Daemon sharedController];
 	unsigned capabilities = [controller capabilitiesForListenerID:@"SMServer"];
 	NSLog(@"capabilities: %u", capabilities);
-	unsigned new_capabilities = [controller hooked_capabilities:nil];
-	NSLog(@"new: %u", new_capabilities);
+	
+	if ([controller connectToDaemon]) {
+		IMChatRegistry* reg = [NSClassFromString(@"IMChatRegistry") sharedInstance];
+	} else {
+		NSLog(@"no connect");
+	}
 }
 
 @end

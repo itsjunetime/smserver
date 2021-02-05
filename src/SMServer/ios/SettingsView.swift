@@ -53,7 +53,7 @@ struct SettingsView: View {
 		let socket_binding = Binding<Int>(get: {
 			self.settings.socket_port
 		}, set: {
-			if String($0) == self.settings.server_port {
+			if $0 == self.settings.server_port {
 				self.alert_title = "Error"
 				self.alert_text = "The websocket port must be different from the main server port. Please change it to fix this."
 				self.show_alert = true

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "~//Apple/DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		This plist simply shows how you could run SMServer as a daemon.
+		Copy this into /Library/LaunchDaemons/ on your iOS device, then run: 
+		`launchctl load /Library/LaunchDaemons/com.ianwelker.smserver.plist`
+		`launchctl start /Library/LaunchDaemons/com.ianwelker.smserver.plist`
+
+		If you'd like to pass in more commandline arguments, add strings in the `ProgramArguments` array
+	-->
+	<key>Label</key>
+	<string>com.ianwelker.smserver</string>
+
+	<key>Program</key>
+	<string>/Applications/SMServer.app/SMServer</string>
+
+	<key>ProgramArguments</key>
+	<array>
+		<string>-b</string>
+		<string>&</string>
+	</array>
+
+	<key>RunAtLoad</key>
+	<true/>
+
+	<key>KeepAlive</key>
+	<true/>
+
+	<key>SuccessfulExit</key>
+	<true/>
+
+	<key>UserName</key>
+	<string>mobile</string>
+</dict>
+</plist>

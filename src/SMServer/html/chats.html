@@ -7,9 +7,6 @@
 		</title>
 		<script>
 			/// These next five lines need to remain without value, since they will be changed when swift parses the file.
-			var num_texts_to_load;
-			var num_chats_to_load;
-			var num_photos_to_load;
 			var socket_port;
 			var debug;
 			var subject;
@@ -18,6 +15,7 @@
 			var printed_texts = 0;
 			var printed_chats = 0;
 			var printed_photos = 0;
+			var num_texts_returned = 0;
 
 			var has_shown_warning = false;
 			var has_shown_camera_roll = false;
@@ -46,9 +44,6 @@
 
 			if (doc_url === "127.0.0.1" || doc_url === "localhost") { /// when I'm debugging on local computer
 				prefix = "http://192.168.0.180:8741/";
-				num_texts_to_load = 100;
-				num_chats_to_load = 60;
-				num_photos_to_load = 40;
 				socket_port = 8740;
 				socket_address = prefix.split("/")[2].split(":")[0];
 				debug = true;
@@ -138,6 +133,8 @@
 						var under = document.createElement("a");
 						under.href = (text.text.match(/^https{0,1}:\/\//) ? "" : "http://") + text.text;
 						under.className = "richLinkUnder";
+						under.setAttribute("target", "_blank");
+						under.setAttribute("rel", "noreferrer noopener");
 
 						if (text.attachments.length > 1) {
 							t.appendChild(img);
@@ -265,7 +262,7 @@
 							orig_tb.outerHTML = tap.outerHTML;
 						} else {
 							var ln = elder.getElementsByClassName("tapback").length;
-							var mg = ` -${ln * 2}6px;`;
+							var mg = `${((ln + 1) * -17) + 5}px;`; // I know this seems nonsensical but it makes it look nice
 							mg += `z-index: ${9 < (ln + 2) ? 9 : (ln + 2)};`;
 							if (elder.className.includes("from_them")) {
 								tap.setAttribute("style", `left:${mg}`);
@@ -313,9 +310,9 @@
 				return document.createElement("span");
 			}
 
-			function getChatElement(chat, num_texts, searched = false, relevant_text = 0) {
+			function getChatElement(chat, searched = false, relevant_text = 0) {
 				/// relevant_text will contain the ROWID of the matching text from the search
-				if (debug) console.log(`Getting chat element for ${chat.chat_identifier}, num: ${num_texts}`);
+				if (debug) console.log(`Getting chat element for ${chat.chat_identifier}`);
 				var b = document.createElement("button");
 
 				if (!searched) b.id = chat.chat_identifier;
@@ -386,7 +383,7 @@
 
 				b.className = classes;
 
-				var gts = `getTexts("${chat.chat_identifier}", ${num_texts}` + (chat.addresses !== undefined ? `, "${chat.addresses}"` : "") + ');';
+				var gts = `getTexts("${chat.chat_identifier}"` + (chat.addresses !== undefined ? `, "${chat.addresses}"` : "") + ');';
 				b.setAttribute("onclick", gts);
 
 				return b;
@@ -589,11 +586,10 @@
 
 			async function printChats(offset = 0) {
 				if (debug) console.log("printing Chats");
-				let url = `${prefix}requests?chats=${num_chats_to_load}&chats_offset=${offset}`;
+				let url = `${prefix}requests?chats&chats_offset=${offset}`;
 				let chatPromise = await fetchFromURL(url);
 				this.items = chatPromise.chats;
 
-				const num_texts = num_texts_to_load;
 				var doc = document.getElementsByClassName("chats-list")[0];
 				var old_button = document.getElementById("morechatsbutton");
 
@@ -604,11 +600,11 @@
 				doc.innerHTML = "";
 				doc.appendChild(old_button);
 
-				printed_chats = num_chats_to_load;
+				printed_chats = items.length;
 
 				for(var i = 0; i < items.length; i++) {
 
-					var b = getChatElement(items[i], num_texts);
+					var b = getChatElement(items[i]);
 
 					if (items[i].chat_identifier === selected_id)
 						b.classList.add("selected");
@@ -641,23 +637,23 @@
 
 			const getMoreChats = async (offset = printed_chats) => {
 				if (debug) console.log("getting more chats");
-				let url = `${prefix}requests?chats=${num_chats_to_load}&chats_offset=${offset}`;
+				let url = `${prefix}requests?chats&chats_offset=${offset}`;
 				let chatsPromise = await fetchFromURL(url);
 				new_items = chatsPromise.chats;
 
-				printed_chats += num_chats_to_load;
+				printed_chats += new_items.length;
 				var doc = document.getElementsByClassName("chats-list")[0];
 
 				for(var i = 0; i < new_items.length; i++) {
-					var b = getChatElement(new_items[i], num_texts_to_load);
+					var b = getChatElement(new_items[i]);
 					doc.insertBefore(b, document.getElementById("morechatsbutton"));
 				}
 
 				console.log("There will probably be a significant amount of 404 errors here, ignore them. They've been handled :)");
 			}
 
-			const getTexts = async (chat_id, num_texts, addresses = "") => {
-				if (debug) console.log(`getting ${num_texts} for chat ${chat_id}`);
+			const getTexts = async (chat_id, addresses = "") => {
+				if (debug) console.log(`getting texts for chat ${chat_id}`);
 
 				if (mobile) {
 					document.getElementsByClassName("chats")[0].style.display = "none";
@@ -700,10 +696,12 @@
 
 				message_title.innerHTML = back_arrow + title_doc.outerHTML + trash;
 
-				let url = `${prefix}requests?messages=${addresses === "" ? chat_id : addresses}&num_messages=${num_texts}`;
+				let url = `${prefix}requests?messages=${addresses === "" ? chat_id : addresses}`;
 
 				let textsPromise = await fetchFromURL(url);
 				this.texts = textsPromise.texts;
+
+				num_texts_returned = texts.length;
 
 				myNode.innerHTML = "";
 
@@ -721,15 +719,13 @@
 
 				document.getElementById("text-content").lastChild.scrollIntoView();
 				document.getElementById("sendbox").focus();
-
-				if (texts.length < num_texts) document.getElementById("moretextsbutton").outerHTML = "";
 			}
 
-			const getMoreTexts = async (num_texts = num_texts_to_load) => {
-				if (debug) console.log(`called getMoreText; num === ${num_texts}`);
+			const getMoreTexts = async () => {
+				if (debug) console.log(`called getMoreTexts`);
 				var chat_id = document.querySelector(`[addresses*="${current_chat_id}"]`).getAttribute("addresses");
 
-				let url = `${prefix}requests?messages=${chat_id}&num_messages=${num_texts_to_load}&messages_offset=${printed_texts}&read_messages=false`;
+				let url = `${prefix}requests?messages=${chat_id}&messages_offset=${printed_texts}&read_messages=false`;
 				let textPromise = await fetchFromURL(url);
 				this.texts = textPromise.texts;
 
@@ -738,7 +734,7 @@
 				var is_group = chat_id.substring(0, 4) === "chat";
 				printListOfTexts(texts, false, is_group);
 
-				if (texts.length < num_texts) document.getElementById("moretextsbutton").outerHTML = "";
+				if (texts.length < num_texts_returned) document.getElementById("moretextsbutton").outerHTML = "";
 			}
 
 			function sleep(ms) {
@@ -1081,7 +1077,7 @@
 				if (!has_shown_camera_roll) {
 					var photos;
 
-					var url = `${prefix}requests?photos=${num_photos_to_load}`;
+					var url = `${prefix}requests?photos`;
 					let photoPromise = await fetchFromURL(url);
 					photos = photoPromise.photos;
 					if (photos.length === 0) {
@@ -1105,7 +1101,7 @@
 				var cr = document.getElementById("camerarollContent");
 				var new_photos;
 
-				var url = `${prefix}requests?photos=${num_photos_to_load}&photos_offset=${printed_photos}`;
+				var url = `${prefix}requests?photos&photos_offset=${printed_photos}`;
 				let photoPromise = await fetchFromURL(url);
 				new_photos = photoPromise.photos;
 				printed_photos += new_photos.length;
@@ -1354,17 +1350,27 @@
 
 			function setUpMobile() {
 				document.body.style.zoom = "200%";
+				document.body.style.height = "-webkit-fill-available";
 				document.documentElement.style.setProperty("--chats-width", "calc(100vw - 16px)");
+				document.documentElement.style.height = "-webkit-fill-available";
 
-				document.getElementsByClassName("everything")[0].style.display = "block";
 				document.getElementsByClassName("chats")[0].style.width = "100%";
 
 				document.getElementsByClassName("messages")[0].style.display = "none";
 				document.getElementsByClassName("messages")[0].style.height = "100%";
 				document.getElementById("messagesTitleText").style.maxWidth = "calc(100vw - 110px)";
+
+				let ev = document.getElementsByClassName("everything")[0];
+				ev.style.display = "block";
+				ev.style.maxHeight = "-webkit-fill-available";
 			}
 
 			function connectWebSocket() {
+				if (socket_subdir !== undefined)
+					socket_url = `${window.location.href.replace(/^http/g, "ws").split("/").splice(0, 3).join("/")}/${socket_subdir}`;
+				else
+					socket_url = `${location.protocol === "https:" ? "wss://" : "ws://"}${socket_address}:${socket_port}`;
+
 				socket = new WebSocket(socket_url);
 
 				socket.onmessage = function(event) {
@@ -1386,6 +1392,20 @@
 				};
 			}
 
+			async function setUpConfig() {
+				let config_url = `${prefix}requests?config`;
+				let config_promise = await fetchFromURL(config_url);
+
+				let config = config_promise["config"];
+
+				if (config.socket_subdirectory !== null)
+					socket_subdir = config.socket_subdirectory;
+
+				socket_port = config.socket_port;
+				subject = config.subjects;
+				debug = config.debug;
+			}
+
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
 				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
@@ -1397,36 +1417,31 @@
 				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
 			});
 
-			document.addEventListener("DOMContentLoaded", () => {
+			document.addEventListener("DOMContentLoaded", async function() {
 				if (!window.Notification || Notification.permission === "granted")
 					document.getElementById("notificationbutton").outerHTML = "";
+
+				await setUpConfig();
 
 				if (subject) enableSubject();
 				if (prefix !== "") setUpPrefix();
 				if (mobile) setUpMobile();
 				setUpDND();
+				connectWebSocket();
 			});
 
-			printChats();
-
 			var socket_url = "";
-
-			if (socket_subdir !== undefined)
-				socket_url = `${window.location.href.replace(/^http/g, "ws").split("/").splice(0, 3).join("/")}/${socket_subdir}`;
-			else
-				socket_url = `${location.protocol === "https:" ? "wss://" : "ws://"}${socket_address}:${socket_port}`;
-
 			var socket;
-			connectWebSocket();
+
+			printChats();
 
 		</script>
 		<link rel="stylesheet" type="text/css" href="style?fa_solid" id="style_fa_solid">
 		<link rel="stylesheet" type="text/css" href="style?font_awesome" id="style_font_awesome">
 		<link rel="stylesheet" type="text/css" href="style?main" id="style_main">
 		<link rel="stylesheet" type="text/css" href="style?custom" id="style_custom">
-		<!--theme optional section; next line must remain as comment-->
-		<!--light-->
-		<!--nord-->
+		<link rel="stylesheet" type="text/css" href="style?light">
+		<link rel="stylesheet" type="text/css" href="style?nord">
 	</head>
 	<body>
 		<div class="everything">

@@ -92,19 +92,26 @@ struct Const {
 	\(col)1mOptions:\(col)0m
 
 	\(cmd_server_port_short), \(cmd_server_port):
-		This sets the port that the HTTP server will run on, and requires a value to be passed in immediately after this flag. For example, to set the server port to 4000, you'd run \(col)1msmserver \(cmd_server_port) 4000\(col)0m. The default server port is 8741.
+		This sets the port that the HTTP server will run on, and requires a value to be passed in immediately after this flag.
+		For example, to set the server port to 4000, you'd run \(col)1msmserver \(cmd_server_port) 4000\(col)0m. The default server port is 8741.
 
 	\(cmd_socket_port_short), \(cmd_socket_port):
 		This sets the port that the websocket will run on, and requires a value to be passed in immediately after this flag. The default socket port is 8740.
+
+	\(cmd_socket_subdir):
+		Only use this option if you are running SMServer behind a proxy of some kind -- this allows SMServer to tell the web interface what subdirectory the websocket
+		is communicating from. If you do not call this flag, it is assumed that you are not running SMServer behind a proxy
 
 	\(cmd_password):
 		This sets the password for the server, and requires a value to be passed in immediately after this flag. The default password for the server is 'toor'.
 
 	\(cmd_theme_short), \(cmd_theme):
-		This sets the theme for the web interface, which must be one of the following: \(cmd_theme_options.joined(separator: ",")), and requires a value to be passed in immediately after this flag.
+		This sets the theme for the web interface, which must be one of the following: \(cmd_theme_options.joined(separator: ",")),
+		and requires a value to be passed in immediately after this flag.
 
 	\(cmd_def_chats), \(cmd_def_messages), \(cmd_def_photos):
-		This sets the number of chats, messages, or photos to be loaded, respectively (if URL queries don't specify otherwise), and requires a value to be passed in immediately after this flag. The default number of chats is 40, messages is 100, and photos is 40.
+		This sets the number of chats, messages, or photos to be loaded, respectively (if URL queries don't specify otherwise),
+		and requires a value to be passed in immediately after this flag. The default number of chats is 40, messages is 100, and photos is 40.
 
 	\(cmd_auth_short), \(cmd_auth), \(cmd_no_auth):
 		This will enable or disable authentication, respective to which flag you pass in. The default is enabled.
@@ -119,13 +126,22 @@ struct Const {
 		This will enable or disable the subject line in the web interface, respective to which flag you pass in. The default is disabled.
 
 	\(cmd_typing_short), \(cmd_typing), \(cmd_no_typing):
-		This will enable or disable sending of typing indicators from the server to other conversations, respective to which flag you pass in. The default is enabled.
+		This will enable or disable sending of typing indicators from the server to other conversations,
+		respective to which flag you pass in. The default is enabled.
 
 	\(cmd_contacts_short), \(cmd_contacts), \(cmd_no_contacts):
-		If this option is enabled, conversations will be combined with the other conversations that are assigned to the same contact on the host device. If this option is disabled, they will not. The default is disabled.
+		If this option is enabled, conversations will be combined with the other conversations that are assigned to the same contact
+		on the host device. If this option is disabled, they will not. The default is disabled.
 
 	\(cmd_background_short), \(cmd_background), \(cmd_no_background):
-	   This will allow the app to run in the background, even after you've exited this terminal session; it must be run in conjunction with the shell backgrounder (\(col)1m&\(col)0m). Without this flag, the server will die as soon as you exit the terminal session.
+		This will allow the app to run in the background, even after you've exited this terminal session; it must be run in conjunction
+		with the shell backgrounder (\(col)1m&\(col)0m). Without this flag, the server will die as soon as you exit the terminal session. The default is disabled.
+
+	\(cmd_debug_short), \(cmd_debug), \(cmd_no_debug):
+		This will enable or disable printing debug messages to the console. The default is disabled.
+
+	\(cmd_web_short), \(cmd_web), \(cmd_no_web):
+		This will enable or disable the web interface (not the API). The default is enabled.
 	"""
 	
 	#elseif os(macOS)
@@ -147,6 +163,7 @@ struct Const {
 
 	static let config_file_url: URL = URL(fileURLWithPath: user_home_url + "/.config/smserver/server.yaml") /// subject to change
 	static let html_dir: URL = URL(fileURLWithPath: user_home_url + "/.smserver/")
+	static let cert_pass_file: String = html_dir.path + "/smserver_cert_pass.txt"
 	
 	static let help_string = """
 	usage: \(col)1m./smserver [options]\(col)0m
@@ -199,11 +216,12 @@ struct Const {
 	static let cmd_server_port_short: String = "-p"
 	static let cmd_socket_port: String = "--socket_port"
 	static let cmd_socket_port_short: String = "-w"
+	static let cmd_socket_subdir: String = "--subdir"
 	static let cmd_config_file: String = "--config"
 	static let cmd_config_file_short: String = "-c"
 
-	static let cmd_html_dir: String = "--directory"
-	static let cmd_html_dir_short: String = "-d"
+	static let cmd_html_dir: String = "--html_dir"
+	static let cmd_html_dir_short: String = "-m"
 	static let cmd_password: String = "--password"
 	static let cmd_theme: String = "--theme"
 	static let cmd_theme_short: String = "-t"
@@ -250,7 +268,7 @@ struct Const {
 		cmd_socket_port, cmd_socket_port_short,
 		cmd_config_file, cmd_config_file_short,
 		cmd_html_dir, cmd_html_dir_short,
-		cmd_password,
+		cmd_password, cmd_socket_subdir,
 		cmd_theme, cmd_theme_short,
 		cmd_def_chats, cmd_def_messages, cmd_def_photos
 	]
@@ -276,7 +294,11 @@ struct Const {
 	static func log(_ s: String, warning: Bool = false) {
 		/// This logs to syslog
 		if Settings.shared().debug || warning {
-			os_log("%{public}@%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, log_prefix, warning ? log_warning : "", s)
+			if CommandLine.argc > 1 {
+				print("\(log_prefix)\(warning ? log_warning : "")\(s)")
+			} else {
+				os_log("%{public}@%{public}@%{public}@", log: OSLog(subsystem: "com.ianwelker.smserver", category: "debugging"), type: .debug, log_prefix, warning ? log_warning : "", s)
+			}
 		}
 	}
 

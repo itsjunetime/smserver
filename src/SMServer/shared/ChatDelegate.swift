@@ -863,13 +863,19 @@ final class ChatDelegate {
 		var propertyListFormat = PropertyListSerialization.PropertyListFormat.xml
 		var plistData = [String:AnyObject]()
 		do {
-			plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as! [String : AnyObject]
+			plistData = try PropertyListSerialization.propertyList(from: data as Data, options: .mutableContainersAndLeaves, format: &propertyListFormat) as? [String : AnyObject] ?? [String:AnyObject]()
 		} catch {
 			Const.log("WARNING: failed to decode plist for ROWID \(mid)", warning: true)
+			statement = nil
+			
 			return ret_dict
 		}
-
+		
 		statement = nil
+		
+		guard plistData.count > 0 else {
+			return ret_dict
+		}
 
 		/// Always under object `$objects`
 		let objects = plistData["$objects"] as! NSMutableArray
@@ -886,7 +892,7 @@ final class ChatDelegate {
 			ret_dict["title"] = objects[9] as? String ?? "Episode"
 			ret_dict["subtitle"] = objects[10] as? String ?? "Podcast"
 			ret_dict["type"] = "podcast"
-		} else if let title: String = objects[6] as? String, objects.count >= 10 {
+		} else if objects.count >= 10, let title: String = objects[6] as? String {
 			ret_dict["title"] = title
 			let subtitle = objects[4] as? String ?? "//website/"
 			ret_dict["subtitle"] = subtitle.split(separator: "/").count > 1 ? String(subtitle.split(separator: "/")[1]) : subtitle
