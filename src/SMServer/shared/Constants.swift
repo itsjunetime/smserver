@@ -56,13 +56,11 @@ struct Const {
 
 	static let api_tap_req: String = "tapback"
 	static let api_tap_guid: String = "tap_guid"
-	static let api_tap_chat: String = "tap_in_chat"
 	static let api_tap_rem: String = "remove_tap"
 
 	static let api_tap_vals = [
 		api_tap_req,
 		api_tap_guid,
-		api_tap_chat,
 		api_tap_rem
 	]
 
@@ -73,6 +71,9 @@ struct Const {
 		api_del_chat,
 		api_del_text
 	]
+
+	static let api_config: String = "config"
+	static let api_match: String = "match"
 
 	static let custom_css_path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("smserver_custom.css")
 
@@ -143,7 +144,7 @@ struct Const {
 	\(cmd_web_short), \(cmd_web), \(cmd_no_web):
 		This will enable or disable the web interface (not the API). The default is enabled.
 	"""
-	
+
 	#elseif os(macOS)
 
 	#if DEBUG
@@ -164,7 +165,7 @@ struct Const {
 	static let config_file_url: URL = URL(fileURLWithPath: user_home_url + "/.config/smserver/server.yaml") /// subject to change
 	static let html_dir: URL = URL(fileURLWithPath: user_home_url + "/.smserver/")
 	static let cert_pass_file: String = html_dir.path + "/smserver_cert_pass.txt"
-	
+
 	static let help_string = """
 	usage: \(col)1m./smserver [options]\(col)0m
 
@@ -209,7 +210,7 @@ struct Const {
 	\(cmd_contacts_short), \(cmd_contacts), \(cmd_no_contacts):
 		\(col)1mCURRENTLY INEFFECTIVE\(col)0m If this option is enabled, conversations will be combined with the other conversations that are assigned to the same contact on the host device. If this option is disabled, they will not. The default is disabled.
 	"""
-	
+
 	#endif
 
 	static let cmd_server_port: String = "--server_port"
@@ -286,7 +287,7 @@ struct Const {
 	]
 
 	static let col = "\u{001B}["
-	
+
 
 	static let log_prefix: String = "SMServer_app: "
 	static let log_warning: String = "WARNING: "

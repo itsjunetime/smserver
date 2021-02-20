@@ -137,6 +137,7 @@ final class ChatDelegate {
 		let bad_bundles = ["com.apple.DigitalTouchBalloonProvider", "com.apple.Handwriting.HandwritingProvider"]
 
 		for i in 0..<texts.count {
+			texts[i]["text"] = (texts[i]["text"] as? String ?? "").replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil)
 
 			/// Get details about attachments if there are any attachments associated with this message
 			if texts[i]["cache_has_attachments"] as! String == "1" && texts[i]["ROWID"] != nil {
@@ -510,13 +511,17 @@ final class ChatDelegate {
 
 		#if os(iOS)
 		var image_db = createConnection(connection_string: Const.contact_images_address)
-		if contact_db == nil || image_db == nil { return Data.init(capacity: 0) }
+		var sms_db = createConnection()
+		if contact_db == nil || image_db == nil || sms_db == nil {
+			return Data.init(capacity: 0)
+		}
 
 		/// get image data with dbs as parameters
-		let return_val = returnImageDataDB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!)
+		let return_val = returnImageDataDB(chat_id: chat_id, contact_db: contact_db!, image_db: image_db!, sms_db: sms_db!)
 
 		/// close
 		closeDatabase(&image_db)
+		closeDatabase(&sms_db)
 
 		#elseif os(macOS)
 		let image_name = selectFromSql(db: contact_db, columns: ["ZUNIQUEID"], table: "ZABCDRECORD", condition: "WHERE ZCONTACTINDEX IN (SELECT Z_PK from ZABCDCONTACTINDEX WHERE ZSTRINGFORINDEXING LIKE ?)", args: ["%\(chat_id)%"], num_items: 1)
@@ -542,12 +547,12 @@ final class ChatDelegate {
 		return return_val
 	}
 
-	final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer) -> Data? {
+	final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer, sms_db: OpaquePointer) -> Data? {
 		/// This returns the profile picture for someone with the phone number or email `chat_id` as pure image data
 
 		Const.log("Getting image data with db for chat_id \(chat_id)")
 
-		if chat_id == "default" || (chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20) {
+		if chat_id == "default" {
 			#if os(iOS)
 			let pngdata = UIImage(named: "profile")?.pngData()
 			#elseif os(macOS)
@@ -555,6 +560,23 @@ final class ChatDelegate {
 			#endif
 
 			return pngdata ?? Data.init(capacity: 0)
+		}
+
+		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20 {
+			/// This is a kinda hacky workaround to get the image for a group
+			/// So basically, whenever a group image is set, a message is inserted into the SMS database with a `group_action_type` of 1 and 1 attachment
+			/// The attachment is the new profile picture for the group. So this just grabs the most recent message with 1 for the `group_action_type`,
+			/// gets the location of its associated attachment, and returns that.
+			let image_location = selectFromSql(db: sms_db, columns: ["filename"], table: "attachment", condition: "where ROWID in (select attachment_id from message_attachment_join where message_id in (select ROWID from message where group_action_type is 1 and cache_has_attachments is 1 and ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is ?)) order by date DESC))", args: [chat_id], num_items: 1)
+
+			guard image_location.count == 1 && image_location[0]["filename"] != nil else {
+				return returnImageDataDB(chat_id: "default", contact_db: contact_db, image_db: image_db, sms_db: sms_db)
+			}
+
+			let image_url: String = image_location[0]["filename"]!
+
+			let image = UIImage(contentsOfFile: image_url.replacingOccurrences(of: "~", with: "/var/mobile"))
+			return image?.pngData() ?? Data(capacity: 0)
 		}
 
 		var docid = [[String:String]]()
@@ -712,26 +734,30 @@ final class ChatDelegate {
 
 		parseTexts(&texts, db: db, contact_db: contact_db)
 
-		for i in texts {
+		if !group_by_time {
+			for i in texts {
 
-			/// get sender for this text
-			let chat = i["chat_identifier"] as! String
+				/// get sender for this text
+				let chat = i["chat_identifier"] as! String
 
-			/// Add this text onto the list of texts from this person that match term if grouping by person and not time
-			if !group_by_time {
+				/// Add this text onto the list of texts from this person that match term if grouping by person and not time
 				if return_texts[chat] == nil {
 					return_texts[chat] = [i]
 				} else {
 					return_texts[chat]?.append(i)
 				}
 			}
+		} else {
+			return_texts["texts"] = texts
 		}
+
+		return_texts["conversations"] = matchPartialAddressWithDB(term, db: contact_db)
 
 		/// close
 		closeDatabase(&db)
 		closeDatabase(&contact_db)
 
-		return group_by_time ? texts : return_texts
+		return return_texts
 	}
 
 	final func getPhotoList(num: Int = 40, offset: Int = 0, most_recent: Bool = true) -> [[String: Any]] {
@@ -867,12 +893,12 @@ final class ChatDelegate {
 		} catch {
 			Const.log("WARNING: failed to decode plist for ROWID \(mid)", warning: true)
 			statement = nil
-			
+
 			return ret_dict
 		}
-		
+
 		statement = nil
-		
+
 		guard plistData.count > 0 else {
 			return ret_dict
 		}
@@ -973,5 +999,57 @@ final class ChatDelegate {
 		db = nil
 
 		return text
+	}
+
+	func matchPartialAddress(_ chat: String) -> [[String:String]] {
+		Const.log("Matching partial address \(chat)")
+		var ret = [[String:String]]()
+
+		var db = createConnection(connection_string: Const.contacts_address)
+		if db == nil { return ret }
+		Const.log("Made connection with \(Const.contacts_address)")
+
+		ret = matchPartialAddressWithDB(chat, db: db)
+
+		Const.log("Closing database")
+		closeDatabase(&db)
+		db = nil
+
+		return ret
+	}
+
+	func matchPartialAddressWithDB(_ chat: String, db: OpaquePointer?) -> [[String:String]] {
+		var ret = [[String:String]]()
+
+		let matches = selectFromSql(db: db, columns: ["c0First", "c1Last", "c16Phone", "c17Email"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE ? or c16Phone LIKE ?", args: ["%\(chat)%", "%\(chat)%"])
+
+		for m in matches {
+			let add_str: String = m["c16Phone"] ?? "" + " " + (m["c17Email"] ?? "")
+			let address: String = String(add_str.split(separator: " ").filter({ $0.contains(chat) }).max(by: {$1.count > $0.count}) ?? "")
+
+			ret.append(["display_name": "\(m["c0First"] ?? "") \(m["c1Last"] ?? "")", "chat_id": address])
+		}
+
+		return ret
+	}
+
+	func getChatOfText(_ guid: String) -> String {
+		Const.log("Getting chat of text \(guid)")
+		var ret = ""
+
+		var db = createConnection()
+		if db == nil { return "" }
+
+		let chat_query = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id in (select ROWID from message where guid is ?))", args: [guid], num_items: 1)
+
+		if chat_query.count > 0, let id = chat_query[0]["chat_identifier"] {
+			ret = id
+		}
+
+		Const.log("Closing database")
+		closeDatabase(&db)
+		db = nil
+
+		return ret
 	}
 }

@@ -93,8 +93,11 @@
 }
 
 - (BOOL)removeObject:(NSString *)chat text:(NSString *)text {
-	NSDictionary* args = @{@"chat": chat, @"text": text};
-	return [self.center callExternalMethod:@selector(delete:) withArguments:args];
+	NSMutableDictionary* args = [NSMutableDictionary dictionaryWithObject:chat forKey:@"chat"];
+	if (text != nil)
+		args[@"text"] = text;
+
+	return [self.center callExternalMethod:@selector(delete:) withArguments:[NSDictionary dictionaryWithDictionary:args]];
 }
 
 /// This is not being used, but I am leaving it here for future versions in case I figure out how to make it work well.

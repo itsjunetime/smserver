@@ -19,16 +19,16 @@ Try disabling 'Mark conversations as read when viewed on web interface' in the s
 As of version 0.7.0, SMServer can run perfectly behind a reverse proxy, and it's very easy to set it up. Here's what you have to do:
 
 1\. Install nginx on your device.  \
-2\. Open up the configuration file (`/etc/nginx/nginx.conf` on GNU/Linux, `/usr/local/etc/nginx/nginx.conf` on macOS), and add the following inside the main `server { }` block:
+2\. Open up the configuration file (`/etc/nginx/nginx.conf` on GNU/Linux, `/usr/local/etc/nginx/nginx.conf` on macOS), and add the following inside the main `server { }` block (replacing `<phone IP>` with your host device's private IP Address):
 ```
 proxy_ssl_verify off;
 
 location /smserver/ {
-    proxy_pass https://192.168.0.180:8741/;
+    proxy_pass https://<phone IP>:8741/;
 }
 
 location /smserver_websocket/ {
-    proxy_pass https://192.168.0.180:8740/;
+    proxy_pass https://<phone IP>:8740/;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";

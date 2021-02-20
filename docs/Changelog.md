@@ -1,4 +1,17 @@
 # Changelog
+0.7.2 &rightarrow; 0.7.3
+ - Added support in search API for returning conversations as well as texts
+ - Added API for matching partial address when typing into new conversation box
+ - Added support for showing group chat pictures
+ - Removed unnecessary specifications in some API endpoints
+ - Filtered hidden characters from texts with attachments
+ - Set texts to send attachments first, and then subject/body
+ - Web interface now correctly shows tapbacks relative to specific attachments
+ - CLI Version outputs more information about how to connect to the server
+ - Text send with only subject, no body, will now send with subject text in body field and no text in subject field
+ - Fixed issue in web server framework that would prevent device from connecting if the host header was sent in lowercase
+ - Fixed styling issue by notifications button on web interface
+
 0.7.1 &rightarrow; 0.7.2
  - Added ability to run SMServer as a commandline app or daemon
  - Allowed sending of texts when subject field has text but body field is empty

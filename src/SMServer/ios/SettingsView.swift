@@ -385,7 +385,7 @@ struct SettingsView: View {
 					ShareSheet(activityItems: [Bundle.main.url(forResource: "cert", withExtension: "der")!])
 				})
 
-				Text("Compatible with libSMServer 0.6.1")
+				Text("Compatible with libSMServer 0.6.3")
 					.font(.callout)
 					.foregroundColor(.gray)
 

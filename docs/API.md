@@ -330,33 +330,42 @@ All of the `GET` requests to `/send` return only status codes, and no text in th
  - `403`, meaning that you have yet to authenticate with the server, so the request was not processed, or
  - `503`, meaning that an internal error occured and the request could not be completed as requested. Feel free to retry if you run into a 503 code.
 
-### `tapback`, `tap_guid`, `tap_in_chat`, `remove_tap`
+### `tapback`, `tap_guid`, `remove_tap`
 
-Sends a tapback for the message with `tap_guid`, in `tap_in_chat` chat.
+Sends a tapback for the message with `tap_guid`.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
 | tapback | Yes | Int | This should be an int, describing the reaction to send. "Heart" is 0, "Thumbs up" is 1, "Thumbs down" is 2, "Haha" is 3, "Emphasis" is 4, and "Question" is 5. If this number is greater than 5 or less than 0 or is not an int, the tapback will fail to send.
 | tap_guid | Yes | String | Must be the guid of the message that the tapback is being sent for. |
-| tap_in_chat | Yes | String | Must be the chat_identifier of the conversation in which the tapback is being sent. |
 | remove_tap | No | String | Must be either true or false. If it is neither, it defaults to false. When this is `true`, it removes the tapback with the above attributes instead of adding it. |
 
 __Example queries:__
-- /send?tapback=1&tap_guid=0AD2418E-19E4-47B1-9380-DB8E0A90B30C&tap_in_chat=+11231231234
-- /send?tapback=0&tap_guid=D11C0838-02F0-4917-AE38-AC7628E1DBCC&tap_in_chat=email@email.com&remove_tap=true
+- /send?tapback=1&tap_guid=0AD2418E-19E4-47B1-9380-DB8E0A90B30C
+- /send?tapback=0&tap_guid=D11C0838-02F0-4917-AE38-AC7628E1DBCC&remove_tap=true
 
-## `delete_chat`, `delete_text`
+## `delete_chat`
 
-This will delete either a conversation or a single message. If the content of the `delete_text` value has a length greater than 0, it will delete the text with the guid of the value in `delete_text`. Otherwise, it will delete the conversation with the `chat_identifier` which is in the value of `delete_chat`. If there is something incorrect about the query, it will return a warning message instead of "true". Returns plain text.
+This will delete the conversation which has the `chat_identifier` which is in the value of `delete_chat`. If there is something incorrect about the query, it will return a status code that is not 200, and a description detailing why it failed.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
-| delete_chat | Yes | String | Must be the `chat_identifier` of the conversation to be deleted, or the `chat_identifier` of the conversation in which the message which is to be deleted resides. Either way, it must be included. |
-| delete_text | No | String | Must be the `guid` of the message which is to be deleted. If this value is not included, or its length is 0, the conversation which has the `chat_identifier` that is included in the `delete_chat` parameter of this request will be deleted. |
+| delete_chat | Yes | String | Must be the `chat_identifier` of the conversation to be deleted. |
 
 __Example queries:__
-- /send?delete_chat=+11231231234&delete_text=473EED50-D302-473C-920B-3353A43C6B75
+- /send?delete_chat=+11231231234
 - /send?delete_chat=email@email.org
+
+## `delete_text`
+
+This will delete the text with the `guid` which is in the value of `delete_text`. If there is something incorrect about the query, it will return a status code that is not 200, and a description detailing why it failed.
+
+| Key | Required | Type | Description |
+| - | - | - | - |
+| delete_text | Yes | String | Must be the `guid` of the text to be deleted. |
+
+__Example Queries:__
+- /send?delete_text=4505C31A-A0FB-496F-AAA4-9821FBCF9BE4
 
 ## `POST` requests
 

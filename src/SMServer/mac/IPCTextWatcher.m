@@ -32,22 +32,22 @@
 - (void)setUpHooks {
 	NSBundle *framework = [[NSBundle alloc] initWithPath:@"/System/Library/PrivateFrameworks/IMCore.framework"];
 	[framework load];
-	
+
 	/// Hooking IMDaemon _capabilities
 	Method original_cap = class_getInstanceMethod([Daemon class], @selector(capabilitiesForListenerID:));
 	Method swizzled_cap = class_getInstanceMethod([self class], @selector(swizzled_capabilities:));
-	
+
 	method_exchangeImplementations(original_cap, swizzled_cap);
-	
+
 	Method original_grant = class_getInstanceMethod([NSClassFromString(@"IMDaemon") class], @selector(daemonInterface:shouldGrantAccessForPID:auditToken:portName:listenerConnection:setupInfo:setupResponse:));
 	Method swizzled_grant = class_getInstanceMethod([self class], @selector(swizzledDaemonInterface:shouldGrantAccessForPID:auditToken:portName:listenerConnection:setupInfo:setupResponse:));
-	
+
 	method_exchangeImplementations(original_grant, swizzled_grant);
 
 	IMDaemonController* controller = [Daemon sharedController];
 	unsigned capabilities = [controller capabilitiesForListenerID:@"SMServer"];
 	NSLog(@"capabilities: %u", capabilities);
-	
+
 	if ([controller connectToDaemon]) {
 		IMChatRegistry* reg = [NSClassFromString(@"IMChatRegistry") sharedInstance];
 	} else {

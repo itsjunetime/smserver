@@ -28,7 +28,7 @@ class Settings {
 	var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
 	var reload_on_network_change: Bool = UserDefaults.standard.object(forKey: "reload_on_network_change") as? Bool ?? true
 	var run_web_interface: Bool = UserDefaults.standard.object(forKey: "run_web_interface") as? Bool ?? true
-	
+
 	var show_help: Bool = false
 	var cli_background: Bool = false
 
@@ -46,7 +46,7 @@ class Settings {
 	class func shared() -> Settings {
 		return sharedSettings
 	}
-	
+
 	func parseArgs() {
 		let settings = Settings.shared()
 		var past_val = false
@@ -76,7 +76,7 @@ class Settings {
 					print("Please enter a value for the option \(opt)")
 					continue
 				}
-				
+
 				let val = args[i+1]
 				switch opt {
 					case Const.cmd_server_port, Const.cmd_server_port_short:

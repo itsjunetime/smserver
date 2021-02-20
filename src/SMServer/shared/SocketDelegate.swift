@@ -88,6 +88,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 		if !verify_auth(ip) {
 			Const.log("\(ip) is not verified. Disconnecting.")
 			webSocket.close(immediately: true)
+			return
 		}
 
 		Const.log("\(ip) was allowed to connect")

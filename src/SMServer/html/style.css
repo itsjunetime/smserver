@@ -188,6 +188,7 @@ i#chargingSymbol {
 	border-bottom: 1px solid var(--chats-border);
 	display: grid;
 	grid-template-columns: 1fr max-content max-content;
+	grid-gap: 10px;
 }
 .chats-list {
 	grid-row: 3;
@@ -693,7 +694,6 @@ i#chargingSymbol {
 	background-color: var(--light-button-background);
 	border-radius: 3px;
 	padding-left: 6px;
-	margin-right: 6px;
 }
 #notificationbutton {
 	width: max-content;

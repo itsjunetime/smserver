@@ -222,7 +222,11 @@ class ServerDelegate {
 				} else {
 					res.setValue(info[1] as! String, forHTTPHeaderField: "Content-Type")
 					res.setValue("inline; filename=\(req.query["path"]?.split(separator: "/").last ?? "")", forHTTPHeaderField: "Content-Disposition")
+
+					res.setStatusCode(206, description: "Partial Content")
+					res.setValue("bytes 0-\((info[0] as? Data ?? Data()).count - 1)/\((info[0] as? Data ?? Data()).count)", forHTTPHeaderField: "Content-Range")
 				}
+
 				res.send(info[0] as? Data ?? Data.init(capacity: 0))
 			} else if f == "photo" {
 				/// This gets an image from the camera roll. The value for this key must be the path at which the image resides,
@@ -330,22 +334,22 @@ class ServerDelegate {
 
 				res.send(self.checkIfAuthenticated(ras: ip) ? self.main_page : self.gatekeeper_page)
 			}
-			
+
 			server.add("/style") { (req, res, _) in
 				/// Returns the style.css file as text
 				let ip = req.connection?.remoteAddress ?? ""
-				
+
 				Const.log("GET style: \(ip)")
-				
+
 				if !self.checkIfAuthenticated(ras: ip) {
 					res.setStatusCode(403, description: "Please authenticate")
 					res.send("")
 					return
 				}
-				
+
 				let s = Array(req.query.keys)[0]
 				res.setValue("text/css", forHTTPHeaderField: "Content-Type")
-				
+
 				if s == "main" {
 					res.send(self.main_page_style)
 				} else if s == "custom" {
@@ -364,17 +368,17 @@ class ServerDelegate {
 			server.add("/webfonts") { (req, res, _) in
 				/// Gets the fonts necessary for fontawesome
 				let ip = req.connection?.remoteAddress ?? ""
-				
+
 				Const.log("GET webfonts: \(ip)")
-				
+
 				if !self.checkIfAuthenticated(ras: ip) {
 					res.setStatusCode(403, description: "Please authenticate")
 					res.send("")
 					return
 				}
-				
+
 				let font = Array(req.query.keys)[0]
-				
+
 				if let f = Bundle.main.url(forResource: font, withExtension: "", subdirectory: "html/webfonts") {
 					do {
 						let font_data = try Data.init(contentsOf: f)
@@ -384,10 +388,10 @@ class ServerDelegate {
 						Const.log("WARNING: Can't get font for \(font)", warning: true)
 					}
 				}
-				
+
 				res.send("")
 			}
-			
+
 			server.add("/favicon.ico") { (req, res, next) in
 				/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
 				#if os(macOS)
@@ -395,7 +399,7 @@ class ServerDelegate {
 				#elseif os(iOS)
 				let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
 				#endif
-				
+
 				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 				res.send(data)
 			}
@@ -446,9 +450,9 @@ class ServerDelegate {
 
 	func sendText(params: [String:Any], new_files: [String]) -> Int {
 
-		let body: String = params["text"] as? String ?? ""
+		var body: String = params["text"] as? String ?? ""
 		var address: String = params["chat"] as? String ?? ""
-		let subject: String = params["subject"] as? String ?? ""
+		var subject: String = params["subject"] as? String ?? ""
 		var files = new_files
 
 		#if os(iOS)
@@ -464,8 +468,13 @@ class ServerDelegate {
 			address = "+\(address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())"
 		}
 
+		if subject.count > 0 && body.count == 0 {
+			body = subject
+			subject = ""
+		}
+
 		/// Make sure there's actually some content
-		if body != "" || files.count > 0 || subject != "" {
+		if body.count + files.count + subject.count > 0 {
 			/// Send the information the obj-c function
 			let response = ServerDelegate.sender.sendIPCText(body, withSubject: subject, toAddress: address, withAttachments: files)
 			return response ? 200 : 503
@@ -478,12 +487,13 @@ class ServerDelegate {
 
 		if Const.api_tap_vals.contains(params.keys.first ?? "") {
 
-			guard let req = params[Const.api_tap_req], let guid = params[Const.api_tap_guid], let chat = params[Const.api_tap_chat] else {
-				return [400, "Please include parameters '\(Const.api_tap_req)', '\(Const.api_tap_guid)', and '\(Const.api_tap_chat)' in your request"]
+			guard let req = params[Const.api_tap_req], let guid = params[Const.api_tap_guid] else {
+				return [400, "Please include parameters '\(Const.api_tap_req)' and '\(Const.api_tap_guid)' in your request"]
 			}
 
 			var reaction: Int = (Int(req) ?? -1) + 2000 /// reactions are 2000 - 2005
 			let remove = (params[Const.api_tap_rem] ?? "false") == "true"
+			let chat = ServerDelegate.chat_delegate.getChatOfText(guid)
 
 			guard reaction < 2006 && reaction > 1999 else {
 				return [400, "tapback value must be at least 0 and no greater than 5"]
@@ -498,18 +508,33 @@ class ServerDelegate {
 			}
 
 			return [200, ""]
-		} else if Const.api_del_vals.contains(params.keys.first ?? "") {
-			/// Deletes a conversation or text
-			guard let chat: String = params[Const.api_del_chat] else {
-				return [400, "Please enter at least one identifier"]
+		} else if params.keys.first == Const.api_del_chat {
+			/// Deletes a conversation
+
+			guard let chat = params[Const.api_del_chat], chat.count > 0 else {
+				return [400, "Please specify the chat_identifier"]
 			}
 
-			let text: String = params[Const.api_del_text] ?? ""
+			let ret = ServerDelegate.sender.removeObject(chat, text: nil)
+
+			if !ret {
+				return [503, "Failed to delete chat; unknown reason"]
+			}
+
+			return [200, ""]
+		} else if params.keys.first == Const.api_del_text {
+			/// Deletes a text
+
+			guard let text = params[Const.api_del_text], text.count > 0 else {
+				return [400, "Please specify the text guid"]
+			}
+
+			let chat = ServerDelegate.chat_delegate.getChatOfText(text)
 
 			let ret = ServerDelegate.sender.removeObject(chat, text: text)
 
 			if !ret {
-				return [503, "Failed to remove object; unknown reason"]
+				return [503, "Failed to delete text; unknown reason"]
 			}
 
 			return [200, ""]
@@ -606,24 +631,31 @@ class ServerDelegate {
 			let photos = encodeToJson(object: ret_val, title: "photos")
 
 			return [200, photos]
-		} else if f == "config" {
+		} else if f == Const.api_config {
 			var subdir: String? = nil
 			if let subdirectory = settings.socket_subdirectory {
 				subdir = subdirectory
 				if subdirectory.prefix(1) == "/" { subdir = String(subdirectory.suffix(subdirectory.count - 1)) }
 				if subdirectory.suffix(1) != "/" { subdir! += "/" }
 			}
-			
+
 			let config: [String:Any?] = [
 				"socket_port": settings.socket_port,
 				"socket_subdirectory": subdir,
 				"debug": settings.debug,
 				"subjects": settings.subjects_enabled,
 			]
-			
+
 			let ret_config = encodeToJson(object: config, title: "config")
-			
+
 			return [200, ret_config]
+		} else if f == Const.api_match {
+			let chat = params[Const.api_match] ?? ""
+			let result = ServerDelegate.chat_delegate.matchPartialAddress(chat)
+
+			let res_json = encodeToJson(object: result, title: "matches")
+
+			return [200, res_json]
 		}
 
 		Const.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)

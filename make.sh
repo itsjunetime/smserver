@@ -136,19 +136,11 @@ if [ "$deb" = true ] || [ "$ipa" = true ]
 then
 	pn "\033[34m==>\033[0m Checking files and LLVM Version..."
 	llvm_vers=$(llvm-gcc --version | grep -oE "clang\-[0-9]{4,}" | sed 's/clang\-//g')
-	if [ ${llvm_vers} -lt 1200 ]
-	then
-		pn "\033[1;33mWARNING:\033[0m You are using llvm < 1200 (Xcode 11.7 or lower). Using this has, in my experience, created a compiled product that does not have the full intended capabilities of the app."
-		pn "If you would like to stop now and instead build with Xcode 12/llvm >= 1200, you can use \033[1mxcode-select\033[0m to select the Xcode version to use."
-		pn "Would you like to continue building with your currently selected version of llvm? (y/n)"
+	[ ${llvm_vers} -lt 1200 ] && \
+		err "You are using llvm < 1200 (Xcode 11.7 or lower); this will fail to compile. Please install Xcode 12.0 or higher to build SMServer."
 
-		read -n1 cont
-
-		[[ "$(echo ${cont} | grep -E "[Nn]")" ]] && exit
-		pn "" # newline time
-	fi
-
-	(! [ -f ${ROOTDIR}/src/SMServer/identity.pfx ] || ! [ -f ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift ]) && err "You haven't created some files necessary to compile this. Please run this script with the \033[1m-n\033[0m or \033[1m--new\033[0m flag first"
+	(! [ -f ${ROOTDIR}/src/SMServer/identity.pfx ] || ! [ -f ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift ]) && \
+		err "You haven't created some files necessary to compile this. Please run this script with the \033[1m-n\033[0m or \033[1m--new\033[0m flag first"
 
 	if [ "$min" = true ]
 	then
