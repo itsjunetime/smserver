@@ -379,6 +379,7 @@ i#chargingSymbol {
 }
 .text span {
 	word-break: break-word;
+	white-space: pre-wrap;
 }
 .text:before, .text:after {
 	content: '';
@@ -499,7 +500,9 @@ i#chargingSymbol {
 .tapback_choice {
 	margin: 0 8px;
 	border-radius: 100%;
-	text-shadow: 2px 2px var(--body-background);
+}
+i.fa-thumbs-down {
+	transform: scale(-1, 1);
 }
 .tapback_chosen * {
 	color: dodgerblue;
@@ -773,22 +776,18 @@ i#chargingSymbol {
 .tapback {
 	top: -8px;
 	position: relative;
-	padding: 3px 6px;
+	padding: 5px;
+	height: 16px;
 	z-index: 2;
-	box-shadow: 0px 0px 6px #000;
-	height: max-content;
-	backdrop-filter: blur(1.5px);
-	-webkit-backdrop-filter: blur(1.5px);
+	border-radius: 20px;
 }
 .from_them .tapback {
 	left: -12px;
-	border-radius: 4px 4px 0 4px;
-	background-color: rgba(70, 140, 240, 0.7);
+	background-color: rgb(70, 140, 240);
 }
 .from_me .tapback {
 	right: -6px;
-	border-radius: 4px 4px 4px 0;
-	background-color: rgba(71, 71, 80, 0.7);
+	background-color: rgb(71, 71, 80);
 }
 .text-area {
 	display: flex;

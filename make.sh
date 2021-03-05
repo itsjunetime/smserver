@@ -76,7 +76,7 @@ done
 
 [[ "$(uname)" == "Darwin" ]] || err "This can only be run on MacOS"
 
-if [ "$hlp" = true ] || ([ "$deb" != true ] && [ "$ipa" != true ])
+if [ "$hlp" = true ] || ([ "$deb" != true ] && [ "$ipa" != true ] && [ "$new" != true ])
 then
 	pn "
     usage: ./make.sh -hndivk
@@ -130,6 +130,12 @@ then
 	rm key.pem cert.pem
 
 	echo -en "class PKCS12Identity {\n\tstatic let pass: String = \"${pass}\"\n}" > ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift
+
+	olddir="$(pwd)"
+	cd "${ROOTDIR}/src"
+	pod install
+
+	cd "$olddir"
 fi
 
 if [ "$deb" = true ] || [ "$ipa" = true ]

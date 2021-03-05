@@ -11,7 +11,7 @@ target 'SMServer' do
   pod 'Telegraph'
   # I'm sorry that it's a local repo; this podspec is also available online for you to download:
   # https://raw.githubusercontent.com/iandwelker/Criollo/master/Criollo.podspec
-  pod 'Criollo', :podspec => '/Users/ian/Documents/Coding/foss/Criollo/Criollo.podspec'
+  pod 'Criollo', :podspec => './Criollo.podspec'
 
 end
 
@@ -21,6 +21,6 @@ target 'SMServer_Mac' do
   use_frameworks!
 
   pod 'Telegraph'
-  pod 'Criollo', :podspec => '/Users/ian/Documents/Coding/foss/Criollo/Criollo.podspec'
+  pod 'Criollo', :podspec => './Criollo.podspec'
 
 end

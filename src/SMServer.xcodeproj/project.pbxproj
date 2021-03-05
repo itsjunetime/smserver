@@ -19,9 +19,10 @@
 		3C128FF1259FEE4F0072CFD3 /* cert.der in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB2E24E77F1D00F48291 /* cert.der */; };
 		3C128FF2259FEE4F0072CFD3 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E8F245BCFE100EF24FE /* Preview Assets.xcassets */; };
 		3C128FF3259FEE4F0072CFD3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E8C245BCFE100EF24FE /* Assets.xcassets */; };
+		3C3B303C25F2BE3100EE8B68 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3B303B25F2BE3100EE8B68 /* Image.swift */; };
+		3C3B303D25F2BE3100EE8B68 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3B303B25F2BE3100EE8B68 /* Image.swift */; };
 		3C524F2625B13A72009CA5DC /* Sender.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7963FF25A12670006AFD7C /* Sender.m */; };
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
-		3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3C69EB2F24E77F1D00F48291 /* cert.der in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB2E24E77F1D00F48291 /* cert.der */; };
 		3C69EB3124E77F7800F48291 /* identity.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB3024E77F7800F48291 /* identity.pfx */; };
 		3C760E8D245BCFE100EF24FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E8C245BCFE100EF24FE /* Assets.xcassets */; };
@@ -31,6 +32,8 @@
 		3C79640525A128EC006AFD7C /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C79640425A128EC006AFD7C /* main.swift */; };
 		3C79641125A13AF4006AFD7C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C79641025A13AF4006AFD7C /* Settings.swift */; };
 		3C79641225A13AF4006AFD7C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C79641025A13AF4006AFD7C /* Settings.swift */; };
+		3C88306D25F2D1BD00FACDEB /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
+		3C88307825F2D25700FACDEB /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3CA58671259FF1EA0063963B /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58664259FF1E90063963B /* Constants.swift */; };
 		3CA58672259FF1EA0063963B /* ChatDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58665259FF1E90063963B /* ChatDelegate.swift */; };
 		3CA58673259FF1EA0063963B /* IdentityPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58666259FF1E90063963B /* IdentityPass.swift */; };
@@ -41,7 +44,6 @@
 		3CA5867D259FF2110063963B /* IdentityPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58666259FF1E90063963B /* IdentityPass.swift */; };
 		3CA5867E259FF2110063963B /* ServerDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58669259FF1E90063963B /* ServerDelegate.swift */; };
 		3CA5867F259FF2110063963B /* SocketDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA5866A259FF1E90063963B /* SocketDelegate.swift */; };
-		4A3037B2EFC53077759F563D /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -62,7 +64,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				3C6713F924722635002EBBDF /* Pods_SMServer.framework in Embed Frameworks */,
+				3C88307825F2D25700FACDEB /* Pods_SMServer.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -73,10 +75,10 @@
 		0007B80E5E922ECFAA2FC353 /* Pods_SMServer_Mac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer_Mac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		3C128FFB259FEE4F0072CFD3 /* SMServer_Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer_Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		3C128FFC259FEE4F0072CFD3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = /Users/ian/Documents/Coding/Personal/swift/SMServer/src/Info.plist; sourceTree = "<absolute>"; };
 		3C17D59B25A3A80F00D27CFE /* IPCTextWatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IPCTextWatcher.m; sourceTree = "<group>"; };
 		3C17D59D25A3A83E00D27CFE /* IPCTextWatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = IPCTextWatcher.h; sourceTree = "<group>"; };
 		3C17D59F25A3AEAA00D27CFE /* PrivateHeaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrivateHeaders.h; sourceTree = "<group>"; };
+		3C3B303B25F2BE3100EE8B68 /* Image.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		3C562A37245FB4A000A4474B /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; name = html; path = SMServer/html; sourceTree = "<group>"; };
 		3C69EB2E24E77F1D00F48291 /* cert.der */ = {isa = PBXFileReference; lastKnownFileType = file; path = cert.der; sourceTree = "<group>"; };
 		3C69EB3024E77F7800F48291 /* identity.pfx */ = {isa = PBXFileReference; lastKnownFileType = file; path = identity.pfx; sourceTree = "<group>"; };
@@ -93,6 +95,7 @@
 		3C79640325A1288D006AFD7C /* Sender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sender.h; sourceTree = "<group>"; };
 		3C79640425A128EC006AFD7C /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3C79641025A13AF4006AFD7C /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		3C88306225F2D06C00FACDEB /* SMServerIPC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMServerIPC.h; sourceTree = "<group>"; };
 		3CA5865E259FF1E90063963B /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3CA5865F259FF1E90063963B /* MRYIPCCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MRYIPCCenter.h; sourceTree = "<group>"; };
 		3CA58660259FF1E90063963B /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -127,8 +130,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C88306D25F2D1BD00FACDEB /* Pods_SMServer.framework in Frameworks */,
 				3C03DDE124E32EA90017A265 /* libmryipc.dylib in Frameworks */,
-				4A3037B2EFC53077759F563D /* Pods_SMServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -156,7 +159,6 @@
 				9AD8FBCC73D9F16CE0A7770A /* Pods */,
 				00B47E94EB56A64768B969DE /* Frameworks */,
 				3CB981B224BAAB3B00724AA4 /* Recovered References */,
-				3C128FFC259FEE4F0072CFD3 /* Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -205,6 +207,7 @@
 				3CA58662259FF1E90063963B /* SceneDelegate.swift */,
 				3C7963FE25A12670006AFD7C /* Sender.h */,
 				3C7963FF25A12670006AFD7C /* Sender.m */,
+				3C88306225F2D06C00FACDEB /* SMServerIPC.h */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -220,6 +223,7 @@
 				3CA58669259FF1E90063963B /* ServerDelegate.swift */,
 				3CA5866A259FF1E90063963B /* SocketDelegate.swift */,
 				3C17D59F25A3AEAA00D27CFE /* PrivateHeaders.h */,
+				3C3B303B25F2BE3100EE8B68 /* Image.swift */,
 			);
 			path = shared;
 			sourceTree = "<group>";
@@ -449,6 +453,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3CA5867B259FF2110063963B /* Constants.swift in Sources */,
+				3C3B303D25F2BE3100EE8B68 /* Image.swift in Sources */,
 				3C79640525A128EC006AFD7C /* main.swift in Sources */,
 				3C79641225A13AF4006AFD7C /* Settings.swift in Sources */,
 				3CA5867C259FF2110063963B /* ChatDelegate.swift in Sources */,
@@ -464,6 +469,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3C524F2625B13A72009CA5DC /* Sender.m in Sources */,
+				3C3B303C25F2BE3100EE8B68 /* Image.swift in Sources */,
 				3C002B6325A06FA3004C4E3D /* SettingsView.swift in Sources */,
 				3C002B6525A06FA3004C4E3D /* AppDelegate.swift in Sources */,
 				3C002B6625A06FA3004C4E3D /* ContentView.swift in Sources */,
@@ -802,7 +808,7 @@
 					"$(PROJECT_DIR)/SMServer",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = YES;
-				MARKETING_VERSION = 0.7.0;
+				MARKETING_VERSION = 0.7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -871,7 +877,7 @@
 					"$(PROJECT_DIR)/SMServer",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = YES;
-				MARKETING_VERSION = 0.7.0;
+				MARKETING_VERSION = 0.7.4;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"z\"",

@@ -35,7 +35,6 @@ class Settings {
 	#if os(macOS)
 	var config_file_url: String = Const.config_file_url.path
 	var html_dir: String = Const.html_dir.path
-	var run_web_interface: Bool = true /// no UserDefaults since rn only iOS needs that
 	#endif
 
 	private static var sharedSettings: Settings = {

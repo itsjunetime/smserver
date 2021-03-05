@@ -11,6 +11,7 @@ func main() {
 	}
 
 	print(server.startServers() ? "Started server & websocket..." : "Failed to start server and websocket...")
+	print("Connect to them at http\(settings.is_secure ? "s" : "")://\(Const.getWiFiAddress() ?? "your device's IP Address"):\(settings.server_port)")
 
 	while let string = readLine() {
 		if string == "q" { break }

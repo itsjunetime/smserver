@@ -193,7 +193,7 @@ John Smith
 ```
 
 ## `search`, `search_case`, `search_gaps`, `search_group`
-This searches for the term `search` in all your texts. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options. Returns a JSON object.
+This searches for the term `search` in all your texts and conversations. `case_sensitive`, `bridge_gaps`, and `group_by` are customization options. Returns a JSON object.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
@@ -207,36 +207,51 @@ __Example queries:__
 - /requests?search=hello_there&search_group=conversation
 
 __Example return:__
+Query: `search=+11231231234`
 
-With `group_by=time`
+With `search_group=time`
 
 ```json
-{ "matches": [
-  {
-    "chat_identifier" : "+11231231234",
-    "text" : "Hey there, friend",
-    "cache_has_attachments" : false,
-    "display_name" : "John Smith",
-    "service" : "SMS",
-    "date" : 627285343072013056,
-    "ROWID" : 175309
-  },
-]}
+{ "matches": {
+	"texts" : [
+		{
+			"chat_identifier" : "+11231231234",
+			"text" : "My phone number is +11231231234",
+			"cache_has_attachments" : false,
+			"display_name" : "John Smith",
+			"service" : "SMS",
+			"date" : 627285343072013056,
+			"ROWID" : 175309
+		},
+	],
+	"conversations" : [
+		{
+			"display_name" : "John Smith",
+			"chat_id" : +11231231234",
+		}
+	]
+}}
 ```
 
-With `group_by=chat`
+With `search_group=chat`
 
 ```json
 { "matches": {
 	"+11231231234" : [
 		{
 			"chat_identifier" : "+11231231234",
-			"text" : "Hey there, friend",
+			"text" : "My phone number is +11231231234",
 			"cache_has_attachments" : false,
 			"display_name" : "John Smith",
 			"service" : "SMS",
 			"date" : 627285343072013056,
 			"ROWID" : 175309
+		},
+	],
+	"conversations": [
+		{
+			"display_name" : "John Smith",
+			"chat_id" : "+11231231234"
 		},
 	]
 }}
@@ -278,6 +293,33 @@ __Return fields Description:__
 | - | - | - |
 | is_favorite | Bool | Tells whether or not the photo is favorited on the host device. |
 | URL | String | This value holds the URL of the photo on the host device, minus the prefix of `/var/mobile/Media/` |
+
+## `match`
+This does the exact same thing as the search API, but only checks for conversations, as opposed to both conversations and texts.
+
+| Key | Required | Type | Description |
+| - | - | - | - |
+| match | Yes | String | The chat_identifier that you would like to match with. Will match all conversations whose chat_identifiers contain the string that is sent with this parameter. |
+
+__Example queries:__
+- /requests?match=+1123
+- /requests?match=@gmail.com
+
+__Example return:__
+```json
+{ "matches": [
+	{
+		"chat_id" : "+11231231234",
+		"display_name" : "John Smith",
+	},
+]}
+```
+
+__Return fields Description:__
+| Key | Type | Description |
+| - | - | - |
+| chat_id | String | The chat_identifier of the matched conversation |
+| display_name | String | The name that goes along with the matched conversation |
 
 # `/data` requests
 

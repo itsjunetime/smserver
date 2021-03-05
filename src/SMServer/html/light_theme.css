@@ -55,13 +55,10 @@
 	background-color: var(--light-button-background);
 }
 .from_me .tapback {
-	background-color: #cacacac0;
+	background-color: #cacaca;
 }
 .from_them .tapback {
-	background-color: rgba(119, 155, 255, 0.5);
-}
-.tapback {
-	box-shadow: 0px 0px 6px #aaa;
+	background-color: rgb(119, 155, 255);
 }
 .tapback * {
 	color: white;

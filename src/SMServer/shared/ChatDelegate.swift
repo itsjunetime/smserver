@@ -360,7 +360,7 @@ final class ChatDelegate {
 				DispatchQueue.global(qos: .default).async {
 					dp_group.enter()
 					let center = MRYIPCCenter.init(named: "com.ianwelker.smserver")
-					pinned_chats = center?.callExternalMethod(Selector(("getPinnedChats")), withArguments: nil) as? [String] ?? [String]()
+					pinned_chats = center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String] ?? [String]()
 					dp_group.leave()
 				}
 			}
@@ -441,10 +441,9 @@ final class ChatDelegate {
 			new_chat["has_unread"] = i["m.is_from_me"] as! String == "0" && i["m.date_read"] as! String == "0" && i["m.text"] != nil && i["m.is_read"] as! String == "0" && i["m.item_type"] as! String == "0"
 
 			/// Content of the most recent text. If a text has attachments, `i["m.text"]` will look like `\u{ef}`. this checks for that.
-			new_chat["latest_text"] = ""
-			if (i["m.text"] as! String).replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil).trimmingCharacters(in: .whitespacesAndNewlines).count != 0 {
-				new_chat["latest_text"] = i["m.text"]
-			} else if i["m.cache_has_attachments"] as! String != "0" {
+			new_chat["latest_text"] = String((i["m.text"] as! String).replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil))
+			
+			if (new_chat["latest_text"] as! String).count == 0 && i["m.cache_has_attachments"] as! String != "0" {
 				let att = getAttachmentFromMessage(mid: i["m.ROWID"] as! String)
 
 				/// Make it say like `Attachment: Image` if there's no text
@@ -455,6 +454,8 @@ final class ChatDelegate {
 				}
 			} else if i["m.balloon_bundle_id"] as! String == "com.apple.DigitalTouchBalloonProvder" {
 				new_chat["latest_text"] = "Digital Touch Message"
+			} else if i["m.balloon_bundle_id"] as! String == "com.apple.Handwriting.HandwritingProvider" {
+				new_chat["latest_text"] = "Handwritten Message"
 			}
 
 			/// Get name for chat
@@ -464,8 +465,8 @@ final class ChatDelegate {
 				new_chat["display_name"] = i["c.display_name"]
 			}
 
-			if pinned_chats != nil {
-				new_chat["pinned"] = pinned_chats!.contains(i["c.chat_identifier"] as! String)
+			if let pins = pinned_chats {
+				new_chat["pinned"] = pins.contains(i["c.chat_identifier"] as! String)
 				pinned_chats!.removeAll(where: { $0 == i["c.chat_identifier"] as! String })
 			} else {
 				new_chat["pinned"] = false
@@ -553,13 +554,9 @@ final class ChatDelegate {
 		Const.log("Getting image data with db for chat_id \(chat_id)")
 
 		if chat_id == "default" {
-			#if os(iOS)
-			let pngdata = UIImage(named: "profile")?.pngData()
-			#elseif os(macOS)
-			let pngdata = NSImage(named: "profile")?.tiffRepresentation
-			#endif
+			let pngdata = SMImage(named: "profile").parseableData()
 
-			return pngdata ?? Data.init(capacity: 0)
+			return pngdata ?? Data()
 		}
 
 		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20 {
@@ -575,8 +572,8 @@ final class ChatDelegate {
 
 			let image_url: String = image_location[0]["filename"]!
 
-			let image = UIImage(contentsOfFile: image_url.replacingOccurrences(of: "~", with: "/var/mobile"))
-			return image?.pngData() ?? Data(capacity: 0)
+			let image = SMImage(image_url.replacingOccurrences(of: "~", with: "/var/mobile"))
+			return image.parseableData() ?? Data(capacity: 0)
 		}
 
 		var docid = [[String:String]]()
@@ -689,16 +686,11 @@ final class ChatDelegate {
 		do {
 			/// Pretty straightforward -- get data and return it
 			if (type == "image/heic") { /// Since they're used so much
-				#if os(iOS)
-				let img = UIImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)
-				let attachment_data = img?.jpegData(compressionQuality: 1) /// ok this is infuriating. It works just fine when I'm debugging, but when I archive it, it only returns complete black. What
-
+				let attachment_data = SMImage(Const.attachment_address_prefix + parsed_path).parseableData()
+				
 				if attachment_data == nil {
 					Const.log("Failed to get JPEG data from HEIC Image at \(Const.attachment_address_prefix + parsed_path).", warning: true)
 				}
-				#elseif os(macOS)
-				let attachment_data = NSImage(contentsOfFile: Const.attachment_address_prefix + parsed_path)?.tiffRepresentation
-				#endif
 
 				info[0] = attachment_data ?? Data() as Any
 			} else {
@@ -841,16 +833,9 @@ final class ChatDelegate {
 
 		/// To prevent LFI
 		let parsed_path = path.replacingOccurrences(of: "\\/", with: "/").replacingOccurrences(of: "../", with: "")
+		let photo_data = SMImage(Const.photo_address_prefix + parsed_path).parseableData()
 
-		#if os(iOS)
-		let image = UIImage(contentsOfFile: Const.photo_address_prefix + parsed_path)
-		let photo_data = image?.jpegData(compressionQuality: 0) ?? Data.init(capacity: 0)
-		#elseif os(macOS)
-		let image = NSImage(contentsOfFile: Const.photo_address_prefix + parsed_path)
-		let photo_data = image?.tiffRepresentation ?? Data.init(capacity: 0)
-		#endif
-
-		return photo_data
+		return photo_data ?? Data()
 	}
 
 	final func getLinkInfo(_ mid: String, db: OpaquePointer?) -> [String:String] {
@@ -959,10 +944,7 @@ final class ChatDelegate {
 
 		Const.log("Closing databases and destroying pointers")
 		closeDatabase(&db)
-		db = nil
-
 		closeDatabase(&contact_db)
-		contact_db = nil
 
 		return text
 	}
@@ -993,10 +975,7 @@ final class ChatDelegate {
 
 		Const.log("Closing connections and destroying pointers")
 		closeDatabase(&contact_db)
-		contact_db = nil
-
 		closeDatabase(&db)
-		db = nil
 
 		return text
 	}
@@ -1013,7 +992,6 @@ final class ChatDelegate {
 
 		Const.log("Closing database")
 		closeDatabase(&db)
-		db = nil
 
 		return ret
 	}
@@ -1048,7 +1026,6 @@ final class ChatDelegate {
 
 		Const.log("Closing database")
 		closeDatabase(&db)
-		db = nil
 
 		return ret
 	}

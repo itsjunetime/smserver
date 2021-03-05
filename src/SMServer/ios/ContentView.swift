@@ -12,6 +12,7 @@ struct ContentView: View {
 	@State var server_running: Bool = false
 	@State var show_picker: Bool = false
 	@State var show_oseven_update: Bool = false
+	@State var ip_address: String = ""
 
 	func loadServer() {
 		/// This starts the server at port $port_num
@@ -54,6 +55,12 @@ struct ContentView: View {
 		if settings.start_on_load && (Const.getWiFiAddress() != nil || settings.override_no_wifi)  {
 			loadServer()
 		}
+		
+		NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "ianwelker.smserver.system.config.network_change"), object: nil, queue: nil, using: { notification in
+			self.ip_address = Const.getWiFiAddress() ?? "\(self.getHostname()).local"
+		})
+		
+		self.ip_address = Const.getWiFiAddress() ?? "\(self.getHostname()).local"
 	}
 
 	func reloadVars() {
@@ -165,7 +172,7 @@ struct ContentView: View {
 			.padding(.top, 14)
 
 			if Const.getWiFiAddress() != nil || settings.override_no_wifi {
-				Text(verbatim: "Visit http\(settings.is_secure ? "s" : "")://\(Const.getWiFiAddress() ?? self.getHostname()):\(settings.server_port) in your browser to view your messages!")
+				Text(verbatim: "Visit http\(settings.is_secure ? "s" : "")://\(ip_address):\(settings.server_port) in your browser to view your messages!")
 					.font(Font.custom("smallTitle", size: 22))
 					.padding()
 			} else {

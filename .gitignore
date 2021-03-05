@@ -9,3 +9,5 @@ implement.md
 
 src/SMServer/shared/IdentityPass.swift
 src/SMServer/identity.pfx
+src/Pods/
+src/Pods/**

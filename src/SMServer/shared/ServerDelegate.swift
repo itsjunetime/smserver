@@ -222,9 +222,11 @@ class ServerDelegate {
 				} else {
 					res.setValue(info[1] as! String, forHTTPHeaderField: "Content-Type")
 					res.setValue("inline; filename=\(req.query["path"]?.split(separator: "/").last ?? "")", forHTTPHeaderField: "Content-Disposition")
-
-					res.setStatusCode(206, description: "Partial Content")
-					res.setValue("bytes 0-\((info[0] as? Data ?? Data()).count - 1)/\((info[0] as? Data ?? Data()).count)", forHTTPHeaderField: "Content-Range")
+					
+					if req.range != nil {
+						res.setStatusCode(206, description: "Partial Content")
+						res.setValue("bytes 0-\((info[0] as? Data ?? Data()).count - 1)/\((info[0] as? Data ?? Data()).count)", forHTTPHeaderField: "Content-Range")
+					}
 				}
 
 				res.send(info[0] as? Data ?? Data.init(capacity: 0))
@@ -394,11 +396,7 @@ class ServerDelegate {
 
 			server.add("/favicon.ico") { (req, res, next) in
 				/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
-				#if os(macOS)
-				let data = NSImage(named: "favicon")?.tiffRepresentation ?? Data.init(capacity: 0)
-				#elseif os(iOS)
-				let data = UIImage(named: "favicon")?.pngData() ?? Data.init(capacity: 0)
-				#endif
+				let data = SMImage(named: "favicon").parseableData() ?? Data()
 
 				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 				res.send(data)
@@ -493,7 +491,7 @@ class ServerDelegate {
 
 			var reaction: Int = (Int(req) ?? -1) + 2000 /// reactions are 2000 - 2005
 			let remove = (params[Const.api_tap_rem] ?? "false") == "true"
-			let chat = ServerDelegate.chat_delegate.getChatOfText(guid)
+			let chat = ServerDelegate.chat_delegate.getChatOfText(String(guid.suffix(36)))
 
 			guard reaction < 2006 && reaction > 1999 else {
 				return [400, "tapback value must be at least 0 and no greater than 5"]
@@ -529,7 +527,7 @@ class ServerDelegate {
 				return [400, "Please specify the text guid"]
 			}
 
-			let chat = ServerDelegate.chat_delegate.getChatOfText(text)
+			let chat = ServerDelegate.chat_delegate.getChatOfText(String(text.suffix(36)))
 
 			let ret = ServerDelegate.sender.removeObject(chat, text: text)
 

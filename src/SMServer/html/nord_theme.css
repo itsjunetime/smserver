@@ -41,11 +41,8 @@
 	background-color: #5e81cc;
 }
 .from_me .tapback {
-	background-color: #4c566ac0;
+	background-color: #4c566a;
 }
 .from_them .tapback {
-	background-color: #5381aca0;
-}
-.tapback {
-	box-shadow: 0px 0px 6px #444;
+	background-color: #5381ac;
 }

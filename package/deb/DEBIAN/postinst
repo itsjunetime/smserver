@@ -4,7 +4,17 @@
 
 set -e
 
+# We have to have root privileges to run this stuff
+if [ $UID -ne 0 ]
+then
+	echo "Not running as root. Exiting..."
+	exit
+fi
+
 dir="/Applications/SMServer.app"
+
+# Make the directory if it doesn't exist
+[ -d $dir ] || mkdir -p $dir
 
 # If they already have this file, then they're upgrading, so we don't need to generate a new cert
 if ! [ -f "${dir}/smserver_cert_pass.txt" ]

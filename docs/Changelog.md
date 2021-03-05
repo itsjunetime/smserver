@@ -1,4 +1,17 @@
 # Changelog
+0.7.3 &rightarrow; Unreleased
+ - Added support for sending attachments to specific parts of messages ([#81](https://github.com/iandwelker/smserver/issues/81))
+ - Re-did tapback displays to look nicer and closer to stock ([#98](https://github.com/iandwelker/smserver/issues/98))
+ - Improved display of special recents texts (e.g. attachments, handwritten messages, etc.) in left chat panel
+ - Main view accurately shows current address when network changes
+ - Fixed issue that prevented typing indicators from showing
+ - Fixed issue that would throw safe mode if text sent with attachments and no text ([#96](https://github.com/iandwelker/smserver/issues/96))
+ - Fixed issue with not all spaces showing in text on web interface ([#90](https://github.com/iandwelker/smserver/issues/90))
+ - Fixed issue with attachments not downloading on chrome-based browsers ([#94](https://github.com/iandwelker/smserver/issues/94))
+ - Fixed issue with texts on web interface not respecting new lines ([#100](https://github.com/iandwelker/smserver/issues/100))
+ - Fixed issue preventing text deletion on iOS 13 ([#95](https://github.com/iandwelker/smserver/issues/95))
+ - Fixed a few compilation warnings
+
 0.7.2 &rightarrow; 0.7.3
  - Added support in search API for returning conversations as well as texts
  - Added API for matching partial address when typing into new conversation box

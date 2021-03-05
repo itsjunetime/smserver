@@ -2,6 +2,7 @@
 #import "MRYIPCCenter.h"
 #import "../shared/PrivateHeaders.h"
 #import "Sender.h"
+#import "SMServerIPC.h"
 
 #define c(a) NSClassFromString(@#a)
 

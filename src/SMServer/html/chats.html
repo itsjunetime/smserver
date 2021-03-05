@@ -35,7 +35,7 @@
 			var current_chat_id = "";
 			var typing_sleep = 10000;
 			var load_icon = '<i class="fas fa-chevron-circle-up"></i>';
-			var fa_icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>', '<i class="fas fa-grin-tears"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
+			var fa_icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>', '<i class="fas fa-laugh-squint"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
 			var taps_to_print = [];
 
 			var doc_url = window.location.href;
@@ -122,12 +122,14 @@
 					t.setAttribute("date_read", text.date_read);
 					t.setAttribute("date", text.date);
 					t.innerHTML = "";
-					t.setAttribute("onclick", `showTapbackDialog("${text.guid}");`);
 
 					/// it's a rich link
 					if (text.balloon_bundle_id === "com.apple.messages.URLBalloonProvider" && text.cache_has_attachments) {
 						t.className += " noPadding richLink";
-						t.setAttribute("tapback_guid", `bp:${text.guid}`);
+
+						let tapback_id = `bp:${text.guid}`;
+						t.setAttribute("tapback_guid", tapback_id);
+						t.setAttribute("onclick", `showTapbackDialog("${tapback_id}");`);
 
 						var img = document.createElement("img");
 						img.src = `${prefix}data?path=${text.attachments.length > 1 ? text.attachments[1].filename : text.attachments[0].filename}`;
@@ -183,35 +185,14 @@
  						return t;
 					}
 
-					if (text.text.length > 0 || text.subject.length > 0) {
-						let c = t.cloneNode();
-
-						if (text.subject.length > 0) {
-							var subject = document.createElement("div");
-							subject.className = "subject";
-							subject.textContent = text.subject;
-							c.appendChild(subject);
-						}
-
-						var inner = document.createElement("span");
-						inner.textContent = text.text.replace(" ", "\u00a0"); // inserts &nbsp; without innerHTML
-						c.appendChild(inner);
-
-						c.setAttribute("tapback_guid", `p:${current_index}/${text.guid}`);
-
-						var emoji_check = text.text.match(/\p{Extended_Pictographic}/gu);
-						if (text.subject === "" && emoji_check !== null && emoji_check.join("").length === text.text.length)
-							c.classList.add("allEmoji");
-
-						rets.push(c);
-						current_index += 1;
-					}
-
 					if (text.cache_has_attachments) {
 
 						for (var l = 0; l < text.attachments.length; ++l, ++current_index) {
 							var c = t.cloneNode();
-							c.setAttribute("tapback_guid", `p:${current_index}/${text.guid}`);
+							
+							let tapback_id = `p:${current_index}/${text.guid}`;
+							c.setAttribute("tapback_guid", tapback_id);
+							c.setAttribute("onclick", `showTapbackDialog("${tapback_id}");`);
 
 							var bigType = text.attachments[l].mime_type.split("/")[0];
 							var smallType = text.attachments[l].mime_type.split("/")[1];
@@ -245,6 +226,32 @@
 								c.className += " noPadding fullAttachment";
 							rets.push(c);
 						}
+					}
+
+					if (text.text.length > 0 || text.subject.length > 0) {
+						let c = t.cloneNode();
+
+						if (text.subject.length > 0) {
+							var subject = document.createElement("div");
+							subject.className = "subject";
+							subject.textContent = text.subject;
+							c.appendChild(subject);
+						}
+
+						var inner = document.createElement("span");
+						inner.textContent = text.text.replace(/ /g, "\u00a0"); // inserts &nbsp; without innerHTML
+						c.appendChild(inner);
+
+						let tapback_id = `p:${current_index}/${text.guid}`;
+						c.setAttribute("tapback_guid", tapback_id);
+						c.setAttribute("onclick", `showTapbackDialog("${tapback_id}");`);
+
+						var emoji_check = text.text.match(/\p{Extended_Pictographic}/gu);
+						if (text.subject === "" && emoji_check !== null && emoji_check.join("").length === text.text.length)
+							c.classList.add("allEmoji");
+
+						rets.push(c);
+						current_index += 1;
 					}
 
 					return rets;
@@ -300,8 +307,8 @@
 					}
 
 				} else if (text.associated_message_type > 2999 && text.associated_message_type < 3006) {
-					var guid = text.associated_message_guid.split("/")[1];
-					var box = document.getElementById(guid)
+					var box = document.querySelector(`[tapback_guid="${text.associated_message_guid}"]`);
+
 					if (box !== null) {
 						var area = box.parentNode;
 
@@ -1262,7 +1269,7 @@
 					return;
 				}
 
-				var text = document.getElementById(guid);
+				var text = document.querySelector(`[tapback_guid="${guid}"]`);
 				var dialog = document.createElement("span");
 				var is_area = text.parentNode.className.includes("text-area");
 				dialog.className = "text tapback_dialog";
