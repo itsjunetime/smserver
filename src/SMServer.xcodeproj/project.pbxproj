@@ -13,7 +13,6 @@
 		3C002B6525A06FA3004C4E3D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58660259FF1E90063963B /* AppDelegate.swift */; };
 		3C002B6625A06FA3004C4E3D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58661259FF1E90063963B /* ContentView.swift */; };
 		3C002B6725A06FA3004C4E3D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58662259FF1E90063963B /* SceneDelegate.swift */; };
-		3C03DDE124E32EA90017A265 /* libmryipc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; };
 		3C128FEE259FEE4F0072CFD3 /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3C128FEF259FEE4F0072CFD3 /* identity.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB3024E77F7800F48291 /* identity.pfx */; };
 		3C128FF1259FEE4F0072CFD3 /* cert.der in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB2E24E77F1D00F48291 /* cert.der */; };
@@ -23,6 +22,8 @@
 		3C3B303D25F2BE3100EE8B68 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C3B303B25F2BE3100EE8B68 /* Image.swift */; };
 		3C524F2625B13A72009CA5DC /* Sender.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C7963FF25A12670006AFD7C /* Sender.m */; };
 		3C562A38245FB4A100A4474B /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
+		3C5F2BDD25F6CB3D00BAEB60 /* libmryipc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
+		3C5F2BDE25F6CB3D00BAEB60 /* libmryipc.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3C69EB2F24E77F1D00F48291 /* cert.der in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB2E24E77F1D00F48291 /* cert.der */; };
 		3C69EB3124E77F7800F48291 /* identity.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB3024E77F7800F48291 /* identity.pfx */; };
 		3C760E8D245BCFE100EF24FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E8C245BCFE100EF24FE /* Assets.xcassets */; };
@@ -64,6 +65,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				3C5F2BDE25F6CB3D00BAEB60 /* libmryipc.dylib in Embed Frameworks */,
 				3C88307825F2D25700FACDEB /* Pods_SMServer.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -130,8 +132,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C5F2BDD25F6CB3D00BAEB60 /* libmryipc.dylib in Frameworks */,
 				3C88306D25F2D1BD00FACDEB /* Pods_SMServer.framework in Frameworks */,
-				3C03DDE124E32EA90017A265 /* libmryipc.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -773,12 +775,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"SMServer/Preview Content\"";
 				DEVELOPMENT_TEAM = X543N5D24H;
 				DYLIB_INSTALL_NAME_BASE = "";
 				ENABLE_PREVIEWS = YES;
-				ENABLE_TESTABILITY = NO;
+				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket\"",
@@ -789,7 +791,7 @@
 				);
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				GENERATE_PROFILING_CODE = YES;
+				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket/CocoaAsyncSocket.framework/Headers\"",
@@ -807,7 +809,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SMServer",
 				);
-				LINKER_DISPLAYS_MANGLED_NAMES = YES;
+				LINKER_DISPLAYS_MANGLED_NAMES = NO;
 				MARKETING_VERSION = 0.7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
@@ -823,12 +825,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ianwelker.smserver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				STRIP_INSTALLED_PRODUCT = NO;
+				STRIP_INSTALLED_PRODUCT = YES;
 				STRIP_STYLE = all;
-				STRIP_SWIFT_SYMBOLS = NO;
+				STRIP_SWIFT_SYMBOLS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "SMServer/shared/SMServer-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "\"$(PROJECT_DIR)/SMServer\"";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -858,7 +861,7 @@
 				);
 				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_WARN_UNUSED_VARIABLE = NO;
-				GENERATE_PROFILING_CODE = YES;
+				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/CocoaAsyncSocket/CocoaAsyncSocket.framework/Headers\"",
@@ -876,7 +879,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/SMServer",
 				);
-				LINKER_DISPLAYS_MANGLED_NAMES = YES;
+				LINKER_DISPLAYS_MANGLED_NAMES = NO;
 				MARKETING_VERSION = 0.7.4;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -891,12 +894,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ianwelker.smserver;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				STRIP_INSTALLED_PRODUCT = NO;
+				STRIP_INSTALLED_PRODUCT = YES;
 				STRIP_STYLE = all;
-				STRIP_SWIFT_SYMBOLS = NO;
+				STRIP_SWIFT_SYMBOLS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "SMServer/shared/SMServer-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = "\"$(PROJECT_DIR)/SMServer\"";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

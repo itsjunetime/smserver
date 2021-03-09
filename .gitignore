@@ -3,6 +3,7 @@
 *.app/
 *.ipa
 *.deb
+*.xcarchive
 tests.md
 implement.md
 .xcode-version

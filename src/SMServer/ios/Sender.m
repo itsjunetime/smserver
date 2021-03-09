@@ -14,7 +14,7 @@
 + (instancetype)sharedInstance {
 	static dispatch_once_t onceToken = 0;
 	__strong static IPCTextWatcher* sharedInstance = nil;
-	MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
+	//MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
 	dispatch_once(&onceToken, ^{
 		sharedInstance = [[self alloc] init];
 	});
@@ -24,9 +24,18 @@
 - (instancetype)init {
 	if ((self = [super init])) {
 		_center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
-		[_center addTarget:self action:@selector(handleReceivedTextWithCallback:)];
-		[_center addTarget:self action:@selector(handlePartyTypingWithCallback:)];
-		[_center addTarget:self action:@selector(handleSentTapbackWithCallback:)];
+		
+		// have to try catch this 'cause libmryipc throws an exception when the port is already in use,
+		// which occurs when we already have SMServer running in the background.
+		@try {
+			[_center addTarget:self action:@selector(handleReceivedTextWithCallback:)];
+			[_center addTarget:self action:@selector(handlePartyTypingWithCallback:)];
+			[_center addTarget:self action:@selector(handleSentTapbackWithCallback:)];
+		}
+		@catch (id exc) {
+			NSLog(@"SMServer_app: Failed to add selector for MRYIPCCenter: %@", exc);
+			return nil;
+		}
 	}
 	return self;
 }

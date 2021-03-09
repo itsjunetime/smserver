@@ -133,9 +133,11 @@ then
 
 	olddir="$(pwd)"
 	cd "${ROOTDIR}/src"
+	pn "\033[35m==>\033[0m Installing pods..."
 	pod install
 
 	cd "$olddir"
+	pn "" # for the newline
 fi
 
 if [ "$deb" = true ] || [ "$ipa" = true ]
@@ -173,7 +175,8 @@ then
 	[ $? -ne 0 ] && err "Failed to archive package. Run again with \033[1m-v\033[0m to see why"
 
 	pn "\033[34m==>\033[0m Codesigning..."
-	codesign --entitlements ${ROOTDIR}/src/app.entitlements -f -s "${DEV_CERT}" ${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app
+	# codesign --entitlements ${ROOTDIR}/src/app.entitlements -f -s "${DEV_CERT}" ${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app
+	codesign --entitlements ${ROOTDIR}/src/app.entitlements -f --deep -s "${DEV_CERT}" ${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app
 
 	pn "✅ \033[1mSMServer.app successfully created\033[0m\n"
 fi
@@ -263,8 +266,7 @@ then
 	cp -r ${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app ${ROOTDIR}/package/Payload/SMServer.app
 
 	pn "\033[35m==>\033[0m Compressing payload into \033[1mSMServer_${vers}.ipa\033[0m..."
-	ditto -c -k --sequesterRsrc --keepParent ${ROOTDIR}/package/Payload/SMServer.app ${ROOTDIR}/package/SMServer.zip
-	mv ${ROOTDIR}/package/SMServer.zip ${ROOTDIR}/package/SMServer_${vers}.ipa
+	ditto -c -k --sequesterRsrc --keepParent ${ROOTDIR}/package/Payload ${ROOTDIR}/package/SMServer_${vers}.ipa
 
 	pn "✅ SMServer_${vers}.ipa successfully created a† \033[1m${ROOTDIR}/package/SMServer_${vers}.ipa\033[0m"
 fi

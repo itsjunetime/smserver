@@ -12,7 +12,6 @@ final class ChatDelegate {
 
 	final func createConnection(connection_string: String = Const.sms_db_address) -> OpaquePointer? {
 		/// This simply returns an opaque pointer to the database at `connection_string`, allowing for sqlite connections.
-
 		var db: OpaquePointer?
 
 		/// Open the database
@@ -169,14 +168,14 @@ final class ChatDelegate {
 			texts[i].removeValue(forKey: "payload_data")
 
 			/// Change values that shouldn't be strings to the correct type
-			if texts[i]["ROWID"] != nil { texts[i]["ROWID"] = Int(texts[i]["ROWID"] as! String) }
-			if texts[i]["is_from_me"] != nil { texts[i]["is_from_me"] = texts[i]["is_from_me"] as! String == "1" }
-			if texts[i]["date"] != nil { texts[i]["date"] = Int(texts[i]["date"] as! String) }
-			if texts[i]["date_read"] != nil { texts[i]["date_read"] = Int(texts[i]["date_read"] as! String) }
-			if texts[i]["cache_has_attachments"] != nil { texts[i]["cache_has_attachments"] = texts[i]["cache_has_attachments"] as! String == "1" }
-			if texts[i]["associated_message_type"] != nil { texts[i]["associated_message_type"] = Int(texts[i]["associated_message_type"] as! String) }
-			if texts[i]["item_type"] != nil { texts[i]["item_type"] = Int(texts[i]["item_type"] as! String) }
-			if texts[i]["group_action_type"] != nil { texts[i]["group_action_type"] = Int(texts[i]["group_action_type"] as! String) ?? 0 }
+			if texts[i]["ROWID"] != nil                    { texts[i]["ROWID"] = Int(texts[i]["ROWID"] as! String) }
+			if texts[i]["is_from_me"] != nil               { texts[i]["is_from_me"] = texts[i]["is_from_me"] as! String == "1" }
+			if texts[i]["date"] != nil                     { texts[i]["date"] = Int(texts[i]["date"] as! String) }
+			if texts[i]["date_read"] != nil                { texts[i]["date_read"] = Int(texts[i]["date_read"] as! String) }
+			if texts[i]["cache_has_attachments"] != nil    { texts[i]["cache_has_attachments"] = texts[i]["cache_has_attachments"] as! String == "1" }
+			if texts[i]["associated_message_type"] != nil  { texts[i]["associated_message_type"] = Int(texts[i]["associated_message_type"] as! String) }
+			if texts[i]["item_type"] != nil                { texts[i]["item_type"] = Int(texts[i]["item_type"] as! String) }
+			if texts[i]["group_action_type"] != nil        { texts[i]["group_action_type"] = Int(texts[i]["group_action_type"] as! String) ?? 0 }
 		}
 	}
 
@@ -331,7 +330,16 @@ final class ChatDelegate {
 			from_string = " and m.is_from_me is \(from == 1 ? 1 : 0)"
 		}
 
-		var messages: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "h.id"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc", args: num.split(separator: ",").map({String($0)}), num_items: num_items, offset: offset, split_ids: true)
+		var messages: [[String:Any]] = selectFromSql(
+			db: db,
+			columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "h.id"],
+			table: "message m",
+			condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc",
+			args: num.split(separator: ",").map({String($0)}),
+			num_items: num_items,
+			offset: offset,
+			split_ids: true
+		)
 
 		parseTexts(&messages, db: db, contact_db: contact_db, is_group: is_group)
 
@@ -380,7 +388,13 @@ final class ChatDelegate {
 		var chat_identifiers = [String:[String]]()
 		var checked = [String]()
 
-		let chats: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j", condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc", num_items: num_to_load, offset: offset)
+		let chats: [[String:Any]] = selectFromSql(
+			db: db,
+			columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j",
+			condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc",
+			num_items: num_to_load,
+			offset: offset
+		)
 
 		inner: if settings.combine_contacts {
 			/// This `if` gets all the addresses associated with your contacts, parses them with regex to get all possible `chat_identifier`s,
@@ -442,7 +456,7 @@ final class ChatDelegate {
 
 			/// Content of the most recent text. If a text has attachments, `i["m.text"]` will look like `\u{ef}`. this checks for that.
 			new_chat["latest_text"] = String((i["m.text"] as! String).replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil))
-			
+
 			if (new_chat["latest_text"] as! String).count == 0 && i["m.cache_has_attachments"] as! String != "0" {
 				let att = getAttachmentFromMessage(mid: i["m.ROWID"] as! String)
 
@@ -554,9 +568,7 @@ final class ChatDelegate {
 		Const.log("Getting image data with db for chat_id \(chat_id)")
 
 		if chat_id == "default" {
-			let pngdata = SMImage(named: "profile").parseableData()
-
-			return pngdata ?? Data()
+			return SMImage(named: "profile").parseableData() ?? Data()
 		}
 
 		if chat_id.prefix(4) == "chat" && !chat_id.contains("@") && chat_id.count >= 20 {
@@ -564,7 +576,14 @@ final class ChatDelegate {
 			/// So basically, whenever a group image is set, a message is inserted into the SMS database with a `group_action_type` of 1 and 1 attachment
 			/// The attachment is the new profile picture for the group. So this just grabs the most recent message with 1 for the `group_action_type`,
 			/// gets the location of its associated attachment, and returns that.
-			let image_location = selectFromSql(db: sms_db, columns: ["filename"], table: "attachment", condition: "where ROWID in (select attachment_id from message_attachment_join where message_id in (select ROWID from message where group_action_type is 1 and cache_has_attachments is 1 and ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is ?)) order by date DESC))", args: [chat_id], num_items: 1)
+			let image_location = selectFromSql(
+				db: sms_db,
+				columns: ["filename"],
+				table: "attachment",
+				condition: "where ROWID in (select attachment_id from message_attachment_join where message_id in (select ROWID from message where group_action_type is 1 and cache_has_attachments is 1 and ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is ?)) order by date DESC))",
+				args: [chat_id],
+				num_items: 1
+			)
 
 			guard image_location.count == 1 && image_location[0]["filename"] != nil else {
 				return returnImageDataDB(chat_id: "default", contact_db: contact_db, image_db: image_db, sms_db: sms_db)
@@ -596,11 +615,11 @@ final class ChatDelegate {
 			docid = selectFromSql(db: contact_db, columns: ["docid"], table: "ABPersonFullTextSearch_content", condition: "WHERE c16Phone LIKE ? and c16Phone NOT LIKE \"%+%\"", args: ["%\(chat_id) "], num_items: 1)
 		}
 
-		guard docid.count > 0 else { return Data.init(capacity: 0) }
+		guard docid.count > 0 else { return Data() }
 
 		/// each contact image is stored as a blob in the sqlite database, not as a file.
 		/// That's why we need a special query to get it, and can't use the selectFromSql function(s).
-		let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id=\"\(String(describing: docid[0]["docid"]!))\""
+		let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id is \"\(docid[0]["docid"] ?? "")\""
 
 		var statement: OpaquePointer?
 
@@ -687,7 +706,7 @@ final class ChatDelegate {
 			/// Pretty straightforward -- get data and return it
 			if (type == "image/heic") { /// Since they're used so much
 				let attachment_data = SMImage(Const.attachment_address_prefix + parsed_path).parseableData()
-				
+
 				if attachment_data == nil {
 					Const.log("Failed to get JPEG data from HEIC Image at \(Const.attachment_address_prefix + parsed_path).", warning: true)
 				}
@@ -921,17 +940,25 @@ final class ChatDelegate {
 
 		var db = createConnection()
 		var contact_db = createConnection(connection_string: Const.contacts_address)
-
 		if db == nil || contact_db == nil { return [String:String]() }
 
-		var text_array: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is ?", args: [guid], num_items: 1, offset: 0, split_ids: true)
+		var text_array: [[String:Any]] = [[String:Any]]()
 
 		for _ in 0..<10 {
-			usleep(useconds_t(50000))  /// I hate race conditions so much but I have no idea how to avoid it for this
-
-			text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is ?", args: [guid], num_items: 1, offset: 0, split_ids: true)
+			text_array = selectFromSql(
+				db: db,
+				columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"],
+				table: "message m",
+				condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.guid is ?",
+				args: [guid],
+				num_items: 1,
+				offset: 0,
+				split_ids: true
+			)
 
 			if text_array.count > 0 { break }
+			
+			usleep(useconds_t(50000))  /// I hate race conditions so much but I have no idea how to avoid it for this
 		}
 
 		guard text_array.count > 0 else {
@@ -958,14 +985,22 @@ final class ChatDelegate {
 		var contact_db = createConnection(connection_string: Const.contacts_address)
 		if db == nil { return [String:String]() }
 
-		var text_array: [[String:Any]] = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.associated_message_guid like ? and m.associated_message_type is ?", args: ["%\(guid)%", Int(tapback)], num_items: 1, split_ids: true)
+		var text_array: [[String:Any]] = [[String:Any]]()
 
 		for _ in 0..<10 {
-			usleep(useconds_t(50000))  /// I hate race conditions so much but I have no idea how to avoid it for this
-
-			text_array = selectFromSql(db: db, columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"], table: "message m", condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.associated_message_guid like ? and m.associated_message_type is ?", args: ["%\(guid)%", Int(tapback)], num_items: 1, split_ids: true)
+			text_array = selectFromSql(
+				db: db,
+				columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.service", "m.cache_has_attachments", "m.handle_id", "m.balloon_bundle_id", "m.associated_message_guid", "m.associated_message_type", "h.id", "c.chat_identifier", "c.room_name"],
+				table: "message m",
+				condition: "left join handle h on h.ROWID = m.handle_id inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID where m.associated_message_guid like ? and m.associated_message_type is ?",
+				args: ["%\(guid)%", Int(tapback)],
+				num_items: 1,
+				split_ids: true
+			)
 
 			if text_array.count > 0 { break }
+			
+			usleep(useconds_t(20000))  /// I hate race conditions so much but I have no idea how to avoid it for this
 		}
 
 		guard text_array.count > 0 else { return [String:String]() }
@@ -980,7 +1015,7 @@ final class ChatDelegate {
 		return text
 	}
 
-	func matchPartialAddress(_ chat: String) -> [[String:String]] {
+	final func matchPartialAddress(_ chat: String) -> [[String:String]] {
 		Const.log("Matching partial address \(chat)")
 		var ret = [[String:String]]()
 
@@ -996,10 +1031,16 @@ final class ChatDelegate {
 		return ret
 	}
 
-	func matchPartialAddressWithDB(_ chat: String, db: OpaquePointer?) -> [[String:String]] {
+	final func matchPartialAddressWithDB(_ chat: String, db: OpaquePointer?) -> [[String:String]] {
 		var ret = [[String:String]]()
 
-		let matches = selectFromSql(db: db, columns: ["c0First", "c1Last", "c16Phone", "c17Email"], table: "ABPersonFullTextSearch_content", condition: "WHERE c17Email LIKE ? or c16Phone LIKE ?", args: ["%\(chat)%", "%\(chat)%"])
+		let matches = selectFromSql(
+			db: db,
+			columns: ["c0First", "c1Last", "c16Phone", "c17Email"],
+			table: "ABPersonFullTextSearch_content",
+			condition: "WHERE c17Email LIKE ? or c16Phone LIKE ?",
+			args: ["%\(chat)%", "%\(chat)%"]
+		)
 
 		for m in matches {
 			let add_str: String = m["c16Phone"] ?? "" + " " + (m["c17Email"] ?? "")
@@ -1010,15 +1051,88 @@ final class ChatDelegate {
 
 		return ret
 	}
+	
+	final func matchPartialName(_ name: String) -> [[String:Any]] {
+		Const.log("Matching partial name \(name)")
+		var ret = [[String:Any]]()
 
-	func getChatOfText(_ guid: String) -> String {
+		var db = createConnection(connection_string: Const.contacts_address)
+		if db == nil { return ret }
+		Const.log("Made connection with \(Const.contacts_address)")
+
+		ret = matchPartialNameWithDB(name, db: db)
+
+		Const.log("Closing database")
+		closeDatabase(&db)
+
+		return ret
+	}
+	
+	final func matchPartialNameWithDB(_ name: String, db: OpaquePointer?) -> [[String:Any]] {
+		let splits = name.split(separator: " ")
+		let first =  splits.first ?? ""
+		let last = splits.last ?? first
+		var ret: [[String:Any]] = [[String:Any]]()
+		
+		let matches = selectFromSql(
+			db: db,
+			columns: ["c0First", "c1Last", "c16Phone", "c17Email"],
+			table: "ABPersonFullTextSearch_content",
+			condition: "WHERE c0First LIKE ? or c1Last LIKE ?",
+			args: ["%\(first)%", "%\(last)%"]
+		)
+		
+		for m in matches {
+			var addresses = Set(m["c17Email"]?.split(separator: " ").map({String($0)}) ?? [String]())
+			let phones = m["c16Phone"]?.split(separator: " ").map({String($0)}) ?? [String]()
+
+			var pluses = Set(phones.filter({$0.contains("+")}))
+			for p in pluses {
+				if pluses.filter({$0.contains(p) && $0 != p}).count > 0 {
+					pluses.remove(p)
+				} else {
+					addresses.insert(p)
+				}
+			}
+
+			let fullnums = phones.map({$0.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()})
+			outerfor: for p in fullnums {
+				if phones.filter({$0.contains(p) && $0 != p}).count > 0 {
+					continue
+				}
+				
+				innerfor: for plus in pluses {
+					if p.contains(plus.replacingOccurrences(of: "+", with: "")) {
+						continue outerfor
+					}
+				}
+				
+				addresses.insert(p)
+			}
+			
+			if addresses.count > 0 {
+				ret.append(["name": "\(m["c0First"] ?? "") \(m["c1Last"] ?? "")", "addresses": Array(addresses)])
+			}
+		}
+		
+		return ret
+	}
+
+	final func getChatOfText(_ guid: String) -> String {
 		Const.log("Getting chat of text \(guid)")
 		var ret = ""
 
 		var db = createConnection()
 		if db == nil { return "" }
 
-		let chat_query = selectFromSql(db: db, columns: ["chat_identifier"], table: "chat", condition: "where ROWID in (select chat_id from chat_message_join where message_id in (select ROWID from message where guid is ?))", args: [guid], num_items: 1)
+		let chat_query = selectFromSql(
+			db: db,
+			columns: ["chat_identifier"],
+			table: "chat",
+			condition: "where ROWID in (select chat_id from chat_message_join where message_id in (select ROWID from message where guid is ?))",
+			args: [guid],
+			num_items: 1
+		)
 
 		if chat_query.count > 0, let id = chat_query[0]["chat_identifier"] {
 			ret = id

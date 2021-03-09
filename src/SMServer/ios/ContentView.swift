@@ -13,6 +13,7 @@ struct ContentView: View {
 	@State var show_picker: Bool = false
 	@State var show_oseven_update: Bool = false
 	@State var ip_address: String = ""
+	@State var show_failed_start: Bool = false
 
 	func loadServer() {
 		/// This starts the server at port $port_num
@@ -21,6 +22,10 @@ struct ContentView: View {
 		self.server_running = server.startServers()
 
 		Const.log(self.server_running ? "Successfully started server and socket" : "Failed to start server and socket", warning: !self.server_running)
+		
+		if !self.server_running {
+			self.show_failed_start = true
+		}
 	}
 
 	func enteredBackground() {
@@ -55,11 +60,12 @@ struct ContentView: View {
 		if settings.start_on_load && (Const.getWiFiAddress() != nil || settings.override_no_wifi)  {
 			loadServer()
 		}
-		
+
 		NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "ianwelker.smserver.system.config.network_change"), object: nil, queue: nil, using: { notification in
 			self.ip_address = Const.getWiFiAddress() ?? "\(self.getHostname()).local"
+			self.server_running = server.isRunning()
 		})
-		
+
 		self.ip_address = Const.getWiFiAddress() ?? "\(self.getHostname()).local"
 	}
 
@@ -295,6 +301,9 @@ struct ContentView: View {
 		.edgesIgnoringSafeArea(.all)
 		.alert(isPresented: $show_oseven_update, content: {
 			Alert(title: Text("0.7.0 Update"), message: Text("SMServer was recently updated to version 0.7.0. In this update, many parts of the API were rewritten to be easier to use and more robust.\n\nIf you are using the API of this app in any way outside of the built-in web interface, I would recommend that you check the API documentation (link in Settings) and verify that what you've made is still compatible"), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_oseven_update = false }))
+		})
+		.alert(isPresented: $show_failed_start, content: {
+			Alert(title: Text("Failed to start"), message: Text("SMServer failed to start the web service. You may already have SMServer running in the background as a daemon. Please close the app and try again."), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_failed_start = false }))
 		})
 	}
 }

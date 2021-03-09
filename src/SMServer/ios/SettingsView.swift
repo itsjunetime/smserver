@@ -68,8 +68,8 @@ struct SettingsView: View {
 		}, set: {
 			self.settings.light_theme = $0 == 1
 			self.settings.nord_theme = $0 == 2
-			UserDefaults.standard.setValue(self.settings.light_theme, forKey: "light_theme")
-			UserDefaults.standard.setValue(self.settings.nord_theme, forKey: "nord_theme")
+			UserDefaults.standard.setValue($0 == 1, forKey: "light_theme")
+			UserDefaults.standard.setValue($0 == 2, forKey: "nord_theme")
 		})
 
 		let subject_binding = Binding<Bool>(get: {
@@ -301,7 +301,7 @@ struct SettingsView: View {
 								),
 								startPoint: .topLeading, endPoint: .bottomTrailing
 							).mask(
-								VStack {
+								VStack(spacing: 20) {
 									HStack {
 										Text("View API Documentation")
 											.aspectRatio(contentMode: .fill)
@@ -309,23 +309,17 @@ struct SettingsView: View {
 										Image(systemName: "doc.text")
 									}
 
-									Spacer().frame(height: 20)
-
 									HStack {
 										Text("Donate to support SMServer")
 										Spacer()
 										Image(systemName: "link")
 									}
 
-									Spacer().frame(height: 20)
-
 									HStack {
 										Text("Export TLS certificate")
 										Spacer()
-										Image(systemName: "link")
+										Image(systemName: "scroll")
 									}
-
-									Spacer().frame(height: 20)
 
 									HStack {
 										Text("Reset Settings to Default")
@@ -397,23 +391,11 @@ struct SettingsView: View {
 
 /// stolen from https://developer.apple.com/forums/thread/123951
 struct ShareSheet: UIViewControllerRepresentable {
-	typealias Callback = (_ activityType: UIActivity.ActivityType?, _ completed: Bool, _ returnedItems: [Any]?, _ error: Error?) -> Void
-
 	let activityItems: [Any]
-	let applicationActivities: [UIActivity]? = nil
-	let excludedActivityTypes: [UIActivity.ActivityType]? = nil
-	let callback: Callback? = nil
 
 	func makeUIViewController(context: Context) -> UIActivityViewController {
-		let controller = UIActivityViewController(
-			activityItems: activityItems,
-			applicationActivities: applicationActivities)
-		controller.excludedActivityTypes = excludedActivityTypes
-		controller.completionWithItemsHandler = callback
-		return controller
+		return UIActivityViewController( activityItems: activityItems, applicationActivities: nil)
 	}
 
-	func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
-		// nothing to do here
-	}
+	func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

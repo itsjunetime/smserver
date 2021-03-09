@@ -189,7 +189,7 @@
 
 						for (var l = 0; l < text.attachments.length; ++l, ++current_index) {
 							var c = t.cloneNode();
-							
+
 							let tapback_id = `p:${current_index}/${text.guid}`;
 							c.setAttribute("tapback_guid", tapback_id);
 							c.setAttribute("onclick", `showTapbackDialog("${tapback_id}");`);
@@ -788,6 +788,8 @@
 				photos.value = "";
 
 				autoGrow();
+
+				showSendingIndicator();
 			}
 
 			async function sendComposeForm() {
@@ -963,6 +965,11 @@
 						if (typ !== undefined && typ !== null) {
 							if (notif_text.is_from_me) typing_outer = typ.outerHTML;
 							typ.outerHTML = "";
+						}
+						if (notif_text.is_from_me) {
+							var sending = document.getElementById("sendingIndicator");
+							if (sending !== null && sending !== undefined)
+								sending.outerHTML = "";
 						}
 						printListOfTexts([notif_text], true, notif_text.room_name.length > 0);
 						if (typing_outer !== "") document.getElementById("text-content").innerHTML += typing_outer;
@@ -1327,6 +1334,30 @@
 					else
 						txt.parentNode.outerHTML = "";
 				}
+			}
+
+			function showSendingIndicator() {
+				let typing_indicator = document.getElementById("typingIndicator");
+				let sending_indicator = document.createElement("div");
+
+				sending_indicator.className = "text is_from_me iMessage";
+				sending_indicator.id = "sendingIndicator";
+				sending_indicator.innerHTML = '<em>Sending</em> <span class="dot flashing">• </span><span class="dot">• </span><span class="dot">•</span>';
+
+				document.getElementById("text-content").insertBefore(sending_indicator, typing_indicator);
+				sending_indicator.scrollIntoView();
+
+				var c = 0;
+				var typing = window.setInterval(() => {
+					var i = document.getElementById("sendingIndicator");
+					if (i === null) {
+						clearInterval(typing);
+						return;
+					}
+					i.children[c+1].className = "dot";
+					c = (c + 1) % 3;
+					i.children[c+1].className = "dot flashing";
+				}, 400);
 			}
 
 			function setUpDND() {

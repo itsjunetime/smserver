@@ -9,7 +9,7 @@ class ServerDelegate {
 
 	static let chat_delegate = ChatDelegate()
 	static let sender: IWSSender = IWSSender.init()
-	var watcher: IPCTextWatcher = IPCTextWatcher.sharedInstance()
+	var watcher: IPCTextWatcher? = nil //IPCTextWatcher.sharedInstance()
 
 	var restarted_recently: Bool = false
 	var did_start = false;
@@ -39,18 +39,6 @@ class ServerDelegate {
 		#if os(macOS)
 		watcher.setUpHooks()
 		#endif
-
-		self.watcher.setTexts = { value in
-			self.sentOrReceivedNewText(value ?? "None")
-		}
-
-		self.watcher.setTyping = { vals in
-			self.setPartyTyping(vals as? [String:Any] ?? [String:Any]())
-		}
-
-		self.watcher.sentTapback = { tapback, guid in
-			self.sentTapback(tapback, guid: guid ?? "")
-		}
 
 		socket.watcher = self.watcher
 		socket.verify_auth = self.checkIfAuthenticated
@@ -139,7 +127,24 @@ class ServerDelegate {
 	}
 
 	func startServers() -> Bool {
+		guard let new_watch = IPCTextWatcher.sharedInstance() else {
+			return false
+		}
+		
+		self.watcher = new_watch
+		
+		self.watcher?.setTexts = { value in
+			self.sentOrReceivedNewText(value ?? "None")
+		}
 
+		self.watcher?.setTyping = { vals in
+			self.setPartyTyping(vals as? [String:Any] ?? [String:Any]())
+		}
+
+		self.watcher?.sentTapback = { tapback, guid in
+			self.sentTapback(tapback, guid: guid ?? "")
+		}
+		
 		if server.isListening {
 			self.stopServers()
 			Const.log("Server was already running, stopped.", warning: false)
@@ -222,7 +227,7 @@ class ServerDelegate {
 				} else {
 					res.setValue(info[1] as! String, forHTTPHeaderField: "Content-Type")
 					res.setValue("inline; filename=\(req.query["path"]?.split(separator: "/").last ?? "")", forHTTPHeaderField: "Content-Disposition")
-					
+
 					if req.range != nil {
 						res.setStatusCode(206, description: "Partial Content")
 						res.setValue("bytes 0-\((info[0] as? Data ?? Data()).count - 1)/\((info[0] as? Data ?? Data()).count)", forHTTPHeaderField: "Content-Range")
@@ -437,13 +442,11 @@ class ServerDelegate {
 
 	func encodeToJson(object: Any, title: String) -> String {
 		/// This encodes `object` (normally like an array of dictionary or dictionary of dictionaries) to JSON, with the title of `title`
-
-		guard let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted) else {
+		let enc = [title: object]
+		guard let data = try? JSONSerialization.data(withJSONObject: enc, options: .prettyPrinted) else {
 			return ""
 		}
-		var data_string = String(decoding: data, as: UTF8.self)
-		data_string = "{ \"\(title)\": \(data_string)\n}"
-		return data_string
+		return String(decoding: data, as: UTF8.self)
 	}
 
 	func sendText(params: [String:Any], new_files: [String]) -> Int {
@@ -567,7 +570,7 @@ class ServerDelegate {
 			return [403, "Please authenticate"]
 		}
 
-		let f = Array(params.keys)[0] as String
+		let f = (params.keys.first ?? "") as String
 
 		if Const.api_msg_vals.contains(f) {
 			/// requesting messages from a specific person
@@ -647,9 +650,12 @@ class ServerDelegate {
 			let ret_config = encodeToJson(object: config, title: "config")
 
 			return [200, ret_config]
-		} else if f == Const.api_match {
-			let chat = params[Const.api_match] ?? ""
-			let result = ServerDelegate.chat_delegate.matchPartialAddress(chat)
+		} else if Const.api_match_vals.contains(f) {
+			guard let id = params[Const.api_match_keyword], let type = params[Const.api_match_type] else {
+				return [400, "Please specify the identifier and type with \(Const.api_match_keyword) and \(Const.api_match_type)"]
+			}
+			
+			let result = type == "chat" ? ServerDelegate.chat_delegate.matchPartialAddress(id) : ServerDelegate.chat_delegate.matchPartialName(id)
 
 			let res_json = encodeToJson(object: result, title: "matches")
 

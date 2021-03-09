@@ -1,9 +1,11 @@
 # Changelog
 0.7.3 &rightarrow; Unreleased
  - Added support for sending attachments to specific parts of messages ([#81](https://github.com/iandwelker/smserver/issues/81))
+ - Added "sending..." view to show that text has been sent to the host
  - Re-did tapback displays to look nicer and closer to stock ([#98](https://github.com/iandwelker/smserver/issues/98))
  - Improved display of special recents texts (e.g. attachments, handwritten messages, etc.) in left chat panel
- - Main view accurately shows current address when network changes
+ - Main view accurately shows current address and server status when network changes
+ - App no longer crashes when SMServer is running in the background on the device
  - Fixed issue that prevented typing indicators from showing
  - Fixed issue that would throw safe mode if text sent with attachments and no text ([#96](https://github.com/iandwelker/smserver/issues/96))
  - Fixed issue with not all spaces showing in text on web interface ([#90](https://github.com/iandwelker/smserver/issues/90))
