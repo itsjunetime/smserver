@@ -45,7 +45,7 @@ struct MainApp {
 					print("Enter 'q' at any time to quit SMServer\(Const.col)0m")
 				}
 			} else {
-				print("\(Const.col)31;1mERROR:\(Const.col)0m SMServer failed to start. Please try again with the \(Const.col)1m--debug\(Const.col)0m flag.")
+				print("\(Const.col)31;1mERROR:\(Const.col)0m SMServer failed to start.\(sets.debug ? "" : " Try again with the \(Const.col)1m--debug\(Const.col)0m flag to see more details")")
 				exit(1)
 			}
 

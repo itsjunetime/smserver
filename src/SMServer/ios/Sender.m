@@ -33,7 +33,11 @@
 			[_center addTarget:self action:@selector(handleSentTapbackWithCallback:)];
 		}
 		@catch (id exc) {
-			NSLog(@"SMServer_app: Failed to add selector for MRYIPCCenter: %@", exc);
+			NSString* log = [NSString stringWithFormat:@"\e[93;1mWARNING:\e[0m Failed to add selector for MRYIPCCenter: %@", exc];
+			if ([[NSProcessInfo processInfo] arguments].count > 0)
+				printf("%s\n", [log UTF8String]);
+			else
+				NSLog(@"SMServer_app: %@", log);
 			return nil;
 		}
 	}

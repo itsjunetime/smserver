@@ -1,6 +1,6 @@
 PODS:
   - CocoaAsyncSocket (7.6.5)
-  - Criollo (1.0.2):
+  - Criollo (1.0.3):
     - CocoaAsyncSocket (~> 7.6.5)
   - HTTPParserC (2.9.2)
   - Telegraph (0.28):
@@ -8,7 +8,7 @@ PODS:
     - HTTPParserC (~> 2.7)
 
 DEPENDENCIES:
-  - Criollo (from `/Users/ian/Documents/Coding/foss/Criollo/Criollo.podspec`)
+  - Criollo (from `./Criollo.podspec`)
   - Telegraph
 
 SPEC REPOS:
@@ -19,7 +19,7 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   Criollo:
-    :podspec: "/Users/ian/Documents/Coding/foss/Criollo/Criollo.podspec"
+    :podspec: "./Criollo.podspec"
 
 CHECKOUT OPTIONS:
   Criollo:
@@ -29,10 +29,10 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  Criollo: 41ec9144e69d472825495ef9b1ba5e7ecab1eafe
+  Criollo: 1ab3c1d84407426e875330e6c47f62367de497ee
   HTTPParserC: 1ed389f80bb57a5b967d87d5358b8a94418394ee
   Telegraph: 6820cf262064f2c15a393fb56401834141d0310e
 
-PODFILE CHECKSUM: 8cbf0e267ab21b554af086df4b5c2bafe3a35e2c
+PODFILE CHECKSUM: 1bb0aef95dc81c8ff1cc4d6b8245696f7808ebe2
 
-COCOAPODS: 1.10.0
+COCOAPODS: 1.10.1

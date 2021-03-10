@@ -175,7 +175,6 @@ then
 	[ $? -ne 0 ] && err "Failed to archive package. Run again with \033[1m-v\033[0m to see why"
 
 	pn "\033[34m==>\033[0m Codesigning..."
-	# codesign --entitlements ${ROOTDIR}/src/app.entitlements -f -s "${DEV_CERT}" ${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app
 	codesign --entitlements ${ROOTDIR}/src/app.entitlements -f --deep -s "${DEV_CERT}" ${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app
 
 	pn "✅ \033[1mSMServer.app successfully created\033[0m\n"

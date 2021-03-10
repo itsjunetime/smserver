@@ -7,7 +7,8 @@ import IOKit.ps
 import SwiftUI
 #endif
 
-struct Const {
+@objc
+class Const : NSObject {
 	static let api_msg_req: String = "messages"
 	static let api_msg_num: String = "num_messages"
 	static let api_msg_off: String = "messages_offset"

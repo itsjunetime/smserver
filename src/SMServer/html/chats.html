@@ -239,7 +239,8 @@
 						}
 
 						var inner = document.createElement("span");
-						inner.textContent = text.text.replace(/ /g, "\u00a0"); // inserts &nbsp; without innerHTML
+						// inserts &nbsp; without innerHTML
+						inner.textContent = text.text;
 						c.appendChild(inner);
 
 						let tapback_id = `p:${current_index}/${text.guid}`;
@@ -1329,9 +1330,9 @@
 					alert("Couldn't delete text :(");
 				} else {
 					var txt = document.getElementById(guid);
-					if (txt.parentNode.className.includes("text-content"))
+					if (txt !== null && txt.parentNode.className.includes("text-content"))
 						txt.outerHTML = "";
-					else
+					else if (txt !== null)
 						txt.parentNode.outerHTML = "";
 				}
 			}
