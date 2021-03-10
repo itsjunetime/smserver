@@ -227,7 +227,7 @@ With `search_group=time`
 	"conversations" : [
 		{
 			"display_name" : "John Smith",
-			"chat_id" : +11231231234",
+			"chat_id" : "+11231231234",
 		}
 	]
 }}
@@ -294,24 +294,40 @@ __Return fields Description:__
 | is_favorite | Bool | Tells whether or not the photo is favorited on the host device. |
 | URL | String | This value holds the URL of the photo on the host device, minus the prefix of `/var/mobile/Media/` |
 
-## `match`
-This does the exact same thing as the search API, but only checks for conversations, as opposed to both conversations and texts.
+## `match`, `match_type`
+If `match_type` is `chat`, this returns the number/email and name of all contacts who have a phone number or email which matches the value that was sent in with `match`. Else, it returns all the numers & emails and the name of all contacts whose name contains the string that was sent in with `match`.
 
 | Key | Required | Type | Description |
 | - | - | - | - |
-| match | Yes | String | The chat_identifier that you would like to match with. Will match all conversations whose chat_identifiers contain the string that is sent with this parameter. |
+| match | Yes | String | The chat\_identifier or name that you would like to match with. |
+| match_type | Yes | String | If this is `chat`, it will treat the value that was sent with `match` as a chat\_identifier. Else, it will treat it as a name |
 
 __Example queries:__
-- /requests?match=+1123
-- /requests?match=@gmail.com
+- /requests?match=+1123&match_type=chat
+- /requests?match=@gmail.com&match_type=chat
+- /requests?match=john&match_type=name
 
 __Example return:__
+With `match_type=chat`:
 ```json
 { "matches": [
 	{
 		"chat_id" : "+11231231234",
 		"display_name" : "John Smith",
 	},
+]}
+```
+
+With `match_type=name`
+```json
+{ "matches" : [
+	{
+		"name": "John Smith",
+		"addresses" : [
+			"+11231231234",
+			"email@email.com"
+		]
+	}
 ]}
 ```
 
@@ -379,12 +395,12 @@ Sends a tapback for the message with `tap_guid`.
 | Key | Required | Type | Description |
 | - | - | - | - |
 | tapback | Yes | Int | This should be an int, describing the reaction to send. "Heart" is 0, "Thumbs up" is 1, "Thumbs down" is 2, "Haha" is 3, "Emphasis" is 4, and "Question" is 5. If this number is greater than 5 or less than 0 or is not an int, the tapback will fail to send.
-| tap_guid | Yes | String | Must be the guid of the message that the tapback is being sent for. |
+| tap_guid | Yes | String | Must be the guid of the message that the tapback is being sent for, including the part identifier (e.g. `p:0/`, `p:1/`, `bp:`). It should work if you don't include the part identifier, but it will send a tapback for the whole message, not just one specific part. |
 | remove_tap | No | String | Must be either true or false. If it is neither, it defaults to false. When this is `true`, it removes the tapback with the above attributes instead of adding it. |
 
 __Example queries:__
-- /send?tapback=1&tap_guid=0AD2418E-19E4-47B1-9380-DB8E0A90B30C
-- /send?tapback=0&tap_guid=D11C0838-02F0-4917-AE38-AC7628E1DBCC&remove_tap=true
+- /send?tapback=1&tap_guid=p:1/0AD2418E-19E4-47B1-9380-DB8E0A90B30C
+- /send?tapback=0&tap_guid=bp:D11C0838-02F0-4917-AE38-AC7628E1DBCC&remove_tap=true
 
 ## `delete_chat`
 
@@ -404,10 +420,10 @@ This will delete the text with the `guid` which is in the value of `delete_text`
 
 | Key | Required | Type | Description |
 | - | - | - | - |
-| delete_text | Yes | String | Must be the `guid` of the text to be deleted. |
+| delete_text | Yes | String | Must be the `guid` of the text to be deleted, including the part identifier. It should work if you don't include the part identifier, but it will delete the whole message, not just one part. |
 
 __Example Queries:__
-- /send?delete_text=4505C31A-A0FB-496F-AAA4-9821FBCF9BE4
+- /send?delete_text=p:0/4505C31A-A0FB-496F-AAA4-9821FBCF9BE4
 
 ## `POST` requests
 
