@@ -76,7 +76,7 @@ class Const : NSObject {
 	static let api_config: String = "config"
 	static let api_match_keyword: String = "match"
 	static let api_match_type: String = "match_type"
-	
+
 	static let api_match_vals = [
 		api_match_keyword,
 		api_match_type

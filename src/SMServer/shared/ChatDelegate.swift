@@ -516,7 +516,7 @@ final class ChatDelegate {
 		return return_array
 	}
 
-	final func returnImageData(chat_id: String) -> Data? {
+	final func returnImageData(chat_id: String) -> Data {
 		/// This does the same thing as returnImageDataDB, but without the `contact_db` and `image_db` as arguments, if you just need to get like 1 image
 
 		Const.log("Getting image data for chat_id \(chat_id)")
@@ -528,7 +528,7 @@ final class ChatDelegate {
 		var image_db = createConnection(connection_string: Const.contact_images_address)
 		var sms_db = createConnection()
 		if contact_db == nil || image_db == nil || sms_db == nil {
-			return Data.init(capacity: 0)
+			return Data()
 		}
 
 		/// get image data with dbs as parameters
@@ -562,7 +562,7 @@ final class ChatDelegate {
 		return return_val
 	}
 
-	final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer, sms_db: OpaquePointer) -> Data? {
+	final func returnImageDataDB(chat_id: String, contact_db: OpaquePointer, image_db: OpaquePointer, sms_db: OpaquePointer) -> Data {
 		/// This returns the profile picture for someone with the phone number or email `chat_id` as pure image data
 
 		Const.log("Getting image data with db for chat_id \(chat_id)")
@@ -585,14 +585,12 @@ final class ChatDelegate {
 				num_items: 1
 			)
 
-			guard image_location.count == 1 && image_location[0]["filename"] != nil else {
+			guard image_location.count == 1, let image_url = image_location[0]["filename"] else {
 				return returnImageDataDB(chat_id: "default", contact_db: contact_db, image_db: image_db, sms_db: sms_db)
 			}
 
-			let image_url: String = image_location[0]["filename"]!
-
 			let image = SMImage(image_url.replacingOccurrences(of: "~", with: "/var/mobile"))
-			return image.parseableData() ?? Data(capacity: 0)
+			return image.parseableData() ?? Data()
 		}
 
 		var docid = [[String:String]]()
@@ -619,7 +617,7 @@ final class ChatDelegate {
 
 		/// each contact image is stored as a blob in the sqlite database, not as a file.
 		/// That's why we need a special query to get it, and can't use the selectFromSql function(s).
-		let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id is \"\(docid[0]["docid"] ?? "")\""
+		let sqlString = "SELECT data FROM ABThumbnailImage WHERE record_id is \(docid[0]["docid"] ?? "") order by format asc limit 1;"
 
 		var statement: OpaquePointer?
 
@@ -629,11 +627,10 @@ final class ChatDelegate {
 			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
 			Const.log("WARNING: error preparing select: \(errmsg)", warning: true)
 
-			//return Data.init(capacity: 0)
-			return nil
+			return Data()
 		}
 
-		var pngdata: Data? = nil
+		var jpgdata: Data = Data()
 
 		if sqlite3_step(statement) == SQLITE_ROW {
 			if let tiny_return_blob = sqlite3_column_blob(statement, 0) {
@@ -642,7 +639,7 @@ final class ChatDelegate {
 				let len: Int32 = sqlite3_column_bytes(statement, 0)
 				let dat: NSData = NSData(bytes: tiny_return_blob, length: Int(len))
 
-				pngdata = dat as Data
+				jpgdata = dat as Data
 			}
 		}
 
@@ -654,7 +651,7 @@ final class ChatDelegate {
 		statement = nil
 		Const.log("destroyed statement")
 
-		return pngdata
+		return jpgdata
 	}
 
 	final func getAttachmentFromMessage(mid: String) -> [[String:String]] {
@@ -957,7 +954,7 @@ final class ChatDelegate {
 			)
 
 			if text_array.count > 0 { break }
-			
+
 			usleep(useconds_t(50000))  /// I hate race conditions so much but I have no idea how to avoid it for this
 		}
 
@@ -999,7 +996,7 @@ final class ChatDelegate {
 			)
 
 			if text_array.count > 0 { break }
-			
+
 			usleep(useconds_t(20000))  /// I hate race conditions so much but I have no idea how to avoid it for this
 		}
 
@@ -1051,7 +1048,7 @@ final class ChatDelegate {
 
 		return ret
 	}
-	
+
 	final func matchPartialName(_ name: String) -> [[String:Any]] {
 		Const.log("Matching partial name \(name)")
 		var ret = [[String:Any]]()
@@ -1067,13 +1064,13 @@ final class ChatDelegate {
 
 		return ret
 	}
-	
+
 	final func matchPartialNameWithDB(_ name: String, db: OpaquePointer?) -> [[String:Any]] {
 		let splits = name.split(separator: " ")
 		let first =  splits.first ?? ""
 		let last = splits.last ?? first
 		var ret: [[String:Any]] = [[String:Any]]()
-		
+
 		let matches = selectFromSql(
 			db: db,
 			columns: ["c0First", "c1Last", "c16Phone", "c17Email"],
@@ -1081,7 +1078,7 @@ final class ChatDelegate {
 			condition: "WHERE c0First LIKE ? or c1Last LIKE ?",
 			args: ["%\(first)%", "%\(last)%"]
 		)
-		
+
 		for m in matches {
 			var addresses = Set(m["c17Email"]?.split(separator: " ").map({String($0)}) ?? [String]())
 			let phones = m["c16Phone"]?.split(separator: " ").map({String($0)}) ?? [String]()
@@ -1100,21 +1097,21 @@ final class ChatDelegate {
 				if phones.filter({$0.contains(p) && $0 != p}).count > 0 {
 					continue
 				}
-				
+
 				innerfor: for plus in pluses {
 					if p.contains(plus.replacingOccurrences(of: "+", with: "")) {
 						continue outerfor
 					}
 				}
-				
+
 				addresses.insert(p)
 			}
-			
+
 			if addresses.count > 0 {
 				ret.append(["name": "\(m["c0First"] ?? "") \(m["c1Last"] ?? "")", "addresses": Array(addresses)])
 			}
 		}
-		
+
 		return ret
 	}
 

@@ -855,18 +855,6 @@
 				elem.style.height = getComputedStyle(document.documentElement).getPropertyValue("--send-button-size");
 				var scroll_height = elem.scrollHeight;
 				elem.style.height = scroll_height + "px";
-
-				/// I don't know why this next section is necessary but it is
-				if (elem.value === "" || (oldheight !== null && Number(oldheight.join("")) > scroll_height)) {
-					var uhb = document.getElementById("unhiddenbutton");
-					var crb = document.getElementById("camerarollbutton");
-
-					await uhb.setAttribute("style", "margin: 0 !important;");
-					await crb.setAttribute("style", "margin: 0 !important;");
-					await sleep(1); /// Why do I need this. so dumb
-					await uhb.setAttribute("style", "margin: auto 0;");
-					await crb.setAttribute("style", "margin: auto 0;");
-				}
 			}
 
 			function showPopup() {

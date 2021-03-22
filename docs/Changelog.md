@@ -1,4 +1,10 @@
 # Changelog
+0.7.4 &rightarrow; Unreleased
+ - Fixed incorrect mime type issues when returning profile pictures
+ - Fixed various potential issues in build script
+ - Fixed jumpiness while typing long messages in mobile view
+ - Fixed random bizarrely large texts in mobile view
+
 0.7.3 &rightarrow; 0.7.4
  - Added support for sending tapbacks to specific parts of messages ([#81](https://github.com/iandwelker/smserver/issues/81))
  - Added "sending..." view to show that text has been sent to the host

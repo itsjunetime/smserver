@@ -22,7 +22,7 @@ struct ContentView: View {
 		self.server_running = server.startServers()
 
 		Const.log(self.server_running ? "Successfully started server and socket" : "Failed to start server and socket", warning: !self.server_running)
-		
+
 		if !self.server_running {
 			self.show_failed_start = true
 		}

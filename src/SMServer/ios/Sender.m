@@ -24,7 +24,7 @@
 - (instancetype)init {
 	if ((self = [super init])) {
 		_center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
-		
+
 		// have to try catch this 'cause libmryipc throws an exception when the port is already in use,
 		// which occurs when we already have SMServer running in the background.
 		@try {

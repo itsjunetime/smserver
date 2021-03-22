@@ -28,7 +28,7 @@ class SMImage {
 		#if os(macOS)
 		return self.wrappedImage?.tiffRepresentation
 		#elseif os(iOS)
-		return self.wrappedImage?.pngData()
+		return self.wrappedImage?.jpegData(compressionQuality: 0.25)
 		#endif
 	}
 }

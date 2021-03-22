@@ -376,6 +376,7 @@ i#chargingSymbol {
 	font-size: 18px;
 	padding: 7px 12px;
 	line-height: 21px; /* Specific but that's what it is */
+	text-size-adjust: none !important;
 }
 .text span {
 	word-break: break-word;
@@ -556,6 +557,7 @@ i.fa-thumbs-down {
 	height: var(--send-box-size);
 	padding: 5px calc(var(--send-button-size) + 10px) 0 10px;
 	margin: 0;
+	max-height: 30vh !important;
 }
 #sendbox.input {
 	grid-column: 3/5;
@@ -713,7 +715,7 @@ i.fa-thumbs-down {
 	height: var(--send-box-size);
 	outline: none;
 	border: none;
-	margin: auto 0;
+	margin: auto 0 !important;
 }
 #cameraroll {
 	background-color: var(--main-background);

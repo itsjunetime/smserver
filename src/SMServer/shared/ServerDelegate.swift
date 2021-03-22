@@ -130,9 +130,9 @@ class ServerDelegate {
 		guard let new_watch = IPCTextWatcher.sharedInstance() else {
 			return false
 		}
-		
+
 		self.watcher = new_watch
-		
+
 		self.watcher?.setTexts = { value in
 			self.sentOrReceivedNewText(value ?? "None")
 		}
@@ -144,7 +144,7 @@ class ServerDelegate {
 		self.watcher?.sentTapback = { tapback, guid in
 			self.sentTapback(tapback, guid: guid ?? "")
 		}
-		
+
 		if server.isListening {
 			self.stopServers()
 			Const.log("Server was already running, stopped.", warning: false)
@@ -213,9 +213,19 @@ class ServerDelegate {
 				let q = req.query
 				let data = ServerDelegate.chat_delegate.returnImageData(chat_id: q["chat_id"] ?? "")
 
-				res.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
-				if data == nil { res.setStatusCode(404, description: "No profile image for chat_id \(q["chat_id"] ?? "")") }
-				res.send(data ?? Data.init(capacity: 0))
+				var mime = "image/jpeg"
+				if !data.isEmpty {
+					var bytes: UInt8 = 0
+					data.copyBytes(to: &bytes, count: 1)
+
+					if bytes == 0x89 {
+						mime = "image/png"
+					}
+				}
+
+				res.setValue(mime, forHTTPHeaderField: "Content-Type")
+				if data.isEmpty { res.setStatusCode(404, description: "No profile image for chat_id \(q["chat_id"] ?? "")") }
+				res.send(data)
 			} else if f == "path" {
 				/// This gets attachments. The value for this key must be the path at which the attachment resides,
 				/// minus the prefix of `/private/var/mobile/Library/SMS/`
@@ -654,7 +664,7 @@ class ServerDelegate {
 			guard let id = params[Const.api_match_keyword], let type = params[Const.api_match_type] else {
 				return [400, "Please specify the identifier and type with \(Const.api_match_keyword) and \(Const.api_match_type)"]
 			}
-			
+
 			let result = type == "chat" ? ServerDelegate.chat_delegate.matchPartialAddress(id) : ServerDelegate.chat_delegate.matchPartialName(id)
 
 			let res_json = encodeToJson(object: result, title: "matches")
@@ -662,7 +672,7 @@ class ServerDelegate {
 			return [200, res_json]
 		}
 
-		Const.log("WARNING: We haven't implemented this functionality yet, sorry :/", warning: true)
+		Const.log("We haven't implemented this functionality yet, sorry :/", warning: true)
 		return [404, "There is no functionality in the API that implements these URL query parameters"]
 	}
 
