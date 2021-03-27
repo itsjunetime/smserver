@@ -1,4 +1,0 @@
-[submodule "libsmserver"]
-	path = libsmserver
-	url = https://github.com/iandwelker/libsmserver.git
-	branch = master
