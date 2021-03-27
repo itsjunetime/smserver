@@ -18,6 +18,9 @@ struct MainApp {
 	static func main() throws {
 		if CommandLine.argc > 1 {
 			MainApp.setUpSignalHandlers()
+			
+			var token: Int32 = 0
+			memorystatus_control(UInt32(5), getpid(), 500, &token, 0)
 
 			let sets = Settings.shared()
 			sets.parseArgs()

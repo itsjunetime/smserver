@@ -14,7 +14,6 @@
 + (instancetype)sharedInstance {
 	static dispatch_once_t onceToken = 0;
 	__strong static IPCTextWatcher* sharedInstance = nil;
-	//MRYIPCCenter* center = [MRYIPCCenter centerNamed:@"com.ianwelker.smserverHandleText"];
 	dispatch_once(&onceToken, ^{
 		sharedInstance = [[self alloc] init];
 	});

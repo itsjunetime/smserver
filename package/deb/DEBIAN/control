@@ -1,5 +1,6 @@
 Package: com.ianwelker.smserver
-Depends: com.janshai.libsmserver | com.twickd.ian-welker.libsmserver, openssl
+Depends: openssl
+Conflicts: com.janshai.libsmserver, com.twickd.ian-welker.libsmserver
 Name: SMServer
 Version: 0.7.5
 Architecture: iphoneos-arm

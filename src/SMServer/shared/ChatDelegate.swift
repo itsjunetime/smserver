@@ -362,18 +362,17 @@ final class ChatDelegate {
 		let dp_group = DispatchGroup()
 
 		if offset == 0 {
-			let os_version = Const.getOSVersion()
 			#if os(iOS)
-			if os_version >= 14.0 {
+			if Const.getOSVersion() >= 14.0 {
 				DispatchQueue.global(qos: .default).async {
 					dp_group.enter()
-					let center = MRYIPCCenter.init(named: "com.ianwelker.smserver")
+					let center = MRYIPCCenter(named: "com.ianwelker.smserver")
 					pinned_chats = center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String] ?? [String]()
 					dp_group.leave()
 				}
 			}
 			#elseif os(macOS)
-			if os_version >= 10.15 {
+			if Const.getOSVersion() >= 10.15 {
 				pinned_chats = [String]() /// TEMPORARY. Will fix.
 			}
 			#endif

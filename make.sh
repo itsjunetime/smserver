@@ -99,6 +99,9 @@ fi
 ! command -v xcodebuild &>/dev/null && err "Please install xcode command line tools"
 
 [ "$new" = true ] && ! command -v openssl &> /dev/null && err "Please install \033[1mopenssl\033[0m (required to build new certificates)"
+[ "$deb" = true ] && ! command -v dpkg &>/dev/null && err "Please install dpkg to create deb pagkage"
+
+ls -A "${ROOTDIR}"/libsmserver/* || err "It looks like you haven't yet set up this repository's submodules. Please run \033[1mgit submodule init && git submodule update\033[0m and try again."
 
 [ -z ${DEV_CERT+x} ] && DEV_CERT=$(security find-identity -v -p codesigning | head -n1 | cut -d '"' -f2)
 
@@ -159,13 +162,13 @@ then
 
 		find "$html_tmp" -name "*.css" | while read -r file
 		do
-			newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "html_dir")}"
+			newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "$html_dir")}"
 			minify "$file" > "$newfile"
 		done
 
 		find "$html_tmp" -name "*.html" | while read -r file
 		do
-			newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "html_dir")}"
+			newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "$html_dir")}"
 			minify --html-keep-comments --html-keep-document-tags --html-keep-end-tags --html-keep-quotes --html-keep-whitespace "$file" > "$newfile"
 		done
 	fi
@@ -190,63 +193,24 @@ then
 	rm -rf "${ROOTDIR}/package/deb/Applications/SMServer.app"
 	cp -r "${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app" "${ROOTDIR}/package/deb/Applications/SMServer.app"
 
-	if command -v dpkg &>/dev/null
-	then
-		pn "\033[92m==>\033[0m Building \033[1m.deb\033[0m..."
-		dpkg -b "${ROOTDIR}/package/deb"
-		{ mv "${ROOTDIR}/package/deb.deb" "${ROOTDIR}/package/SMServer_${vers}.deb" && recv=true; } || \
-			pn "\033[33mWARNING:\033[0m Failed to create .deb. Run with \033[1m-v\033[0m to see more details."
+	pn "\033[92m==>\033[0m Building \033[1mlibsmserver\033[0m..."
+	cd "${ROOTDIR}/libsmserver" || err "The libsmserver directory is gone."
 
-	else
+	make -B package FINALPACKAGE=1 || err "Failed to build libsmserver. Run with the \033[1m-v\033[0m to see details"
+	cd ".." || err "The parent directory is gone."
 
-		pn "\nSince you don't have \033[1mdpkg\033[0m installed, we must send the .app package over to your iDevice to create the \033[1m.deb\033[0m package."
-		pn "Doing that now...\n"
+	cp "${ROOTDIR}/libsmserver/lib/libsmserver.dylib" "${ROOTDIR}/package/deb/Library/MobileSubstrate/DynamicLibraries/"
+	cp "${ROOTDIR}/libsmserver/libsmserver.plist" "${ROOTDIR}/package/deb/Library/MobileSubstrate/DynamicLibraries/"
 
-		! command -v sshpass &> /dev/null && err "sshpass is not installed on this computer. You can install it with \033[1mbrew install hudochenkov/sshpass/sshpass\033[0m"
-
-		if [ -z ${THEOS_DEVICE_IP+x} ]
-		then
-			pn "Please enter your iDevice's \033[1mIP address\033[0;34m: " -n
-			read -r THEOS_DEVICE_IP
-		fi
-
-		if [ -z ${THEOS_DEVICE_PASS+x} ]
-		then
-			pn "\033[0mPlease enter your iDevice's \033[1mssh password\033[0;34m: " -n
-			read -sr THEOS_DEVICE_PASS
-			pn "" # Just for the newline
-		fi
-
-
-		pn "\033[92m==>\033[0m Removing old directory and sending over new files..."
-		sshpass -p "$THEOS_DEVICE_PASS" ssh root@"${THEOS_DEVICE_IP}" rm -rf /var/mobile/Documents/SMServer || \
-			err "Failed to ssh into your iDevice. Please check your connection and try again. Exiting..."
-
-		sshpass -p "$THEOS_DEVICE_PASS" scp -Crp "${ROOTDIR}/package/deb" root@"${THEOS_DEVICE_IP}":/var/mobile/Documents/SMServer
-
-		pn "\033[92m==>\033[0m Creating new package..."
-		sshpass -p "$THEOS_DEVICE_PASS" ssh root@"${THEOS_DEVICE_IP}" dpkg -b /var/mobile/Documents/SMServer
-
-		while ! [ "$recv" = true ]
-		do
-			pn "\033[92m==>\033[0m Receiving new package..."
-			sshpass -p "$THEOS_DEVICE_PASS" scp -C root@"${THEOS_DEVICE_IP}":/var/mobile/Documents/SMServer.deb "${ROOTDIR}/package/SMServer_${vers}.deb" && \
-				recv=true && break
-
-			pn "\033[1;33mWARNING:\033[0m Failed to receive new package over scp.\n"
-			pn "Would you like to retry? [y/n]: " -n
-			read -rn1 cont
-
-			{ [[ "${cont}" == "n" ]] || [[ "${cont}" == "N" ]]; } && break
-
-		done
-	fi
+	pn "\033[92m==>\033[0m Building \033[1m.deb\033[0m..."
+	dpkg -b "${ROOTDIR}/package/deb"
+	{ mv "${ROOTDIR}/package/deb.deb" "${ROOTDIR}/package/SMServer_${vers}.deb" && recv=true; } || \
+		pn "\033[33;1mWARNING:\033[0m Failed to create .deb. Run with \033[1m-v\033[0m to see more details."
 
 	if [ "$recv" = true ]
 	then
 		pn "✅ SMServer_${vers}.deb successfully created at \033[1m${ROOTDIR}/package/SMServer_${vers}.deb\033[0m\n"
 	else
-		pn "\033[1;33mWARNING:\033[0m Could not receive package over scp.\n"
 		rm "${ROOTDIR}/package/SMServer_${vers}.deb" # Since it may be corrupted
 	fi
 fi

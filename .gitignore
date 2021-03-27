@@ -12,3 +12,6 @@ src/SMServer/shared/IdentityPass.swift
 src/SMServer/identity.pfx
 src/Pods/
 src/Pods/**
+
+package/deb/Library/MobileSubstrate/DynamicLibraries/libsmserver.dylib
+package/deb/Library/MobileSubstrate/DynamicLibraries/libsmserver.plist

@@ -1,9 +1,11 @@
 # Changelog
 0.7.4 &rightarrow; Unreleased
+ - Optimized profile image retrieval
  - Fixed incorrect mime type issues when returning profile pictures
  - Fixed various potential issues in build script
- - Fixed jumpiness while typing long messages in mobile view
- - Fixed random bizarrely large texts in mobile view
+ - Fixed jumpiness while typing long messages in mobile view ([#87](https://github.com/ianwelker/smserver/issues/87))
+ - Fixed random bizarrely large texts in mobile view ([#79](https://github.com/iandwelker/smserver/issues/79))
+ - Fixed infinite crashes when trying to run as daemon ([#111](https://github.com/iandwelker/smserver/issues/111))
 
 0.7.3 &rightarrow; 0.7.4
  - Added support for sending tapbacks to specific parts of messages ([#81](https://github.com/iandwelker/smserver/issues/81))

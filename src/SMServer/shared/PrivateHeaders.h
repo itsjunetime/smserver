@@ -33,6 +33,8 @@
 - (id)guid;
 @end
 
+int memorystatus_control(uint32_t command, int32_t pid, uint32_t flags, void *buffer, size_t buffersize);
+
 #if !TARGET_OS_IPHONE
 
 @interface IMDaemonSingleton

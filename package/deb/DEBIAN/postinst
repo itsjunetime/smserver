@@ -46,4 +46,11 @@ fi
 chown -R mobile:mobile /var/tmp/com.ianwelker.smserver
 
 echo -e "\nSet up permissions for file uploading"
-echo -e "Thanks for installing and enjoy SMServer :)\n"
+
+if [ -f "${dir}/SMServer" ]
+then
+	echo -e "Thanks for installing and enjoy SMServer :)\n"
+else
+	echo -e "\e[31;1mWARNING:\e[0m It appears SMServer did not install correctly.\nPlease completely uninstall the package, respring, and try again."
+	exit 1
+fi
