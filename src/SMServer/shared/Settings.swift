@@ -18,7 +18,9 @@ class Settings {
 	var light_theme: Bool = UserDefaults.standard.object(forKey: "light_theme") as? Bool ?? false
 	var nord_theme: Bool = UserDefaults.standard.object(forKey: "nord_theme") as? Bool ?? false
 	var is_secure: Bool = UserDefaults.standard.object(forKey: "is_secure") as? Bool ?? true
+
 	var authenticated_addresses: [String] = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
+	var parsed_messages: [String] = [String]()
 
 	var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
 	var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false

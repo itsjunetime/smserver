@@ -101,7 +101,7 @@ fi
 [ "$new" = true ] && ! command -v openssl &> /dev/null && err "Please install \033[1mopenssl\033[0m (required to build new certificates)"
 [ "$deb" = true ] && ! command -v dpkg &>/dev/null && err "Please install dpkg to create deb pagkage"
 
-ls -A "${ROOTDIR}"/libsmserver/* || err "It looks like you haven't yet set up this repository's submodules. Please run \033[1mgit submodule init && git submodule update\033[0m and try again."
+ls -A "${ROOTDIR}"/libsmserver/* || err "It looks like you haven't yet set up this repository's submodules. Please run \033[1mgit submodule init && git submodule update --remote\033[0m and try again."
 
 [ -z ${DEV_CERT+x} ] && DEV_CERT=$(security find-identity -v -p codesigning | head -n1 | cut -d '"' -f2)
 

@@ -9,7 +9,7 @@ class ServerDelegate {
 
 	static let chat_delegate = ChatDelegate()
 	static let sender: IWSSender = IWSSender.init()
-	var watcher: IPCTextWatcher? = nil //IPCTextWatcher.sharedInstance()
+	var watcher: IPCTextWatcher? = nil
 
 	var restarted_recently: Bool = false
 	var did_start = false;
@@ -679,6 +679,9 @@ class ServerDelegate {
 	func sentOrReceivedNewText(_ guid: String) {
 		/// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
 		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
+		
+		if settings.parsed_messages.contains(guid) { return }
+		settings.parsed_messages.append(guid);
 
 		let text = ServerDelegate.chat_delegate.getTextByGUID(guid);
 		let json = encodeToJson(object: text, title: "text")

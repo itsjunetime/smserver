@@ -1,9 +1,10 @@
 # Changelog
 0.7.4 &rightarrow; Unreleased
+ - Automatically displays texts sent by user from outside of SMServer ([#76](https://github.com/iandwelker/smserver/issues/76))
  - Optimized profile image retrieval
  - Fixed incorrect mime type issues when returning profile pictures
  - Fixed various potential issues in build script
- - Fixed jumpiness while typing long messages in mobile view ([#87](https://github.com/ianwelker/smserver/issues/87))
+ - Fixed jumpiness while typing long messages in mobile view ([#87](https://github.com/iandwelker/smserver/issues/87))
  - Fixed random bizarrely large texts in mobile view ([#79](https://github.com/iandwelker/smserver/issues/79))
  - Fixed infinite crashes when trying to run as daemon ([#111](https://github.com/iandwelker/smserver/issues/111))
 
