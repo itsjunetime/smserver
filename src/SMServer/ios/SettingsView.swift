@@ -378,11 +378,6 @@ struct SettingsView: View {
 				.sheet(isPresented: $show_share_sheet, content: {
 					ShareSheet(activityItems: [Bundle.main.url(forResource: "cert", withExtension: "der")!])
 				})
-
-				Text("Compatible with libSMServer 0.6.4")
-					.font(.callout)
-					.foregroundColor(.gray)
-
 			}.padding()
 			.animation(.easeInOut(duration: 0.2))
 		}.coordinateSpace(name: "frameLayer")
