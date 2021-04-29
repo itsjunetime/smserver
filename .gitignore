@@ -7,6 +7,7 @@
 tests.md
 implement.md
 .xcode-version
+*.xcbkptlist
 
 src/SMServer/shared/IdentityPass.swift
 src/SMServer/identity.pfx

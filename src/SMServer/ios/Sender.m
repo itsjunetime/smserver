@@ -30,6 +30,7 @@
 			[_center addTarget:self action:@selector(handleReceivedTextWithCallback:)];
 			[_center addTarget:self action:@selector(handlePartyTypingWithCallback:)];
 			[_center addTarget:self action:@selector(handleSentTapbackWithCallback:)];
+			[_center addTarget:self action:@selector(handleTextReadWithCallback:)];
 		}
 		@catch (id exc) {
 			NSString* log = [NSString stringWithFormat:@"\e[93;1mWARNING:\e[0m Failed to add selector for MRYIPCCenter: %@", exc];
@@ -59,6 +60,10 @@
 	/// This is called when you send a reaction through SMServer
 	/// _sentTapback is a block that is set somewhere around line 46 in `ServerDelegate.swift`, in loadFuncs().
 	_sentTapback([[vals objectForKey:@"tapback"] intValue], [vals objectForKey:@"guid"]);
+}
+
+- (void)handleTextReadWithCallback:(NSString *)guid {
+	_textRead(guid);
 }
 
 @end

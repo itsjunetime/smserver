@@ -78,6 +78,16 @@ class SocketDelegate : ServerWebSocketDelegate {
 			}
 		}
 	}
+	
+	func sendTextRead(_ guid: String, date: String) {
+		if let sock = server {
+			if let json = try? JSONSerialization.data(withJSONObject: ["guid": guid, "date": date], options: []) {
+				for i in sock.webSockets {
+					i.send(text: "read:\(String(decoding: json, as: UTF8.self))")
+				}
+			}
+		}
+	}
 
 	func server(_ server: Server, webSocketDidConnect webSocket: WebSocket, handshake: HTTPRequest) {
 		// A web socket connected, you can extract additional information from the handshake request

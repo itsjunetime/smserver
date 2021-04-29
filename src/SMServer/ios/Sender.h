@@ -6,11 +6,13 @@
 @property (copy) void(^setTexts)(NSString *);
 @property (copy) void(^setTyping)(NSDictionary *);
 @property (copy) void(^sentTapback)(int, NSString *);
+@property (copy) void(^textRead)(NSString *);
 + (instancetype)sharedInstance;
 - (instancetype)init;
 - (void)handleReceivedTextWithCallback:(NSString *)chat_id;
 - (void)handlePartyTypingWithCallback:(NSDictionary *)vals;
 - (void)handleSentTapbackWithCallback:(NSDictionary *)vals;
+- (void)handleTextReadWithCallback:(NSString *)guid;
 
 @end
 

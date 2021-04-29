@@ -767,12 +767,12 @@ i.fa-thumbs-down {
 	padding-right: 24px;
 	top: -20px;
 }
-.readreceipt {
+.readReceipt {
 	font-size: 14px;
 	align-self: flex-end;
 	margin-top: 3px;
 }
-.readreceipt, .readreceipt strong {
+.readReceipt, .readReceipt strong {
 	color: #a6a6a6;
 }
 .tapback {

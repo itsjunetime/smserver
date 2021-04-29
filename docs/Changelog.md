@@ -1,12 +1,17 @@
 # Changelog
 0.7.4 &rightarrow; Unreleased
+ - Updates read receipts in real time
  - Automatically displays texts sent by user from outside of SMServer ([#76](https://github.com/iandwelker/smserver/issues/76))
  - Optimized profile image retrieval
+ - Added better notification images ([#119](https://github.com/iandwelker/smserver/issues/119))
  - Fixed incorrect mime type issues when returning profile pictures
  - Fixed various potential issues in build script
+ - Fixed incorrect operating system retrieval
  - Fixed jumpiness while typing long messages in mobile view ([#87](https://github.com/iandwelker/smserver/issues/87))
  - Fixed random bizarrely large texts in mobile view ([#79](https://github.com/iandwelker/smserver/issues/79))
  - Fixed infinite crashes when trying to run as daemon ([#111](https://github.com/iandwelker/smserver/issues/111))
+ - Fixed issue with different addresses being concatenated ([#118](https://github.com/iandwelker/smserver/issues/118))
+ - Fixed ordering of subjects with attachments & disappearing tapbacks ([#110](https://github.com/iandwelker/smserver/issues/110))
 
 0.7.3 &rightarrow; 0.7.4
  - Added support for sending tapbacks to specific parts of messages ([#81](https://github.com/iandwelker/smserver/issues/81))

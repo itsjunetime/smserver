@@ -38,6 +38,9 @@ location /smserver_websocket/ {
 The above block defines that you will be running the main SMServer server at the subdirectory `/smserver/`, and that you will be running the websocket at the subdirectory `/smserver_websocket/`. You are free to change these directories, but make sure to adjust the next step accordingly if you do. \
 3\. Open the settings of the SMServer app on your host device, and enable 'WebSocket Proxy Compatibility' under 'Web interface Settings'. In the box that appears, enter the subdirectory that the websocket resides at in your reverse proxy (in this case, it is `/smserver_websocket/`, but if you change it you'll need to type in what you set it to instead).
 
+__Using Traefik instead__
+[eriksmets](https://github.com/eriksmets) has gotten SMServer running behind traefik as a reverse proxy. Reference [this issue](https://github.com/iandwelker/smserver/issues/117) for details on how to get it set up and running.
+
 ### The website stops automatically updating after a while and I have to refresh it to see new texts/an accurate battery percentage.
 
 Try disabling the option "Restart server on network change" in the host device's settings. If you're running SMServer behind a reverse proxy, you may also want to look at [this comment](https://github.com/iandwelker/smserver/issues/73#issuecomment-762618203) to see if it helps.

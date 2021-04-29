@@ -350,7 +350,9 @@ class Const : NSObject {
 		#if os(macOS)
 			return Double("\(ProcessInfo.processInfo.operatingSystemVersion.majorVersion).\(ProcessInfo.processInfo.operatingSystemVersion.minorVersion)") ?? 10.12
 		#elseif os(iOS)
-			return Double(UIDevice.current.systemVersion) ?? 13.0
+			let version = UIDevice.current.systemVersion
+			let maj_min = version.split(separator: ".").dropLast().joined(separator: ".")
+			return Double(maj_min) ?? 13.0
 		#endif
 	}
 

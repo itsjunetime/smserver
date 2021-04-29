@@ -44,7 +44,7 @@ class ServerDelegate {
 		socket.verify_auth = self.checkIfAuthenticated
 
 		/// Here we set up notification observers for when the network changes, so that we can automatically restart the server on the new network & with the new IP.
-		/// This is kinda a hacky way sending the notification into a `CFNotificationCallback`, which then posts a notification in the `NSNotificationCenter`), but
+		/// This is kinda a hacky way (sending the notification into a `CFNotificationCallback`, which then posts a notification in the `NSNotificationCenter`), but
 		/// it is necessary. The `CFNotificationCallback` can't capture context, but the `NSNotificationCenter` callback can. We need to capture context for our purposes,
 		/// so this seemed like the most efficient solution to accomplish that.
 
@@ -134,15 +134,27 @@ class ServerDelegate {
 		self.watcher = new_watch
 
 		self.watcher?.setTexts = { value in
-			self.sentOrReceivedNewText(value ?? "None")
+			if let val = value {
+				self.sentOrReceivedNewText(val)
+			}
 		}
 
 		self.watcher?.setTyping = { vals in
-			self.setPartyTyping(vals as? [String:Any] ?? [String:Any]())
+			if let v = vals as? [String:Any] {
+				self.setPartyTyping(v)
+			}
 		}
 
 		self.watcher?.sentTapback = { tapback, guid in
-			self.sentTapback(tapback, guid: guid ?? "")
+			if let guid = guid {
+				self.sentTapback(tapback, guid: guid)
+			}
+		}
+		
+		self.watcher?.textRead = { guid in
+			if let guid = guid {
+				self.setTextRead(guid)
+			}
 		}
 
 		if server.isListening {
@@ -462,7 +474,7 @@ class ServerDelegate {
 	func sendText(params: [String:Any], new_files: [String]) -> Int {
 
 		var body: String = params["text"] as? String ?? ""
-		var address: String = params["chat"] as? String ?? ""
+		let address: String = params["chat"] as? String ?? ""
 		var subject: String = params["subject"] as? String ?? ""
 		var files = new_files
 
@@ -475,11 +487,7 @@ class ServerDelegate {
 		}
 		#endif
 
-		if address.prefix(1) == "+" { /// Make sure there are no unnecessary characters like parenthesis
-			address = "+\(address.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())"
-		}
-
-		if subject.count > 0 && body.count == 0 {
+		if subject.count > 0 && body.count == 0 && files.count == 0 {
 			body = subject
 			subject = ""
 		}
@@ -680,8 +688,8 @@ class ServerDelegate {
 		/// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
 		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
 		
-		if settings.parsed_messages.contains(guid) { return }
-		settings.parsed_messages.append(guid);
+		if settings.displayed_messages.contains(guid) { return }
+		settings.displayed_messages.append(guid);
 
 		let text = ServerDelegate.chat_delegate.getTextByGUID(guid);
 		let json = encodeToJson(object: text, title: "text")
@@ -700,6 +708,16 @@ class ServerDelegate {
 
 	func setPartyTyping(_ vals: [String:Any]) {
 		/// Theoretically called when someone else starts typing. Theoretically.
-		self.socket.sendTyping(vals["chat"] as! String, typing: vals["typing"] as! NSNumber == 1)
+		self.socket.sendTyping(vals["chat"] as? String ?? "any", typing: (vals["typing"] as? NSNumber ?? 1) == 1)
+	}
+	
+	func setTextRead(_ guid: String) {
+		if settings.read_messages.contains(guid) { return }
+		settings.read_messages.append(guid)
+		
+		let text = ServerDelegate.chat_delegate.getTextByGUID(guid)
+		let date = Const.getRelativeTime(ts: Double(text["date_read"] as? Int ?? 0))
+		
+		self.socket.sendTextRead(guid, date: date)
 	}
 }
