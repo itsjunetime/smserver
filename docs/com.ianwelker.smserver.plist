@@ -6,7 +6,6 @@
 		This plist simply shows how you could run SMServer as a daemon.
 		Copy this into /Library/LaunchDaemons/ on your iOS device, then run:
 		`launchctl load /Library/LaunchDaemons/com.ianwelker.smserver.plist`
-		`launchctl start /Library/LaunchDaemons/com.ianwelker.smserver.plist`
 
 		If you'd like to pass in more commandline arguments, add strings in the `ProgramArguments` array
 	-->
@@ -18,8 +17,13 @@
 
 	<key>ProgramArguments</key>
 	<array>
+		<!--
+		I know that `-r` is not a real argument,
+		but you need at least one argument argument before `-b`
+		for it to work, for some reason
+		-->
+		<string>-r</string>
 		<string>-b</string>
-		<string>&</string>
 	</array>
 
 	<key>RunAtLoad</key>
@@ -28,10 +32,10 @@
 	<key>KeepAlive</key>
 	<true/>
 
-	<key>SuccessfulExit</key>
-	<true/>
-
 	<key>UserName</key>
-	<string>mobile</string>
+	<string>root</string>
+
+	<key>AbandonProcessGroup</key>
+	<true/>
 </dict>
 </plist>

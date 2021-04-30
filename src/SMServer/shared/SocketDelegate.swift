@@ -78,7 +78,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 			}
 		}
 	}
-	
+
 	func sendTextRead(_ guid: String, date: String) {
 		if let sock = server {
 			if let json = try? JSONSerialization.data(withJSONObject: ["guid": guid, "date": date], options: []) {

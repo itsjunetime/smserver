@@ -150,7 +150,7 @@ class ServerDelegate {
 				self.sentTapback(tapback, guid: guid)
 			}
 		}
-		
+
 		self.watcher?.textRead = { guid in
 			if let guid = guid {
 				self.setTextRead(guid)
@@ -687,7 +687,7 @@ class ServerDelegate {
 	func sentOrReceivedNewText(_ guid: String) {
 		/// Is called when you receive a new text; Tells the socket to send a notification to all connected that you received a new text
 		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
-		
+
 		if settings.displayed_messages.contains(guid) { return }
 		settings.displayed_messages.append(guid);
 
@@ -710,14 +710,14 @@ class ServerDelegate {
 		/// Theoretically called when someone else starts typing. Theoretically.
 		self.socket.sendTyping(vals["chat"] as? String ?? "any", typing: (vals["typing"] as? NSNumber ?? 1) == 1)
 	}
-	
+
 	func setTextRead(_ guid: String) {
 		if settings.read_messages.contains(guid) { return }
 		settings.read_messages.append(guid)
-		
+
 		let text = ServerDelegate.chat_delegate.getTextByGUID(guid)
 		let date = Const.getRelativeTime(ts: Double(text["date_read"] as? Int ?? 0))
-		
+
 		self.socket.sendTextRead(guid, date: date)
 	}
 }
