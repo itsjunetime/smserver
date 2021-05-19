@@ -4,20 +4,20 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>SMServer copy.xcscheme_^#shared#^_</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>6</integer>
-		</dict>
 		<key>SMServer.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>SMServer12.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>12</integer>
+		</dict>
 		<key>SMServer_Mac.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>11</integer>
+			<integer>1</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
@@ -38,6 +38,11 @@
 			<true/>
 		</dict>
 		<key>3C760EA3245BCFE100EF24FE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>3CFFB08F2655D56A002F1AC5</key>
 		<dict>
 			<key>primary</key>
 			<true/>
