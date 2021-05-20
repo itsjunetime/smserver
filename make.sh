@@ -6,6 +6,7 @@ pn () {
 
 leave() {
 	[ -d "${ROOTDIR}/package/SMServer.xcarchive" ] && rm -rf "${ROOTDIR}/package/SMServer.xcarchive"
+	[ -d "${ROOTDIR}/package/SMServer12.xcarchive" ] && rm -rf "${ROOTDIR}/package/SMServer12.xcarchive"
 	ls ./*.pem && rm key.pem cert.pem
 	if ! [ "$kep" = true ]
 	then
@@ -27,6 +28,97 @@ err () {
 	leave
 }
 
+compile() {
+	scheme="$1"
+
+	pn "Compiling \e[1m$scheme\e[0m ->"
+
+	if [ "$deb" = true ] || [ "$ipa" = true ]
+	then
+		pn "\e[34m==>\e[0m Checking files and LLVM Version..."
+		llvm_vers=$(llvm-gcc --version | grep -oE "clang\-[0-9]{4,}" | sed 's/clang\-//g')
+		[ "${llvm_vers}" -lt 1200 ] && \
+			err "You are using llvm < 1200 (Xcode 11.7 or lower); this will fail to compile. Please install Xcode 12.0 or higher to build SMServer."
+
+		{ ! [ -f ${ROOTDIR}/src/SMServer/identity.pfx ] || ! [ -f ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift ]; } && \
+			err "You haven't created some files necessary to compile this. Please run this script with the \e[1m-n\e[0m or \e[1m--new\e[0m flag first"
+
+		if [ "$min" = true ]
+		then
+			! command -v minify && err "Please install minify to minify asset files"
+
+			pn "\e[34m==>\e[0m Minifying css & html files..."
+			cp -r "${html_dir}/" "${html_tmp}/"
+
+			ls "$html_tmp"/*.css | while read -r file
+			do
+				newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "$html_dir")}"
+				minify "$file" > "$newfile"
+			done
+
+			ls "$html_tmp"/*.html | while read -r file
+			do
+				newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "$html_dir")}"
+				minify --html-keep-comments --html-keep-document-tags --html-keep-end-tags --html-keep-quotes --html-keep-whitespace "$file" > "$newfile"
+			done
+		fi
+
+		rm -rf "${ROOTDIR}/package/$scheme.xcarchive"
+		pn "\e[34m==>\e[0m Cleaning and archiving package..."
+		xcodebuild clean archive -workspace "${ROOTDIR}/src/SMServer.xcworkspace" -scheme "$scheme" -archivePath "${ROOTDIR}/package/$scheme.xcarchive" -destination generic/platform=iOS -allowProvisioningUpdates \
+			|| err "Failed to archive package. Run again with \e[1m-v\e[0m to see why"
+
+		pn "\e[34m==>\e[0m Codesigning..."
+		codesign --entitlements "${ROOTDIR}/src/app.entitlements" -f --deep -s "${DEV_CERT}" "${ROOTDIR}/package/$scheme.xcarchive/Products/Applications/$scheme.app"
+
+		pn "✅ \e[1m$scheme.app successfully created\e[0m\n"
+	fi
+
+	if [ "$deb" = true ]
+	then
+		recv=false
+
+		pn "\e[92m==>\e[0m Extracting \e[1m$scheme.app\e[0m..."
+		mkdir -p "${ROOTDIR}/package/deb/Applications"
+		rm -rf "${ROOTDIR}/package/deb/Applications/"*
+		cp -r "${ROOTDIR}/package/$scheme.xcarchive/Products/Applications/$scheme.app" "${ROOTDIR}/package/deb/Applications/$scheme.app"
+
+		pn "\e[92m==>\e[0m Building \e[1mlibsmserver\e[0m..."
+		cd "${ROOTDIR}/libsmserver" || err "The libsmserver directory is gone."
+
+		make -B package FINALPACKAGE=1 || err "Failed to build libsmserver. Run with the \e[1m-v\e[0m to see details"
+		cd ".." || err "The parent directory is gone."
+
+		cp "${ROOTDIR}/libsmserver/lib/libsmserver.dylib" "${ROOTDIR}/package/deb/Library/MobileSubstrate/DynamicLibraries/"
+		cp "${ROOTDIR}/libsmserver/libsmserver.plist" "${ROOTDIR}/package/deb/Library/MobileSubstrate/DynamicLibraries/"
+
+		pn "\e[92m==>\e[0m Building \e[1m.deb\e[0m..."
+		dpkg -b "${ROOTDIR}/package/deb"
+		{ mv "${ROOTDIR}/package/deb.deb" "${ROOTDIR}/package/${scheme}_${vers}.deb" && recv=true; } || \
+			pn "\e[33;1mWARNING:\e[0m Failed to create .deb. Run with \e[1m-v\e[0m to see more details."
+
+		if [ "$recv" = true ]
+		then
+			pn "✅ ${scheme}_${vers}.deb successfully created at \e[1m${ROOTDIR}/package/${scheme}_${vers}.deb\e[0m\n"
+		else
+			rm "${ROOTDIR}/package/${scheme}_${vers}.deb" # Since it may be corrupted
+		fi
+	fi
+
+	if [ "$ipa" = true ]
+	then
+		pn "\e[35m==>\e[0m Extracting \e[1m$scheme.app\e[0m..."
+		mkdir -p "${ROOTDIR}/package/Payload"
+		rm -rf "${ROOTDIR}/package/Payload/"*
+		cp -r "${ROOTDIR}/package/$scheme.xcarchive/Products/Applications/$scheme.app" "${ROOTDIR}/package/Payload/$scheme.app"
+
+		pn "\e[35m==>\e[0m Compressing payload into \e[1m${scheme}_${vers}.ipa\e[0m..."
+		ditto -c -k --sequesterRsrc --keepParent "${ROOTDIR}/package/Payload" "${ROOTDIR}/package/${scheme}_${vers}.ipa"
+
+		pn "✅ ${scheme}_${vers}.ipa successfully created a† \e[1m${ROOTDIR}/package/${scheme}_${vers}.ipa\e[0m"
+	fi
+}
+
 OLDDIR="$(pwd)"
 ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 [[ "$OLDDIR" == "$ROOTDIR" ]] && ROOTDIR="."
@@ -42,6 +134,7 @@ vbs=false
 hlp=false
 kep=false
 min=false
+low=false
 
 stty -echoctl
 trap 'leave' SIGINT
@@ -58,6 +151,7 @@ do
 		[[ "${ng}" == "-keep" ]] && kep=true
 		[[ "${ng}" == "-verbose" ]] && vbs=true
 		[[ "${ng}" == "-minify" ]] && min=true
+		[[ "${ng}" == "-lower" ]] && low=true
 	else
 		for ((i=0; i<${#ng}; i++))
 		do
@@ -68,6 +162,7 @@ do
 			[[ "${ng:$i:1}" == "h" ]] && hlp=true
 			[[ "${ng:$i:1}" == "k" ]] && kep=true
 			[[ "${ng:$i:1}" == "m" ]] && min=true
+			[[ "${ng:$i:1}" == "l" ]] && low=true
 		done
 	fi
 done
@@ -91,7 +186,8 @@ then
         -i, --ipa     : Builds a .ipa
         -v, --verbose : Runs verbose; doesn't hide any output
         -k, --keep    : Don't remove extracted \e[1mSMServer.app\e[0m files when cleaning up
-		-m, --minify  : Minify css & html file when compiling assets using minify (\e[1mbrew install tdewolff/tap/minify\e[0m)
+        -m, --minify  : Minify css & html file when compiling assets using minify (\e[1mbrew install tdewolff/tap/minify\e[0m)
+        -l, --lower   : Compile the CLI version as well, for iOS 12 & lower
     "
 	exit
 fi
@@ -143,89 +239,8 @@ then
 	pn "" # for the newline
 fi
 
-if [ "$deb" = true ] || [ "$ipa" = true ]
-then
-	pn "\e[34m==>\e[0m Checking files and LLVM Version..."
-	llvm_vers=$(llvm-gcc --version | grep -oE "clang\-[0-9]{4,}" | sed 's/clang\-//g')
-	[ "${llvm_vers}" -lt 1200 ] && \
-		err "You are using llvm < 1200 (Xcode 11.7 or lower); this will fail to compile. Please install Xcode 12.0 or higher to build SMServer."
+compile "SMServer"
 
-	{ ! [ -f ${ROOTDIR}/src/SMServer/identity.pfx ] || ! [ -f ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift ]; } && \
-		err "You haven't created some files necessary to compile this. Please run this script with the \e[1m-n\e[0m or \e[1m--new\e[0m flag first"
-
-	if [ "$min" = true ]
-	then
-		! command -v minify && err "Please install minify to minify asset files"
-
-		pn "\e[34m==>\e[0m Minifying css & html files..."
-		cp -r "${html_dir}/" "${html_tmp}/"
-
-		ls "$html_tmp"/*.css | while read -r file
-		do
-			newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "$html_dir")}"
-			minify "$file" > "$newfile"
-		done
-
-		ls "$html_tmp"/*.html | while read -r file
-		do
-			newfile="${file//$(printf "%q" "$html_tmp")/$(printf "%q" "$html_dir")}"
-			minify --html-keep-comments --html-keep-document-tags --html-keep-end-tags --html-keep-quotes --html-keep-whitespace "$file" > "$newfile"
-		done
-	fi
-
-	rm -rf "${ROOTDIR}/package/SMServer.xcarchive"
-	pn "\e[34m==>\e[0m Cleaning and archiving package..."
-	xcodebuild clean archive -workspace "${ROOTDIR}/src/SMServer.xcworkspace" -scheme SMServer -archivePath "${ROOTDIR}/package/SMServer.xcarchive" -destination generic/platform=iOS -allowProvisioningUpdates \
-		|| err "Failed to archive package. Run again with \e[1m-v\e[0m to see why"
-
-	pn "\e[34m==>\e[0m Codesigning..."
-	codesign --entitlements "${ROOTDIR}/src/app.entitlements" -f --deep -s "${DEV_CERT}" "${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app"
-
-	pn "✅ \e[1mSMServer.app successfully created\e[0m\n"
-fi
-
-if [ "$deb" = true ]
-then
-	recv=false
-
-	pn "\e[92m==>\e[0m Extracting \e[1mSMServer.app\e[0m..."
-	mkdir -p "${ROOTDIR}/package/deb/Applications"
-	rm -rf "${ROOTDIR}/package/deb/Applications/SMServer.app"
-	cp -r "${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app" "${ROOTDIR}/package/deb/Applications/SMServer.app"
-
-	pn "\e[92m==>\e[0m Building \e[1mlibsmserver\e[0m..."
-	cd "${ROOTDIR}/libsmserver" || err "The libsmserver directory is gone."
-
-	make -B package FINALPACKAGE=1 || err "Failed to build libsmserver. Run with the \e[1m-v\e[0m to see details"
-	cd ".." || err "The parent directory is gone."
-
-	cp "${ROOTDIR}/libsmserver/lib/libsmserver.dylib" "${ROOTDIR}/package/deb/Library/MobileSubstrate/DynamicLibraries/"
-	cp "${ROOTDIR}/libsmserver/libsmserver.plist" "${ROOTDIR}/package/deb/Library/MobileSubstrate/DynamicLibraries/"
-
-	pn "\e[92m==>\e[0m Building \e[1m.deb\e[0m..."
-	dpkg -b "${ROOTDIR}/package/deb"
-	{ mv "${ROOTDIR}/package/deb.deb" "${ROOTDIR}/package/SMServer_${vers}.deb" && recv=true; } || \
-		pn "\e[33;1mWARNING:\e[0m Failed to create .deb. Run with \e[1m-v\e[0m to see more details."
-
-	if [ "$recv" = true ]
-	then
-		pn "✅ SMServer_${vers}.deb successfully created at \e[1m${ROOTDIR}/package/SMServer_${vers}.deb\e[0m\n"
-	else
-		rm "${ROOTDIR}/package/SMServer_${vers}.deb" # Since it may be corrupted
-	fi
-fi
-
-if [ "$ipa" = true ]
-then
-	pn "\e[35m==>\e[0m Extracting \e[1mSMServer.app\e[0m..."
-	mkdir -p "${ROOTDIR}/package/Payload"
-	rm -r "${ROOTDIR}/package/Payload/SMServer.app"
-	cp -r "${ROOTDIR}/package/SMServer.xcarchive/Products/Applications/SMServer.app" "${ROOTDIR}/package/Payload/SMServer.app"
-
-	pn "\e[35m==>\e[0m Compressing payload into \e[1mSMServer_${vers}.ipa\e[0m..."
-	ditto -c -k --sequesterRsrc --keepParent "${ROOTDIR}/package/Payload" "${ROOTDIR}/package/SMServer_${vers}.ipa"
-
-	pn "✅ SMServer_${vers}.ipa successfully created a† \e[1m${ROOTDIR}/package/SMServer_${vers}.ipa\e[0m"
-fi
+[ "$low" = true ] && pn "" && compile "SMServer12"
 
 leave

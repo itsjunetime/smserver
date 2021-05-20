@@ -1,5 +1,5 @@
 Package: com.ianwelker.smserver
-Depends: openssl
+Depends: openssl, com.muirey03.libmryipc
 Conflicts: com.janshai.libsmserver, com.twickd.ian-welker.libsmserver
 Name: SMServer
 Version: 0.8.0

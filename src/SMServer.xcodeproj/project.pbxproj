@@ -55,7 +55,6 @@
 		3CFFB09E2655D56A002F1AC5 /* IdentityPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58666259FF1E90063963B /* IdentityPass.swift */; };
 		3CFFB0A02655D56A002F1AC5 /* libmryipc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
 		3CFFB0A12655D56A002F1AC5 /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
-		3CFFB0A22655D56A002F1AC5 /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */; };
 		3CFFB0A42655D56A002F1AC5 /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3CFFB0A52655D56A002F1AC5 /* identity.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB3024E77F7800F48291 /* identity.pfx */; };
 		3CFFB0A62655D56A002F1AC5 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */; };
@@ -66,7 +65,6 @@
 		3CFFB0AC2655D56A002F1AC5 /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3CFFB0B42655D6DF002F1AC5 /* entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFFB0B32655D6DF002F1AC5 /* entry.swift */; };
 		3CFFB0B52655D726002F1AC5 /* entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFFB0B32655D6DF002F1AC5 /* entry.swift */; };
-		AEBF69C8F3C5E563775B5FDF /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -171,7 +169,6 @@
 			files = (
 				3C5F2BDD25F6CB3D00BAEB60 /* libmryipc.dylib in Frameworks */,
 				3C88306D25F2D1BD00FACDEB /* Pods_SMServer.framework in Frameworks */,
-				AEBF69C8F3C5E563775B5FDF /* Pods_SMServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -181,7 +178,6 @@
 			files = (
 				3CFFB0A02655D56A002F1AC5 /* libmryipc.dylib in Frameworks */,
 				3CFFB0A12655D56A002F1AC5 /* Pods_SMServer.framework in Frameworks */,
-				3CFFB0A22655D56A002F1AC5 /* Pods_SMServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -839,8 +835,8 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -901,7 +897,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
+				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -928,6 +924,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 695E11A8D6758027462A7F3A /* Pods-SMServer.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_OPTIMIZATION = "";
 				CLANG_ENABLE_MODULES = YES;
@@ -1001,6 +998,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_OPTIMIZATION = time;
 				CLANG_ENABLE_MODULES = YES;
@@ -1071,6 +1069,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 695E11A8D6758027462A7F3A /* Pods-SMServer.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_OPTIMIZATION = "";
 				CLANG_ENABLE_MODULES = YES;
@@ -1103,8 +1102,8 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/HTTPParserC/HTTPParserC.framework/Headers\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph/Telegraph.framework/Headers\"",
 				);
-				INFOPLIST_FILE = "SMServer copy-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				INFOPLIST_FILE = SMServer/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1114,6 +1113,7 @@
 					"$(PROJECT_DIR)/SMServer",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
+				LLVM_LTO = YES;
 				MARKETING_VERSION = 0.7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
@@ -1144,6 +1144,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_OPTIMIZATION = time;
 				CLANG_ENABLE_MODULES = YES;
@@ -1174,8 +1175,8 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/HTTPParserC/HTTPParserC.framework/Headers\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph/Telegraph.framework/Headers\"",
 				);
-				INFOPLIST_FILE = "SMServer copy-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				INFOPLIST_FILE = SMServer/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1185,6 +1186,7 @@
 					"$(PROJECT_DIR)/SMServer",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
+				LLVM_LTO = YES;
 				MARKETING_VERSION = 0.7.4;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
