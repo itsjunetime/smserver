@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env bash
 
 pn () {
 	{ [ $# -gt 1 ] && [[ "${2}" == "-n" ]] && echo -en "${1}" >&3; } || echo -e "${1}" >&3
