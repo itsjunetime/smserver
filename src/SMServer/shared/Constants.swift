@@ -193,6 +193,18 @@ class Const : NSObject {
 	\(cmd_password):
 		This sets the password for the server, and requires a value to be passed in immediately after this flag. The default password for the server is 'toor'.
 
+	\(cmd_rem_run), \(cmd_rem_run_short):
+		Connects SMServer to the remote server to allow out-of-network access.
+
+	\(cmd_rem_addr), \(cmd_rem_addr_short):
+		Tells SMServer what remote server to connect to (if not using the default), without the protocol specifier (e.g. just 'example.com:8741/subdirectory')
+
+	\(cmd_rem_sec), \(cmd_rem_sec_short):
+		Tells SMServer to connect to the remote server with TLS/SSL
+
+	\(cmd_rem_bypass), \(cmd_rem_bypass_short):
+		Tells SMServer to bypass SSL Certificate checks when connecting to the remote server
+
 	\(cmd_theme_short), \(cmd_theme):
 		This sets the theme for the web interface, which must be one of the following: \(cmd_theme_options.joined(separator: ",")), and requires a value to be passed in immediately after this flag.
 
@@ -271,6 +283,18 @@ class Const : NSObject {
 	static let cmd_background_short: String = "-b"
 	static let cmd_no_background: String = "--no_background"
 
+	static let cmd_rem_run: String = "--remote"
+	static let cmd_rem_run_short: String = "-r"
+	static let cmd_rem_no_run: String = "--no_remote"
+	static let cmd_rem_addr: String = "--remote_addr"
+	static let cmd_rem_addr_short: String = "-o"
+	static let cmd_rem_sec: String = "--remote_secure"
+	static let cmd_rem_sec_short: String = "-u"
+	static let cmd_rem_no_sec: String = "--no_remote_secure"
+	static let cmd_rem_bypass: String = "--remote_bypass"
+	static let cmd_rem_bypass_short: String = "-k"
+	static let cmd_rem_no_bypass: String = "--no_remote_bypass"
+
 	static let cmd_req_vals = [
 		cmd_server_port, cmd_server_port_short,
 		cmd_socket_port, cmd_socket_port_short,
@@ -278,7 +302,8 @@ class Const : NSObject {
 		cmd_html_dir, cmd_html_dir_short,
 		cmd_password, cmd_socket_subdir,
 		cmd_theme, cmd_theme_short,
-		cmd_def_chats, cmd_def_messages, cmd_def_photos
+		cmd_def_chats, cmd_def_messages, cmd_def_photos,
+		cmd_rem_addr, cmd_rem_addr_short,
 	]
 
 	static let cmd_bool_vals = [
@@ -290,7 +315,10 @@ class Const : NSObject {
 		cmd_contacts, cmd_contacts_short, cmd_no_contacts,
 		cmd_debug, cmd_debug_short, cmd_no_debug,
 		cmd_show_help, cmd_show_help_short,
-		cmd_background, cmd_background_short, cmd_no_background
+		cmd_background, cmd_background_short, cmd_no_background,
+		cmd_rem_run, cmd_rem_run_short, cmd_rem_no_run,
+		cmd_rem_sec, cmd_rem_sec_short, cmd_rem_no_sec,
+		cmd_rem_bypass, cmd_rem_bypass_short, cmd_rem_no_bypass
 	]
 
 	static let col = "\u{001B}["
@@ -436,6 +464,33 @@ class Const : NSObject {
 
 			return formatter.string(from: date)
 		}
+	}
+
+	static func encodeToJson(object: Any, title: String?) -> String {
+		/// This encodes `object` (normally like an array of dictionary or dictionary of dictionaries) to JSON, with the title of `title`
+		if let ttl = title {
+			let enc = [ttl: object]
+			guard let data = try? JSONSerialization.data(withJSONObject: enc, options: .prettyPrinted) else {
+				return ""
+			}
+			return String(decoding: data, as: UTF8.self)
+		} else {
+			guard let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted) else {
+				return ""
+			}
+			return String(decoding: data, as: UTF8.self)
+		}
+	}
+
+	static func jsonToDict(string: String) -> [String: Any]? {
+		if let data = string.data(using: .utf8) {
+			do {
+				return try JSONSerialization.jsonObject(with: data, options: []) as? [String:Any]
+			} catch {
+				print(error.localizedDescription)
+			}
+		}
+		return nil
 	}
 }
 

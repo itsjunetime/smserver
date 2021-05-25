@@ -15,9 +15,9 @@ struct SettingsView: View {
 	@State private var alert_title: String = ""
 	@State private var alert_text: String = ""
 
-	/// Ideally we would make this equal to the object in settings that relates to this
-	/// but in iOS, where this file is used, the items in settings always equal their `UserDefaults` counterparts.
-	@State var socket_subdir_enabled: Bool = UserDefaults.standard.object(forKey: "socket_subdirectory") as? String? ?? nil != nil
+	@State var socket_subdir_enabled: Bool = Settings.shared().socket_subdirectory != nil
+	@State var run_remote: Bool = Settings.shared().run_remote
+	@State var remote_secure: Bool = Settings.shared().remote_secure
 
 	private func resetDefaults() {
 		let domain = Bundle.main.bundleIdentifier!
@@ -120,6 +120,36 @@ struct SettingsView: View {
 		}, set: {
 			self.settings.socket_subdirectory = $0
 			UserDefaults.standard.setValue($0, forKey: "socket_subdirectory")
+		})
+
+		let run_remote_binding = Binding<Bool>(get: {
+			self.run_remote
+		}, set: {
+			self.settings.run_remote = $0
+			self.run_remote = $0
+			UserDefaults.standard.setValue($0, forKey: "run_remote")
+		})
+
+		let remote_addr_binding = Binding<String>(get: {
+			self.settings.remote_addr
+		}, set: {
+			self.settings.remote_addr = $0
+			UserDefaults.standard.setValue($0, forKey: "remote_addr")
+		})
+
+		let remote_sec_binding = Binding<Bool>(get: {
+			self.settings.remote_secure
+		}, set: {
+			self.settings.remote_secure = $0
+			self.remote_secure = $0
+			UserDefaults.standard.setValue($0, forKey: "remote_secure")
+		})
+
+		let remote_bypass_binding = Binding<Bool>(get: {
+			self.settings.remote_bypass_cert
+		}, set: {
+			self.settings.remote_bypass_cert = $0
+			UserDefaults.standard.setValue($0, forKey: "remote_bypass_cert")
 		})
 
 		let debug_binding = Binding<Bool>(get: {
@@ -261,6 +291,40 @@ struct SettingsView: View {
 					.background(grey_box)
 					.cornerRadius(8)
 					.animation(.easeInOut(duration: 0.2))
+
+					Spacer().frame(height: 8)
+
+					Section {
+
+						Text("Remote Connection Settings")
+							.font(.headline)
+
+						Section {
+							VStack(spacing: 8) {
+
+								Toggle("Enable remote connection", isOn: run_remote_binding)
+
+								if run_remote {
+									VStack(alignment: .leading) {
+										Text("Remote address (no protocol)")
+										TextField("e.g. example.com:8741/subdir", text: remote_addr_binding)
+											.textFieldStyle(RoundedBorderTextFieldStyle())
+											.disableAutocorrection(true)
+									}
+
+									Toggle("Connect securely", isOn: remote_sec_binding)
+
+									if remote_secure {
+										Toggle("Bypass certificate checks", isOn: remote_bypass_binding)
+									}
+								}
+
+							}
+						}.padding(10)
+						.background(grey_box)
+						.cornerRadius(8)
+						.animation(.easeInOut(duration: 0.2))
+					}
 
 					Spacer().frame(height: 8)
 

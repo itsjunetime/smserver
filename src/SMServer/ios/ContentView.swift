@@ -14,16 +14,19 @@ struct ContentView: View {
 	@State var show_oseven_update: Bool = false
 	@State var ip_address: String = ""
 	@State var show_failed_start: Bool = false
+	@State var failed_start_msg: String = ""
 
 	func loadServer() {
 		/// This starts the server at port $port_num
 		Const.log("Attempting to load server and socket...")
 
-		self.server_running = server.startServers()
+		let running = server.startServers()
 
-		Const.log(self.server_running ? "Successfully started server and socket" : "Failed to start server and socket", warning: !self.server_running)
+		Const.log(running.0 ? "Successfully started server and socket" : "Failed to start server and socket: \(running.1)", warning: !running.0)
 
+		self.server_running = running.0
 		if !self.server_running {
+			self.failed_start_msg = running.1
 			self.show_failed_start = true
 		}
 	}
@@ -178,9 +181,27 @@ struct ContentView: View {
 			.padding(.top, 14)
 
 			if Const.getWiFiAddress() != nil || settings.override_no_wifi {
-				Text(verbatim: "Visit http\(settings.is_secure ? "s" : "")://\(ip_address):\(settings.server_port) in your browser to view your messages!")
-					.font(Font.custom("smallTitle", size: 22))
-					.padding()
+				if self.server_running {
+					Text(verbatim: "Visit http\(settings.is_secure ? "s" : "")://\(ip_address):\(settings.server_port) in your browser to view your messages!")
+						.font(Font.custom("smallTitle", size: 22))
+						.padding()
+
+					if settings.run_remote {
+						if let id = settings.remote_id {
+							Text("Your remote id is \(id)")
+								.font(Font.custom("smallerTitle", size: 20))
+								.padding()
+						} else {
+							Text("Unable to get remote id; restart to try again.")
+								.font(Font.custom("smallerTitle", size: 20))
+								.padding()
+						}
+					}
+				} else {
+					Text("Click the start button to run the server!")
+						.font(Font.custom("smallTitle", size: 22))
+						.padding()
+				}
 			} else {
 				Text("Please connect to wifi to operate the server.")
 					.font(Font.custom("smallTitle", size: 22))
@@ -303,7 +324,7 @@ struct ContentView: View {
 			Alert(title: Text("0.7.0 Update"), message: Text("SMServer was recently updated to version 0.7.0. In this update, many parts of the API were rewritten to be easier to use and more robust.\n\nIf you are using the API of this app in any way outside of the built-in web interface, I would recommend that you check the API documentation (link in Settings) and verify that what you've made is still compatible"), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_oseven_update = false }))
 		})
 		.alert(isPresented: $show_failed_start, content: {
-			Alert(title: Text("Failed to start"), message: Text("SMServer failed to start the web service. You may already have SMServer running in the background as a daemon. Please close the app and try again."), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_failed_start = false }))
+			Alert(title: Text("Failed to start"), message: Text(self.failed_start_msg), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_failed_start = false }))
 		})
 	}
 }

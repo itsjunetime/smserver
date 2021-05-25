@@ -10,6 +10,15 @@ import Contacts
 final class ChatDelegate {
 	let settings = Settings.shared()
 
+	private static var sharedDelegate: ChatDelegate = {
+		let delegate = ChatDelegate()
+		return delegate
+	}()
+
+	class func shared() -> ChatDelegate {
+		return sharedDelegate
+	}
+
 	final func createConnection(connection_string: String = Const.sms_db_address) -> OpaquePointer? {
 		/// This simply returns an opaque pointer to the database at `connection_string`, allowing for sqlite connections.
 		var db: OpaquePointer?
@@ -167,15 +176,43 @@ final class ChatDelegate {
 
 			texts[i].removeValue(forKey: "payload_data")
 
+			if let serv = texts[i]["service"] as? String {
+				texts[i]["imessage"] = serv == "iMessage"
+				texts[i].removeValue(forKey: "service")
+			}
+
 			/// Change values that shouldn't be strings to the correct type
-			if texts[i]["ROWID"] != nil                    { texts[i]["ROWID"] = Int(texts[i]["ROWID"] as! String) }
-			if texts[i]["is_from_me"] != nil               { texts[i]["is_from_me"] = texts[i]["is_from_me"] as! String == "1" }
-			if texts[i]["date"] != nil                     { texts[i]["date"] = Int(texts[i]["date"] as! String) }
-			if texts[i]["date_read"] != nil                { texts[i]["date_read"] = Int(texts[i]["date_read"] as! String) }
-			if texts[i]["cache_has_attachments"] != nil    { texts[i]["cache_has_attachments"] = texts[i]["cache_has_attachments"] as! String == "1" }
-			if texts[i]["associated_message_type"] != nil  { texts[i]["associated_message_type"] = Int(texts[i]["associated_message_type"] as! String) }
-			if texts[i]["item_type"] != nil                { texts[i]["item_type"] = Int(texts[i]["item_type"] as! String) }
-			if texts[i]["group_action_type"] != nil        { texts[i]["group_action_type"] = Int(texts[i]["group_action_type"] as! String) ?? 0 }
+			if let rowid = texts[i]["ROWID"] as? String {
+				texts[i]["ROWID"] = Int(rowid)
+			}
+
+			if let from_me = texts[i]["is_from_me"] as? String {
+				texts[i]["is_from_me"] = from_me == "1"
+			}
+
+			if let date = texts[i]["date"] as? String {
+				texts[i]["date"] = Int(date)
+			}
+
+			if let read = texts[i]["date_read"] as? String {
+				texts[i]["date_read"] = Int(read)
+			}
+
+			if let cache = texts[i]["cache_has_attachments"] as? String {
+				texts[i]["cache_has_attachments"] = cache == "1"
+			}
+
+			if let am_type = texts[i]["associated_message_type"] as? String {
+				texts[i]["associated_message_type"] = Int(am_type)
+			}
+
+			if let type = texts[i]["item_type"] as? String {
+				texts[i]["item_type"] = Int(type)
+			}
+
+			if let ga_type = texts[i]["group_action_type"] as? String {
+				texts[i]["group_action_type"] = Int(ga_type) ?? 0
+			}
 		}
 	}
 

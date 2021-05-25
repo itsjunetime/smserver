@@ -28,7 +28,7 @@ struct MainApp {
 			let server = ServerDelegate()
 			let success = server.startServers()
 
-			if success {
+			if success.0 {
 				print("\(Const.col)34m==>\(Const.col)0m Success!\(Const.col)1m")
 				if sets.cli_background {
 					print("\(Const.col)0mServer will now run in the background until you kill it")
@@ -36,7 +36,7 @@ struct MainApp {
 					print("Enter 'q' at any time to quit SMServer\(Const.col)0m")
 				}
 			} else {
-				print("\(Const.col)31;1mERROR:\(Const.col)0m SMServer failed to start.\(sets.debug ? "" : " Try again with the \(Const.col)1m--debug\(Const.col)0m flag to see more details")")
+				print("\(Const.col)31;1mERROR:\(Const.col)0m SMServer failed to start: \(success.1)\(sets.debug ? "" : "\nTry again with the \(Const.col)1m--debug\(Const.col)0m flag to see more details")")
 				exit(1)
 			}
 
