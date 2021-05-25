@@ -109,7 +109,8 @@
 
 					var t = document.createElement("span");
 					var rets = [];
-					var classes = `text ${text.is_from_me ? "is_from_me" : "is_from_them"} ${text.service}`;
+					var service = text.imessage ? "iMessage" : "SMS";
+					var classes = `text ${text.is_from_me ? "is_from_me" : "is_from_them"} ${service}`;
 					var current_index = 0;
 
 					t.className = classes;
@@ -131,7 +132,7 @@
 						img.src = `${prefix}data?path=${text.attachments.length > 1 ? text.attachments[1].filename : text.attachments[0].filename}`;
 
 						var under = document.createElement("a");
-						under.href = (text.text.match(/^https{0,1}:\/\//) ? "" : "http://") + text.text;
+						under.href = (text.text.match(/^https?:\/\//) ? "" : "http://") + text.text;
 						under.className = "richLinkUnder";
 						under.setAttribute("target", "_blank");
 						under.setAttribute("rel", "noreferrer noopener");
@@ -605,8 +606,7 @@
 			async function printChats(offset = 0) {
 				if (debug) console.log("printing Chats");
 				let url = `${prefix}requests?chats&chats_offset=${offset}`;
-				let chatPromise = await fetchFromURL(url);
-				this.items = chatPromise.chats;
+				let items = await fetchFromURL(url);
 
 				var doc = document.getElementsByClassName("chats-list")[0];
 				var old_button = document.getElementById("morechatsbutton");
@@ -716,8 +716,8 @@
 
 				let url = `${prefix}requests?messages=${addresses === "" ? chat_id : addresses}`;
 
-				let textsPromise = await fetchFromURL(url);
-				this.texts = textsPromise.texts;
+				let texts = await fetchFromURL(url);
+				//this.texts = textsPromise.texts;
 
 				num_texts_returned = texts.length;
 
@@ -1450,9 +1450,7 @@
 
 			async function setUpConfig() {
 				let config_url = `${prefix}requests?config`;
-				let config_promise = await fetchFromURL(config_url);
-
-				let config = config_promise["config"];
+				let config = await fetchFromURL(config_url);
 
 				if (config.socket_subdirectory !== null)
 					socket_subdir = config.socket_subdirectory;

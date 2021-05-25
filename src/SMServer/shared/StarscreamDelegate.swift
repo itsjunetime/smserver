@@ -16,7 +16,7 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 			return false
 		}
 
-		Const.log("Got id: '\(id)'")
+		Const.log("Got remote id: '\(id)'")
 
 		settings.remote_id = id
 		let url_encoded = settings.password.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? settings.password
@@ -50,11 +50,15 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 		let group = DispatchGroup()
 		group.enter()
 
+		let config = URLSessionConfiguration.default
+		config.timeoutIntervalForRequest = 10
+		config.timeoutIntervalForResource = 10
+
 		let urlSession: URLSession = {
 			if settings.remote_bypass_cert {
-				return URLSession(configuration: URLSessionConfiguration.default, delegate: self, delegateQueue: nil)
+				return URLSession(configuration: config, delegate: self, delegateQueue: nil)
 			} else {
-				return URLSession(configuration: URLSessionConfiguration.default)
+				return URLSession(configuration: config)
 			}
 		}()
 
@@ -65,6 +69,8 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 			group.leave()
 		}
 
+		Const.log("Creating session with url \(url)")
+
 		task.resume()
 
 		group.wait()
@@ -72,6 +78,7 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 	}
 
 	func didReceive(event: WebSocketEvent, client: WebSocket) {
+		Const.log("Receuved event: \(event)")
 		switch event {
 			case .connected(_):
 				socket_state = SocketState.Connected
@@ -90,16 +97,19 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 
 	func sendTyping(_ chat: String, typing: Bool) {
 		let msg = SocketMessage.typing(chat, active: typing)
+		Const.log("Sending typing msg: \(msg)")
 		self.sendData(data: msg.json())
 	}
 
 	func sendNewMessage(_ msg: [String:Any]) {
 		let new_msg = SocketMessage.newMessage(msg)
+		Const.log("Sending new msg: \(msg)")
 		self.sendData(data: new_msg.json())
 	}
 
 	func sendData(data: Any) {
 		let json = Const.encodeToJson(object: data, title: nil)
+		Const.log("Sending data: \(json)")
 		socket?.write(string: json)
 	}
 }

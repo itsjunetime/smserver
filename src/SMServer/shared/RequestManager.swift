@@ -7,6 +7,8 @@ class RequestManager {
 	static let sharedManager = RequestManager()
 
 	func handleString(_ str: String) {
+		Const.log("Decoding string \(str)")
+
 		guard let object = Const.jsonToDict(string: str) else {
 			return
 		}
@@ -38,22 +40,36 @@ class RequestManager {
 	}
 
 	func handleJsonRequest(_ msg: SocketMessage) {
+		Const.log("Msg is a parseAndReturn request")
+
 		var str_dict = (msg.data as? [String:Any] ?? [String:Any]()).mapValues({ String(describing: $0) })
 
 		if msg.command == .GetChats && str_dict[Const.api_chat_req] == nil {
 			str_dict[Const.api_chat_req] = ""
 		}
 
+		Const.log("Send params \(str_dict) to parseAndReturn")
+
 		let ret_data = ServerDelegate.parseAndReturn(params: str_dict, verify_auth: false)
 		if ret_data.0 == 200 {
+			Const.log("ret_data is good. Sending.")
 			self.sendRequestResponse(msg, data: ret_data.1)
+		} else {
+			Const.log("ret_data is bad: \(ret_data.0), \(ret_data.1)")
 		}
 	}
 
 	func handleSendMessage(_ msg: SocketMessage) {
-		let msg_req = SendMessageRequest(msg.data as? [String:Any] ?? [String:Any]())
+		let dict = msg.data as? [String:Any] ?? [String:Any]()
+		let msg_req = SendMessageRequest(dict)
+		Const.log("Appending sendMessageRequest \(msg_req)")
 		if let id = msg.id {
-			pending_sends[id] = msg_req
+
+			if (dict["attachments"] as? [[String:Any]] ?? [[String:Any]]()).count > 0 {
+				pending_sends[id] = msg_req
+			} else {
+				_ = ServerDelegate.sendText(params: dict, new_files: [String]())
+			}
 		}
 	}
 
@@ -72,6 +88,8 @@ class RequestManager {
 			return Data()
 		}()
 
+		Const.log("Got data for data request: \(ret_data)")
+
 		let encoded = ret_data.base64EncodedString()
 		let chunk_size = 51200
 		let string_len = encoded.count;
@@ -80,17 +98,21 @@ class RequestManager {
 
 		while idx < string_len {
 			let chunk_start_idx = encoded.index(encoded.startIndex, offsetBy: idx)
-			let chunk_end_idx = encoded.index(chunk_start_idx, offsetBy: chunk_size >= string_len ? string_len - 1 : chunk_size)
+			let chunk_end_idx = encoded.index(chunk_start_idx, offsetBy: min(chunk_size, string_len))
 			let chunk = encoded[chunk_start_idx..<chunk_end_idx]
 
 			chunks.append(String(chunk))
 			idx += chunk_size
 		}
 
+		Const.log("Total chunks length: \(chunks.count)")
+
 		for chunk in chunks {
-			let json_dict: [String:String] = [
+			Const.log("Sending chunk...")
+
+			let json_dict: [String:Any] = [
 				"data": chunk,
-				"total": String(chunks.count)
+				"total": chunks.count
 			]
 
 			self.sendRequestResponse(msg, data: json_dict)
@@ -98,6 +120,7 @@ class RequestManager {
 	}
 
 	func handleSendRequest(_ msg: SocketMessage) {
+		Const.log("Handling send request \(msg)")
 		if let dict = msg.data as? [String:Any] {
 			let str_dict = dict.mapValues({ String(describing: $0) })
 			_ = ServerDelegate.sendGetRequest(params: str_dict)
@@ -109,6 +132,7 @@ class RequestManager {
 
 		let att_data = AttachmentData(dict)
 		guard let send_req = pending_sends[att_data.message_id] else {
+			Const.log("Couldn't get send_req for id \(att_data.message_id)")
 			return
 		}
 
@@ -116,17 +140,20 @@ class RequestManager {
 
 		for att in send_req.attachments {
 			if att.id == att_data.attachment_id {
+				Const.log("Appending data for attachment_id \(att.id)")
 				att.data.append(att_data.data)
 			}
 
 			if finished {
 				if att.received != att.size {
+					Const.log("Have not received all data for att \(att). Received: \(att.received), size: \(att.size)")
 					finished = false
 				}
 			}
 		}
 
 		if finished {
+			Const.log("Have finished receiving data for message. Sending...")
 			let fm = FileManager.default
 			let doc_dir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
 
@@ -135,6 +162,8 @@ class RequestManager {
 				let file_dir = "\(doc_dir)/\(att.filename)"
 
 				fm.createFile(atPath: file_dir, contents: full_data, attributes:nil)
+
+				Const.log("Placed data in file at \(file_dir)")
 
 				return file_dir
 			}
@@ -145,6 +174,8 @@ class RequestManager {
 				"subject": send_req.subject,
 				"photos": send_req.photos
 			]
+
+			Const.log("Sending message...")
 
 			_ = ServerDelegate.sendText(params: params, new_files: file_dirs)
 

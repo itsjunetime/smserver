@@ -627,7 +627,7 @@ class ServerDelegate {
 
 			let result = type == "chat" ? chat_delegate.matchPartialAddress(id) : chat_delegate.matchPartialName(id)
 
-			let res_json = Const.encodeToJson(object: result, title: "matches")
+			//let res_json = Const.encodeToJson(object: result, title: "matches")
 
 			return (200, result)
 		}
