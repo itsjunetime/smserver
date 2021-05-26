@@ -142,6 +142,7 @@ class RequestManager {
 			if att.id == att_data.attachment_id {
 				Const.log("Appending data for attachment_id \(att.id)")
 				att.data.append(att_data.data)
+				att.received += 1;
 			}
 
 			if finished {
@@ -159,7 +160,7 @@ class RequestManager {
 
 			let file_dirs = send_req.attachments.map{ att -> String in
 				let full_data = Data(base64Encoded: att.data.joined())
-				let file_dir = "\(doc_dir)/\(att.filename)"
+				let file_dir = doc_dir.absoluteString + att.filename
 
 				fm.createFile(atPath: file_dir, contents: full_data, attributes:nil)
 
@@ -204,12 +205,13 @@ let str_to_command: [String:APICommand] = [
 	"get-attachment": .GetAttachment,
 	"get-icon": .GetIcon,
 	"send-message": .SendMessage,
+	"attachment-data": .AttachmentData,
 	"send-tapback": .SendTapback,
 	"delete-chat": .DeleteChat,
 	"delete-text": .DeleteText,
 	"send-typing": .SendTyping,
 	"typing": .Typing,
-	"new-message": .NewMessage
+	"new-message": .NewMessage,
 ]
 
 class SocketRequest {
