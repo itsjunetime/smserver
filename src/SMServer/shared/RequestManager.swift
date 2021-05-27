@@ -98,7 +98,7 @@ class RequestManager {
 
 		while idx < string_len {
 			let chunk_start_idx = encoded.index(encoded.startIndex, offsetBy: idx)
-			let chunk_end_idx = encoded.index(chunk_start_idx, offsetBy: min(chunk_size, string_len))
+			let chunk_end_idx = encoded.index(chunk_start_idx, offsetBy: min(chunk_size, string_len - idx))
 			let chunk = encoded[chunk_start_idx..<chunk_end_idx]
 
 			chunks.append(String(chunk))
@@ -107,13 +107,19 @@ class RequestManager {
 
 		Const.log("Total chunks length: \(chunks.count)")
 
-		for chunk in chunks {
+		msg.last = false;
+
+		for idx in 0..<chunks.count {
 			Const.log("Sending chunk...")
 
 			let json_dict: [String:Any] = [
-				"data": chunk,
+				"data": chunks[idx],
 				"total": chunks.count
 			]
+			
+			if idx == chunks.count - 1 {
+				msg.last = true
+			}
 
 			self.sendRequestResponse(msg, data: json_dict)
 		}
@@ -159,14 +165,14 @@ class RequestManager {
 			let doc_dir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
 
 			let file_dirs = send_req.attachments.map{ att -> String in
-				let full_data = Data(base64Encoded: att.data.joined())
-				let file_dir = doc_dir.absoluteString + att.filename
+				let full_data = Data(base64Encoded: att.data.reversed().joined())
+				let file_dir = doc_dir.appendingPathComponent(att.filename)
 
-				fm.createFile(atPath: file_dir, contents: full_data, attributes:nil)
+				fm.createFile(atPath: file_dir.path, contents: full_data, attributes:nil)
 
-				Const.log("Placed data in file at \(file_dir)")
+				Const.log("Placed data (length \(full_data?.count ?? 0)) in file at \(file_dir)")
 
-				return file_dir
+				return file_dir.path
 			}
 
 			let params = [
@@ -193,7 +199,7 @@ class RequestManager {
 	}
 
 	func sendRequestResponse(_ msg: SocketMessage, data: Any) {
-		let response = SocketMessage(msg.id, command: msg.command, data: data, incoming: false)
+		let response = SocketMessage(msg.id, command: msg.command, data: data, incoming: false, last: msg.last)
 		StarscreamDelegate.sharedDelegate.sendData(data: response.json())
 	}
 }
