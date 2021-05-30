@@ -29,24 +29,24 @@ struct SettingsView: View {
 
 	var body: some View {
 
-		let chats_binding = Binding<Int>(get: {
+		let chats_binding = Binding<UInt>(get: {
 			self.settings.default_num_chats
 		}, set: {
-			self.settings.default_num_chats = Int($0)
+			self.settings.default_num_chats = UInt($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_chats")
 		})
 
-		let messages_binding = Binding<Int>(get: {
+		let messages_binding = Binding<UInt>(get: {
 			self.settings.default_num_messages
 		}, set: {
-			self.settings.default_num_messages = Int($0)
+			self.settings.default_num_messages = UInt($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_messages")
 		})
 
-		let photos_binding = Binding<Int>(get: {
+		let photos_binding = Binding<UInt>(get: {
 			self.settings.default_num_photos
 		}, set: {
-			self.settings.default_num_photos = Int($0)
+			self.settings.default_num_photos = UInt($0)
 			UserDefaults.standard.setValue(Int($0), forKey: "num_photos")
 		})
 

@@ -298,8 +298,8 @@ class ServerDelegate {
 			} else if req.method == .get {
 				let send_response = ServerDelegate.sendGetRequest(params: req.query)
 
-				if let code: Int = send_response[0] as? Int, code != 200 {
-					res.setStatusCode(UInt(code), description: send_response[1] as? String ?? "")
+				if send_response.0 != 200 {
+					res.setStatusCode(UInt(send_response.0), description: send_response.1)
 				}
 			}
 
@@ -451,13 +451,13 @@ class ServerDelegate {
 		return 400 /// HTTP 400 status code, as in they sent some information that won't send a text
 	}
 
-	static func sendGetRequest(params: [String:String]) -> [Any] {
+	static func sendGetRequest(params: [String:String]) -> (Int, String) {
 		let chat_delegate = ChatDelegate.shared()
 
 		if Const.api_tap_vals.contains(params.keys.first ?? "") {
 
 			guard let req = params[Const.api_tap_req], let guid = params[Const.api_tap_guid] else {
-				return [400, "Please include parameters '\(Const.api_tap_req)' and '\(Const.api_tap_guid)' in your request"]
+				return (400, "Please include parameters '\(Const.api_tap_req)' and '\(Const.api_tap_guid)' in your request")
 			}
 
 			var reaction: Int = (Int(req) ?? -1) + 2000 /// reactions are 2000 - 2005
@@ -465,7 +465,7 @@ class ServerDelegate {
 			let chat = chat_delegate.getChatOfText(String(guid.suffix(36)))
 
 			guard reaction < 2006 && reaction > 1999 else {
-				return [400, "tapback value must be at least 0 and no greater than 5"]
+				return (400, "tapback value must be at least 0 and no greater than 5")
 			}
 
 			if remove { reaction += 1000 }
@@ -473,29 +473,29 @@ class ServerDelegate {
 			let ret = ServerDelegate.sender.sendTapback(reaction as NSNumber, forGuid: guid, inChat: chat)
 
 			if !ret {
-				return [503, "Could not send tapback; unknown reason"]
+				return (503, "Could not send tapback; unknown reason")
 			}
 
-			return [200, ""]
+			return (200, "")
 		} else if params.keys.first == Const.api_del_chat {
 			/// Deletes a conversation
 
 			guard let chat = params[Const.api_del_chat], chat.count > 0 else {
-				return [400, "Please specify the chat_identifier"]
+				return (400, "Please specify the chat_identifier")
 			}
 
 			let ret = ServerDelegate.sender.removeObject(chat, text: nil)
 
 			if !ret {
-				return [503, "Failed to delete chat; unknown reason"]
+				return (503, "Failed to delete chat; unknown reason")
 			}
 
-			return [200, ""]
+			return (200, "")
 		} else if params.keys.first == Const.api_del_text {
 			/// Deletes a text
 
 			guard let text = params[Const.api_del_text], text.count > 0 else {
-				return [400, "Please specify the text guid"]
+				return (400, "Please specify the text guid")
 			}
 
 			let chat = chat_delegate.getChatOfText(String(text.suffix(36)))
@@ -503,13 +503,13 @@ class ServerDelegate {
 			let ret = ServerDelegate.sender.removeObject(chat, text: text)
 
 			if !ret {
-				return [503, "Failed to delete text; unknown reason"]
+				return (503, "Failed to delete text; unknown reason")
 			}
 
-			return [200, ""]
+			return (200, "")
 		}
 
-		return [406, "No api endpoint exists for url query parameters"]
+		return (406, "No api endpoint exists for url query parameters")
 	}
 
 	static func parseAndReturn(params: [String:String], address: String = "", verify_auth: Bool = true) -> (Int, Any) {
@@ -551,14 +551,14 @@ class ServerDelegate {
 				ServerDelegate.sender.markConvo(asRead: person)
 			}
 
-			let num_texts = Int(params[Const.api_msg_num] ?? String(settings.default_num_messages)) ?? settings.default_num_messages
+			let num_texts = UInt(params[Const.api_msg_num] ?? String(settings.default_num_messages)) ?? settings.default_num_messages
 			let offset = Int(params[Const.api_msg_off] ?? "0") ?? 0
 			let from = Int(params[Const.api_msg_from] ?? "0") ?? 0 /// 0 for either, 1 for me, 2 for them
 			person = person.replacingOccurrences(of: "\"", with: "") /// In case they decide to capture it in quotes
 
 			Const.log("selecting person: \(person), num: \(num_texts)")
 
-			let texts_array = chat_delegate.loadMessages(num: person, num_items: num_texts, offset: offset, from: from)
+			let texts_array = chat_delegate.loadMessages(num: person, num_items: Int(num_texts), offset: offset, from: from)
 			//let texts = Const.encodeToJson(object: texts_array, title: "texts")
 
 			return (200, texts_array)
@@ -566,11 +566,11 @@ class ServerDelegate {
 			/// Requesting most recent conversations
 
 			let chats_offset = Int(params[Const.api_chat_off] ?? "0") ?? 0
-			let num_texts = Int(params[Const.api_chat_req] ?? String(settings.default_num_chats)) ?? settings.default_num_chats
-			Const.log("num chats: \(num_texts), offset: \(chats_offset)")
+			let num_chats = UInt(params[Const.api_chat_req] ?? String(settings.default_num_chats)) ?? settings.default_num_chats
 
-			let chats_array = chat_delegate.loadChats(num_to_load: num_texts, offset: chats_offset)
-			//let chats = Const.encodeToJson(object: chats_array, title: "chats")
+			Const.log("num chats: \(num_chats), offset: \(chats_offset)")
+
+			let chats_array = chat_delegate.loadChats(num_to_load: Int(num_chats), offset: chats_offset)
 
 			return (200, chats_array)
 		} else if f == Const.api_name_req {
@@ -596,10 +596,9 @@ class ServerDelegate {
 			/// Retrieving most recent photos
 			let most_recent = (params[Const.api_photo_recent] ?? "true") == "true"
 			let offset = Int(params[Const.api_photo_off] ?? "0") ?? 0
-			let num = Int(params[Const.api_photo_req] ?? String(settings.default_num_photos)) ?? settings.default_num_photos
+			let num = UInt(params[Const.api_photo_req] ?? String(settings.default_num_photos)) ?? settings.default_num_photos
 
-			let photos = chat_delegate.getPhotoList(num: num, offset: offset, most_recent: most_recent)
-			//let photos = Const.encodeToJson(object: ret_val, title: "photos")
+			let photos = chat_delegate.getPhotoList(num: Int(num), offset: offset, most_recent: most_recent)
 
 			return (200, photos)
 		} else if f == Const.api_config {

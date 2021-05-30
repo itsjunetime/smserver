@@ -8,9 +8,9 @@ class Settings {
 	/// This passphrase is found in a hidden file that doesn't exist in the git repo. This is so that nobody can extract the private key from the pfx file
 	var cert_pass: String = PKCS12Identity.pass
 
-	var default_num_chats: Int = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-	var default_num_messages: Int = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-	var default_num_photos: Int = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
+	var default_num_chats: UInt = UserDefaults.standard.object(forKey: "num_chats") as? UInt ?? 40
+	var default_num_messages: UInt = UserDefaults.standard.object(forKey: "num_messages") as? UInt ?? 100
+	var default_num_photos: UInt = UserDefaults.standard.object(forKey: "num_photos") as? UInt ?? 40
 
 	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
@@ -129,11 +129,11 @@ class Settings {
 						let num = Int(val)
 						if let num = num {
 							if opt == Const.cmd_def_chats {
-								settings.default_num_chats = num
+								settings.default_num_chats = UInt(num)
 							} else if opt == Const.cmd_def_messages {
-								settings.default_num_messages = num
+								settings.default_num_messages = UInt(num)
 							} else {
-								settings.default_num_photos = num
+								settings.default_num_photos = UInt(num)
 							}
 						} else {
 							print("Could not convert value \(val) to int. Socket port will remain unaffected.")

@@ -45,10 +45,10 @@ class SocketDelegate : ServerWebSocketDelegate {
 			"chat": chat,
 			"active": typing
 		]
-		
+
 		let msg = SocketMessage(nil, command: .Typing, data: json, incoming: false)
 		let json_str = Const.encodeToJson(object: msg.json())
-		
+
 		if let sock = server {
 			for i in sock.webSockets {
 				i.send(text: json_str)
