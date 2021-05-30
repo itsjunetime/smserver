@@ -116,7 +116,7 @@ class RequestManager {
 				"data": chunks[idx],
 				"total": chunks.count
 			]
-			
+
 			if idx == chunks.count - 1 {
 				msg.last = true
 			}
@@ -218,6 +218,7 @@ let str_to_command: [String:APICommand] = [
 	"send-typing": .SendTyping,
 	"typing": .Typing,
 	"new-message": .NewMessage,
+	"battery-status": .BatteryStatus
 ]
 
 class SocketRequest {
@@ -247,4 +248,5 @@ enum APICommand {
 	case SendTyping
 	case Typing
 	case NewMessage
+	case BatteryStatus
 }

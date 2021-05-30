@@ -57,24 +57,30 @@ class SocketDelegate : ServerWebSocketDelegate {
 		let percent = Const.getBatteryLevel()
 		let charging_state = Const.getBatteryState()
 
-		var state_string = "charging"
-		if charging_state == .unplugged || charging_state == .unknown {
-			state_string = "unplugged"
-		}
+		let json: [String: Any] = [
+			"charging": charging_state == .charging || charging_state == .full,
+			"percentage": percent
+		]
+
+		let msg = SocketMessage(nil, command: .BatteryStatus, data: json, incoming: false, last: true)
+
+		let json_str = Const.encodeToJson(object: msg.json(), title: nil)
 
 		if let sock = server {
 			for i in sock.webSockets {
-				i.send(text: "battery:\(String(percent))")
-				i.send(text: "battery:\(state_string)")
+				i.send(text: json_str)
 			}
 		}
 	}
 
-	func sendNewText(info: String) {
+	func sendNewText(info: [String:Any]) {
+		let msg = SocketMessage(nil, command: .NewMessage, data: info, incoming: false)
+		let json = Const.encodeToJson(object: msg.json())
+
 		/// If we received a new text
 		if let sock = server {
 			for i in sock.webSockets {
-				i.send(text: "text:" + info)
+				i.send(text: json)
 			}
 		}
 	}
@@ -107,15 +113,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 		UIDevice.current.isBatteryMonitoringEnabled = true
 		#endif
 
-		let battery_level = Const.getBatteryLevel()
-		let charging_state = Const.getBatteryState()
-		var state_string = "charging"
-		if charging_state == .unplugged || charging_state == .unknown {
-			state_string = "unplugged"
-		}
-
-		webSocket.send(text: "battery:\(String(battery_level))")
-		webSocket.send(text: "battery:\(state_string)")
+		self.sendNewBattery()
 
 		#if os(iOS)
 		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)

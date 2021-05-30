@@ -711,8 +711,8 @@ class ServerDelegate {
 		let text = self.chat_delegate.getTextByGUID(guid);
 
 		if server.isListening && socket.server?.webSocketCount ?? 0 > 0 {
-		 	let json = Const.encodeToJson(object: text, title: "text")
-			socket.sendNewText(info: json)
+		 	//let json = Const.encodeToJson(object: text, title: "text")
+			socket.sendNewText(info: text)
 		}
 
 		if starscream.socket_state == .Connected {
@@ -724,9 +724,9 @@ class ServerDelegate {
 		guard server.isListening && socket.server?.webSocketCount ?? 0 > 0 else { return }
 
 		let tb = self.chat_delegate.getTapbackInformation(tapback, guid: guid)
-		let json = Const.encodeToJson(object: tb, title: "text")
+		//let json = Const.encodeToJson(object: tb, title: "text")
 
-		socket.sendNewText(info: json)
+		socket.sendNewText(info: tb)
 	}
 
 	func setPartyTyping(_ vals: [String:Any]) {

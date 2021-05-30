@@ -466,7 +466,7 @@ class Const : NSObject {
 		}
 	}
 
-	static func encodeToJson(object: Any, title: String?) -> String {
+	static func encodeToJson(object: Any, title: String? = nil) -> String {
 		/// This encodes `object` (normally like an array of dictionary or dictionary of dictionaries) to JSON, with the title of `title`
 		if let ttl = title {
 			let enc = [ttl: object]

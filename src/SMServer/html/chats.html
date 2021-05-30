@@ -717,7 +717,6 @@
 				let url = `${prefix}requests?messages=${addresses === "" ? chat_id : addresses}`;
 
 				let texts = await fetchFromURL(url);
-				//this.texts = textsPromise.texts;
 
 				num_texts_returned = texts.length;
 
@@ -744,8 +743,7 @@
 				var chat_id = document.querySelector(`[addresses*="${current_chat_id}"]`).getAttribute("addresses");
 
 				let url = `${prefix}requests?messages=${chat_id}&messages_offset=${printed_texts}&read_messages=false`;
-				let textPromise = await fetchFromURL(url);
-				this.texts = textPromise.texts;
+				texts = await fetchFromURL(url);
 
 				printed_texts += texts.length;
 
@@ -875,30 +873,23 @@
 
 			function parseMessage(msg) {
 				if (debug) console.log(`parsing message ${msg}`);
-				var split = msg.split(":");
+				var obj = JSON.parse(msg);
 
-				var prefix = split[0];
-				var content = "";
-				if (split.length > 0) content = msg.replace(prefix + ":", "");
-
-				switch (prefix) {
-					case "text":
-						processNewText(content);
+				switch (obj.command) {
+					case "new-message":
+						processNewText(obj.data);
 						break;
-					case "battery":
-						setNewBatteryLevel(content);
+					case "battery-status":
+						setNewBatteryLevel(obj.data);
 						break;
 					case "typing":
-						setChatAsTyping(content);
-						break;
-					case "idle":
-						setChatAsIdle(content);
+						setChatAsTyping(obj.data);
 						break;
 					case "read":
-						setNewReadReceipt(content);
+						setNewReadReceipt(obj.data);
 						break;
 					default:
-						console.log(`cannot handle request: '${msg}'`);
+						console.log(`cannot handle request ${obj.command}`);
 						break;
 				}
 			}
@@ -906,25 +897,24 @@
 			async function processNewText(text) {
 				if (debug) console.log(`received new text: ${text}`);
 
-				var notif_text = JSON.parse(text).text;
-				var new_text = notif_text.text;
-				var chat = notif_text.chat_identifier;
+				var new_text = text.text;
+				var chat = text.chat_identifier;
 
 				var btn = document.querySelector(`[addresses*="${chat}"]`);
 
 				var name = "";
 
-				if (!notif_text.is_from_me) {
-					if (notif_text.text.trim() === "" && notif_text.cache_has_attachments)
-						new_text = `Attachment: ${notif_text.attachments[0].mime_type.split("/")[0]}`;
+				if (!text.is_from_me) {
+					if (new_text.trim().length === 0 && text.cache_has_attachments)
+						new_text = "Attachment: " + text.attachments[0].filename.split("/")[0];
 
-					if (notif_text.sender !== undefined && notif_text.sender !== "nil") {
-						name = notif_text.sender;
-						new_text = `${notif_text.sender}: ${new_text}`;
+					if (text.sender !== undefined && text.sender !== "nil") {
+						name = text.sender;
+						new_text = `${name}: ${new_text}`;
 					}
 
 					if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id)) {
-						if (name === "") {
+						if (name.length === 0) {
 							var name_prom = await getTextFromURL(`${prefix}requests?name=${chat}`);
 							if (name_prom.length > 1) name = name_prom[1];
 						}
@@ -941,15 +931,15 @@
 						if (chat !== current_chat_id || !document.hasFocus()) btn.classList.add("unread");
 
 						if (btn.className.includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
-							var text = btn.getElementsByClassName("chat-text")[0];
-							if (text !== undefined && new_text.length > 0) text.textContent = new_text;
+							var chat_text = btn.getElementsByClassName("chat-text")[0];
+							if (chat_text && new_text.length > 0) chat_text.textContent = new_text;
 						} else if (chat !== current_chat_id) {
-							var text = document.createElement("div");
-							text.className = "chat-text";
-							text.textContent = new_text;
+							var div_text = document.createElement("div");
+							div_text.className = "chat-text";
+							div_text.textContent = new_text;
 
 							var tb = btn.getElementsByClassName("chat-top")[0];
-							tb.appendChild(text);
+							tb.appendChild(div_text);
 						}
 
 					}
@@ -957,16 +947,16 @@
 					if (chat === current_chat_id) {
 						var typ = document.getElementById("typingIndicator");
 						var typing_outer = "";
-						if (typ !== undefined && typ !== null) {
-							if (notif_text.is_from_me) typing_outer = typ.outerHTML;
+						if (typ) {
+							if (text.is_from_me) typing_outer = typ.outerHTML;
 							typ.outerHTML = "";
 						}
-						if (notif_text.is_from_me) {
+						if (text.is_from_me) {
 							var sending = document.getElementById("sendingIndicator");
-							if (sending !== null && sending !== undefined)
+							if (sending)
 								sending.outerHTML = "";
 						}
-						printListOfTexts([notif_text], true, notif_text.room_name.length > 0);
+						printListOfTexts([text], true, text.room_name && text.room_name.length > 0);
 						if (typing_outer !== "") document.getElementById("text-content").innerHTML += typing_outer;
 					}
 				}
@@ -1091,12 +1081,9 @@
 				var cr = document.getElementById("camerarollContent");
 
 				if (!has_shown_camera_roll) {
-					var photos;
-
 					var url = `${prefix}requests?photos`;
-					let photoPromise = await fetchFromURL(url);
-					photos = photoPromise.photos;
-					if (photos.length === 0) {
+					let photos = await fetchFromURL(url);
+					if (!photos || photos.length === 0) {
 						let photoPromise = await fetchFromURL(url);
 						photos = photoPromise.photos;
 					}
@@ -1105,9 +1092,9 @@
 
 					for (var i = 0; i < photos.length; i++) {
 						var p = await getPhotoElement(photos[i]);
-
 						cr.insertBefore(p, cr.children[cr.children.length - 1]); /// I should just do cr.lastChild but it doesn't work
 					}
+
 					has_shown_camera_roll = true;
 				}
 			}
@@ -1145,52 +1132,48 @@
 				document.getElementById("camerarollbutton").innerHTML = document.getElementsByClassName("selected-photo").length;
 			}
 
-			function setNewBatteryLevel(level) {
-				if (debug) console.log(`new battery level: ${level}`);
+			function setNewBatteryLevel(data) {
+				if (debug) console.log(`new battery level: ${data.percentage}, ${data.charging ? "charging": "unplugged"}`);
 				var batt = document.getElementById("battery");
 				var bat_symbol = document.getElementById("batterySymbol");
 
 				var symbol = "";
-				if (isNaN(level)) {
+				if (data.charging)
+					symbol = ' <i id="chargingSymbol" class="fas fa-bolt"></i>';
 
-					if (level === "charging")
-						symbol = ' <i id="chargingSymbol" class="fas fa-bolt"></i>';
+				var cgs = document.getElementById("chargingSymbol");
+				if (cgs)
+					cgs.outerHTML = symbol;
+				else
+					bat_symbol.innerHTML = symbol + bat_symbol.innerHTML;
 
-					var cgs = document.getElementById("chargingSymbol");
-					if (cgs !== undefined && cgs !== null)
-						cgs.outerHTML = symbol;
-					else
-						bat_symbol.innerHTML = symbol + bat_symbol.innerHTML;
+				var rounded = ~~Number(data.percentage);
+				let perc_str = "full";
+				if (rounded < 5)
+					perc_str = "empty";
+				else if (rounded < 25)
+					perc_str = "quarter";
+				else if (rounded < 50)
+					perc_str = "half";
+				else if (rounded < 75)
+					perc_str = "three-quarters";
 
-				} else {
-					var dbl = ~~Number(level);
+				symbol = ` <i id="levelSymbol" class="fas fa-battery-${perc_str}"></i>`;
 
-					if (dbl < 5)
-						symbol = ' <i id="levelSymbol" class="fas fa-battery-empty"></i>';
-					else if (dbl < 25)
-						symbol = ' <i id="levelSymbol" class="fas fa-battery-quarter"></i>';
-					else if (dbl < 50)
-						symbol = ' <i id="levelSymbol" class="fas fa-battery-half"></i>';
-					else if (dbl < 75)
-						symbol = ' <i id="levelSymbol" class="fas fa-battery-three-quarters"></i>';
-					else
-						symbol = ' <i id="levelSymbol" class="fas fa-battery-full"></i>';
+				var lvs = document.getElementById("levelSymbol");
+				if (lvs)
+					lvs.outerHTML = symbol;
+				else
+					bat_symbol.innerHTML = bat_symbol.innerHTML + symbol;
 
-					var lvs = document.getElementById("levelSymbol");
-					if (lvs !== undefined && lvs !== null)
-						lvs.outerHTML = symbol;
-					else
-						bat_symbol.innerHTML = bat_symbol.innerHTML + symbol;
+				batt.innerHTML = `${rounded}%${bat_symbol.outerHTML}`;
 
-					batt.innerHTML = `${String(level).split(".")[0]}%${bat_symbol.outerHTML}`;
-
-					if (dbl > 35)
-						batt.className = "fullEnough";
-					else if (dbl > 20)
-						batt.className = "risky";
-					else
-						batt.className = "low";
-				}
+				if (rounded > 35)
+					batt.className = "fullEnough";
+				else if (rounded > 20)
+					batt.className = "risky";
+				else
+					batt.className = "low";
 			}
 
 			function setChatAsTyping(chat) {
