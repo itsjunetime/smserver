@@ -41,10 +41,17 @@ class SocketDelegate : ServerWebSocketDelegate {
 	}
 
 	func sendTyping(_ chat: String, typing: Bool = true) {
+		let json: [String:Any] = [
+			"chat": chat,
+			"active": typing
+		]
+		
+		let msg = SocketMessage(nil, command: .Typing, data: json, incoming: false)
+		let json_str = Const.encodeToJson(object: msg.json())
+		
 		if let sock = server {
-			let send_str = "\(typing ? "typing" : "idle"):\(chat)"
 			for i in sock.webSockets {
-				i.send(text: send_str)
+				i.send(text: json_str)
 			}
 		}
 	}
@@ -86,11 +93,17 @@ class SocketDelegate : ServerWebSocketDelegate {
 	}
 
 	func sendTextRead(_ guid: String, date: String) {
+		let json = [
+			"guid": guid,
+			"date": date
+		]
+
+		let msg = SocketMessage(nil, command: .ReadMessage, data: json, incoming: false)
+		let json_str = Const.encodeToJson(object: msg.json())
+
 		if let sock = server {
-			if let json = try? JSONSerialization.data(withJSONObject: ["guid": guid, "date": date], options: []) {
-				for i in sock.webSockets {
-					i.send(text: "read:\(String(decoding: json, as: UTF8.self))")
-				}
+			for i in sock.webSockets {
+				i.send(text: json_str)
 			}
 		}
 	}

@@ -218,7 +218,8 @@ let str_to_command: [String:APICommand] = [
 	"send-typing": .SendTyping,
 	"typing": .Typing,
 	"new-message": .NewMessage,
-	"battery-status": .BatteryStatus
+	"battery-status": .BatteryStatus,
+	"read-message": .ReadMessage
 ]
 
 class SocketRequest {
@@ -249,4 +250,5 @@ enum APICommand {
 	case Typing
 	case NewMessage
 	case BatteryStatus
+	case ReadMessage
 }

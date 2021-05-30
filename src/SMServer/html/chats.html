@@ -102,10 +102,10 @@
 			function getTextElement(text) {
 				if (debug) console.log(`Getting text element for text ${text}`);
 
-				if (text.group_action_type !== undefined && text.group_action_type !== 0)
+				if (text.group_action_type && text.group_action_type !== 0)
 					return document.createElement("span");
 
-				if (text.associated_message_type < 2000 || text.associated_message_type === undefined) {
+				if (text.associated_message_type < 2000 || !text.associated_message_type) {
 
 					var t = document.createElement("span");
 					var rets = [];
@@ -162,7 +162,7 @@
 
 						under.appendChild(desc);
 
-						if (text.link_type !== undefined && text.link_type.split(".")[0] === "music") {
+						if (text.link_type && text.link_type.split(".")[0] === "music") {
 							var icon = document.createElement("div");
 							icon.className = "richLinkIcon";
 
@@ -224,9 +224,9 @@
 
 								var fa = "file";
 
-								if (text.attachments[l].mime_type.length > 0 && smallType !== undefined) {
+								if (text.attachments[l].mime_type.length > 0 && smallType) {
 									var dict = {'pdf': 'file-pdf', 'vcard': 'id-card', 'x-debian-package': 'archive', 'x-sh': 'file-code', 'zip': 'file-archive', 'x-python-script': 'file-code'};
-									if (dict[smallType] !== undefined) fa = dict[smallType];
+									if (dict[smallType]) fa = dict[smallType];
 								}
 
 								var icon = `<i class="fas fa-${fa}"></i>`;
@@ -252,7 +252,7 @@
 						c.setAttribute("onclick", `showTapbackDialog("${tapback_id}");`);
 
 						var emoji_check = text.text.match(/\p{Extended_Pictographic}/gu);
-						if (text.subject === "" && emoji_check !== null && emoji_check.join("").length === text.text.length)
+						if (text.subject === "" && emoji_check && emoji_check.join("").length === text.text.length)
 							c.classList.add("allEmoji");
 
 						rets.push(c);
@@ -263,7 +263,7 @@
 				} else if (text.associated_message_type < 2006 && text.associated_message_type > 1999) {
 					var original = document.querySelector(`[tapback_guid="${text.associated_message_guid}"]`);
 
-					if (original === null || original === undefined)
+					if (!original)
 						return document.createElement("span");
 
 					var tap = document.createElement("span");
@@ -277,7 +277,7 @@
 					if (elder.className.includes("text-area")) {
 						var orig_tb = elder.querySelector(`[sender="${text.id}"]`);
 
-						if (orig_tb !== null && orig_tb !== undefined) {
+						if (orig_tb) {
 							orig_tb.outerHTML = tap.outerHTML;
 						} else {
 							var ln = elder.getElementsByClassName("tapback").length;
@@ -314,7 +314,7 @@
 				} else if (text.associated_message_type > 2999 && text.associated_message_type < 3006) {
 					var box = document.querySelector(`[tapback_guid="${text.associated_message_guid}"]`);
 
-					if (box !== null) {
+					if (box) {
 						var box_area = box.parentNode;
 
 						for (var i = 0; i < box_area.children.length; i++) {
@@ -337,7 +337,7 @@
 				if (!searched) b.id = chat.chat_identifier;
 				else b.setAttribute("chat_id", chat.chat_identifier);
 
-				b.setAttribute("addresses", (chat.addresses !== undefined && chat.addresses !== "" ? chat.addresses : chat.chat_identifier));
+				b.setAttribute("addresses", (chat.addresses && chat.addresses !== "" ? chat.addresses : chat.chat_identifier));
 
 				var i = document.createElement("span");
 
@@ -402,7 +402,7 @@
 
 				b.className = classes;
 
-				var gts = `getTexts("${chat.chat_identifier}"` + (chat.addresses !== undefined ? `, "${chat.addresses}"` : "") + ');';
+				var gts = `getTexts("${chat.chat_identifier}"` + (chat.addresses ? `, "${chat.addresses}"` : "") + ');';
 				b.setAttribute("onclick", gts);
 
 				return b;
@@ -452,8 +452,8 @@
 					}
 
 					var fts = getTextElement(texts[i]);
-					if (fts.length === undefined && fts.outerHTML === "<span></span>") continue;
-					var ft = fts.length === undefined ? [fts] : fts;
+					if (!fts.length && fts.outerHTML === "<span></span>") continue;
+					var ft = !fts.length ? [fts] : fts;
 					if (ft.length === 0) continue;
 
 					printed = true;
@@ -484,7 +484,7 @@
 								et[et.length-1].classList.add("notLast");
 							else if (texts[i].date - et[et.length-1].getAttribute("date") >= 3600000000000)
 								append_time_display = true;
-							else if (is_group && !sameSender && texts[i].sender !== undefined)
+							else if (is_group && !sameSender && texts[i].sender)
 								sender_box.textContent = texts[i].sender;
 						} else {
 							var hourTillFirst = texts[i].date - et[0].getAttribute("date") >= 3600000000000;
@@ -504,7 +504,7 @@
 								else notLast = true;
 							}
 
-							if (is_group && !texts[n].is_from_me && texts[i].sender !== texts[n].sender && texts[n].sender !== undefined)
+							if (is_group && !texts[n].is_from_me && texts[i].sender !== texts[n].sender && texts[n].sender)
 								sender_box.textContent = texts[n].sender;
 						}
 					}
@@ -513,7 +513,7 @@
 						tc.innerHTML += `<div class="time-display"><p>${timeConverter(texts[i].date)}</p></div>`;
 
 					for (var j = 0; j < ft.length; j++) {
-						if (ft[j].innerHTML === undefined || ft[j].innerHTML === "") continue;
+						if (!ft[j].innerHTML || ft[j].innerHTML === "") continue;
 						if (notLast || (append && j < ft.length - 1) || (!append && j > 0)) ft[j].classList.add("notLast");
 						if (append) tc.appendChild(ft[j]);
 						else tc.insertBefore(ft[j], document.getElementById("moretextsbutton").nextSibling);
@@ -522,7 +522,7 @@
 					var orig = null; /// if you do insertBefore(node, null), it just appends.
 					if (!append) {
 						orig = document.getElementById(ft[0].id);
-						while (orig !== null && orig !== undefined && orig.id === ft[0].id) orig = orig.nextSibling;
+						while (orig && orig.id === ft[0].id) orig = orig.nextSibling;
 					}
 
 					if (add_spacer)
@@ -540,14 +540,14 @@
 
 						if (is_group) {
 							var tds = document.getElementsByClassName("time-display");
-							if (n < texts.length && !texts[n].is_from_me && texts[n].sender !== undefined) {
+							if (n < texts.length && !texts[n].is_from_me && texts[n].sender) {
 								sender_box.textContent = texts[n].sender;
 								var next = texts[n].sender === texts[i].sender ? tds[0].nextSibling : orig;
 								if (append && i !== 0) next = tds[tds.length - 1].nextSibling;
 								tc.insertBefore(sender_box, next);
 							}
 							if (((append && i === 0) || (!append && i === lnr)) && !texts[i].is_from_me &&
-								(n >= texts.length || texts[i].sender !== texts[n].sender) && texts[i].sender !== undefined) {
+								(n >= texts.length || texts[i].sender !== texts[n].sender) && texts[i].sender) {
 								var clone = sender_box.cloneNode();
 								clone.textContent = texts[i].sender;
 								tc.insertBefore(clone, tds[0].nextSibling);
@@ -556,7 +556,7 @@
 						}
 					}
 
-					if (sender_box !== undefined && sender_box.textContent != "")
+					if (sender_box && sender_box.textContent != "")
 						tc.insertBefore(sender_box, orig);
 				}
 
@@ -571,7 +571,7 @@
 						if (et[i].className.includes("from_me") && et[i].className.includes("iMessage") && et[i].getAttribute("date_read") !== "0" && et[i].getAttribute("date_read") !== "undefined")
 							lt = et[i];
 
-					if (lt !== undefined) {
+					if (lt) {
 						var nrr = document.createElement("span");
 						nrr.className = "readReceipt";
 						nrr.innerHTML = `<strong>Read</strong> ${timeConverter(parseInt(lt.getAttribute("date_read")))}`;
@@ -649,6 +649,10 @@
 					}
 				}
 
+				setUnreadTitle();
+			}
+
+			function setUnreadTitle() {
 				var unread_chats = document.getElementsByClassName("unread").length;
 				document.title = `SMServer${unread_chats > 0 ? " (" + String(unread_chats) + ")" : ""}`;
 			}
@@ -689,8 +693,8 @@
 
 				var orig_btn = document.querySelector(`[addresses*="${chat_id}"]`);
 				orig_btn.className = orig_btn.className.replace(/unread/g, "") + " selected";
-				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${unread_chats > 0 ? ` (${unread_chats})` : ""}`;
+
+				setUnreadTitle();
 
 				if (!orig_btn.className.includes("unpinned") && orig_btn.getElementsByClassName("chat-text").length > 0)
 					orig_btn.getElementsByClassName("chat-text")[0].outerHTML = "";
@@ -827,7 +831,7 @@
 				if (current_chat_id !== "") {
 					if (document.getElementById("sendbox").value.length > 0) {
 						typing_sleep = 10000;
-						if (!currently_typing) socket.send(`typing:${current_chat_id}`);
+						if (!currently_typing) sendTyping(current_chat_id, true);
 						currently_typing = true;
 						typingWait();
 					} else {
@@ -844,10 +848,22 @@
 					}
 					if (currently_typing) {
 						currently_typing = false;
-						socket.send(`idle:${current_chat_id}`);
+						sendTyping(current_chat_id, false);
 					}
 					called_typing_wait = false;
 				}
+			}
+
+			function sendTyping(chat, active) {
+				var obj = {
+					command: "send-typing",
+					data: {
+						chat: chat,
+						active: active ? true : false,
+					}
+				};
+
+				socket.send(JSON.stringify(obj));
 			}
 
 			async function autoGrow() {
@@ -908,7 +924,7 @@
 					if (new_text.trim().length === 0 && text.cache_has_attachments)
 						new_text = "Attachment: " + text.attachments[0].filename.split("/")[0];
 
-					if (text.sender !== undefined && text.sender !== "nil") {
+					if (text.sender && text.sender !== "nil") {
 						name = text.sender;
 						new_text = `${name}: ${new_text}`;
 					}
@@ -923,14 +939,14 @@
 				}
 
 				if (chat.length !== 0) {
-					if (btn === undefined || btn === null || chat === "any") {
+					if (!btn || chat === "any") {
 						printChats();
 					} else if (chat !== document.getElementsByClassName("unpinned")[0].id && btn.className.includes("unpinned")) {
 						setChatAsTop(chat, new_text);
 					} else {
 						if (chat !== current_chat_id || !document.hasFocus()) btn.classList.add("unread");
 
-						if (btn.className.includes("unpinned") || btn.getElementsByClassName("chat-text")[0] !== undefined) {
+						if (btn.className.includes("unpinned") || btn.getElementsByClassName("chat-text")[0]) {
 							var chat_text = btn.getElementsByClassName("chat-text")[0];
 							if (chat_text && new_text.length > 0) chat_text.textContent = new_text;
 						} else if (chat !== current_chat_id) {
@@ -961,8 +977,7 @@
 					}
 				}
 
-				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${unread_chats > 0 ? " (" + String(unread_chats) + ")" : ""}`;
+				setUnreadTitle();
 			}
 
 			async function setChatAsTop(chat, new_text = "") {
@@ -1176,39 +1191,31 @@
 					batt.className = "low";
 			}
 
-			function setChatAsTyping(chat) {
-				if (debug) console.log(`setting ${chat} as typing`);
-				var current = document.getElementById("typingIndicator");
-				if (current !== null && current !== undefined) return;
-				if (chat === current_chat_id) {
-					var d = document.createElement("div");
-					d.className = "text is_from_them iMessage";
-					d.id = "typingIndicator";
+			function setChatAsTyping(data) {
+				var chat = data.chat;
+				var active = data.active;
 
-					d.innerHTML = '<span class="dot flashing">• </span><span class="dot">• </span><span class="dot">•</span>';
+				if (debug) console.log(`setting ${data.chat} as ${active ? "typing" : "idle"}`);
 
-					document.getElementById("text-content").appendChild(d);
-					d.scrollIntoView();
-
-					var c = 0;
-					var typing = window.setInterval(() => {
-						var i = document.getElementById("typingIndicator");
-						if (i === null) {
-							clearInterval(typing);
-							return;
-						}
-						i.children[c].className = "dot";
-						c = (c + 1) % 3;
-						i.children[c].className = "dot flashing";
-					}, 400);
+				if (!active) {
+					var current = document.getElementById("typingIndicator");
+					if (current && chat === current_chat_id)
+						current.outerHTML = "";
+					return;
 				}
-			}
 
-			function setChatAsIdle(chat) {
-				if (debug) console.log(`setting ${chat} as idle`);
-				var current = document.getElementById("typingIndicator");
-				if (chat !== current_chat_id || current === null || current === undefined) return;
-				current.outerHTML = "";
+				if (chat !== current_chat_id) return;
+
+				var d = document.createElement("div");
+				d.className = "text is_from_them iMessage";
+				d.id = "typingIndicator";
+
+				d.innerHTML = '<span class="dot flashing">• </span><span class="dot">• </span><span class="dot">•</span>';
+
+				document.getElementById("text-content").appendChild(d);
+				d.scrollIntoView();
+
+				setFlashingInterval(d.id, 0);
 			}
 
 			function enableSubject() {
@@ -1249,7 +1256,7 @@
 			function showTapbackDialog(guid) {
 				if (debug) console.log(`showing tapback dialog for guid ${guid}`);
 				var existing = document.getElementById(`${guid}-tapback`);
-				if (existing !== undefined && existing !== null) {
+				if (existing) {
 					existing.outerHTML = "";
 					return;
 				}
@@ -1307,9 +1314,9 @@
 					alert("Couldn't delete text :(");
 				} else {
 					var txt = document.getElementById(guid);
-					if (txt !== null && txt.parentNode.className.includes("text-content"))
+					if (txt && txt.parentNode.className.includes("text-content"))
 						txt.outerHTML = "";
-					else if (txt !== null)
+					else if (txt)
 						txt.parentNode.outerHTML = "";
 				}
 			}
@@ -1325,16 +1332,20 @@
 				document.getElementById("text-content").insertBefore(sending_indicator, typing_indicator);
 				sending_indicator.scrollIntoView();
 
+				setFlashingInterval(sending_indicator.id, 1);
+			}
+
+			function setFlashingInterval(id, offset) {
 				var c = 0;
-				var typing = window.setInterval(() => {
-					var i = document.getElementById("sendingIndicator");
-					if (i === null) {
-						clearInterval(typing);
+				var intv = window.setInterval(() => {
+					var i = document.getElementById(id);
+					if (!i) {
+						clearInterval(intv);
 						return;
 					}
-					i.children[c+1].className = "dot";
+					i.children[c+offset].className = "dot";
 					c = (c + 1) % 3;
-					i.children[c+1].className = "dot flashing";
+					i.children[c+offset].className = "dot flashing";
 				}, 400);
 			}
 
@@ -1344,12 +1355,11 @@
 				if (receipt.length === 1)
 					receipt[0].outerHTML = "";
 
-				let read = JSON.parse(content);
-				let text = document.getElementById(read.guid);
+				let text = document.getElementById(content.guid);
 
 				let new_receipt = document.createElement("span");
 				new_receipt.className = "readReceipt";
-				new_receipt.innerHTML = `<strong>Read</strong> ${read.date}`;
+				new_receipt.innerHTML = `<strong>Read</strong> ${content.date}`;
 
 				document.getElementById("text-content").insertBefore(new_receipt, text.nextSibling);
 			}
@@ -1364,8 +1374,13 @@
 				input_form.ondrop = function(evt) {
 					var file_box = document.getElementById("attachmentbutton");
 					file_box.files = evt.dataTransfer.files;
-					if (file_box.files.length > 0) document.getElementById('unhiddenbutton').innerHTML = file_box.files.length;
-					else document.getElementById("unhiddenbutton").innerHTML = '<i class="fas fa-paperclip"></i>';
+
+					let uhb = document.getElementById('unhiddenbutton');
+					if (file_box.files.length > 0)
+						uhb.innerHTML = file_box.files.length;
+					else
+						uhb.innerHTML = '<i class="fas fa-paperclip"></i>';
+
 					evt.preventDefault();
 				};
 			}
@@ -1405,7 +1420,7 @@
 			}
 
 			function connectWebSocket() {
-				if (socket_subdir !== undefined)
+				if (socket_subdir)
 					socket_url = `${window.location.href.replace(/^http/g, "ws").split("/").splice(0, 3).join("/")}/${socket_subdir}`;
 				else
 					socket_url = `${location.protocol === "https:" ? "wss://" : "ws://"}${socket_address}:${socket_port}`;
@@ -1435,7 +1450,7 @@
 				let config_url = `${prefix}requests?config`;
 				let config = await fetchFromURL(config_url);
 
-				if (config.socket_subdirectory !== null)
+				if (config.socket_subdirectory)
 					socket_subdir = config.socket_subdirectory;
 
 				socket_port = config.socket_port;
@@ -1446,22 +1461,22 @@
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
 				var bt = document.querySelector(`[addresses*="${current_chat_id}"]`);
-				if (bt === undefined || bt === null || !bt.className.includes("unread")) return;
+				if (!bt || !bt.className.includes("unread")) return;
 				bt.className = bt.className.replace(/unread/g, "");
 				var _ = fetchFromURL(`${prefix}requests?messages=${current_chat_id}&num_messages=1`);
 
-				var unreads = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
+				setUnreadTitle();
 			});
 
 			document.addEventListener("DOMContentLoaded", async function() {
+				if (prefix.length) setUpPrefix();
+
 				if (!window.Notification || Notification.permission === "granted")
 					document.getElementById("notificationbutton").outerHTML = "";
 
 				await setUpConfig();
 
 				if (subject) enableSubject();
-				if (prefix !== "") setUpPrefix();
 				if (mobile) setUpMobile();
 				setUpDND();
 				connectWebSocket();
