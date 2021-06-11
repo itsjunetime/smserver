@@ -394,6 +394,20 @@ class ServerDelegate {
 		}
 
 		self.did_start = true
+		
+		#if os(iOS)
+		UIDevice.current.isBatteryMonitoringEnabled = true
+
+		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryStateDidChangeNotification, object: nil)
+		#elseif os(macOS)
+		DispatchQueue.main.async {
+			while true { /// yes. This is terrible.
+				sleep(10)
+				self.sendNewBattery()
+			}
+		}
+		#endif
 
 		return (isRunning(), "Could not start server; unknown error. Please respring/ldrestart/reinstall, etc. and try again")
 	}
@@ -413,6 +427,15 @@ class ServerDelegate {
 
 	func isRunning() -> Bool {
 		return server.isListening && socket.server != nil && socket.server?.isRunning ?? false
+	}
+	
+	@objc func sendNewBatteryFromNotification(notification: Notification) {
+		self.sendNewBattery()
+	}
+	
+	func sendNewBattery() {
+		starscream.sendBattery()
+		socket.sendNewBattery()
 	}
 
 	static func checkIfAuthenticated(ras: String) -> Bool {

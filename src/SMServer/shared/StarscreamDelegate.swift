@@ -78,13 +78,20 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 	}
 
 	func didReceive(event: WebSocketEvent, client: WebSocket) {
-		Const.log("Receuved event: \(event)")
+		Const.log("Received event: \(event)")
 		switch event {
 			case .connected(_):
 				socket_state = SocketState.Connected
 			case .disconnected(_, _):
 				socket_state = SocketState.Disconnected
 			case .text(let string):
+				// we can't really just send a battery message when they first connect since the .connected(_) event
+				// is only called when it first connects to the remote server, so I guess just send it whenever they request anything?
+				// Ideally we'd have a way of detecting the first request from a certain host, and only sending it on that, but nothing
+				// like that yet.
+				DispatchQueue.main.async {
+					self.sendBattery()
+				}
 				request_manager.handleString(string)
 			case .cancelled:
 				socket_state = SocketState.Disconnected
@@ -93,6 +100,16 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 			default:
 				break
 		}
+	}
+	
+	func sendBattery() {
+		let perc = Const.getBatteryLevel()
+		let state = Const.getBatteryState()
+		let charging = state == .charging || state == .full
+		
+		let msg = SocketMessage.battery(perc, charging: charging)
+		Const.log("Sending battery msg: \(msg)")
+		self.sendData(data: msg.json())
 	}
 
 	func sendTyping(_ chat: String, typing: Bool) {

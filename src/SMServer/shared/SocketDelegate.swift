@@ -122,23 +122,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 		Const.log("\(ip) was allowed to connect")
 
-		#if os(iOS)
-		UIDevice.current.isBatteryMonitoringEnabled = true
-		#endif
-
 		self.sendNewBattery()
-
-		#if os(iOS)
-		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
-		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryStateDidChangeNotification, object: nil)
-		#elseif os(macOS)
-		DispatchQueue.main.async {
-			while true { /// yes. This is terrible.
-				sleep(10)
-				self.sendNewBattery()
-			}
-		}
-		#endif
 	}
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {
