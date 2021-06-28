@@ -233,6 +233,8 @@ then
 	olddir="$(pwd)"
 	cd "${ROOTDIR}/src" || err "Source directory is gone"
 	pn "\e[35m==>\e[0m Installing pods..."
+
+	pod update Criollo --no-repo-update
 	pod install
 
 	cd "$olddir" || err "$olddir is gone"

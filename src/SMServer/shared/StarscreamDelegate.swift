@@ -38,6 +38,10 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 		return true
 	}
 
+	func disconnect() {
+		socket?.disconnect()
+	}
+
 	func getID() -> String? {
 		let url_encoded = settings.password.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? settings.password
 

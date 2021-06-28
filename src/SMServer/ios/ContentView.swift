@@ -15,25 +15,32 @@ struct ContentView: View {
 	@State var ip_address: String = ""
 	@State var show_failed_start: Bool = false
 	@State var failed_start_msg: String = ""
+	@State var actively_loading: Bool = false
 
 	func loadServer() {
 		/// This starts the server at port $port_num
 		Const.log("Attempting to load server and socket...")
 
-		let running = server.startServers()
+		self.actively_loading = true
 
-		Const.log(running.0 ? "Successfully started server and socket" : "Failed to start server and socket: \(running.1)", warning: !running.0)
+		// so that the main view can refresh and show a loading indicator
+		DispatchQueue.global().async {
+			let running = server.startServers()
 
-		self.server_running = running.0
-		if !self.server_running {
-			self.failed_start_msg = running.1
-			self.show_failed_start = true
+			Const.log(running.0 ? "Successfully started server and socket" : "Failed to start server and socket: \(running.1)", warning: !running.0)
+
+			self.server_running = running.0
+			if !self.server_running {
+				self.failed_start_msg = running.1
+				self.show_failed_start = true
+			}
+
+			self.actively_loading = false
 		}
 	}
 
 	func enteredBackground() {
 		/// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
-		//if !background || !self.server.isListening {
 		if !settings.background || !self.server.isRunning() {
 			Const.log("sceneDidEnterBackground, starting kill timer")
 			DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: {
@@ -112,15 +119,19 @@ struct ContentView: View {
 
 						Spacer().frame(width: 30)
 
-						Button(action: {
-							if !self.server_running && (Const.getWiFiAddress() != nil || self.settings.override_no_wifi) {
-								self.loadServer()
+						if self.actively_loading {
+							ActivityIndicator(isAnimating: $actively_loading, style: .medium)
+						} else {
+							Button(action: {
+								if !self.server_running && (Const.getWiFiAddress() != nil || self.settings.override_no_wifi) {
+									self.loadServer()
+								}
+								UserDefaults.standard.setValue(true, forKey: "has_run")
+							}) {
+								Image(systemName: "play.fill")
+									.font(.system(size: self.font_size))
+									.foregroundColor(self.server_running ? Color.gray : Color.green)
 							}
-							UserDefaults.standard.setValue(true, forKey: "has_run")
-						}) {
-							Image(systemName: "play.fill")
-								.font(.system(size: self.font_size))
-								.foregroundColor(self.server_running ? Color.gray : Color.green)
 						}
 
 					}.padding(10)
@@ -349,5 +360,18 @@ class DocPicker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
 
 	func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
 		onPick(urls.first ?? URL(fileURLWithPath: ""))
+	}
+}
+
+struct ActivityIndicator: UIViewRepresentable {
+	@Binding var isAnimating: Bool
+	let style: UIActivityIndicatorView.Style
+
+	func makeUIView(context: UIViewRepresentableContext<ActivityIndicator>) -> UIActivityIndicatorView {
+		return UIActivityIndicatorView(style: style)
+	}
+
+	func updateUIView(_ uiView: UIActivityIndicatorView, context: UIViewRepresentableContext<ActivityIndicator>) {
+		isAnimating ? uiView.startAnimating() : uiView.stopAnimating()
 	}
 }

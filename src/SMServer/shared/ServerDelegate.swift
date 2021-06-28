@@ -384,14 +384,16 @@ class ServerDelegate {
 
 		Const.log("Got past adding all the handlers.")
 
-		server.startListening(nil, portNumber: UInt(settings.server_port))
-		socket.startServer(port: settings.socket_port)
-
 		if and_socket && settings.run_remote {
 			if !starscream.registerAndConnect() {
 				return (false, "Unable to connect to the remote server. Please check your remote settings and try again")
 			}
 		}
+
+		Const.log("Connected via starscream")
+
+		server.startListening(nil, portNumber: UInt(settings.server_port))
+		socket.startServer(port: settings.socket_port)
 
 		self.did_start = true
 		
@@ -409,6 +411,13 @@ class ServerDelegate {
 		}
 		#endif
 
+		guard isRunning() else {
+			server.stopListening()
+			socket.stopServer()
+			starscream.disconnect()
+			return (false, "Unable to start local server. Please try again.")
+		}
+
 		return (isRunning(), "Could not start server; unknown error. Please respring/ldrestart/reinstall, etc. and try again")
 	}
 
@@ -417,6 +426,8 @@ class ServerDelegate {
 
 		self.server.stopListening()
 		self.socket.stopServer()
+
+		self.starscream.disconnect()
 		Const.log("Stopped Server")
 
 		if !from_nc_change {
