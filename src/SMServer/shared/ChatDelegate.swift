@@ -240,7 +240,6 @@ final class ChatDelegate {
 
 	final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String, is_group: Bool? = nil) -> String {
 		/// Gets the first + last name of a contact with the phone number or email of `chat_id`
-
 		Const.log("Getting display name for \(chat_id) with db")
 
 		/// Support for group chats
@@ -251,7 +250,7 @@ final class ChatDelegate {
 				if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
 					let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
 
-					return recipients.joined(separator: ", ")
+					return recipients.map { $0.1 }.joined(separator: ", ")
 				} else {
 					return check_name[0]["display_name"]!
 				}
@@ -323,19 +322,22 @@ final class ChatDelegate {
 		return full_name
 	}
 
-	final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
+	final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [(String, String)] {
+		// returns (chat_identifier, display_name)
 
 		Const.log("Getting group chat recipients for \(ci)")
 
 		let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is ?))", args: [ci])
 
-		var ret_val = [String]()
+		var ret_val = [(String, String)]()
 
 		for i in recipients {
 
-			/// get name for person
-			let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["id"] ?? "", is_group: false)
-			ret_val.append((ds == "" ? i["id"] : ds) ?? "")
+			if let id = i["id"] {
+				/// get name for person
+				let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: id, is_group: false)
+				ret_val.append((id, ds.count == 0 ? id : ds))
+			}
 		}
 
 		Const.log("Finished retrieving recipients for \(ci)")
@@ -471,20 +473,24 @@ final class ChatDelegate {
 		dp_group.wait()
 
 		for i in chats {
-			Const.log("Beginning to iterate through chats for \(i["c.chat_identifier"] as! String)")
+			guard let chat_id = i["c.chat_identifier"] as? String else {
+				continue
+			}
+
+			Const.log("Beginning to iterate through chats for \(chat_id)")
 
 			var new_chat = [String:Any]()
 
 			if settings.combine_contacts {
-				if checked.contains(i["c.chat_identifier"] as! String) { continue }
+				if checked.contains(chat_id) { continue }
 
-				let these_addresses: [String] = chat_identifiers[i["c.chat_identifier"] as! String] ?? [String]()
+				let these_addresses: [String] = chat_identifiers[chat_id] ?? [String]()
 				new_chat["addresses"] = these_addresses.joined(separator: ",")
 				for j in these_addresses {
 					checked.append(j)
 				}
 			} else {
-				new_chat["addresses"] = i["c.chat_identifier"] as? String
+				new_chat["addresses"] = chat_id
 			}
 
 			/// Check for if it has unread. It has to fit all these specific things.
@@ -510,14 +516,14 @@ final class ChatDelegate {
 
 			/// Get name for chat
 			if (i["c.display_name"] as! String).count == 0 {
-				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"] as! String, is_group: (i["c.room_name"] as! String).count > 0)
+				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: chat_id, is_group: (i["c.room_name"] as! String).count > 0)
 			} else {
 				new_chat["display_name"] = i["c.display_name"]
 			}
 
 			if let pins = pinned_chats {
-				new_chat["pinned"] = pins.contains(i["c.chat_identifier"] as! String)
-				pinned_chats!.removeAll(where: { $0 == i["c.chat_identifier"] as! String })
+				new_chat["pinned"] = pins.contains(chat_id)
+				pinned_chats!.removeAll(where: { $0 == chat_id })
 			} else {
 				new_chat["pinned"] = false
 			}
@@ -525,8 +531,11 @@ final class ChatDelegate {
 			new_chat["relative_time"] = Const.getRelativeTime(ts: Double(i["m.date"] as! String) ?? 0.0)
 
 			new_chat["is_group"] = (i["c.room_name"] as! String) != ""
-			new_chat["chat_identifier"] = i["c.chat_identifier"]
+			new_chat["chat_identifier"] = chat_id
 			new_chat["time_marker"] = Int(i["m.date"] as! String)
+
+			new_chat["members"] = getGroupRecipientsWithDb(contact_db: contacts_db, db: db, ci: chat_id)
+					.map { ["chat_identifier": $0.0, "display_name": $0.1] }
 
 			return_array.append(new_chat)
 		}
