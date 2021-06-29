@@ -375,7 +375,7 @@ class ServerDelegate {
 
 			server.add("/favicon.ico") { (req, res, next) in
 				/// Returns the app icon. Doesn't have authentication so that it still appears when you're at the gatekeeper.
-				let data = SMImage(named: "favicon").parseableData() ?? Data()
+				let data = SMImage(named: "favicon").parseableData(png: true) ?? Data()
 
 				res.setValue("image/png", forHTTPHeaderField: "Content-Type")
 				res.send(data)

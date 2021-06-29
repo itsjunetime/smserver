@@ -24,11 +24,11 @@ class SMImage {
 		self.wrappedImage = KitImage(named: name)
 	}
 
-	final func parseableData() -> Data? {
+	final func parseableData(png: Bool = false) -> Data? {
 		#if os(macOS)
 		return self.wrappedImage?.tiffRepresentation
 		#elseif os(iOS)
-		return self.wrappedImage?.jpegData(compressionQuality: 0.25)
+		return png ? self.wrappedImage?.pngData() : self.wrappedImage?.jpegData(compressionQuality: 0.25)
 		#endif
 	}
 }
