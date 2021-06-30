@@ -49,7 +49,7 @@ __Example queries:__
 
 __Example return:__
 ```json
-{ "texts": [
+[
 	{
 		"date" : 628153075801778048,
 		"balloon_bundle_id" : "",
@@ -64,11 +64,14 @@ __Example return:__
 		"associated_message_guid" : "",
 		"subject" : "",
 		"is_from_me" : false,
-		"service" : "iMessage",
+		"imessage" : true,
 		"date_read" : 628153077592212992,
 		"guid" : "06F2E807-3607-4A97-A7E8-DC2BD051DEE9",
 		"ROWID" : 176227,
-		"text" : "￼Oh and here’s the python file you were asking for earlier"
+		"text" : "￼Oh and here’s the python file you were asking for earlier",
+		"group_action_type" : 0,
+		"item_type" : 0,
+		"id": "+11231231234"
 	  },
 	  {
 		"is_from_me" : true,
@@ -82,7 +85,10 @@ __Example return:__
 		"ROWID" : 176224,
 		"date_read" : 628152958118957952,
 		"associated_message_guid" : "",
-		"service" : "iMessage"
+		"service" : "iMessage",
+		"group_action_type" : 0,
+		"item_type" : 0,
+		"id": "+11231231234"
 	  },
 	  {
 		"ROWID" : 176223,
@@ -109,28 +115,35 @@ __Example return:__
 		"associated_message_type" : 0,
 		"is_from_me" : true,
 		"guid" : "ED180020-AEF5-4E2F-9991-E5C227B648C3",
-		"text" : "https:\/\/open.spotify.com\/track\/1yyIxshSIfW89EPTW0xkPH?si=D-S1TWN5S4CjjR65x9LBjg"
+		"text" : "https:\/\/open.spotify.com\/track\/1yyIxshSIfW89EPTW0xkPH?si=D-S1TWN5S4CjjR65x9LBjg",
+		"group_action_type" : 0,
+		"item_type" : 0,
+		"id": "+11231231234"
 	}
-]}
+]
 ```
 
 ### Return fields description
 | Key | Type | Description |
 | - | - | - |
 | date | Int | This is the date when the text was sent, in apple's own way of storing dates (to get a unix timestamp from it, do `(date / 1000000000) + 978307200`. |
-| is_from_me | Bool | true if it is from you, false if it was sent to you. |
+| is_from_me | Bool | `true` if it is from you, `false` if it was sent to you. |
 | date_read | Int | Theoretically the date at which the message was read by the other party. Is only something other than `0` if the text in question is a regular text (not a rich link, not a reaction, not just an attachment, etc), and either the other party sends read receipts or the text is to you. |
-| guid | String |The guid of the text. Will become relevant in the case of reactions, which specify guid of the text which they are reacting to. |
+| guid | String | The guid of the text. Will become relevant in the case of reactions, which specify guid of the text which they are reacting to. |
 | subject | String |The subject of the text, as opposed to the body. |
 | ROWID | Int |The rowid of the text. Normally irrelevant, but can be useful for checking order of texts, if that is something that can help you. |
-| cache_has_attachments | Bool | true if the text has any attachments, false if it has no attachments. |
-| service | String | "iMessage" if the text is an iMessage, "SMS" if it is an SMS. |
+| cache_has_attachments | Bool | `true` if the text has any attachments, `false` if it has no attachments. |
+| imessage | Bool | true if this was sent over iMessage, false if not. |
 | text | String | The body of the text, the most important part. |
 | attachments | Array | This is an array of the attachments associated with this text. `filename` is the path of this attachment in the host device's filesystem, minus the prefix of `/private/var/mobile/Library/SMS/`. `mime_type` contains the mime type of this attachment. |
 | balloon_bundle_id | String | Generally empty, but is something for special types of messages. This is "com.apple.messages.URLBalloonProvider" for rich links, and "com.apple.DigitalTouchBalloonProvder" for digital touch messages. |
-| link_type | String |Only exists on rich link messages. Specifies what type of content the link leads to, generally. For most spotify links, for example, it is "Music", and for youtube videos, it is "Video". Generally is just "Website", though. |
-| link_title | String |The title of the link, that generally shows up right underneath the rich link preview image. |
-| link_subtitle | String |The subtitle of the link, that generally shows up right underneath the title of the rich link. |
+| link_type | String | Only exists on rich link messages. Specifies what type of content the link leads to, generally. For most spotify links, for example, it is "Music", and for youtube videos, it is "Video". Generally is just "Website", though. |
+| link_title | String | The title of the link, that generally shows up right underneath the rich link preview image. |
+| link_subtitle | String | The subtitle of the link, that generally shows up right underneath the title of the rich link. |
+| group_action_type | Int | This is only not 0 if it is a special group event (e.g. changing the name, somebody joining, the image changing, etc), in which case it is a low integer.
+| item_type | Int | This is only used as a requirement to determine unread-ness. If the latest message does not have this value set as 0, the conversation can't be considered unread. |
+| id | String | The `chat_identifier` of the person who sent this text |
+| sender | String | the `display_name` of the person who sent this text (only included in group chats) |
 
 
 ## `chats`, `chats_offset`
@@ -149,7 +162,7 @@ __Example queries:__
 
 __Example return:__
 ```json
-{ "chats": [
+[
 	{
 		"has_unread" : false,
 		"chat_identifier" : "+11231231234",
@@ -158,9 +171,16 @@ __Example return:__
 		"display_name" : "John Smith",
 		"time_marker" : 625632825876320896,
 		"relative_time" : "1 month ago",
-		"addresses" : "+11231231234,email@email.com"
+		"addresses" : "+11231231234,email@email.com",
+		"is_group" : false,
+		"members"  : [
+			{
+				"display_name" : "John Smith",
+				"chat_identifier" : "+11231231234"
+			}
+		]
 	}
-]}
+]
 ```
 
 __Return fields description__
@@ -174,6 +194,8 @@ __Return fields description__
 | time_marker | Int | This is the date at which the latest text was sent or received in this conversation, also in apple's own time  format. To get a unix timestamp, do `(time_marker / 1000000000) + 978307200`. |
 | relative_time | String | A simple description of about when the last text was sent, somewhat similar to how it is shown in the iMessages app (but not exactly).
 | addresses | String | If the `Merge contact addresses` option is turned on in the host device's settings, this field will contain all of the email addresses and phone numbers that are associated with the contact who holds this `chat_identifier`. |
+| is_group | Bool | If the conversation is a group chat or not |
+| members | Array | A list of the `chat_identifier`s and `display_name`s of the members of this conversation |
 
 ## `name`
 Retrieves the contact name that accompanies chat_identifier `name`. Returns plain text.
@@ -212,7 +234,7 @@ Query: `search=+11231231234`
 With `search_group=time`
 
 ```json
-{ "matches": {
+{
 	"texts" : [
 		{
 			"chat_identifier" : "+11231231234",
@@ -230,13 +252,13 @@ With `search_group=time`
 			"chat_id" : "+11231231234",
 		}
 	]
-}}
+}
 ```
 
 With `search_group=chat`
 
 ```json
-{ "matches": {
+{
 	"+11231231234" : [
 		{
 			"chat_identifier" : "+11231231234",
@@ -254,7 +276,7 @@ With `search_group=chat`
 			"chat_id" : "+11231231234"
 		},
 	]
-}}
+}
 ```
 
 See above, in the `person` query return value descriptions for how to understand these return values
@@ -276,16 +298,16 @@ __Example queries:__
 
 __Example return:__
 ```json
-{ "photos": [
-  {
-    "is_favorite" : false,
-    "URL" : "DCIM\/100APPLE\/IMG_0244.JPG"
-  },
-  {
-    "is_favorite" : true,
-    "URL" : "DCIM\/100APPLE\/IMG_0243.JPG"
-  }
-]}
+{
+	{
+		"is_favorite" : false,
+		"URL" : "DCIM\/100APPLE\/IMG_0244.JPG"
+	},
+	{
+		"is_favorite" : true,
+		"URL" : "DCIM\/100APPLE\/IMG_0243.JPG"
+	}
+}
 ```
 
 __Return fields Description:__
@@ -310,17 +332,17 @@ __Example queries:__
 __Example return:__
 With `match_type=chat`:
 ```json
-{ "matches": [
+{
 	{
 		"chat_id" : "+11231231234",
 		"display_name" : "John Smith",
 	},
-]}
+}
 ```
 
 With `match_type=name`
 ```json
-{ "matches" : [
+{
 	{
 		"name": "John Smith",
 		"addresses" : [
@@ -328,7 +350,7 @@ With `match_type=name`
 			"email@email.com"
 		]
 	}
-]}
+}
 ```
 
 __Return fields Description:__

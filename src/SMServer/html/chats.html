@@ -856,8 +856,9 @@
 
 			function sendTyping(chat, active) {
 				var obj = {
+					id: "",
 					command: "send-typing",
-					data: {
+					params: {
 						chat: chat,
 						active: active ? true : false,
 					}
