@@ -1,4 +1,10 @@
 # Changelog
+0.8.0 &rightarrow; 0.9.0
+ - Built in support for connecting to SMServer from outside of the same network by implementing new websocket API
+ - Updated existing REST & Websocket API to be much more robust
+ - Main view now remains responsive and shows loading indicator while starting servers/connecting to remote server
+ - Added support in API for retrieving members of each group conversation
+
 0.7.4 &rightarrow; 0.8.0
  - Built libsmserver into the `.deb` package so that it is no longer necessary as a dependency
  - Updates read receipts in real time
