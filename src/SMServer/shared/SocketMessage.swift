@@ -34,13 +34,13 @@ class SocketMessage {
 
 		return SocketMessage(nil, command: .Typing, data: data, incoming: false)
 	}
-	
+
 	static func battery(_ perc: Double, charging: Bool) -> SocketMessage {
 		let data: [String:Any] = [
 			"percentage": perc,
 			"charging": charging
 		]
-		
+
 		return SocketMessage(nil, command: .BatteryStatus, data: data, incoming: false)
 	}
 

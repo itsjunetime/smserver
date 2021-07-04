@@ -94,6 +94,8 @@ class Const : NSObject {
 	static let user_home_url: String = "/private/var/mobile/"
 	static let cert_pass_file: String = Bundle.main.bundlePath + "/smserver_cert_pass.txt"
 
+	static let ss_changed_notification: String = "socket_state_changed"
+
 	static let help_string = """
 	usage: \(col)1m./smserver [options]\(col)0m
 

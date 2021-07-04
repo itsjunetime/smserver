@@ -396,7 +396,7 @@ class ServerDelegate {
 		socket.startServer(port: settings.socket_port)
 
 		self.did_start = true
-		
+
 		#if os(iOS)
 		UIDevice.current.isBatteryMonitoringEnabled = true
 
@@ -423,7 +423,6 @@ class ServerDelegate {
 
 	func stopServers(from_nc_change: Bool = false) {
 		/// Stops the server & and de-authenticates all ip addresses
-
 		self.server.stopListening()
 		self.socket.stopServer()
 
@@ -439,11 +438,11 @@ class ServerDelegate {
 	func isRunning() -> Bool {
 		return server.isListening && socket.server != nil && socket.server?.isRunning ?? false
 	}
-	
+
 	@objc func sendNewBatteryFromNotification(notification: Notification) {
 		self.sendNewBattery()
 	}
-	
+
 	func sendNewBattery() {
 		starscream.sendBattery()
 		socket.sendNewBattery()
@@ -593,7 +592,6 @@ class ServerDelegate {
 			Const.log("selecting person: \(person), num: \(num_texts)")
 
 			let texts_array = chat_delegate.loadMessages(num: person, num_items: Int(num_texts), offset: offset, from: from)
-			//let texts = Const.encodeToJson(object: texts_array, title: "texts")
 
 			return (200, texts_array)
 		} else if Const.api_chat_vals.contains(f) {
@@ -623,7 +621,6 @@ class ServerDelegate {
 			let term = params[Const.api_search_req] ?? ""
 
 			let matches = chat_delegate.searchForString(term: term , case_sensitive: case_sensitive, bridge_gaps: bridge_gaps, group_by_time: group_by_time)
-			//let matches = Const.encodeToJson(object: responses, title: "matches")
 
 			return (200, matches)
 		} else if Const.api_photo_vals.contains(f) {
@@ -650,8 +647,6 @@ class ServerDelegate {
 				"subjects": settings.subjects_enabled,
 			]
 
-			//let ret_config = Const.encodeToJson(object: config, title: "config")
-
 			return (200, config)
 		} else if Const.api_match_vals.contains(f) {
 			guard let id = params[Const.api_match_keyword], let type = params[Const.api_match_type] else {
@@ -659,8 +654,6 @@ class ServerDelegate {
 			}
 
 			let result = type == "chat" ? chat_delegate.matchPartialAddress(id) : chat_delegate.matchPartialName(id)
-
-			//let res_json = Const.encodeToJson(object: result, title: "matches")
 
 			return (200, result)
 		}
@@ -748,8 +741,11 @@ class ServerDelegate {
 			socket.sendNewText(info: text)
 		}
 
-		if starscream.socket_state == .Connected {
-			starscream.sendNewMessage(text)
+		switch starscream.socket_state {
+			case .Connected:
+				starscream.sendNewMessage(text)
+			default:
+				break
 		}
 	}
 

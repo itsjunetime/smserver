@@ -5,7 +5,7 @@ import Starscream
 class StarscreamDelegate : NSObject, WebSocketDelegate {
 	let settings = Settings.shared()
 	var socket: WebSocket? = nil
-	var socket_state: SocketState = SocketState.Disconnected
+	var socket_state: SocketState = SocketState.Disconnected(false)
 	var request_manager = RequestManager.sharedManager
 	static let sharedDelegate = StarscreamDelegate()
 
@@ -33,26 +33,78 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 
 		socket?.connect()
 
-		socket_state = SocketState.Connecting
+		setSocketState(new_state: .Connecting)
 
 		return true
 	}
 
 	func disconnect() {
+		// need to set disconnected state before actually disconnecting
+		// or else it'll think we accidentally disconnected and will try to reconnect
+		setSocketState(new_state: .Disconnected(false))
+		settings.remote_id = nil
+
 		socket?.disconnect()
+		_ = self.deregister() // eh we'll handle the result later
 	}
 
 	func getID() -> String? {
 		let url_encoded = settings.password.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? settings.password
 
-		let url = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/register?key=\(url_encoded)&host_key=\(url_encoded)&reg_type=hostclient")!
-		var ret_str: String? = nil
+		guard let url = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/register?key=\(url_encoded)&host_key=\(url_encoded)&reg_type=hostclient") else {
+			Const.log("Error: You have characters in your remote address which should not be in URLs. Please remove them")
 
-		var request = URLRequest(url: url)
-		request.httpMethod = "GET"
+			return nil
+		}
+		var ret_str: String? = nil
 
 		let group = DispatchGroup()
 		group.enter()
+
+		Const.log("Creating session with url \(url)")
+
+		self.getURLSessionAndRequest(url, completion: {(data, _, _) in
+			if let data = data {
+				ret_str = String(data: data, encoding: .utf8)
+			}
+			group.leave()
+		})
+
+		group.wait()
+		return ret_str
+	}
+
+	func deregister() -> Bool {
+		var succeeded = true
+
+		let url_encoded = settings.password.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? settings.password
+		guard let url = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/remove?id=\(settings.remote_id ?? "")&key=\(url_encoded)&host_key=\(url_encoded)") else {
+			Const.log("Error: You have characters in your remote address which should not be in URLs. Please remove them")
+
+			return false
+		}
+
+		let group = DispatchGroup()
+		group.enter()
+
+		Const.log("Removing session with id \(settings.remote_id ?? "unknown")")
+
+		self.getURLSessionAndRequest(url, completion: {(data, _, error) in
+			if let err = error {
+				Const.log("Could not remove session: \(err)")
+				succeeded = false
+			}
+
+			group.leave()
+		})
+
+		group.wait()
+		return succeeded
+	}
+
+	func getURLSessionAndRequest(_ url: URL, completion: @escaping (_: Data?, _: URLResponse?, _: Error?) -> Void) {
+		var request = URLRequest(url: url)
+		request.httpMethod = "GET"
 
 		let config = URLSessionConfiguration.default
 		config.timeoutIntervalForRequest = 10
@@ -66,28 +118,17 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 			}
 		}()
 
-		let task = urlSession.dataTask(with: request) {(data, response, err) in
-			if let data = data {
-				ret_str = String(data: data, encoding: .utf8)
-			}
-			group.leave()
-		}
-
-		Const.log("Creating session with url \(url)")
-
+		let task = urlSession.dataTask(with: request, completionHandler: completion)
 		task.resume()
-
-		group.wait()
-		return ret_str
 	}
 
 	func didReceive(event: WebSocketEvent, client: WebSocket) {
 		Const.log("Received event: \(event)")
 		switch event {
 			case .connected(_):
-				socket_state = SocketState.Connected
-			case .disconnected(_, _):
-				socket_state = SocketState.Disconnected
+				setSocketState(new_state: .Connected)
+			case .disconnected(_, _), .cancelled:
+				socketDisconnected()
 			case .text(let string):
 				// we can't really just send a battery message when they first connect since the .connected(_) event
 				// is only called when it first connects to the remote server, so I guess just send it whenever they request anything?
@@ -97,20 +138,32 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 					self.sendBattery()
 				}
 				request_manager.handleString(string)
-			case .cancelled:
-				socket_state = SocketState.Disconnected
 			case .error(_):
-				socket_state = SocketState.Disconnected
+				setSocketState(new_state: .Disconnected(true))
 			default:
 				break
 		}
 	}
-	
+
+	func socketDisconnected() {
+		switch socket_state {
+			case .Disconnected(_):
+				break
+			default:
+				setSocketState(new_state: .Disconnected(true))
+		}
+	}
+
+	func setSocketState(new_state: SocketState) {
+		socket_state = new_state
+		NotificationCenter.default.post(name: Notification.Name(Const.ss_changed_notification), object: new_state)
+	}
+
 	func sendBattery() {
 		let perc = Const.getBatteryLevel()
 		let state = Const.getBatteryState()
 		let charging = state == .charging || state == .full
-		
+
 		let msg = SocketMessage.battery(perc, charging: charging)
 		Const.log("Sending battery msg: \(msg)")
 		self.sendData(data: msg.json())
@@ -143,5 +196,5 @@ extension StarscreamDelegate : URLSessionDelegate {
 }
 
 enum SocketState {
-	case Connected, Connecting, Disconnected
+	case Connected, Connecting, Disconnected(Bool), Reconnecting, FailedConnect
 }

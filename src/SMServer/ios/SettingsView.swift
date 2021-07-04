@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
 	let settings = Settings.shared()
 
-	var grey_box = Color.init(red: 0.2, green: 0.2, blue: 0.2)
+	var grey_box = Color("GreyBox")
 
 	private let picker_options: [String] = ["Dark", "Light", "Nord"]
 
