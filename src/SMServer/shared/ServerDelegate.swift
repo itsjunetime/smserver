@@ -426,10 +426,11 @@ class ServerDelegate {
 		self.server.stopListening()
 		self.socket.stopServer()
 
-		self.starscream.disconnect()
 		Const.log("Stopped Server")
 
 		if !from_nc_change {
+			self.starscream.disconnect()
+
 			settings.authenticated_addresses = [String]()
 			self.did_start = false
 		}

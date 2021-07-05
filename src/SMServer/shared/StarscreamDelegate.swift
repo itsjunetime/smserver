@@ -127,7 +127,7 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 		switch event {
 			case .connected(_):
 				setSocketState(new_state: .Connected)
-			case .disconnected(_, _), .cancelled:
+			case .disconnected(_, _), .cancelled, .error(_), .reconnectSuggested(_):
 				socketDisconnected()
 			case .text(let string):
 				// we can't really just send a battery message when they first connect since the .connected(_) event
@@ -138,8 +138,6 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 					self.sendBattery()
 				}
 				request_manager.handleString(string)
-			case .error(_):
-				setSocketState(new_state: .Disconnected(true))
 			default:
 				break
 		}
