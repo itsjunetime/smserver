@@ -181,6 +181,8 @@ final class ChatDelegate {
 				texts[i].removeValue(forKey: "service")
 			}
 
+			texts[i]["is_group"] = is_group
+
 			/// Change values that shouldn't be strings to the correct type
 			if let rowid = texts[i]["ROWID"] as? String {
 				texts[i]["ROWID"] = Int(rowid)

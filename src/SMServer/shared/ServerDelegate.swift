@@ -18,6 +18,11 @@ class ServerDelegate {
 	var main_page: String = ""
 	var main_page_style: String = ""
 	var gatekeeper_page: String = ""
+
+	var display_js: String = ""
+	var conversation_js: String = ""
+	var message_js: String = ""
+
 	var light_style: String = ""
 	var nord_style: String = ""
 	var fa_style: String = ""
@@ -106,12 +111,20 @@ class ServerDelegate {
 		   let l = Bundle.main.url(forResource: "light_theme", withExtension: "css", subdirectory: "html"),
 		   let n = Bundle.main.url(forResource: "nord_theme", withExtension: "css", subdirectory: "html"),
 		   let fa = Bundle.main.url(forResource: "font_awesome", withExtension: "css", subdirectory: "html/fontawesome"),
-		   let fs = Bundle.main.url(forResource: "fa_solid", withExtension: "css", subdirectory: "html/fontawesome") {
+		   let fs = Bundle.main.url(forResource: "fa_solid", withExtension: "css", subdirectory: "html/fontawesome"),
+		   let cjs = Bundle.main.url(forResource: "conversation", withExtension: "js", subdirectory: "html"),
+		   let djs = Bundle.main.url(forResource: "display", withExtension: "js", subdirectory: "html"),
+		   let mjs = Bundle.main.url(forResource: "message", withExtension: "js", subdirectory: "html") {
 			do {
 				/// Set up all the pages as multi-line string variables, set values within them.
 				self.main_page = try String(contentsOf: h, encoding: .utf8)
 				self.main_page_style = try String(contentsOf: s, encoding: .utf8)
 				self.gatekeeper_page = try String(contentsOf: g, encoding: .utf8)
+
+				self.conversation_js = try String(contentsOf: cjs, encoding: .utf8)
+				self.display_js = try String(contentsOf: djs, encoding: .utf8)
+				self.message_js = try String(contentsOf: mjs, encoding: .utf8)
+
 				self.light_style = try String(contentsOf: l, encoding: .utf8)
 				self.nord_style = try String(contentsOf: n, encoding: .utf8)
 				self.fa_style = try String(contentsOf: fa, encoding: .utf8)
@@ -343,6 +356,30 @@ class ServerDelegate {
 					res.send(self.fa_solid_style)
 				} else if s == "font_awesome" {
 					res.send(self.fa_style)
+				}
+			}
+
+			server.add("/js") { (req, res, _) in
+				/// Returns a js script as text
+				let ip = req.connection?.remoteAddress ?? ""
+
+				Const.log("GET js: \(ip)")
+
+				if !ServerDelegate.checkIfAuthenticated(ras: ip) {
+					res.setStatusCode(403, description: "Please authenticate")
+					res.send("")
+					return
+				}
+
+				let s = Array(req.query.keys)[0]
+				res.setValue("script/js", forHTTPHeaderField: "Content-Type")
+
+				if s == "display" {
+					res.send(self.display_js)
+				} else if s == "conversation" {
+					res.send(self.conversation_js)
+				} else if s == "message" {
+					res.send(self.message_js)
 				}
 			}
 

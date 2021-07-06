@@ -197,7 +197,7 @@ i#chargingSymbol {
 	overflow-x: hidden;
 	max-width: var(--chats-width);
 }
-.chats button.unpinned,
+.chats button.listed,
 #morechatsbutton {
 	border: none;
 	border-top: 1px solid var(--chats-border);
@@ -210,7 +210,7 @@ i#chargingSymbol {
 	position: relative;
 	padding: 6px;
 }
-.chats button.unpinned img {
+.chats button.listed img {
 	max-height: calc(var(--chats-button-height) * 0.74);
 	max-width: calc(var(--chats-button-height) * 0.74);
 	border-radius: 100%;
@@ -232,10 +232,10 @@ i#chargingSymbol {
 	max-width: calc(var(--chats-width) * 0.25);
 	position: relative;
 }
-.chats button.pinned .chat-top {
+.chats button.pinned .chatTop {
 	display: grid;
 }
-.chats button.pinned img, .pinned .chat-image {
+.chats button.pinned img, .pinned .chatImage {
 	height: calc(var(--chats-width) * 0.20);
 	width: calc(var(--chats-width) * 0.20);
 	max-height: calc(var(--chats-button-height) * 1.4);
@@ -245,11 +245,11 @@ i#chargingSymbol {
 	grid-column: 1;
 	margin: 0 auto 10px auto;
 }
-.chats button.pinned .chat-top > span {
+.chats button.pinned .chatTop > span {
 	grid-row: 1/3;
 	grid-column: 1;
 }
-.chats button.pinned .chat-text {
+.chats button.pinned .chatText {
 	background-color: #7776;
 	color: white;
 	padding: 4px;
@@ -262,27 +262,33 @@ i#chargingSymbol {
 	grid-column: 1;
 	height: max-content;
 }
-.chats button.pinned.unread .chat-name:before,
-.unread .chat-nonpic:before {
+.chats button.pinned.unread .chatName:before,
+.unread .chatNonpic:before {
 	content: '';
 	background-color: #369cff;
 	position: absolute;
 	border-radius: 100%;
 }
-.chats button.pinned.unread .chat-name:before {
+.chats button.pinned.unread .chatName:before {
 	width: calc(7px + 0.3vw);
 	height: calc(7px + 0.3vw);
 	left: calc(1vw - 19px);
 	bottom: calc(14px - 3.5%);
 }
-.pinned .chat-name {
+.pinned .chatName {
 	font-size: calc(8px + 0.5vw);
 	margin: auto;
 	padding: 0;
 	max-width: 100%;
 	width: max-content;
 }
-.chat-image {
+.profileImage > .chatImage {
+	font-size: 14px;
+	max-width: 32px;
+	max-height: 32px;
+	z-index: 2;
+}
+.chatImage {
 	font-size: 24px;
 	background: linear-gradient(45deg, grey, #cacacab5);
 	border-radius: 100%;
@@ -290,27 +296,27 @@ i#chargingSymbol {
 	height: calc(var(--chats-button-height) * 0.74);
 	display: grid;
 }
-.chat-image-letters {
+.chatImageLetters {
 	margin: auto;
 	color: white;
 }
-.chat-nonpic {
+.chatNonpic {
 	padding: 8px 0 0 14px;
 	width: calc(var(--chats-width) - (var(--chats-button-height) * 1.1)); /* This doesn't make any sense but it seems to work */
 	height: 100%;
 }
-.chat-toprow {
+.chatToprow {
 	display: flex;
 	margin-bottom: 4px;
 }
-.chat-name {
+.chatName {
 	font-size: 16px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	margin-right: auto;
 	white-space: nowrap;
 }
-.chat-text {
+.chatText {
 	color: #ddd;
 	font-size: 12px;
 	overflow: hidden;
@@ -319,7 +325,7 @@ i#chargingSymbol {
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
 }
-.chat-date {
+.chatDate {
 	padding-right: 6px;
 	min-width: max-content;
 	margin: auto 0 auto 6px;
@@ -331,7 +337,7 @@ i#chargingSymbol {
 #morechatsbutton, #morechatsbutton * {
 	color: dodgerblue;
 }
-.unread .chat-nonpic:before {
+.unread .chatNonpic:before {
 	height: 15px;
 	width: 15px;
 	top: 9px;
@@ -346,8 +352,8 @@ i#chargingSymbol {
 .text-content p.noPadding img {
 	padding: 0;
 }
-.text.noPadding.fullAttachment, .text-area.noPadding.fullAttachment {
-	background-color: transparent;
+.text.noPadding.fullAttachment {
+	background-color: transparent !important;
 }
 .fullAttachment:before, .fullAttachment:after {
 	display: none;
@@ -368,6 +374,24 @@ i#chargingSymbol {
 }
 .selected div {
 	color: rgb(115, 170, 226);
+}
+.message {
+	display: grid;
+	grid-template-rows: 1fr;
+	grid-template-columns: 1fr;
+	grid-template-areas: 'messages';
+}
+.message.withSender {
+	grid-template-rows: 26px 1fr;
+	grid-template-areas: 'nothing sender' 'image messages' !important;
+}
+.message.withReceipt {
+	grid-template-rows: 1fr 20px;
+	grid-template-areas: 'messages' 'receipt' !important;
+}
+.message.withImage {
+	grid-template-columns: 40px 1fr;
+	grid-template-areas: 'image messages';
 }
 .text {
 	font-family: var(--main-font);
@@ -391,52 +415,57 @@ i#chargingSymbol {
 .text .subject {
 	font-weight: 600;
 }
-.is_from_them a, .is_from_them a p, .is_from_them a span {
+.fromThem a, .fromThem a p, .fromThem a span {
 	color: dodgerblue;
 }
-.is_from_me a, .is_from_me a p, .is_from_me a span {
+.fromMe a, .fromMe a p, .fromMe a span {
 	color: lightblue;
 }
 .sender {
 	font-size: 14px;
 	margin: 10px 0 0 5px;;
 	color: #bbb;
+	grid-area: sender;
 }
-.is_from_me {
-	position: relative;
-	border-radius: 20px 20px 15px 20px;
+.fromMe {
 	align-self: flex-end;
 }
-.is_from_me:before {
+.fromMe .text {
+	position: relative;
+	border-radius: 20px;
+}
+.fromMe .text:before {
 	right: -11px;
 	border-bottom-left-radius: 16px 14px;
 	transform: translate(0, -2px);
 	border-bottom-right-radius: 12px;
 }
-.is_from_me:after {
+.fromMe .text:after {
 	right: -42px;
 	border-bottom-left-radius: 8px;
 }
-.iMessage.is_from_me:before {
+.iMessage.fromMe .text:before {
 	border-right: 19px solid var(--my-imessage-background);
 }
-.SMS.is_from_me:before {
+.SMS.fromMe .text:before {
 	border-right: 19px solid var(--my-sms-background);
 }
-.is_from_them {
-	border-radius: 20px 20px 20px 15px;
+.fromThem {
 	align-self: flex-start;
+}
+.fromThem .text {
+	border-radius: 20px;
 	background-color: var(--their-text-background);
 	position: relative;
 }
-.is_from_them:before {
+.fromThem .text:before {
 	left: -11px;
 	border-left: 20px solid var(--their-text-background);
 	border-bottom-right-radius: 16px 14px;
 	transform: translate(0, -2px);
 	border-bottom-left-radius: 8px;
 }
-.is_from_them:after {
+.fromThem .text:after {
 	left: 18px;
 	border-bottom-right-radius: 8px;
 }
@@ -449,15 +478,15 @@ i#chargingSymbol {
 [class*="from_me"] + [class*="from_them"] {
 	margin-top: 10px;
 }
-.is_from_me.iMessage {
+.fromMe.iMessage .text {
 	background-color: var(--my-imessage-background);
 }
-.is_from_me.SMS {
+.fromMe.SMS .text {
 	background-color: var(--my-sms-background);
 }
-.text video, .text-area video,
-.text img, .text-area img,
-.text audio, .text-area audio {
+.text video, .textArea video,
+.text img, .textArea img,
+.text audio, .textArea audio {
 	max-width: 100%;
 	border-radius: 10px;
 }
@@ -487,15 +516,15 @@ i#chargingSymbol {
 	border-radius: 100%;
 	border: 0 solid black !important;
 }
-.is_from_them.tapback_dialog:before {
+.fromThem.tapback_dialog:before {
 	left: -4px;
 	background-color: var(--their-text-background);
 }
-.is_from_me.tapback_dialog:before {
+.fromMe.tapback_dialog:before {
 	right: -4px;
 	background-color: var(--my-imessage-background);
 }
-.SMS.is_from_me.tapback_dialog:before {
+.SMS .fromMe.tapback_dialog:before {
 	background-color: var(--my-sms-background);
 }
 .tapback_choice {
@@ -514,7 +543,7 @@ i.fa-thumbs-down {
 .spacer {
 	min-height: 10px;
 }
-.time-display {
+.timeDisplay {
 	text-align: center;
 }
 #moretextsbutton {
@@ -769,10 +798,12 @@ i.fa-thumbs-down {
 }
 .readReceipt {
 	font-size: 14px;
-	align-self: flex-end;
 	margin-top: 3px;
+	display: flex;
+	flex-direction: row-reverse;
+	grid-area: receipt;
 }
-.readReceipt, .readReceipt strong {
+.readReceipt span, .readReceipt strong {
 	color: #a6a6a6;
 }
 .tapback {
@@ -783,23 +814,36 @@ i.fa-thumbs-down {
 	z-index: 2;
 	border-radius: 20px;
 }
-.from_them .tapback {
+.fromThem .tapback {
 	left: -12px;
 	background-color: rgb(70, 140, 240);
 }
-.from_me .tapback {
+.fromMe .tapback {
 	right: -6px;
 	background-color: rgb(71, 71, 80);
 }
-.text-area {
+.mainMessages {
+	grid-area: messages;
+}
+.profileImage {
+	grid-area: image;
+	display: flex;
+	flex-direction: column-reverse;
+}
+.profileImage img {
+	border-radius: 100%;
+	max-width: 32px;
+	z-index: 2;
+}
+.textArea {
 	display: flex;
 	flex-shrink: 0;
 }
-.text-area.from_me {
-	align-self: flex-end;
+.fromMe .textArea {
+	flex-direction: row-reverse;
 }
-.text-area.from_them {
-	align-self: flex-start;
+.fromThem .textArea {
+	flex-direction: row;
 }
 .noPadding {
 	padding: 0 !important;
