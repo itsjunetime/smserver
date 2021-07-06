@@ -104,27 +104,6 @@
 				return ret;
 			}
 
-			function getTextElement(text) {
-				let msg = new Message(text)
-				return msg.html()
-			}
-
-			/*function setProfileImageAsText(chat_id, is_title = false) {
-				if (debug) console.log(`settings profile image for ${chat_id} as text, is_title: ${is_title}`);
-				var c = convos.find(c => c.addresses.includes(chat_id))
-				var im = is_title ? document.getElementById("messagesTitleText").firstChild : c.image()
-
-				let i = c.newSpan('chatImage')
-				let cil = c.newSpan('chatImageLetters')
-
-				var name = c.display_name.replace(/\p{Extended_Pictographic}/gu, "").split(" ");
-				cil.textContent = `${name[0].substr(0, 1)}${name.length > 1 ? name[name.length - 1].substr(0, 1) : ""}`;
-				i.appendChild(cil);
-
-				im.outerHTML = i.outerHTML;
-				console.log("Don't worry about these 404 errors, they're expected and handled :)");
-			}*/
-
 			function setProfileImageAsText(el) {
 				let name = el.getAttribute('display_name')
 				let repl = name.replace(/\p{Extended_Pictographic}/gu, '').split(' ')
