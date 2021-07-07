@@ -694,6 +694,14 @@ class ServerDelegate {
 			let result = type == "chat" ? chat_delegate.matchPartialAddress(id) : chat_delegate.matchPartialName(id)
 
 			return (200, result)
+		} else if f == Const.api_convo_req {
+			guard let chat_id = params[Const.api_convo_req], chat_id.count > 0 else {
+				return (400, "Please include a chat_identifier")
+			}
+
+			let res = chat_delegate.getChatDetails(chat_id)
+
+			return (200, res)
 		}
 
 		Const.log("We haven't implemented this functionality yet, sorry :/", warning: true)

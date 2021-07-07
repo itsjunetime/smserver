@@ -234,15 +234,15 @@
 			}
 
 			async function printChats(offset = 0) {
-				if (debug) console.log("printing Chats");
-				let url = `${prefix}requests?chats&chats_offset=${offset}`;
-				let items = await fetchFromURL(url);
+				if (debug) console.log("printing Chats")
+				let url = `${prefix}requests?chats&chats_offset=${offset}`
+				let items = await fetchFromURL(url)
 
-				var doc = document.getElementsByClassName("chatsList")[0];
-				var old_button = document.getElementById("moreChatsButton");
+				let doc = document.getElementsByClassName("chatsList")[0]
+				let old_button = document.getElementById("moreChatsButton")
 
-				var selected_id = "";
-				var selecteds = document.getElementsByClassName("selected");
+				let selected_id = ""
+				let selecteds = document.getElementsByClassName("selected")
 				if (selecteds.length > 0) selected_id = selecteds[0].id;
 
 				doc.innerHTML = "";
@@ -254,29 +254,40 @@
 					if (chat.chat_identifier == selected_id)
 						chat.selected = true;
 
-					if (!chat.pinned) {
-						doc.insertBefore(chat.html(), document.getElementById("moreChatsButton"));
-					} else {
-						var pinRows = document.getElementsByClassName("pinRow");
-
-						if (pinRows.length > 0 && pinRows[pinRows.length - 1].children.length < 3) {
-							pinRows[pinRows.length - 1].appendChild(chat.html());
-						} else {
-							var row = document.createElement("div");
-							row.className = "pinRow";
-							row.appendChild(chat.html());
-
-							if (doc.children.length === 0)
-								doc.appendChild(row);
-							else if (pinRows.length === 0)
-								doc.insertBefore(row, doc.firstChild);
-							else if (pinRows.length > 0)
-								doc.insertBefore(row, pinRows[pinRows.length - 1].nextSibling);
-						}
-					}
+					printSingleChat(chat)
 				})
 
-				setUnreadTitle();
+				setUnreadTitle()
+			}
+
+			printSingleChat(chat, append = true) {
+				let doc = document.getElementsByClassName("chatsList")[0];
+
+				if (!chat.pinned) {
+					if (append)
+						doc.insertBefore(chat.html(), document.getElementById("moreChatsButton"));
+					else {
+						let firstButton = doc.getElementsByTagName('button')[0]
+						doc.insertBefore(chat.html(), firstButton)
+					}
+				} else {
+					let pinRows = document.getElementsByClassName("pinRow");
+
+					if (pinRows.length > 0 && pinRows[pinRows.length - 1].children.length < 3) {
+						pinRows[pinRows.length - 1].appendChild(chat.html());
+					} else {
+						let row = document.createElement("div");
+						row.className = "pinRow";
+						row.appendChild(chat.html());
+
+						if (doc.children.length === 0)
+							doc.appendChild(row);
+						else if (pinRows.length === 0)
+							doc.insertBefore(row, doc.firstChild);
+						else if (pinRows.length > 0)
+							doc.insertBefore(row, pinRows[pinRows.length - 1].nextSibling);
+					}
+				}
 			}
 
 			function setUnreadTitle() {
@@ -444,7 +455,7 @@
 
 			function inputKeyDown(subject = false) {
 				if (!subject) autoGrow();
-				if (current_chat_id !== "") {
+				if (current_chat_id) {
 					if (document.getElementById("sendBox").value.length > 0) {
 						typing_sleep = 10000;
 						if (!currently_typing) sendTyping(current_chat_id, true);
@@ -528,128 +539,77 @@
 			}
 
 			async function processNewText(text) {
-				if (debug) console.log(`received new text: ${text}`);
+				let message = new Message(text)
+				let convo = convos.find(c => c.addresses.includes(message.chat_id))
+				let text_content = ''
 
-				var new_text = text.text;
-				var chat = text.chat_identifier;
+				if (!message.from_me) {
+					if (!message.text && message.has_attachments)
+						text_content = `Attachment: ${message.attachments[0].filename.split('/')[0]}`
 
-				var btn = document.querySelector(`[addresses*="${chat}"]`);
+					if (message.sender)
+						text_content = `${message.sender}: ${new_text}`
 
-				var name = "";
+					let name = message.sender ? message.sender : message.chat_id
 
-				if (!text.is_from_me) {
-					if (new_text.trim().length === 0 && text.cache_has_attachments)
-						new_text = "Attachment: " + text.attachments[0].filename.split("/")[0];
-
-					if (text.sender && text.sender !== "nil") {
-						name = text.sender;
-						new_text = `${name}: ${new_text}`;
-					}
-
-					if (window.Notification && Notification.permission === "granted" && (!document.hasFocus() || chat !== current_chat_id)) {
-						if (name.length === 0) {
-							var name_prom = await getTextFromURL(`${prefix}requests?name=${chat}`);
-							if (name_prom.length > 1) name = name_prom[1];
-						}
-						var n = new Notification(name, { body: new_text, icon: `/data?chat_id=${chat}`});
-					}
+					let n
+					if (window.Notification && Notification.permission == 'granted' && (!document.hasFocus() || message.chat_id != current_chat_id))
+						n = new Notification(name, { body: new_text, icon: `/data?chat_id=${message.chat_id}`});
 				}
 
-				if (chat.length !== 0) {
-					if (!btn || chat === "any") {
+				if (!message.chat_id) {
+					if (!convo || convos.length == 0)
 						printChats();
-					} else if (chat !== document.getElementsByClassName("listed")[0].id && btn.className.includes("listed")) {
-						setChatAsTop(chat, new_text);
-					} else {
-						if (chat !== current_chat_id || !document.hasFocus()) btn.classList.add("unread");
+					else if (convo != convos[0] && !convo.pinned)
+						setChatAsTop(message.chat_id, text_content)
+					else {
+						if (message.chat_id != current_box || !document.hasFocus())
+							convo.setUnread();
 
-						if (btn.className.includes("listed") || btn.getElementsByClassName("chatText")[0]) {
-							var chat_text = btn.getElementsByClassName("chatText")[0];
-							if (chat_text && new_text.length > 0) chat_text.textContent = new_text;
-						} else if (chat !== current_chat_id) {
-							var div_text = document.createElement("div");
-							div_text.className = "chatText";
-							div_text.textContent = new_text;
-
-							var tb = btn.getElementsByClassName("chatTop")[0];
-							tb.appendChild(div_text);
-						}
-
+						convo.setNewText(text_content)
 					}
 
-					if (chat === current_chat_id) {
-						var typ = document.getElementById("typingIndicator");
-						var typing_outer = "";
-						if (typ) {
-							if (text.is_from_me) typing_outer = typ.outerHTML;
-							typ.outerHTML = "";
-						}
-						if (text.is_from_me) {
-							var sending = document.getElementById("sendingIndicator");
+					if (message.chat_id == current_chat_id) {
+						let typ = document.getElementById('typingIndicator')
+						let typing_outer = typ && message.from_me ? typ.outerHTML : undefined
+
+						if (typ)
+							typ.outerHTML = '';
+						if (message.from_me) {
+							let sending = document.getElementById('sendingIndicator')
 							if (sending)
-								sending.outerHTML = "";
+								sending.outerHTML = '';
 						}
-						printListOfTexts([text], true);
-						if (typing_outer !== "") document.getElementById("textContent").innerHTML += typing_outer;
+
+						printListOfTexts([text], true)
+						if (typing_outer)
+							document.getElementById('textContent').innerHTML += typing_outer;
 					}
 				}
 
-				setUnreadTitle();
+				setUnreadTitle()
 			}
 
-			async function setChatAsTop(chat, new_text = "") {
-				if (debug) console.log(`Setting chat as top: ${chat}, new: ${new_text}`);
+			async function setChatAsTop(chat, new_text = undefined) {
+				let convo = convos.find(c => c.addresses.includes(chat))
 
-				var chatsList = document.getElementsByClassName("chatsList")[0];
-				var unpins = document.getElementsByClassName("listed");
-				var current_box = document.querySelector(`[addresses*="${chat}"]`);
+				if (convo) {
+					if (new_text)
+						convo.setNewText(new_text)
 
-				if ((current_box && current_box.className.includes("pinned")) || (unpins.length > 0 && chat === unpins[0].id)) {
-					if (new_text !== "" && current_box.className.includes("listed"))
-						current_box.getElementsByClassName("chatText")[0].textContent = new_text;
+					convo.setAtTop()
 
-					if (!document.hasFocus() || current_chat_id !== chat)
-						current_box.classList.add("unread");
+					if (!document.hasFocus() || current_chat_id != chat)
+						convo.setUnread()
 				} else {
-					var last_text;
-					var selected = false;
-					/// The most recent text from this person has (nearly) all the info we need
-					var url = `${prefix}requests?messages=${chat}&num_messages=1&read_messages=false`;
-					let textPromise = await fetchFromURL(url);
-					let last_text_arr = textPromise.texts;
-					if (last_text_arr.length > 0) {
-						let last_text = last_text_arr[0];
+					let url = `${prefix}requests?conversation=${chat}`
+					let chat_details = await fetchFromURL(url)
+					let convo = new Conversation(chat_details)
 
-						var new_chat = {
-							'time_marker': last_text.date,
-							'pinned': false,
-							'latest_text': new_text.length > 0 ? new_text : last_text.text,
-							'chat_identifier': chat,
-							'display_name': chat,
-							'has_unread': false,
-							'relative_time': 'now',
-						};
+					convos.unshift(convo)
 
-						var existingButton = document.querySelector(`[addresses*="${chat}"]`);
-						if (existingButton) {
-							new_chat.pinned = existingButton.className.includes("pinned");
-							new_chat.display_name = existingButton.getElementsByClassName("chatName")[0].firstChild.textContent;
-							selected = existingButton.className.includes("selected");
-							existingButton.outerHTML = "";
-						} else {
-							new_chat.display_name = await getTextFromURL(`${prefix}requests?name=${chat}`)[1];
-						}
-
-						var new_box = getChatElement(new_chat);
-						if (selected) new_box.classList.add("selected");
-
-						var pinRows = document.getElementsByClassName("pinRow");
-
-						if (pinRows.length === 0)
-							chatsList.insertBefore(new_box, chatsList.firstChild);
-						else
-							chatsList.insertBefore(new_box, pinRows[pinRows.length - 1].nextSibling);
-					}
+					if (text_arr.length > 0)
+						printSingleChat(convo, false)
 				}
 			}
 

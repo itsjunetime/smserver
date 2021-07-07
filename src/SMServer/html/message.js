@@ -52,7 +52,7 @@ class Message extends Display {
 
 		this.balloon_bundle_id = json.balloon_bundle_id
 		this.date_read = json.date_read
-		this.chat_id = json.id
+		this.chat_id = json.chat_identifier ? json.chat_identifier : json.id
 		this.is_group = json.is_group
 		this.sender = json.sender
 

@@ -31,6 +31,8 @@ class Const : NSObject {
 		api_chat_off
 	]
 
+	static let api_convo_req: String = "conversation"
+
 	static let api_name_req: String = "name"
 
 	static let api_search_req: String = "search"

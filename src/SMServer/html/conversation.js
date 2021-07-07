@@ -123,6 +123,39 @@ class Conversation extends Display {
 		}
 	}
 
+	setUnread() {
+		let node = this.node()
+		if (node)
+			node.className += ' unread';
+	}
+
+	setNewText(text) {
+		this.latest_text = text
+		let cts = this.node().getElementsByClassName('chatText')
+
+		/// cts MUST exist if it's not pinned
+		if (cts.length)
+			cts[0].textContent = text
+		else if (this.pinned) {
+			let ct = this.newDiv('chatText')
+			ct.textContent = text
+
+			this.node().getElementsByClassName('chatTop')[0].appendChild(ct)
+		}
+	}
+
+	setAtTop() {
+		if (this.pinned) return;
+
+		let chats_list = document.getElementsByClassName('chatsList')[0]
+
+		let firstButton = chats_list.getElementsByTagName('button')[0]
+		let node = this.node()
+
+		node.remove()
+		chats_list.insertBefore(node, firstButton)
+	}
+
 	image() {
 		return this.node().getElementsByTagName('img')[0]
 	}

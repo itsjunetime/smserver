@@ -26,3 +26,8 @@ class Display {
 		return document.createElement(a)
 	}
 }
+
+class Photo extends Display {
+	constructor(json) {
+	}
+}
