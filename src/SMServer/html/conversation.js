@@ -11,6 +11,7 @@ class Conversation extends Display {
 	members; // Array<Handle>
 
 	selected = false;
+	typ_interval = null;
 
 	constructor(json) {
 		super()
@@ -123,10 +124,16 @@ class Conversation extends Display {
 		}
 	}
 
-	setUnread() {
+	setUnread(unread = true) {
 		let node = this.node()
-		if (node)
+		if (!node) return;
+
+		if (unread && !this.unread)
 			node.className += ' unread';
+		else if (!unread && this.unread)
+			node.className = node.className.replace(/unread/g, '');
+
+		this.unread = unread
 	}
 
 	setNewText(text) {
@@ -154,6 +161,17 @@ class Conversation extends Display {
 
 		node.remove()
 		chats_list.insertBefore(node, firstButton)
+	}
+
+	setTyping(typing = true) {
+		let idx = 0
+		if (typing)
+			this.typ_interval = window.setInterval(() => {
+				this.setNewText(`${this.display_name} is typing${'.'.repeat(idx)}`)
+				idx = (idx + 1) % 3
+			}, 400);
+		else
+			clearInterval(this.typ_interval);
 	}
 
 	image() {
