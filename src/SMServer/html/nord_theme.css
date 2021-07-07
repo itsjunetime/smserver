@@ -17,11 +17,11 @@
 .chats button:hover p {
 	color: #81a1c1;
 }
-#moretextsbutton {
+#moreTextsButton {
 	border: none;
 	box-shadow: 0px 0px 10px #2229;
 }
-#camerarollbutton, #unhiddenbutton {
+#cameraRollButton, #unhiddenButton {
 	background-color: #4c566a;
 }
 #composeShowingAttachmentButton {
@@ -34,15 +34,15 @@
 .centered {
 	text-shadow: -4px 4px #2E3440;
 }
-#composeShowButton, #notificationbutton, .selected {
+#composeShowButton, #notificationButton, .selected {
 	background-color: #4c566a !important;
 }
-#sendbutton {
+#sendButton {
 	background-color: #5e81cc;
 }
-.from_me .tapback {
+.fromMe .tapback {
 	background-color: #4c566a;
 }
-.from_them .tapback {
+.fromThem .tapback {
 	background-color: #5381ac;
 }

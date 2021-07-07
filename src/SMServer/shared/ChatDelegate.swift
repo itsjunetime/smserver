@@ -164,6 +164,12 @@ final class ChatDelegate {
 				}
 			}
 
+			if texts[i]["item_type"] as? String == "1" {
+				texts[i]["item_description"] = getJoinedChatDescription(texts[i]["other_handle"] as? String ?? "", "")
+			} else if texts[i]["group_action_type"] as? String == "1" {
+				texts[i]["item_description"] = "\(texts[i]["sender"] as? String ?? "") set the group image"
+			}
+
 			/// This checks if it has anything in the `payload_data` field, which would imply that it is a special message (e.g. rich link, gamepigeon message, etc).
 			/// However, it doesn't enter the `if` if the message is a handwritten message or a digital touch message, since I don't know how to parse those yet.
 			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 && !bad_bundles.contains(texts[i]["balloon_bundle_id"] as! String) && texts[i]["ROWID"] != nil {
@@ -373,7 +379,7 @@ final class ChatDelegate {
 
 		var messages: [[String:Any]] = selectFromSql(
 			db: db,
-			columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "h.id"],
+			columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "m.other_handle", "h.id"],
 			table: "message m",
 			condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc",
 			args: num.split(separator: ",").map({String($0)}),
@@ -1186,5 +1192,29 @@ final class ChatDelegate {
 		closeDatabase(&db)
 
 		return ret
+	}
+
+	final func chatIdOfHandleROWID(_ rowid: Int, db: OpaquePointer?) -> String {
+		let chat_id_arr = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "where ROWID is ?", args: [rowid])
+		guard chat_id_arr.count > 0, let chat_id = chat_id_arr[0]["id"] else {
+			return ""
+		}
+		return chat_id
+	}
+
+	/// don't know yet how to detect who added the new person to the conversation, so we're just not doing anything with that
+	final func getJoinedChatDescription(_ joined_rowid: String, _ sender_rowid: String) -> String {
+		Const.log("Getting joinedChatDescription with ROWID \(joined_rowid)")
+
+		var db = createConnection()
+		if db == nil { return "" }
+
+		let chat_id = chatIdOfHandleROWID(Int(joined_rowid) ?? 0, db: db)
+		let display_name = getDisplayName(chat_id: chat_id, is_group: false)
+
+		Const.log("Closing database")
+		closeDatabase(&db)
+
+		return "\(display_name) was added to the conversation"
 	}
 }

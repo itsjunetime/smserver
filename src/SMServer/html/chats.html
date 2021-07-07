@@ -11,8 +11,6 @@
 			var subject;
 			var socket_subdir;
 
-			var printed_texts = 0;
-			var printed_chats = 0;
 			var printed_photos = 0;
 			var num_texts_returned = 0;
 
@@ -25,13 +23,12 @@
 			var shown_ws_alert = false;
 			var mobile = screen.width < screen.height; // eh. it works.
 
-			var items = "";
-			var new_items = "";
-			var texts = "";
 			var current_chat_id = "";
 			var typing_sleep = 10000;
 			var load_icon = '<i class="fas fa-chevron-circle-up"></i>';
 			var fa_icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>', '<i class="fas fa-laugh-squint"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
+			var mime_dict = {'pdf': 'file-pdf', 'vcard': 'id-card', 'x-debian-package': 'archive', 'x-sh': 'file-code', 'zip': 'file-archive', 'x-python-script': 'file-code'}
+
 			var taps_to_print = [];
 
 			var doc_url = window.location.href;
@@ -50,28 +47,23 @@
 			}
 
 			function timeConverter(t, ts_only = false, apple = true, rev = false) {
-				var ts = t;
-				if (apple) ts = (t / 1000000000) + 978307200;
-				if (ts_only) {
-					if (rev) return (t - 978307200) * 1000000000;
-					return ts;
-				}
+				let ts = (t / 1000000000) + 978307200;
 
-				var a = new Date(ts * 1000);
-				var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-				var year = a.getFullYear();
-				var month = months[a.getMonth()];
-				var date = a.getDate();
-				var hour = a.getHours();
-				var min = a.getMinutes();
-				var time = `${date} ${month} ${year} ${hour < 10 ? '0' : ''}${hour}:${min < 10 ? '0' : ''}${min}`;
+				let a = new Date(ts * 1000);
+				let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+				let year = a.getFullYear();
+				let month = months[a.getMonth()];
+				let date = a.getDate();
+				let hour = a.getHours();
+				let min = a.getMinutes();
+				let time = `${date} ${month} ${year} ${hour < 10 ? '0' : ''}${hour}:${min < 10 ? '0' : ''}${min}`;
 				return time;
 			}
 
 			async function getTextFromURL(url) {
 				if (debug) console.log(`getting text from url ${url}`);
-				var return_text = "";
-				var code = 200;
+				let return_text = "";
+				let code = 200;
 				await fetch(url).then((response) => {
 					code = response.status;
 					return code === 200 ? response.text() : response.statusText;
@@ -90,7 +82,7 @@
 
 			async function fetchFromURL(url) {
 				if (debug) console.log(`fetching url ${url}`);
-				var ret = "";
+				let ret = "";
 				await fetch(url).then(response => {
 					if (!response.ok) throw new Error(`HTTP error ${response.status}`);
 					ret = response.json();
@@ -117,7 +109,7 @@
 				/// places them above.
 				/// The last element in `texts` will be lower on the page than all the rest that are printed
 
-				if (!texts) return;
+				if (!texts || !texts.length) return;
 
 				let is_group = texts[0].is_group
 				let messages = texts.map(t => new Message(t))
@@ -125,7 +117,7 @@
 				let last_msg = append && msgs.length ? msgs[msgs.length - 1] : new Message({})
 				let taps_to_print = []
 
-				let tc = document.getElementById('text-content')
+				let tc = document.getElementById('textContent')
 				let container = document.createElement('div')
 
 				// the message to append the read receipt to
@@ -149,7 +141,7 @@
 						to_remove.push(idx)
 					}
 					/// also we just don't like these and don't want to print them yet so yeah
-					if (msg.group_action_type != 0)
+					if ((msg.group_action_type || msg.item_type) && !msg.item_description)
 						to_remove.push(idx);
 				})
 
@@ -177,7 +169,7 @@
 					/// figure out if we should add the bubble tails (e.g. if it's the last before 
 					/// switching sender or taking a 10+ minute break
 					let ten_until = !next_msg || next_msg.date - msg.date >= 600000000000
-					let last = !next_msg || ten_until || next_msg.sender != msg.sender || next_msg.from_me != msg.from_me
+					let last = !next_msg || ten_until || next_msg.sender != msg.sender || next_msg.from_me != msg.from_me || (!msg.item_description && next_msg.item_description)
 					msg.last = last
 
 					/// just append the html of the message into the temporary container
@@ -199,20 +191,29 @@
 					tc.innerHTML = btn_html + container.innerHTML + tc.innerHTML
 				}
 
-				/// print all the tapbacks that are pending and can be printed, then remove them
-				/// so they don't get printed again
-				for (let i = 0; i < taps_to_print.length; i++) {
-					if (document.getElementById(taps_to_print[i].associated_message_guid)) {
-						taps_to_print[i].html()
-						taps_to_print.splice(i, 1)
-					}
-				}
-
 				/// and add it to the global array of messages
 				if (append)
 					msgs = msgs.concat(msgs_copy)
 				else
 					msgs = msgs_copy.concat(msgs)
+
+				to_reverse = []
+
+				/// print all the tapbacks that are pending and can be printed, then remove them
+				/// so they don't get printed again
+				taps_to_print.forEach((tap, idx) => {
+					if (document.getElementById(tap.associated_message_guid)) {
+						tap.html()
+
+						let msg = msgs.find(m => tap.associated_message_guid.includes(m.guid))
+						if (msg)
+							msg.tapbacks.push(tap)
+
+						to_reverse.push(idx)
+					}
+				})
+
+				to_reverse.reverse().forEach(i => taps_to_print.splice(i))
 
 				if (append)
 					tc.lastChild.scrollIntoView()
@@ -220,15 +221,14 @@
 
 			function clearTextContent() {
 				if (debug) console.log("clearing text content");
-				document.getElementById("text-content").innerHTML = '<div class="centered"> Select a chat on the left to view your messages :)</div>';
-				printed_texts = 0;
+				document.getElementById("textContent").innerHTML = '<div class="centered"> Select a chat on the left to view your messages :)</div>';
+
+				msgs = []
 				document.getElementById("messagesTitleText").innerHTML = "";
 				document.getElementsByClassName("messages")[0].getElementsByClassName("title")[0].innerHTML = document.getElementById("messagesTitleText").outerHTML;
-				document.getElementById("hiddenchatbox").setAttribute("value", "");
+				document.getElementById("hiddenChatBox").setAttribute("value", "");
 
-				var sels = document.getElementsByClassName("selected");
-				for (var i = 0; i < sels.length; i++)
-					sels[i].className = sels[i].className.replace(/selected/g, "");
+				convos.filter(c => c.selected).forEach(c => s.setSelected(false))
 
 				current_chat_id = "";
 			}
@@ -238,8 +238,8 @@
 				let url = `${prefix}requests?chats&chats_offset=${offset}`;
 				let items = await fetchFromURL(url);
 
-				var doc = document.getElementsByClassName("chats-list")[0];
-				var old_button = document.getElementById("morechatsbutton");
+				var doc = document.getElementsByClassName("chatsList")[0];
+				var old_button = document.getElementById("moreChatsButton");
 
 				var selected_id = "";
 				var selecteds = document.getElementsByClassName("selected");
@@ -248,8 +248,6 @@
 				doc.innerHTML = "";
 				doc.appendChild(old_button);
 
-				printed_chats = items.length;
-
 				convos = items.map(c => new Conversation(c))
 
 				convos.forEach(chat => {
@@ -257,7 +255,7 @@
 						chat.selected = true;
 
 					if (!chat.pinned) {
-						doc.insertBefore(chat.html(), document.getElementById("morechatsbutton"));
+						doc.insertBefore(chat.html(), document.getElementById("moreChatsButton"));
 					} else {
 						var pinRows = document.getElementsByClassName("pinRow");
 
@@ -282,25 +280,26 @@
 			}
 
 			function setUnreadTitle() {
-				var unread_chats = document.getElementsByClassName("unread").length;
-				document.title = `SMServer${unread_chats > 0 ? " (" + String(unread_chats) + ")" : ""}`;
+				var unreads = convos.filter(c => c.unread).length
+				document.title = `SMServer${unreads > 0 ? " (" + String(unreads) + ")" : ""}`;
 			}
 
-			async function getMoreChats(offset = printed_chats) {
+			async function getMoreChats(offset = convos.length) {
 				if (debug) console.log("getting more chats");
 				let url = `${prefix}requests?chats&chats_offset=${offset}`;
 				let chatsPromise = await fetchFromURL(url);
-				new_items = chatsPromise.chats;
+				let items = chatsPromise.chats;
 
-				printed_chats += new_items.length;
-				var doc = document.getElementsByClassName("chats-list")[0];
+				if (!items) return;
+				items = items.map(n => new Conversation(n))
 
-				for(var i = 0; i < new_items.length; i++) {
-					var b = getChatElement(new_items[i]);
-					doc.insertBefore(b, document.getElementById("morechatsbutton"));
-				}
+				let doc = document.getElementsByClassName("chatsList")[0];
 
-				console.log("There will probably be a significant amount of 404 errors here, ignore them. They've been handled :)");
+				items.forEach(n => {
+					doc.insertBefore(n.html(), document.getElementById('moreChatsButton'))
+				})
+
+				convos = convos.concat(items)
 			}
 
 			async function getTexts(chat_id, addresses = "") {
@@ -311,13 +310,13 @@
 					document.getElementsByClassName("messages")[0].style.display = "grid";
 				}
 
-				let content = document.getElementsByClassName("text-content")[0];
+				let content = document.getElementsByClassName("textContent")[0];
 
 				let selected = convos.find(c => c.selected)
 				if (selected)
 					selected.setSelected(false);
 
-				var hiddenchatbox = document.getElementById("hiddenchatbox");
+				var hiddenchatbox = document.getElementById("hiddenChatBox");
 				hiddenchatbox.setAttribute("value", chat_id);
 
 				let convo = convos.find(c => c.addresses.includes(chat_id))
@@ -326,7 +325,7 @@
 
 				setUnreadTitle();
 
-				let title_doc = document.getElementsByClassName('title-content')[0]
+				let title_doc = document.getElementsByClassName('titleContent')[0]
 				title_doc.innerHTML = `<p>${convo.display_name}</p>`
 
 				current_chat_id = chat_id;
@@ -349,31 +348,29 @@
 
 				var more = document.createElement("button");
 				more.setAttribute("onclick", "getMoreTexts()");
-				more.id = "moretextsbutton";
+				more.id = "moreTextsButton";
 				more.innerHTML = '<i class="fas fa-chevron-circle-up"></i> More';
 				content.appendChild(more);
 
-				printed_texts = texts.length;
 				texts = texts.reverse();
 
 				printListOfTexts(texts, true);
 
-				document.getElementById("text-content").lastChild.scrollIntoView();
-				document.getElementById("sendbox").focus();
+				document.getElementById("textContent").lastChild.scrollIntoView();
+				document.getElementById("sendBox").focus();
 			}
 
 			async function getMoreTexts() {
 				if (debug) console.log(`called getMoreTexts`);
 				var chat_id = document.querySelector(`[addresses*="${current_chat_id}"]`).getAttribute("addresses");
 
-				let url = `${prefix}requests?messages=${chat_id}&messages_offset=${printed_texts}&read_messages=false`;
-				texts = await fetchFromURL(url);
-
-				printed_texts += texts.length;
+				let url = `${prefix}requests?messages=${chat_id}&messages_offset=${msgs.length}&read_messages=false`;
+				let texts = await fetchFromURL(url);
 
 				printListOfTexts(texts, false);
 
-				if (texts.length < num_texts_returned) document.getElementById("moretextsbutton").outerHTML = "";
+				if (texts.length < num_texts_returned)
+					document.getElementById("moreTextsButton").outerHTML = "";
 			}
 
 			function sleep(ms) {
@@ -384,21 +381,21 @@
 				if (debug) console.log("sending form");
 				if (current_chat_id.length === 0) return;
 
-				var form = document.getElementById("sendform");
+				var form = document.getElementById("sendForm");
 
 				typing_sleep = 0;
 
-				var tbox = document.getElementById("sendbox");
+				var tbox = document.getElementById("sendBox");
 				var oldval = tbox.value;
 				var subjval_len = subject ? document.getElementById("subjectBox").value.length : 0;
 
-				var photos = document.getElementById("hiddenphotobutton");
-				var selected = document.getElementsByClassName("selected-photo");
+				var photos = document.getElementById("hiddenPhotoButton");
+				var selected = document.getElementsByClassName("selectedPhoto");
 				for (var i = 0; i < selected.length; ++i) {
 					photos.value += selected[i].id + (i !== selected.length - 1 ? ":" : "");
 				}
 
-				if (oldval.length + selected.length + subjval_len + document.getElementById("attachmentbutton").files.length === 0)
+				if (oldval.length + selected.length + subjval_len + document.getElementById("attachmentButton").files.length === 0)
 					return;
 
 				form.submit();
@@ -407,8 +404,8 @@
 				if (subject)
 					document.getElementById("subjectBox").value = "";
 
-				document.getElementById("attachmentbutton").value = "";
-				document.getElementById("unhiddenbutton").innerHTML = '<i class="fas fa-paperclip"></i>';
+				document.getElementById("attachmentButton").value = "";
+				document.getElementById("unhiddenButton").innerHTML = '<i class="fas fa-paperclip"></i>';
 				hideCameraRoll(); /// Since it changes the photo button value and unselects all the currently selected photos
 				photos.value = "";
 
@@ -421,7 +418,7 @@
 				if (debug) console.log("sending Compose form");
 				hidePopup();
 
-				var form = document.getElementById("composeform");
+				var form = document.getElementById("composeForm");
 				var tbox = document.getElementById("composeSendBox");
 				var oldval = tbox.value;
 
@@ -448,7 +445,7 @@
 			function inputKeyDown(subject = false) {
 				if (!subject) autoGrow();
 				if (current_chat_id !== "") {
-					if (document.getElementById("sendbox").value.length > 0) {
+					if (document.getElementById("sendBox").value.length > 0) {
 						typing_sleep = 10000;
 						if (!currently_typing) sendTyping(current_chat_id, true);
 						currently_typing = true;
@@ -487,7 +484,7 @@
 			}
 
 			async function autoGrow() {
-				var elem = document.getElementById("sendbox");
+				var elem = document.getElementById("sendBox");
 				var oldheight = elem.style.height.match(/\d/g);
 				elem.style.height = getComputedStyle(document.documentElement).getPropertyValue("--send-button-size");
 				var scroll_height = elem.scrollHeight;
@@ -566,15 +563,15 @@
 					} else {
 						if (chat !== current_chat_id || !document.hasFocus()) btn.classList.add("unread");
 
-						if (btn.className.includes("listed") || btn.getElementsByClassName("chat-text")[0]) {
-							var chat_text = btn.getElementsByClassName("chat-text")[0];
+						if (btn.className.includes("listed") || btn.getElementsByClassName("chatText")[0]) {
+							var chat_text = btn.getElementsByClassName("chatText")[0];
 							if (chat_text && new_text.length > 0) chat_text.textContent = new_text;
 						} else if (chat !== current_chat_id) {
 							var div_text = document.createElement("div");
-							div_text.className = "chat-text";
+							div_text.className = "chatText";
 							div_text.textContent = new_text;
 
-							var tb = btn.getElementsByClassName("chat-top")[0];
+							var tb = btn.getElementsByClassName("chatTop")[0];
 							tb.appendChild(div_text);
 						}
 
@@ -593,7 +590,7 @@
 								sending.outerHTML = "";
 						}
 						printListOfTexts([text], true);
-						if (typing_outer !== "") document.getElementById("text-content").innerHTML += typing_outer;
+						if (typing_outer !== "") document.getElementById("textContent").innerHTML += typing_outer;
 					}
 				}
 
@@ -603,13 +600,13 @@
 			async function setChatAsTop(chat, new_text = "") {
 				if (debug) console.log(`Setting chat as top: ${chat}, new: ${new_text}`);
 
-				var chatsList = document.getElementsByClassName("chats-list")[0];
+				var chatsList = document.getElementsByClassName("chatsList")[0];
 				var unpins = document.getElementsByClassName("listed");
 				var current_box = document.querySelector(`[addresses*="${chat}"]`);
 
 				if ((current_box && current_box.className.includes("pinned")) || (unpins.length > 0 && chat === unpins[0].id)) {
 					if (new_text !== "" && current_box.className.includes("listed"))
-						current_box.getElementsByClassName("chat-text")[0].textContent = new_text;
+						current_box.getElementsByClassName("chatText")[0].textContent = new_text;
 
 					if (!document.hasFocus() || current_chat_id !== chat)
 						current_box.classList.add("unread");
@@ -636,7 +633,7 @@
 						var existingButton = document.querySelector(`[addresses*="${chat}"]`);
 						if (existingButton) {
 							new_chat.pinned = existingButton.className.includes("pinned");
-							new_chat.display_name = existingButton.getElementsByClassName("chat-name")[0].firstChild.textContent;
+							new_chat.display_name = existingButton.getElementsByClassName("chatName")[0].firstChild.textContent;
 							selected = existingButton.className.includes("selected");
 							existingButton.outerHTML = "";
 						} else {
@@ -679,10 +676,10 @@
 			function setSelectedPhoto(url) {
 				if (debug) console.log(`setting selected photo for ${url}`);
 				var p = document.getElementById(url);
-				if (p.className.includes("selected-photo"))
+				if (p.className.includes("selectedPhoto"))
 					p.className = "photo";
 				else
-					p.classList.add("selected-photo");
+					p.classList.add("selectedPhoto");
 			}
 
 			function getPhotoElement(photo) {
@@ -702,7 +699,7 @@
 
 				if (photo.is_favorite) {
 					var h = document.createElement("span");
-					h.className = "favorite-heart";
+					h.className = "favoriteHeart";
 					h.innerHTML = '<i class="fas fa-heart"></i>';
 					p.appendChild(h);
 				}
@@ -711,9 +708,9 @@
 
 			async function displayCameraRoll() {
 				if (debug) console.log("Displaying camera roll");
-				document.getElementById("camerarollpopup").style.display = "block";
+				document.getElementById("cameraRollPopup").style.display = "block";
 
-				var cr = document.getElementById("camerarollContent");
+				var cr = document.getElementById("cameraRollContent");
 
 				if (!has_shown_camera_roll) {
 					var url = `${prefix}requests?photos`;
@@ -736,7 +733,7 @@
 
 			async function loadMoreCameraRoll() {
 				if (debug) console.log("loading more Camera Roll");
-				var cr = document.getElementById("camerarollContent");
+				var cr = document.getElementById("cameraRollContent");
 				var new_photos;
 
 				var url = `${prefix}requests?photos&photos_offset=${printed_photos}`;
@@ -752,19 +749,19 @@
 
 			function hideCameraRoll() {
 				if (debug) console.log("hiding camera roll");
-				document.getElementById("camerarollpopup").style.display = "none";
-				var p = document.getElementsByClassName("selected-photo");
+				document.getElementById("cameraRollPopup").style.display = "none";
+				var p = document.getElementsByClassName("selectedPhoto");
 
 				for (var i = p.length - 1; i >= 0; --i)
-					p[i].className = p[i].className.replace(/selected-photo/g, "");
+					p[i].className = p[i].className.replace(/selectedPhoto/g, "");
 
-				document.getElementById("camerarollbutton").innerHTML = '<i class="fas fa-camera"></i>';
+				document.getElementById("cameraRollButton").innerHTML = '<i class="fas fa-camera"></i>';
 			}
 
 			function selectCameraRollPhotos() {
 				if (debug) console.log("selecing camera roll photos");
-				document.getElementById("camerarollpopup").style.display = "none";
-				document.getElementById("camerarollbutton").innerHTML = document.getElementsByClassName("selected-photo").length;
+				document.getElementById("cameraRollPopup").style.display = "none";
+				document.getElementById("cameraRollButton").innerHTML = document.getElementsByClassName("selectedPhoto").length;
 			}
 
 			function setNewBatteryLevel(data) {
@@ -827,12 +824,12 @@
 				if (chat !== current_chat_id) return;
 
 				var d = document.createElement("div");
-				d.className = "text is_from_them iMessage";
+				d.className = "text fromThem iMessage";
 				d.id = "typingIndicator";
 
 				d.innerHTML = '<span class="dot flashing">• </span><span class="dot">• </span><span class="dot">•</span>';
 
-				document.getElementById("text-content").appendChild(d);
+				document.getElementById("textContent").appendChild(d);
 				d.scrollIntoView();
 
 				setFlashingInterval(d.id, 0);
@@ -840,7 +837,7 @@
 
 			function enableSubject() {
 				if (debug) console.log("enabling subject");
-				var tbox = document.getElementById("sendbox");
+				var tbox = document.getElementById("sendBox");
 				var ntbox = tbox.cloneNode(false);
 				ntbox.className = "subjectInput";
 				ntbox.setAttribute("placeholder", "body");
@@ -853,7 +850,7 @@
 				sbox.id = "subjectBox";
 				sbox.setAttribute("name", "subject");
 				sbox.setAttribute("oninput", "if (event.keyCode !== 13) inputKeyDown(true);");
-				sbox.setAttribute("onkeydown", "if (event.keyCode === 13) { document.getElementById('sendbox').focus(); event.preventDefault(); }");
+				sbox.setAttribute("onkeydown", "if (event.keyCode === 13) { document.getElementById('sendBox').focus(); event.preventDefault(); }");
 				sbox.setAttribute("form", tbox.getAttribute("form"));
 				sbox.setAttribute("placeholder", "Subject");
 
@@ -862,10 +859,10 @@
 
 				document.documentElement.style.setProperty("--messages-send-height", "64px"); /// hardcoded. not a fan. should fix
 				document.documentElement.style.setProperty("--send-box-size", "calc((var(--messages-send-height) / 2) - 6px)");
-				document.getElementById("sendbutton").className = "hasSubject";
+				document.getElementById("sendButton").className = "hasSubject";
 
-				document.getElementById("camerarollbutton").style.margin = "auto 0";
-				document.getElementById("unhiddenbutton").style.margin = "auto 0";
+				document.getElementById("cameraRollButton").style.margin = "auto 0";
+				document.getElementById("unhiddenButton").style.margin = "auto 0";
 			}
 
 			async function submitSearch() {
@@ -874,43 +871,9 @@
 			}
 
 			function showTapbackDialog(guid) {
-				if (debug) console.log(`showing tapback dialog for guid ${guid}`);
-				var existing = document.getElementById(`${guid}-tapback`);
-				if (existing) {
-					existing.outerHTML = "";
-					return;
-				}
-
-				var text = document.querySelector(`[tapback_guid="${guid}"]`);
-				var dialog = document.createElement("span");
-				var is_area = text.parentNode.className.includes("text-area");
-				dialog.className = "text tapback_dialog";
-				dialog.classList.add(text.className.includes("is_from_them") ? "is_from_them" : "is_from_me");
-				dialog.classList.add(text.className.includes("iMessage") ? "iMessage" : "SMS");
-				dialog.id = `${guid}-tapback`;
-
-				var sel = -1;
-				if (is_area) {
-					var my_taps = text.parentNode.getElementsByClassName("tapFromMe");
-					if (my_taps.length > 0) var sel = Number(my_taps[0].getAttribute("tapbackType"));
-				}
-
-				for (var i = 0; i < fa_icons.length; i++) {
-					var choice = document.createElement("span");
-					choice.className = `tapback_choice${i === sel ? " tapback_chosen" : ""}`;
-					choice.innerHTML = fa_icons[i];
-					choice.setAttribute("onclick", `sendTapback("${guid}", ${i}, "${current_chat_id}", ${i === sel});`);
-
-					dialog.appendChild(choice);
-				}
-
-				var trash = document.createElement("span");
-				trash.className = "tapback_choice trash_text";
-				trash.innerHTML = '<i class="fas fa-trash-alt"></i>';
-				trash.setAttribute("onclick", `deleteText("${guid}");`);
-				dialog.appendChild(trash);
-
-				document.getElementById("text-content").insertBefore(dialog, is_area ? text.parentNode : text);
+				let msg = msgs.find(m => guid.includes(m.guid))
+				if (msg)
+					msg.showTapbackDialog(guid)
 			}
 
 			async function sendTapback(guid, tapback, chat = current_chat_id, remove = false) {
@@ -919,7 +882,7 @@
 				if (res[0] !== 200)
 					alert(`Failed to send tapback: ${res[1]}`);
 
-				document.getElementById(`${guid}-tapback`).outerHTML = "";
+				document.getElementById(`${guid}Tapback`).outerHTML = "";
 			}
 
 			async function deleteText(guid) {
@@ -928,16 +891,13 @@
 					return;
 
 				var res = await getTextFromURL(`${prefix}send?&delete_text=${guid}`);
-				document.getElementById(`${guid}-tapback`).outerHTML = "";
+				document.getElementById(`${guid}Tapback`).outerHTML = "";
 
 				if (res[0] !== 200) {
 					alert("Couldn't delete text :(");
 				} else {
-					var txt = document.getElementById(guid);
-					if (txt && txt.parentNode.className.includes("text-content"))
-						txt.outerHTML = "";
-					else if (txt)
-						txt.parentNode.outerHTML = "";
+					let txt = document.getElementById(guid);
+					txt.outerHTML = "";
 				}
 			}
 
@@ -945,11 +905,11 @@
 				let typing_indicator = document.getElementById("typingIndicator");
 				let sending_indicator = document.createElement("div");
 
-				sending_indicator.className = "text is_from_me iMessage";
+				sending_indicator.className = "text isFromMe iMessage";
 				sending_indicator.id = "sendingIndicator";
 				sending_indicator.innerHTML = '<em>Sending</em> <span class="dot flashing">• </span><span class="dot">• </span><span class="dot">•</span>';
 
-				document.getElementById("text-content").insertBefore(sending_indicator, typing_indicator);
+				document.getElementById("textContent").insertBefore(sending_indicator, typing_indicator);
 				sending_indicator.scrollIntoView();
 
 				setFlashingInterval(sending_indicator.id, 1);
@@ -981,21 +941,21 @@
 				new_receipt.className = "readReceipt";
 				new_receipt.innerHTML = `<strong>Read</strong> ${content.date}`;
 
-				document.getElementById("text-content").insertBefore(new_receipt, text.nextSibling);
+				document.getElementById("textContent").insertBefore(new_receipt, text.nextSibling);
 			}
 
 			function setUpDND() {
 				if (debug) console.log("setting up dnd");
-				var input_form = document.getElementById("sendform");
+				var input_form = document.getElementById("sendForm");
 				input_form.ondragover = input_form.ondragenter = function(evt) {
 					evt.preventDefault();
 				};
 
 				input_form.ondrop = function(evt) {
-					var file_box = document.getElementById("attachmentbutton");
+					var file_box = document.getElementById("attachmentButton");
 					file_box.files = evt.dataTransfer.files;
 
-					let uhb = document.getElementById('unhiddenbutton');
+					let uhb = document.getElementById('unhiddenButton');
 					if (file_box.files.length > 0)
 						uhb.innerHTML = file_box.files.length;
 					else
@@ -1012,10 +972,10 @@
 					sty.href = `${prefix}${sty.href}`;
 				}
 
-				let send_form = document.getElementById("sendform");
+				let send_form = document.getElementById("sendForm");
 				send_form.setAttribute("action", `${prefix}${send_form.getAttribute("action")}`);
 
-				let popup_form = document.getElementById("composeform");
+				let popup_form = document.getElementById("composeForm");
 				popup_form.setAttribute("action", `${prefix}${popup_form.getAttribute("action")}`);
 
 				let favicon = document.getElementById("favicon");
@@ -1092,7 +1052,7 @@
 				if (prefix.length) setUpPrefix();
 
 				if (!window.Notification || Notification.permission === "granted")
-					document.getElementById("notificationbutton").outerHTML = "";
+					document.getElementById("notificationButton").outerHTML = "";
 
 				await setUpConfig();
 
@@ -1108,17 +1068,17 @@
 			printChats();
 
 		</script>
-		<link rel="stylesheet" type="text/css" href="style?fa_solid" id="style_fa_solid">
-		<link rel="stylesheet" type="text/css" href="style?font_awesome" id="style_font_awesome">
-		<link rel="stylesheet" type="text/css" href="style?main" id="style_main">
-		<link rel="stylesheet" type="text/css" href="style?custom" id="style_custom">
+		<link rel="stylesheet" type="text/css" href="style?fa_solid" id="styleFASolid">
+		<link rel="stylesheet" type="text/css" href="style?font_awesome" id="styleFontAwesome">
+		<link rel="stylesheet" type="text/css" href="style?main" id="styleMain">
+		<link rel="stylesheet" type="text/css" href="style?custom" id="styleCustom">
 		<link rel="stylesheet" type="text/css" href="style?light">
 		<link rel="stylesheet" type="text/css" href="style?nord">
 	</head>
 	<body>
 		<div class="everything">
 			<div class="chats">
-				<div class="chats-title" onclick="clearTextContent();">
+				<div class="chatsTitle" onclick="clearTextContent();">
 					<h1>SMServer</h1>
 					<div id="stats">
 						<div id="battery">
@@ -1127,36 +1087,36 @@
 						</div>
 					</div>
 				</div>
-				<div class="chats-search">
+				<div class="chatsSearch">
 					<input type="text" id="searchBox" placeholder="Search" onkeydown="if (event.keyCode === 13) submitSearch();"></input>
-					<button onclick="Notification.requestPermission();" id="notificationbutton">Notifications</button>
-					<button onclick="showPopup();" id="composeshowbutton"><i class="fas fa-plus-circle"></i> New</button>
+					<button onclick="Notification.requestPermission();" id="notificationButton">Notifications</button>
+					<button onclick="showPopup();" id="composeShowButton"><i class="fas fa-plus-circle"></i> New</button>
 				</div>
-				<div class="chats-list">
-					<button onclick="getMoreChats()" id="morechatsbutton"><i class="fas fa-chevron-circle-down"></i> More</button>
+				<div class="chatsList">
+					<button onclick="getMoreChats()" id="moreChatsButton"><i class="fas fa-chevron-circle-down"></i> More</button>
 				</div>
 			</div>
 			<div class="messages">
 				<div class="title">
-					<span class="title-content" id="messagesTitleText"></span>
+					<span class="titleContent" id="messagesTitleText"></span>
 				</div>
-				<div class="text-content" id="text-content">
+				<div class="textContent" id="textContent">
 					<div class="centered">Select a chat on the left to view your messages :)</div>
 				</div>
-				<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
-				<form action="send" method="POST" enctype="multipart/form-data" id="sendform" class="textbox" target="dummyframe" name="sendform">
-					<button type="button" onclick="displayCameraRoll();" id="camerarollbutton"><i class="fas fa-camera"></i></button>
-					<button type="button" onclick="document.getElementById('attachmentbutton').click();" id="unhiddenbutton"><i class="fas fa-paperclip"></i></button>
-					<input type="file" name="attachments" id="attachmentbutton" multiple onchange="document.getElementById('unhiddenbutton').innerHTML = document.getElementById('attachmentbutton').files.length;"></input>
-					<input type="text" name="photos" id="hiddenphotobutton" style="display: none;">
-					<textarea id="sendbox" class="input" name="text" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendform" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
-					<input type="text" name="chat" id="hiddenchatbox" form="sendform" style="display: none">
-					<button type="button" id="sendbutton" onclick="sendForm();">↑</button>
+				<iframe name="dummyFrame" id="dummyFrame" style="display: none;"></iframe>
+				<form action="send" method="POST" enctype="multipart/form-data" id="sendForm" class="textbox" target="dummyFrame" name="sendForm">
+					<button type="button" onclick="displayCameraRoll();" id="cameraRollButton"><i class="fas fa-camera"></i></button>
+					<button type="button" onclick="document.getElementById('attachmentButton').click();" id="unhiddenButton"><i class="fas fa-paperclip"></i></button>
+					<input type="file" name="attachments" id="attachmentButton" multiple onchange="document.getElementById('unhiddenButton').innerHTML = document.getElementById('attachmentButton').files.length;"></input>
+					<input type="text" name="photos" id="hiddenPhotoButton" style="display: none;">
+					<textarea id="sendBox" class="input" name="text" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendForm" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
+					<input type="text" name="chat" id="hiddenChatBox" form="sendForm" style="display: none">
+					<button type="button" id="sendButton" onclick="sendForm();">↑</button>
 				</form>
 			</div>
 			<div class="popup" id="popup">
 				<div class="compose" id="compose">
-					<form action="send" method="POST" enctype="multipart/form-data" id="composeform" class="composeTextBox" target="dummyframe" name="composeform">
+					<form action="send" method="POST" enctype="multipart/form-data" id="composeForm" class="composeTextBox" target="dummyFrame" name="composeForm">
 						<div class="composeTitleBoxDiv">
 							<button onclick="hidePopup();" id="composeHideButton">Cancel</button>
 							<span id="composeTitleBoxTitle">New Message</span>
@@ -1164,24 +1124,24 @@
 						</div>
 						<div class="composeAddressBoxDiv">
 							<span class="composeAddressToDiv">To:</span>
-							<input name="chat" id="composeAddressBox" form="composeform" placeholder="address here (e.g. '+19280372949')">
+							<input name="chat" id="composeAddressBox" form="composeForm" placeholder="address here (e.g. '+19280372949')">
 							<input value="&#128206" onclick="document.getElementById('composeAttachmentButton').click();" type="button" id="composeShowingAttachmentButton"></input>
 							<input type="file" name="attachments" id="composeAttachmentButton" multiple onchange="document.getElementById('composeShowingAttachmentButton').value = document.getElementById('composeAttachmentButton').files.length.toString();"></input>
 						</div>
-						<textarea id="composeSendBox" form="composeform" placeholder="body here"></textarea>
-						<textarea name="text" style="display: none;" form="composeform" id="hiddenComposeTextArea"></textarea>
+						<textarea id="composeSendBox" form="composeForm" placeholder="body here"></textarea>
+						<textarea name="text" style="display: none;" form="composeForm" id="hiddenComposeTextArea"></textarea>
 					</form>
 				</div>
 			</div>
-		<div class="camerarollpopup" id="camerarollpopup">
-		<div class="cameraroll" id="cameraroll">
-			<div id="camerarollTitle">
-			<button onclick="hideCameraRoll();" id="camerarollHideButton">Cancel</button>
-			<span id="camerarollTitleBoxTitle">Choose Camera Roll Images</span>
-			<button onclick="selectCameraRollPhotos();" id="camerarollSelectButton">Select</button>
+		<div class="cameraRollPopup" id="cameraRollPopup">
+		<div class="cameraRoll" id="cameraRoll">
+			<div id="cameraRollTitle">
+			<button onclick="hideCameraRoll();" id="cameraRollHideButton">Cancel</button>
+			<span id="cameraRollTitleBoxTitle">Choose Camera Roll Images</span>
+			<button onclick="selectCameraRollPhotos();" id="cameraRollSelectButton">Select</button>
 			</div>
-			<div id="camerarollContent">
-			<button class="photo" id="morephotosbutton" onclick="loadMoreCameraRoll();">+ More</button>
+			<div id="cameraRollContent">
+			<button class="photo" id="morePhotosButton" onclick="loadMoreCameraRoll();">+ More</button>
 			</div>
 		</div>
 		</div>

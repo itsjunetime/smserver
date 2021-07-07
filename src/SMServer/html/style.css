@@ -81,7 +81,7 @@ p, h2, a, button {
 	font-size: calc(var(--messages-title-height) * 0.5);
 	margin: auto 10px;
 }
-.title-content {
+.titleContent {
 	display: grid;
 	margin: auto;
 	width: max-content;
@@ -101,7 +101,7 @@ p, h2, a, button {
 }
 @supports (backdrop-filter: blur(50px)) or (-webkit-backdrop-filter: blur(50px)) {
 	.messages .title, .textbox,
-	.compose, #cameraroll {
+	.compose, #cameraRoll {
 		backdrop-filter: blur(50px);
 		-webkit-backdrop-filter: blur(50px);
 		background-color: transparent !important;
@@ -123,7 +123,7 @@ p, h2, a, button {
 	grid-row: 1;
 	border-radius: 100%;
 }
-#text-content {
+#textContent {
 	grid-row: 1/3;
 	grid-column: 1;
 	overflow-x: hidden;
@@ -131,7 +131,7 @@ p, h2, a, button {
 	display: flex;
 	flex-direction: column;
 }
-#text-content::after {
+#textContent::after {
 	content: '';
 	padding: 5px;
 }
@@ -152,7 +152,7 @@ p, h2, a, button {
 	grid-template-columns: 1fr;
 	grid-template-rows: 60px 36px 1fr;
 }
-.chats-title {
+.chatsTitle {
 	grid-column: 1;
 	grid-row: 1;
 	padding: 10px 0px 0px 10px;
@@ -178,11 +178,11 @@ i#chargingSymbol {
 #wifi {
 	color: dodgerblue;
 }
-.chats-title h1 {
+.chatsTitle h1 {
 	margin: auto 0;
 	font-weight: 300;
 }
-.chats-search {
+.chatsSearch {
 	padding: 5px 10px;
 	border-top: 1px solid var(--chats-border);
 	border-bottom: 1px solid var(--chats-border);
@@ -190,7 +190,7 @@ i#chargingSymbol {
 	grid-template-columns: 1fr max-content max-content;
 	grid-gap: 10px;
 }
-.chats-list {
+.chatsList {
 	grid-row: 3;
 	grid-column: 1;
 	overflow: auto;
@@ -198,7 +198,7 @@ i#chargingSymbol {
 	max-width: var(--chats-width);
 }
 .chats button.listed,
-#morechatsbutton {
+#moreChatsButton {
 	border: none;
 	border-top: 1px solid var(--chats-border);
 	background-color: var(--main-background);
@@ -330,11 +330,11 @@ i#chargingSymbol {
 	min-width: max-content;
 	margin: auto 0 auto 6px;
 }
-#morechatsbutton {
+#moreChatsButton {
 	font-size: 20px;
 	display: block;
 }
-#morechatsbutton, #morechatsbutton * {
+#moreChatsButton, #moreChatsButton * {
 	color: dodgerblue;
 }
 .unread .chatNonpic:before {
@@ -344,12 +344,12 @@ i#chargingSymbol {
 	left: 44px;
 	box-shadow: 0 0 5px #0007;
 }
-.text-content p img {
+.textContent p img {
 	max-width: 100%;
 	border-radius: 10px;
 	padding-bottom: 5px;
 }
-.text-content p.noPadding img {
+.textContent p.noPadding img {
 	padding: 0;
 }
 .text.noPadding.fullAttachment {
@@ -474,8 +474,8 @@ i#chargingSymbol {
 	background: var(--main-background);
 	transform: translate(-30px, -2px);
 }
-[class*="from_them"] + [class*="from_me"],
-[class*="from_me"] + [class*="from_them"] {
+[class*="fromThem"] + [class*="fromMe"],
+[class*="fromMe"] + [class*="fromThem"] {
 	margin-top: 10px;
 }
 .fromMe.iMessage .text {
@@ -502,51 +502,54 @@ i#chargingSymbol {
 	font-size: 50px;
 	padding: 0;
 }
-.tapback_dialog {
+.tapbackDialog {
 	padding: 9px 8px;
 	border-radius: 20px;
 }
-.tapback_dialog:after {
+.tapbackDialog:after {
 	content: none;
 }
-.tapback_dialog:before {
+.tapbackDialog:before {
 	width: 12px;
 	height: 12px;
 	top: 34px;
 	border-radius: 100%;
 	border: 0 solid black !important;
 }
-.fromThem.tapback_dialog:before {
+.fromThem.tapbackDialog:before {
 	left: -4px;
 	background-color: var(--their-text-background);
 }
-.fromMe.tapback_dialog:before {
+.fromMe.tapbackDialog:before {
 	right: -4px;
 	background-color: var(--my-imessage-background);
 }
-.SMS .fromMe.tapback_dialog:before {
+.SMS .fromMe.tapbackDialog:before {
 	background-color: var(--my-sms-background);
 }
-.tapback_choice {
+.tapbackChoice {
 	margin: 0 8px;
 	border-radius: 100%;
 }
 i.fa-thumbs-down {
 	transform: scale(-1, 1);
 }
-.tapback_chosen * {
+.tapbackChosen * {
 	color: dodgerblue;
 }
-.trash_text * {
+.trashText * {
 	color: crimson;
 }
 .spacer {
 	min-height: 10px;
 }
-.timeDisplay {
+.timeDisplay, .itemDescription {
 	text-align: center;
 }
-#moretextsbutton {
+.itemDescription p {
+	color: #797979;
+}
+#moreTextsButton {
 	border: 1px solid black;
 	border-radius: 8px;
 	background-color: cornflowerblue;
@@ -558,11 +561,11 @@ i.fa-thumbs-down {
 	font-size: 20px;
 	min-height: max-content;
 }
-#moretextsbutton:hover {
+#moreTextsButton:hover {
 	box-shadow: none;
 	transition: linear 0.2s;
 }
-#sendbutton {
+#sendButton {
 	grid-column: 4;
 	grid-row: 1;
 	width: var(--send-button-size);
@@ -577,7 +580,7 @@ i.fa-thumbs-down {
 	margin-top: auto;
 	margin-bottom: auto;
 }
-#sendbox, .subjectSubject {
+#sendBox, .subjectSubject {
 	outline: none;
 	resize: none;
 	border: none;
@@ -588,13 +591,13 @@ i.fa-thumbs-down {
 	margin: 0;
 	max-height: 30vh !important;
 }
-#sendbox.input {
+#sendBox.input {
 	grid-column: 3/5;
 	grid-row: 1;
 	border-radius: calc(var(--send-box-size) / 2);
 	margin: auto 0;
 }
-#sendbox.subjectInput {
+#sendBox.subjectInput {
 	border-radius: 0 0 calc(var(--send-box-size) / 2) calc(var(--send-box-size) / 2);
 }
 .subjectSubject {
@@ -607,13 +610,13 @@ i.fa-thumbs-down {
 	grid-column: 3/5;
 	grid-row: 1;
 }
-#attachmentbutton {
+#attachmentButton {
 	display: none;
 }
-#unhiddenbutton {
+#unhiddenButton {
 	grid-column: 2;
 }
-.popup, #camerarollpopup {
+.popup, #cameraRollPopup {
 	display: none;
 	position: fixed;
 	width: 100vw;
@@ -642,21 +645,21 @@ i.fa-thumbs-down {
 	grid-template-columns: 14% 1fr 14%;
 	grid-row: 1;
 }
-#composeHideButton, #camerarollHideButton {
+#composeHideButton, #cameraRollHideButton {
 	grid-column: 1;
 	background-color: rgba(50, 50, 50, 1);
 }
-#composeTitleBoxTitle, #camerarollTitleBoxTitle {
+#composeTitleBoxTitle, #cameraRollTitleBoxTitle {
 	grid-column: 2;
 	text-align: center;
 	margin: auto 0;
 }
-#composeSendButton, #camerarollSelectButton {
+#composeSendButton, #cameraRollSelectButton {
 	grid-column: 3;
 	background-color: rgba(80, 110, 220, 1)
 }
 #composeHideButton, #composeSendButton,
-#camerarollHideButton, #camerarollSelectButton {
+#cameraRollHideButton, #cameraRollSelectButton {
 	border: none;
 	border-radius: 5px;
 	transition: all linear 0.1s;
@@ -664,7 +667,7 @@ i.fa-thumbs-down {
 	margin: 0px 20px;
 }
 #composeHideButton:hover, #composeSendButton:hover,
-#camerarollHideButton:hover, #camerarollSelectButton:hover {
+#cameraRollHideButton:hover, #cameraRollSelectButton:hover {
 	box-shadow: none;
 	transition: all linear 0.1s;
 }
@@ -714,12 +717,12 @@ i.fa-thumbs-down {
 	background-color: rgba(20, 20, 20, 0.7);
 	font-size: 16px
 }
-#composeshowbutton, #notificationbutton {
+#composeShowButton, #notificationButton {
 	background-color: var(--light-button-background);
 	border: none;
 	border-radius: 5px;
 }
-#composeshowbutton {
+#composeShowButton {
 	padding: 0px 8px;
 }
 #searchBox {
@@ -729,14 +732,14 @@ i.fa-thumbs-down {
 	border-radius: 3px;
 	padding-left: 6px;
 }
-#notificationbutton {
+#notificationButton {
 	width: max-content;
 	padding: 0px 8px;
 }
-#camerarollbutton {
+#cameraRollButton {
 	grid-column: 1;
 }
-#camerarollbutton, #unhiddenbutton {
+#cameraRollButton, #unhiddenButton {
 	grid-row: 1;
 	background-color: var(--selected-background);
 	border-radius: 5px;
@@ -746,7 +749,7 @@ i.fa-thumbs-down {
 	border: none;
 	margin: auto 0 !important;
 }
-#cameraroll {
+#cameraRoll {
 	background-color: var(--main-background);
 	max-height: 80vh;
 	max-width: var(--camera-roll-width);
@@ -757,7 +760,7 @@ i.fa-thumbs-down {
 	grid-template-rows: 40px 1fr;
 	grid-template-columns: 1fr;
 }
-#camerarollTitle {
+#cameraRollTitle {
 	background-color: rgba(100, 100, 100, 0.2);
 	border-radius: 8px 8px 0px 0px;
 	padding: 5px;
@@ -765,7 +768,7 @@ i.fa-thumbs-down {
 	grid-template-columns: 14% 1fr 14%;
 	grid-row: 1;
 }
-#camerarollContent {
+#cameraRollContent {
 	overflow: auto;
 	max-width: 100%;
 }
@@ -780,16 +783,16 @@ i.fa-thumbs-down {
 	height: calc(var(--camera-roll-width) * 0.2 - 10px);
 	border-radius: 4px;
 }
-.photo.selected-photo img {
+.photo.selectedPhoto img {
 	filter: opacity(0.5);
 	box-shadow: 0 0 6px aliceblue;
 }
-#morephotosbutton {
+#morePhotosButton {
 	background-color: transparent;
 	border: none;
 	font-size: 28px;
 }
-.favorite-heart {
+.favoriteHeart {
 	position: relative;
 	opacity: 0.8;
 	margin-left: -40px;
@@ -840,7 +843,7 @@ i.fa-thumbs-down {
 	flex-shrink: 0;
 }
 .fromMe .textArea {
-	flex-direction: row-reverse;
+	justify-content: flex-end;
 }
 .fromThem .textArea {
 	flex-direction: row;

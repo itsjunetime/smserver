@@ -1,8 +1,4 @@
-var mime_dict = {'pdf': 'file-pdf', 'vcard': 'id-card', 'x-debian-package': 'archive', 'x-sh': 'file-code', 'zip': 'file-archive', 'x-python-script': 'file-code'}
-
 class Message extends Display {
-	id;
-
 	ROWID; // int
 	date; // int
 	from_me; // bool
@@ -16,8 +12,10 @@ class Message extends Display {
 	associated_message_guid; // string
 	balloon_bundle_id; // string
 	date_read; // int
+
 	group_action_type; // int
 	item_type; // int
+	item_description; // string
 
 	chat_id; // string
 	is_group; // bool
@@ -27,9 +25,12 @@ class Message extends Display {
 	link_subtitle; // string
 	link_type; // string
 
+	tapbacks = []; // Array<Message>
+
 	last = true;
 	show_read = false;
 	show_sender = false;
+	showing_tapback = false;
 
 	constructor(json) {
 		super()
@@ -51,85 +52,39 @@ class Message extends Display {
 
 		this.balloon_bundle_id = json.balloon_bundle_id
 		this.date_read = json.date_read
-		this.group_action_type = json.group_action_type
-		this.item_type = json.item_type
 		this.chat_id = json.id
 		this.is_group = json.is_group
 		this.sender = json.sender
 
+		this.group_action_type = json.group_action_type
+		this.item_type = json.item_type
+		this.item_description = json.item_description
+
 		this.link_title = json.link_title
 		this.link_subtitle = json.link_subtitle
 		this.link_type = json.link_type
-
-		this.id = json.guid
 	}
 
-	/*
-	 * With profile image + subject (with tapback on it) + body + image:
-	<div class="message fromThem iMessage" id="guid_here" title="12:00 AM" date_read="0" date="01293239128421">
-		<span class="profileImage">
-			<img src="data?chat_id=chat_id_here"/>
-		</span>
-		<span class="mainMessages">
-			<span class="textArea withTapback">
-				<span class="tapback tapFromMe" tapbacktype="2" sender="iandwelker@gmail.com">
-					<i class="fas fa-thumbs-down"></i>
-				/span>
-				<span class="text" id="p:-1/guid" onclick="showTapbackDialog("p:-1/guid")">
-					<span class="subject">This is the subject of the message</span>
-				</span>
-			</span>
-			<span class="textArea">
-				<span class="text noPadding fullAttachment" id="p:0/guid" onclick="showTapbackDialog("p:0/guid")">
-					<img src="whatever"/>
-				</span>
-			</span>
-			<span class="textArea">
-				<span class="text" id="p:1/guid" onclick="showTapbackDialog("p:1/guid")">
-					<span>This is the text of the message</span>
-				</span>
-			</span>
-		</span>
-	</div>
-
-	 * Just subject + body:
-	 <div class="message fromThem iMessage" id="guid_here">
-	 	<span class="mainMessages">
-			<span class="textArea">
-				<span class="text" id="p:0/guid">
-					<div class="subject">This is the subject</span>
-					<div>This is the body</div>
-				</span>
-			</span>
-		</span>
-	 </div>
-
-	 * RichLink
-	 <div class="message fromThem iMessage" id="guid_here">
-	 	<span class="mainMessages">
-			<span class="textArea">
-				<span class="text noPadding richLink" id="bp:guid" onclick="showTapbackDialog("bp:guid")">
-					<img src="data?path=path">
-					<br>
-					<a href="link" class="richLinkUnder" target="_blank" rel="noreferrer noopener">
-						<div class="rinkLinkDescription">
-							<p class="richLinktitle">The Title</o>
-							<p class="richLinkSubtitle">The subtitle</p>
-						</div>
-					</a>
-				</span>
-			</span>
-		</span>
-	 </div>
-	 */
+	id() {
+		return this.guid
+	}
 
 	html(show_sender = false, show_read = false) {
 		this.show_sender = show_sender
 		this.show_read = show_read
 
-		if (this.group_action_type)
+		/// if it's a group_action or item that we don't know how to handle and don't have a description for,
+		/// just ignore it
+		if ((this.group_action_type || this.item_type) && !this.item_description)
 			return this.newSpan()
+		else if (this.item_description) {
+			/// but if we do have a description for it, show it
+			let desc = this.newSpan('itemDescription')
+			desc.innerHTML = `<p>${this.item_description}</p>`
+			return desc
+		}
 
+		/// if it's not a tapback or tapback removal
 		if (this.associated_message_type < 2000 || !this.associated_message_type) {
 			let classes = `message ${this.from_me ? 'fromMe' : 'fromThem'} ${this.imessage ? 'iMessage' : 'SMS'}`
 
@@ -140,16 +95,18 @@ class Message extends Display {
 			if (this.is_group && !this.from_me)
 				classes += ' withImage';
 
+			/// msg is the main body of all these messages
 			let msg = this.newDiv(classes)
-			msg.id = this.id
+			msg.id = this.id()
 			msg.setAttribute('title', timeConverter(this.date))
 			msg.setAttribute('date_read', this.date_read)
 			msg.setAttribute('date', this.date);
 
-			if (show_sender) {
-				msg.innerHTML += `<div class="sender">${this.sender}</div>`
-			}
+			/// show the sender if we're supposed to
+			if (show_sender)
+				msg.innerHTML += `<div class="sender">${this.sender}</div>`;
 
+			/// show the profile image to the side if we're supposed to
 			if (this.is_group && this.last && !this.from_me) {
 				let img_sec = this.newSpan('profileImage')
 
@@ -166,9 +123,8 @@ class Message extends Display {
 			msg.appendChild(main_msgs)
 
 			let rich_link = this.richLinkBubble()
-			if (rich_link) {
-				main_msgs.appendChild(rich_link)
-			}
+			if (rich_link)
+				main_msgs.appendChild(rich_link);
 
 			if (this.balloon_bundle_id && !rich_link) {
 				let text = this.textSegment('', 'p:0/')
@@ -269,7 +225,7 @@ class Message extends Display {
 	textSegment(classes = "", prefix = "", last = true) {
 		let sp = this.newSpan(`text ${this.last && last ? '' : 'notLast '}${classes}`)
 		sp.setAttribute('onclick', `showTapbackDialog("${prefix}${this.guid}")`)
-		sp.id = this.guid
+		sp.id = prefix + this.guid
 		return sp
 	}
 
@@ -373,6 +329,38 @@ class Message extends Display {
 
 		main.appendChild(under)
 		return this.textAreaWithChild(main)
+	}
+
+	showTapbackDialog(guid) {
+		let element = document.getElementById(`${guid}Tapback`)
+		if (element) {
+			element.outerHTML = ''
+			return
+		}
+
+		let text = document.getElementById(guid)
+		let classes = `text tapbackDialog ${this.from_me ? 'fromThem' : 'fromMe'} ${this.imessage ? 'iMessage' : 'SMS'}`
+		let dialog = this.newSpan(classes)
+		dialog.id = `${guid}Tapback`
+
+		let my_tap = this.tapbacks.first(t => t.from_me)
+		let sel = undefined
+		if (my_tap)
+			sel = my_tap.associated_message_type - 2000;
+
+		fa_icons.forEach((idx, icon) => {
+			let choice = this.newSpan(`tapbackChoice ${idx == sel ? 'tapbackChosen' : ''}`)
+			choice.innerHTML = icon
+			choice.setAttribute('onclick', `sendTapback("${guid}, ${idx}, "${current_chat_id}", ${idx == sel})`)
+			dialog.appendChild(choice)
+		})
+
+		let trash = this.newSpan('tapbackChoice trashText')
+		trash.innerHTML = '<i class="fas fa-trash-alt"></i>'
+		trash.setAttribute('onclick', `deleteText("${guid}")`)
+		dialog.appendChild(trash)
+
+		document.getElementById('textContent').insertBefore(dialog, text.parentNode)
 	}
 }
 
