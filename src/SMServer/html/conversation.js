@@ -26,15 +26,13 @@ class Conversation extends Display {
 		this.addresses = json.addresses
 		this.is_group = json.is_group
 		this.members = json.members.map(h => new Handle(h))
-	}
 
-	id() {
-		return this.chat_identifier;
+		this.id = this.chat_identifier
 	}
 
 	html() {
 		let b = document.createElement('button')
-		b.id = this.id()
+		b.id = this.id
 		b.setAttribute('addresses', this.addresses ? this.addresses : this.chat_identifier);
 
 		let i = this.newSpan()

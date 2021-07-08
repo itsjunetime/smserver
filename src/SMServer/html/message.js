@@ -63,10 +63,8 @@ class Message extends Display {
 		this.link_title = json.link_title
 		this.link_subtitle = json.link_subtitle
 		this.link_type = json.link_type
-	}
 
-	id() {
-		return this.guid
+		this.id = this.guid
 	}
 
 	html(show_sender = false, show_read = false) {
@@ -97,7 +95,7 @@ class Message extends Display {
 
 			/// msg is the main body of all these messages
 			let msg = this.newDiv(classes)
-			msg.id = this.id()
+			msg.id = this.id
 			msg.setAttribute('title', timeConverter(this.date))
 			msg.setAttribute('date_read', this.date_read)
 			msg.setAttribute('date', this.date);
@@ -343,15 +341,16 @@ class Message extends Display {
 		let dialog = this.newSpan(classes)
 		dialog.id = `${guid}Tapback`
 
-		let my_tap = this.tapbacks.first(t => t.from_me)
+		/// reverse it so that we can find the most recent tapback from me
+		let my_tap = this.tapbacks.reverse().find(t => t.from_me)
 		let sel = undefined
 		if (my_tap)
 			sel = my_tap.associated_message_type - 2000;
 
-		fa_icons.forEach((idx, icon) => {
+		fa_icons.forEach((icon, idx) => {
 			let choice = this.newSpan(`tapbackChoice ${idx == sel ? 'tapbackChosen' : ''}`)
 			choice.innerHTML = icon
-			choice.setAttribute('onclick', `sendTapback("${guid}, ${idx}, "${current_chat_id}", ${idx == sel})`)
+			choice.setAttribute('onclick', `sendTapback("${guid}", ${idx}, "${current_chat_id}", ${idx == sel})`)
 			dialog.appendChild(choice)
 		})
 
@@ -360,7 +359,7 @@ class Message extends Display {
 		trash.setAttribute('onclick', `deleteText("${guid}")`)
 		dialog.appendChild(trash)
 
-		document.getElementById('textContent').insertBefore(dialog, text.parentNode)
+		text.parentNode.parentNode.insertBefore(this.textAreaWithChild(dialog), text.parentNode)
 	}
 }
 

@@ -394,7 +394,6 @@ i#chargingSymbol {
 	grid-template-areas: 'image messages';
 }
 .text {
-	font-family: var(--main-font);
 	max-width: 40vw;
 	margin: 2px 0;
 	font-size: 18px;
@@ -427,12 +426,11 @@ i#chargingSymbol {
 	color: #bbb;
 	grid-area: sender;
 }
-.fromMe {
-	align-self: flex-end;
+.text {
+	border-radius: 20px;
 }
 .fromMe .text {
 	position: relative;
-	border-radius: 20px;
 }
 .fromMe .text:before {
 	right: -11px;
@@ -450,11 +448,7 @@ i#chargingSymbol {
 .SMS.fromMe .text:before {
 	border-right: 19px solid var(--my-sms-background);
 }
-.fromThem {
-	align-self: flex-start;
-}
 .fromThem .text {
-	border-radius: 20px;
 	background-color: var(--their-text-background);
 	position: relative;
 }
@@ -494,9 +488,6 @@ i#chargingSymbol {
 .allEmoji:before, .allEmoji:after {
 	display: none;
 }
-.notLast {
-	border-radius: 20px;
-}
 .text.allEmoji {
 	background-color: transparent;
 	font-size: 50px;
@@ -504,7 +495,6 @@ i#chargingSymbol {
 }
 .tapbackDialog {
 	padding: 9px 8px;
-	border-radius: 20px;
 }
 .tapbackDialog:after {
 	content: none;
@@ -547,7 +537,7 @@ i.fa-thumbs-down {
 	text-align: center;
 }
 .itemDescription p {
-	color: #797979;
+	color: #c5c5c5;
 }
 #moreTextsButton {
 	border: 1px solid black;
@@ -840,7 +830,6 @@ i.fa-thumbs-down {
 }
 .textArea {
 	display: flex;
-	flex-shrink: 0;
 }
 .fromMe .textArea {
 	justify-content: flex-end;

@@ -1,13 +1,11 @@
 class Display {
-	id() {
-		return undefined;
-	}
+	id = undefined
 	node() {
-		return document.getElementById(this.id())
+		return document.getElementById(this.id)
 	}
 	html() {
 		let div = document.createElement("div")
-		div.id = this.id()
+		div.id = this.id
 		return div
 	}
 	newDiv(cls = '') {
@@ -32,8 +30,10 @@ class Photo extends Display {
 	is_favorite;  // bool
 
 	constructor(json) {
+		super()
 		this.url = json.URL
 		this.is_favorite = json.is_favorite
+		this.id = this.url
 	}
 
 	html() {
@@ -55,10 +55,6 @@ class Photo extends Display {
 		return photo
 	}
 
-	id() {
-		return this.url
-	}
-
 	select(sel = true) {
 		let node = this.node()
 		if (!node) return;
@@ -74,15 +70,46 @@ class BatteryStatus extends Display {
 	percentage; // double
 	charging; // bool
 
+	perc_ids = ['empty', 'quarter', 'half', 'three-quarters', 'full']
+
 	constructor(json) {
+		super()
 		this.percentage = json.percentage
 		this.charging = json.charging
-	}
-
-	id() {
-		return 'battery'
+		this.id = 'battery'
 	}
 
 	html() {
+		let cls = 'low'
+		if (this.percentage > 20)
+			cls = this.percentage > 35 ? 'fullEnough' : 'risky'
+
+		let self = this.newDiv(cls)
+		self.id = this.id
+
+		let rounded = Math.min(~~(this.percentage / 25) + 1, 4)
+		let perc_str = this.perc_ids[rounded]
+		let rounded_perc = ~~Number(this.percentage)
+
+		self.innerHTML = `
+			${rounded_perc}%
+			<span id="batterySymbol">
+				${this.charging ? '<i id="chargingSymbol" class="fas fa-bolt"></i>' : ''}
+				<i id="levelSymbol" class="fas fa-battery-${perc_str}"></i>
+			</span>`;
+
+		return self
+	}
+
+	refresh(perc, charg) {
+		this.percentage = perc
+		this.charging = charg
+
+		let node = this.node()
+		let html = this.html()
+		if (!node)
+			document.getElementById('stats').innerHTML = html.outerHTML
+		else
+			node.outerHTML = html.outerHTML
 	}
 }

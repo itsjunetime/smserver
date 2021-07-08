@@ -23,8 +23,7 @@
 
 			var current_chat_id = "";
 			var typing_sleep = 10000;
-			var load_icon = '<i class="fas fa-chevron-circle-up"></i>';
-			var fa_icons = ['<i class="fas fa-heart"></i>', '<i class="fas fa-thumbs-up"></i>', '<i class="fas fa-thumbs-down"></i>', '<i class="fas fa-laugh-squint"></i>', '<i class="fas fa-exclamation"></i><i class="fas fa-exclamation"></i>', '<i class="fas fa-question"></i>'];
+			var fa_icons = ['heart', 'thumbs-up', 'thumbs-down', 'laugh-squint', 'exclamation', 'question'].map(i => `<i class="fas fa-${i}"></i>`)
 			var mime_dict = {'pdf': 'file-pdf', 'vcard': 'id-card', 'x-debian-package': 'archive', 'x-sh': 'file-code', 'zip': 'file-archive', 'x-python-script': 'file-code'}
 
 			var doc_url = window.location.href;
@@ -35,6 +34,7 @@
 			var convos = [];
 			var photos = [];
 			var taps_to_print = [];
+			var battery;
 
 			if (doc_url === "127.0.0.1" || doc_url === "localhost") { /// when I'm debugging on local computer
 				prefix = "http://192.168.0.180:8741/";
@@ -258,7 +258,7 @@
 				setUnreadTitle()
 			}
 
-			printSingleChat(chat, append = true) {
+			function printSingleChat(chat, append = true) {
 				let doc = document.getElementsByClassName("chatsList")[0]
 
 				if (!chat.pinned) {
@@ -539,7 +539,7 @@
 			async function processNewText(text) {
 				let message = new Message(text)
 				let convo = convos.find(c => c.addresses.includes(message.chat_id))
-				let text_content = ''
+				let text_content = message.text
 
 				if (!message.from_me) {
 					if (!message.text && message.has_attachments)
@@ -555,13 +555,13 @@
 						n = new Notification(name, { body: new_text, icon: `/data?chat_id=${message.chat_id}`});
 				}
 
-				if (!message.chat_id) {
-					if (!convo || convos.length == 0)
+				if (message.chat_id) {
+					if (!convo || convos.length == 0) {
 						printChats();
-					else if (convo != convos[0] && !convo.pinned)
+					} else if (convo != convos[0] && !convo.pinned) {
 						setChatAsTop(message.chat_id, text_content)
-					else {
-						if (message.chat_id != current_box || !document.hasFocus())
+					} else {
+						if (message.chat_id != current_chat_id || !document.hasFocus())
 							convo.setUnread();
 
 						convo.setNewText(text_content)
@@ -681,47 +681,10 @@
 			}
 
 			function setNewBatteryLevel(data) {
-				if (debug) console.log(`new battery level: ${data.percentage}, ${data.charging ? "charging": "unplugged"}`);
-				var batt = document.getElementById("battery");
-				var bat_symbol = document.getElementById("batterySymbol");
+				if (!battery)
+					battery = new BatteryStatus(data)
 
-				var symbol = "";
-				if (data.charging)
-					symbol = ' <i id="chargingSymbol" class="fas fa-bolt"></i>';
-
-				var cgs = document.getElementById("chargingSymbol");
-				if (cgs)
-					cgs.outerHTML = symbol;
-				else
-					bat_symbol.innerHTML = symbol + bat_symbol.innerHTML;
-
-				var rounded = ~~Number(data.percentage);
-				let perc_str = "full";
-				if (rounded < 5)
-					perc_str = "empty";
-				else if (rounded < 25)
-					perc_str = "quarter";
-				else if (rounded < 50)
-					perc_str = "half";
-				else if (rounded < 75)
-					perc_str = "three-quarters";
-
-				symbol = ` <i id="levelSymbol" class="fas fa-battery-${perc_str}"></i>`;
-
-				var lvs = document.getElementById("levelSymbol");
-				if (lvs)
-					lvs.outerHTML = symbol;
-				else
-					bat_symbol.innerHTML = bat_symbol.innerHTML + symbol;
-
-				batt.innerHTML = `${rounded}%${bat_symbol.outerHTML}`;
-
-				if (rounded > 35)
-					batt.className = "fullEnough";
-				else if (rounded > 20)
-					batt.className = "risky";
-				else
-					batt.className = "low";
+				battery.refresh(data.percentage, data.charging)
 			}
 
 			function setChatAsTyping(data) {
@@ -887,11 +850,10 @@
 			}
 
 			function setUpPrefix() {
-				let styles = ["fa_solid", "font_awesome", "main", "custom"];
-				for (var i = 0; i < styles.length; i++) {
-					let sty = document.getElementById(`style_${styles[i]}`);
-					sty.href = `${prefix}${sty.href}`;
-				}
+				['fa_solid', 'font_awesome', 'main', 'custom'].forEach(s => {
+					let sty = document.getElementById(`style_${s}`)
+					sty.href = `${prefix}${sty.href}`
+				})
 
 				let send_form = document.getElementById("sendForm");
 				send_form.setAttribute("action", `${prefix}${send_form.getAttribute("action")}`);
