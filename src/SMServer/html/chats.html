@@ -9,8 +9,11 @@
 			var socket_port;
 			var debug;
 			var subject;
-			var socket_subdir;
 			var num_texts_returned = 0;
+
+			var socket_url = "";
+			var socket;
+			var socket_subdir;
 
 			var has_shown_warning = false;
 			var has_shown_camera_roll = false;
@@ -58,42 +61,6 @@
 				return time;
 			}
 
-			async function getTextFromURL(url) {
-				if (debug) console.log(`getting text from url ${url}`);
-				let return_text = "";
-				let code = 200;
-				await fetch(url).then((response) => {
-					code = response.status;
-					return code === 200 ? response.text() : response.statusText;
-				})
-				.then((response) => {
-					return_text = response;
-				})
-				.catch(error => {
-					if (!has_shown_warning)
-						alert(`The server restarted, you need to reload and re-authenticate. url: ${url}`);
-					has_shown_warning = true;
-				});
-
-				return [code, return_text];
-			}
-
-			async function fetchFromURL(url) {
-				if (debug) console.log(`fetching url ${url}`);
-				let ret = "";
-				await fetch(url).then(response => {
-					if (!response.ok) throw new Error(`HTTP error ${response.status}`);
-					ret = response.json();
-				})
-				.catch(error => {
-					if (!has_shown_warning)
-						alert(`The server restarted, you need to reload and re-authenticate. url: ${url}`);
-					has_shown_warning = true;
-				});
-
-				return ret;
-			}
-
 			function setProfileImageAsText(el) {
 				let name = el.getAttribute('display_name')
 				let repl = name.replace(/\p{Extended_Pictographic}/gu, '').split(' ')
@@ -118,15 +85,6 @@
 				let tc = document.getElementById('textContent')
 				let container = document.createElement('div')
 
-				// the message to append the read receipt to
-				let read_idx = null
-				for (let i = messages.length - 1; i >= 0; i--) {
-					if (messages[i].from_me && messages[i].date_read != 0 && messages[i].imessage) {
-						read_idx = i
-						break
-					}
-				}
-
 				/// make a copy so we can add it to the global list of messages later
 				let msgs_copy = messages
 				let to_remove = []
@@ -146,6 +104,15 @@
 				/// must remove the tapbacks separately so that we don't modify an array
 				/// while iterating over it. Also must reverse so they stay accurate
 				to_remove.reverse().forEach(i => messages.splice(i, 1))
+
+				// the message to append the read receipt to
+				let read_idx = null
+				for (let i = messages.length - 1; i >= 0; i--) {
+					if (messages[i].from_me && messages[i].date_read != 0 && messages[i].imessage) {
+						read_idx = i
+						break
+					}
+				}
 
 				messages.forEach((msg, idx) => {
 					let next_msg = idx < messages.length - 1 ? messages[idx + 1] : null
@@ -233,8 +200,7 @@
 
 			async function printChats(offset = 0) {
 				if (debug) console.log("printing Chats")
-				let url = `${prefix}requests?chats&chats_offset=${offset}`
-				let items = await fetchFromURL(url)
+				let items = await getChats(offset);
 
 				let doc = document.getElementsByClassName("chatsList")[0]
 				let old_button = document.getElementById("moreChatsButton")
@@ -295,9 +261,7 @@
 
 			async function getMoreChats(offset = convos.length) {
 				if (debug) console.log("getting more chats");
-				let url = `${prefix}requests?chats&chats_offset=${offset}`;
-				let chatsPromise = await fetchFromURL(url);
-				let items = chatsPromise.chats;
+				let items = await getChats(offset);
 
 				if (!items) return;
 				items = items.map(n => new Conversation(n))
@@ -347,9 +311,7 @@
 
 				title_doc.parentNode.innerHTML = back_arrow + title_doc.outerHTML + trash;
 
-				let url = `${prefix}requests?messages=${addresses ? addresses : chat_id}`;
-
-				let texts = await fetchFromURL(url);
+				let texts = await getMessages(addresses ? addresses : chat_id)
 
 				num_texts_returned = texts.length;
 
@@ -373,8 +335,7 @@
 				if (debug) console.log(`called getMoreTexts`);
 				var chat_id = document.querySelector(`[addresses*="${current_chat_id}"]`).getAttribute("addresses");
 
-				let url = `${prefix}requests?messages=${chat_id}&messages_offset=${msgs.length}&read_messages=false`;
-				let texts = await fetchFromURL(url);
+				let texts = await getMessages(chat_id, msgs.length, false);
 
 				printListOfTexts(texts, false);
 
@@ -600,8 +561,7 @@
 					if (!document.hasFocus() || current_chat_id != chat)
 						convo.setUnread()
 				} else {
-					let url = `${prefix}requests?conversation=${chat}`
-					let chat_details = await fetchFromURL(url)
+					let chat_details = await getConversation(chat);
 					let convo = new Conversation(chat_details)
 
 					convos.unshift(convo)
@@ -615,8 +575,7 @@
 				var confirm_val = prompt(`If you would really like to delete this conversation, please enter "${current_chat_id}" in the box below and hit OK`, "");
 				if (confirm_val !== current_chat_id) return;
 
-				let url = `${prefix}send?delete_chat=${current_chat_id}`;
-				let resp = await getTextFromURL(url);
+				let resp = await deleteChat(current_chat_id)
 
 				if (resp[0] !== 200) alert(`Chat not deleted: ${resp[1]}`);
 				else location.reload();
@@ -636,12 +595,11 @@
 
 				if (!has_shown_camera_roll) {
 					let cr = document.getElementById('cameraRollContent')
-					let url = `${prefix}requests?photos`
-					let photos_ret = await fetchFromURL(url)
+					let photos_ret = await getPhotos();
 
 					/// have to check again 'cause sometimes it just doesn't work
 					if (!photos_ret || photos_ret.length == 0)
-						photos_ret = await fetchFromURL(url);
+						photos_ret = await getPhotos();
 
 					let phs = photos_ret.map(p => new Photo(p))
 
@@ -656,8 +614,7 @@
 
 			async function loadMoreCameraRoll() {
 				let cr = document.getElementById('cameraRollContent')
-				let url = `${prefix}requests?photos&photos_offset=${photos.length}`
-				let photos_ret = await fetchFromURL(url)
+				let photos_ret = await getPhotos(photos.length)
 
 				let phs = photos_ret.map(p => new Photo(p))
 
@@ -760,7 +717,7 @@
 
 			async function sendTapback(guid, tapback, chat = current_chat_id, remove = false) {
 				if (debug) console.log(`sending tapback ${tapback} for guid ${guid} in chat ${chat}, remove: ${remove}`);
-				var res = await getTextFromURL(`${prefix}send?tapback=${tapback}&tap_guid=${guid}&remove_tap=${remove}`);
+				let res = await sendTapback(tapback, guid, remove)
 				if (res[0] !== 200)
 					alert(`Failed to send tapback: ${res[1]}`);
 
@@ -772,7 +729,7 @@
 				if (!confirm("Are you sure you want to delete the selected text?"))
 					return;
 
-				var res = await getTextFromURL(`${prefix}send?&delete_text=${guid}`);
+				let res = await deleteText(guid)
 
 				if (res[0] != 200) {
 					alert("Couldn't delete text :(");
@@ -910,8 +867,7 @@
 			}
 
 			async function setUpConfig() {
-				let config_url = `${prefix}requests?config`;
-				let config = await fetchFromURL(config_url);
+				let config = await getConfig()
 
 				if (config.socket_subdirectory)
 					socket_subdir = config.socket_subdirectory;
@@ -927,7 +883,7 @@
 				if (!convo || !convo.unread) return;
 
 				convo.setUnread(false)
-				var _ = fetchFromURL(`${prefix}requests?messages=${current_chat_id}&num_messages=1`);
+				let _ = getMessages(current_chat_id, 0, null, 1)
 
 				setUnreadTitle();
 			});
@@ -945,12 +901,6 @@
 				setUpDND();
 				connectWebSocket();
 			});
-
-			var socket_url = "";
-			var socket;
-
-			printChats();
-
 		</script>
 		<link rel="stylesheet" type="text/css" href="style?fa_solid" id="styleFASolid">
 		<link rel="stylesheet" type="text/css" href="style?font_awesome" id="styleFontAwesome">
@@ -1033,5 +983,6 @@
 		<script src="js?display"></script>
 		<script src="js?message"></script>
 		<script src="js?conversation"></script>
+		<script src="js?api" onload="printChats()"></script>
 	</body>
 </html>

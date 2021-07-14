@@ -22,6 +22,7 @@ class ServerDelegate {
 	var display_js: String = ""
 	var conversation_js: String = ""
 	var message_js: String = ""
+	var api_js: String = ""
 
 	var light_style: String = ""
 	var nord_style: String = ""
@@ -114,7 +115,8 @@ class ServerDelegate {
 		   let fs = Bundle.main.url(forResource: "fa_solid", withExtension: "css", subdirectory: "html/fontawesome"),
 		   let cjs = Bundle.main.url(forResource: "conversation", withExtension: "js", subdirectory: "html"),
 		   let djs = Bundle.main.url(forResource: "display", withExtension: "js", subdirectory: "html"),
-		   let mjs = Bundle.main.url(forResource: "message", withExtension: "js", subdirectory: "html") {
+		   let mjs = Bundle.main.url(forResource: "message", withExtension: "js", subdirectory: "html"),
+		   let ajs = Bundle.main.url(forResource: "api", withExtension: "js", subdirectory: "html") {
 			do {
 				/// Set up all the pages as multi-line string variables, set values within them.
 				self.main_page = try String(contentsOf: h, encoding: .utf8)
@@ -124,6 +126,7 @@ class ServerDelegate {
 				self.conversation_js = try String(contentsOf: cjs, encoding: .utf8)
 				self.display_js = try String(contentsOf: djs, encoding: .utf8)
 				self.message_js = try String(contentsOf: mjs, encoding: .utf8)
+				self.api_js = try String(contentsOf: ajs, encoding: .utf8)
 
 				self.light_style = try String(contentsOf: l, encoding: .utf8)
 				self.nord_style = try String(contentsOf: n, encoding: .utf8)
@@ -380,6 +383,8 @@ class ServerDelegate {
 					res.send(self.conversation_js)
 				} else if s == "message" {
 					res.send(self.message_js)
+				} else if s == "api" {
+					res.send(self.api_js)
 				}
 			}
 

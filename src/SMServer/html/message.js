@@ -28,8 +28,6 @@ class Message extends Display {
 	tapbacks = []; // Array<Message>
 
 	last = true;
-	show_read = false;
-	show_sender = false;
 	showing_tapback = false;
 
 	constructor(json) {
@@ -68,9 +66,6 @@ class Message extends Display {
 	}
 
 	html(show_sender = false, show_read = false) {
-		this.show_sender = show_sender
-		this.show_read = show_read
-
 		/// if it's a group_action or item that we don't know how to handle and don't have a description for,
 		/// just ignore it
 		if ((this.group_action_type || this.item_type) && !this.item_description)
@@ -124,7 +119,7 @@ class Message extends Display {
 			if (rich_link)
 				main_msgs.appendChild(rich_link);
 
-			if (this.balloon_bundle_id && !rich_link) {
+			if (this.balloon_bundle_id && this.balloon_bundle_id != 'com.apple.messages.URLBalloonProvider') {
 				let text = this.textSegment('', 'p:0/')
 
 				if (this.balloon_bundle_id == 'com.apple.DigitalTouchBalloonProvider')
@@ -259,7 +254,7 @@ class Message extends Display {
 			let fa = 'file'
 
 			if (mime.length > 0 && smallType && mime_dict[smallType])
-				fa = dict[smallType];
+				fa = mime_dict[smallType];
 
 			let icon = `<i class="fas fa-${fa}"></i>`
 

@@ -7,6 +7,7 @@
  - Updated existing REST & Websocket API to be much more robust
  - Main view now remains responsive and shows loading indicator while starting servers/connecting to remote server
  - Fixed weird coloring in settings view ([#131](https://github.com/iandwelker/smserver/issues/131))
+ - Added typing indicators in left hand panel of web interface
  - Added API support for retrieving members of each group conversation ([#130](https://github.com/iandwelker/smserver/issues/130))
  - Added API support for retrieving details about specific conversation, as opposed to just most recent conversations
 
