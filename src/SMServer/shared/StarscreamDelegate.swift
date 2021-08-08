@@ -10,7 +10,7 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 	static let sharedDelegate = StarscreamDelegate()
 
 	func registerAndConnect() -> Bool {
-		let test_id = getID()
+		let test_id = settings.remote_id ?? getID()
 
 		guard let id = test_id else {
 			return false
@@ -42,16 +42,19 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 		// need to set disconnected state before actually disconnecting
 		// or else it'll think we accidentally disconnected and will try to reconnect
 		setSocketState(new_state: .Disconnected(false))
-		settings.remote_id = nil
 
 		socket?.disconnect()
 		_ = self.deregister() // eh we'll handle the result later
+
+		settings.remote_id = nil
 	}
 
 	func getID() -> String? {
 		let url_encoded = settings.password.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? settings.password
 
-		guard let url = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/register?key=\(url_encoded)&host_key=\(url_encoded)&reg_type=hostclient") else {
+		let id_req = settings.remote_id != nil ? "&id_req=\(settings.remote_id ?? "")" : ""
+
+		guard let url = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/register?key=\(url_encoded)&host_key=\(url_encoded)&reg_type=hostclient\(id_req)") else {
 			Const.log("Error: You have characters in your remote address which should not be in URLs. Please remove them")
 
 			return nil
@@ -77,8 +80,13 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 	func deregister() -> Bool {
 		var succeeded = true
 
+		guard let id = settings.remote_id, id.count > 0 else {
+			// still return true 'cause we didn't even have to deregister
+			return true
+		}
+
 		let url_encoded = settings.password.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? settings.password
-		guard let url = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/remove?id=\(settings.remote_id ?? "")&key=\(url_encoded)&host_key=\(url_encoded)") else {
+		guard let url = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/remove?id=\(id)&key=\(url_encoded)&host_key=\(url_encoded)") else {
 			Const.log("Error: You have characters in your remote address which should not be in URLs. Please remove them")
 
 			return false

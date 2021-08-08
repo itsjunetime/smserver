@@ -121,8 +121,6 @@ struct ContentView: View {
 
 		socket_state = state
 
-		self.actively_loading = false
-
 		switch state {
 			case .Disconnected(let retry):
 				lower_msg = "Socket disconnected"
