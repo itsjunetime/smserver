@@ -40,7 +40,7 @@ compile() {
 		[ "${llvm_vers}" -lt 1200 ] && \
 			err "You are using llvm < 1200 (Xcode 11.7 or lower); this will fail to compile. Please install Xcode 12.0 or higher to build SMServer."
 
-		{ ! [ -f ${ROOTDIR}/src/SMServer/identity.pfx ] || ! [ -f ${ROOTDIR}/src/SMServer/shared/IdentityPass.swift ]; } && \
+		{ ! [ -f "${ROOTDIR}/src/SMServer/identity.pfx" ] || ! [ -f "${ROOTDIR}/src/SMServer/shared/IdentityPass.swift" ]; } && \
 			err "You haven't created some files necessary to compile this. Please run this script with the \e[1m-n\e[0m or \e[1m--new\e[0m flag first"
 
 		if [ "$min" = true ]
@@ -65,7 +65,7 @@ compile() {
 
 		rm -rf "${ROOTDIR}/package/$scheme.xcarchive"
 		pn "\e[34m==>\e[0m Cleaning and archiving package..."
-		xcodebuild clean archive -workspace "${ROOTDIR}/src/SMServer.xcworkspace" -scheme "$scheme" -archivePath "${ROOTDIR}/package/$scheme.xcarchive" -destination generic/platform=iOS -allowProvisioningUpdates \
+		xcodebuild clean archive -workspace "${ROOTDIR}/src/SMServer.xcworkspace" -scheme "$scheme" -archivePath "${ROOTDIR}/package/$scheme.xcarchive" -destination generic/platform=iOS -allowProvisioningUpdates | xcpretty \
 			|| err "Failed to archive package. Run again with \e[1m-v\e[0m to see why"
 
 		pn "\e[34m==>\e[0m Codesigning..."
@@ -115,7 +115,7 @@ compile() {
 		pn "\e[35m==>\e[0m Compressing payload into \e[1m${scheme}_${vers}.ipa\e[0m..."
 		ditto -c -k --sequesterRsrc --keepParent "${ROOTDIR}/package/Payload" "${ROOTDIR}/package/${scheme}_${vers}.ipa"
 
-		pn "✅ ${scheme}_${vers}.ipa successfully created a† \e[1m${ROOTDIR}/package/${scheme}_${vers}.ipa\e[0m"
+		pn "✅ ${scheme}_${vers}.ipa successfully created at \e[1m${ROOTDIR}/package/${scheme}_${vers}.ipa\e[0m"
 	fi
 }
 
