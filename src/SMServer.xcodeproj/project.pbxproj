@@ -221,6 +221,7 @@
 				3CFFB0B22655D56A002F1AC5 /* SMServer copy-Info.plist */,
 			);
 			sourceTree = "<group>";
+			usesTabs = 1;
 		};
 		3C760E84245BCFE000EF24FE /* Products */ = {
 			isa = PBXGroup;

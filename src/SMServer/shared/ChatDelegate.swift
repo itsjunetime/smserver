@@ -467,8 +467,7 @@ final class ChatDelegate {
 			if Const.getOSVersion() >= 14.0 {
 				DispatchQueue.global(qos: .default).async {
 					dp_group.enter()
-					let center = MRYIPCCenter(named: "com.ianwelker.smserver")
-					pinned_chats = center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String] ?? [String]()
+					pinned_chats = self.getPinnedChats()
 					dp_group.leave()
 				}
 			}
@@ -583,14 +582,13 @@ final class ChatDelegate {
 		var contacts_db = createConnection(connection_string: Const.contacts_address)
 		if db == nil || contacts_db == nil { return [String:Any]() }
 
-		var pinned_chats = [String]()
+		var pinned_chats: [String]? = [String]()
 		let dp_group = DispatchGroup()
 
 		if Const.getOSVersion() >= 14.0 {
 			DispatchQueue.global().async {
 				dp_group.enter()
-				let center = MRYIPCCenter(named: "com.ianwelker.smserver")
-				pinned_chats = center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String] ?? []
+				pinned_chats = self.getPinnedChats()
 				dp_group.leave()
 			}
 		}
@@ -614,7 +612,7 @@ final class ChatDelegate {
 
 		dp_group.wait()
 
-		ret["pinned"] = pinned_chats.contains(chat_id)
+		ret["pinned"] = pinned_chats?.contains(chat_id)
 
 		closeDatabase(&db)
 		closeDatabase(&contacts_db)
@@ -1269,5 +1267,18 @@ final class ChatDelegate {
 		closeDatabase(&db)
 
 		return "\(display_name) was added to the conversation"
+	}
+
+	final func getPinnedChats() -> [String]? {
+		let center = MRYIPCCenter(named: "com.ianwelker.smserver")
+
+		// Swift is lying to you here. This method can throw, but it's written in obj-c
+		// so it doesn't show that in the method signature, so Swift thinks it can't.
+		do {
+			return try center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String] ?? [String]()
+		} catch {
+			Const.log("Failed to get pinned chats: \(error)", warning: true)
+			return nil
+		}
 	}
 }
