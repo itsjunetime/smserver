@@ -10,9 +10,7 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 	static let sharedDelegate = StarscreamDelegate()
 
 	func registerAndConnect() -> Bool {
-		let test_id = settings.remote_id ?? getID()
-
-		guard let id = test_id else {
+		guard let id = (settings.remote_id ?? getID()) else {
 			return false
 		}
 
