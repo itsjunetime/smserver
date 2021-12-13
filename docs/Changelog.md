@@ -1,4 +1,16 @@
 # Changelog
+0.8.0 &rightarrow; 0.9.0
+ - Built in support for connecting to SMServer from outside of the same network by implementing new websocket API
+ - Massively rewrote web interface to be easier to work with
+ - Added images to show senders of texts in group chats ([#114](https://github.com/iandwelker/smserver/issues/114))
+ - Fixed issue of subjects and texts being separated when not supposed to ([#124](https://github.com/iandwelker/smserver/issues/124))
+ - Updated existing REST & Websocket API to be much more robust
+ - Main view now remains responsive and shows loading indicator while starting servers/connecting to remote server
+ - Fixed weird coloring in settings view ([#131](https://github.com/iandwelker/smserver/issues/131))
+ - Added typing indicators in left hand panel of web interface
+ - Added API support for retrieving members of each group conversation ([#130](https://github.com/iandwelker/smserver/issues/130))
+ - Added API support for retrieving details about specific conversation, as opposed to just most recent conversations
+
 0.7.4 &rightarrow; 0.8.0
  - Built libsmserver into the `.deb` package so that it is no longer necessary as a dependency
  - Updates read receipts in real time

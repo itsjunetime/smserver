@@ -7,8 +7,19 @@ import Photos
 import Contacts
 #endif
 
+let chat_columns = ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"]
+
 final class ChatDelegate {
 	let settings = Settings.shared()
+
+	private static var sharedDelegate: ChatDelegate = {
+		let delegate = ChatDelegate()
+		return delegate
+	}()
+
+	class func shared() -> ChatDelegate {
+		return sharedDelegate
+	}
 
 	final func createConnection(connection_string: String = Const.sms_db_address) -> OpaquePointer? {
 		/// This simply returns an opaque pointer to the database at `connection_string`, allowing for sqlite connections.
@@ -139,15 +150,14 @@ final class ChatDelegate {
 			texts[i]["text"] = (texts[i]["text"] as? String ?? "").replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil)
 
 			/// Get details about attachments if there are any attachments associated with this message
-			if texts[i]["cache_has_attachments"] as! String == "1" && texts[i]["ROWID"] != nil {
-				let att = getAttachmentFromMessage(mid: (texts[i]["ROWID"] as? String ?? "")) /// get list of attachments
-				texts[i]["attachments"] = att
+			if texts[i]["cache_has_attachments"] as! String == "1", let rowid = texts[i]["ROWID"] as? String {
+				texts[i]["attachments"] = getAttachmentFromMessage(mid: rowid)
 			}
 
 			/// Get the sender's name for this text if it is a group chat and it's not from me
 			if is_group && texts[i]["is_from_me"] as? String ?? "0" == "0" && (texts[i]["id"] as? String)?.count != 0 {
-				if names[texts[i]["id"] as! String] != nil {
-					texts[i]["sender"] = names[texts[i]["id"] as! String]
+				if let name = names[texts[i]["id"] as? String ?? ""] {
+					texts[i]["sender"] = name
 				} else {
 					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: (texts[i]["id"] as? String) ?? "", is_group: is_group)
 					texts[i]["sender"] = name
@@ -155,10 +165,16 @@ final class ChatDelegate {
 				}
 			}
 
+			if texts[i]["item_type"] as? String == "1" {
+				texts[i]["item_description"] = getJoinedChatDescription(texts[i]["other_handle"] as? String ?? "", "")
+			} else if texts[i]["group_action_type"] as? String == "1" {
+				texts[i]["item_description"] = "\(texts[i]["sender"] as? String ?? "") set the group image"
+			}
+
 			/// This checks if it has anything in the `payload_data` field, which would imply that it is a special message (e.g. rich link, gamepigeon message, etc).
 			/// However, it doesn't enter the `if` if the message is a handwritten message or a digital touch message, since I don't know how to parse those yet.
-			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 && !bad_bundles.contains(texts[i]["balloon_bundle_id"] as! String) && texts[i]["ROWID"] != nil {
-				let link_info = getLinkInfo(texts[i]["ROWID"] as? String ?? "", db: db)
+			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 && !bad_bundles.contains(texts[i]["balloon_bundle_id"] as! String), let rowid = texts[i]["ROWID"] as? String {
+				let link_info = getLinkInfo(rowid, db: db)
 
 				texts[i]["link_title"] = link_info["title"]
 				texts[i]["link_subtitle"] = link_info["subtitle"]
@@ -167,16 +183,100 @@ final class ChatDelegate {
 
 			texts[i].removeValue(forKey: "payload_data")
 
+			if let serv = texts[i]["service"] as? String {
+				texts[i]["imessage"] = serv == "iMessage"
+				texts[i].removeValue(forKey: "service")
+			}
+
+			texts[i]["is_group"] = is_group
+
 			/// Change values that shouldn't be strings to the correct type
-			if texts[i]["ROWID"] != nil                    { texts[i]["ROWID"] = Int(texts[i]["ROWID"] as! String) }
-			if texts[i]["is_from_me"] != nil               { texts[i]["is_from_me"] = texts[i]["is_from_me"] as! String == "1" }
-			if texts[i]["date"] != nil                     { texts[i]["date"] = Int(texts[i]["date"] as! String) }
-			if texts[i]["date_read"] != nil                { texts[i]["date_read"] = Int(texts[i]["date_read"] as! String) }
-			if texts[i]["cache_has_attachments"] != nil    { texts[i]["cache_has_attachments"] = texts[i]["cache_has_attachments"] as! String == "1" }
-			if texts[i]["associated_message_type"] != nil  { texts[i]["associated_message_type"] = Int(texts[i]["associated_message_type"] as! String) }
-			if texts[i]["item_type"] != nil                { texts[i]["item_type"] = Int(texts[i]["item_type"] as! String) }
-			if texts[i]["group_action_type"] != nil        { texts[i]["group_action_type"] = Int(texts[i]["group_action_type"] as! String) ?? 0 }
+			if let rowid = texts[i]["ROWID"] as? String {
+				texts[i]["ROWID"] = Int(rowid)
+			}
+
+			if let from_me = texts[i]["is_from_me"] as? String {
+				texts[i]["is_from_me"] = from_me == "1"
+			}
+
+			if let date = texts[i]["date"] as? String {
+				texts[i]["date"] = Int(date)
+			}
+
+			if let read = texts[i]["date_read"] as? String {
+				texts[i]["date_read"] = Int(read)
+			}
+
+			if let cache = texts[i]["cache_has_attachments"] as? String {
+				texts[i]["cache_has_attachments"] = cache == "1"
+			}
+
+			if let am_type = texts[i]["associated_message_type"] as? String {
+				texts[i]["associated_message_type"] = Int(am_type)
+			}
+
+			if let type = texts[i]["item_type"] as? String {
+				texts[i]["item_type"] = Int(type)
+			}
+
+			if let ga_type = texts[i]["group_action_type"] as? String {
+				texts[i]["group_action_type"] = Int(ga_type) ?? 0
+			}
 		}
+	}
+
+	final func parseChats(_ chats: [[String:Any]], db: OpaquePointer?, contact_db: OpaquePointer?) -> [[String:Any]] {
+		var ret = [[String:Any]]()
+
+		for chat in chats {
+			guard let chat_id = chat["c.chat_identifier"] as? String else {
+				continue
+			}
+
+			var new_chat = [String:Any]()
+
+			new_chat["has_unread"] = chat["m.is_from_me"] as? String ?? "" == "0" &&
+		                             chat["m.date_read"] as? String ?? "" == "0" &&
+		                             chat["m.text"] != nil &&
+		                             chat["m.is_read"] as? String ?? "" == "0" &&
+		                             chat["m.item_type"] as? String ?? "" == "0"
+
+			new_chat["latest_text"] = String((chat["m.text"] as? String ?? "").replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil))
+
+			if (new_chat["latest_text"] as! String).count == 0 && chat["m.cache_has_attachments"] as? String ?? "" != "0" {
+				let att = getAttachmentFromMessage(mid: chat["m.ROWID"] as? String ?? "")
+
+				if att.count != 0 && att[0].count == 2 && att[0]["mime_type"]?.count ?? 0 > 0 {
+					new_chat["latest_text"] = "Attachment: \(att[0]["mime_type"]?.split(separator: "/").first ?? "1 File")"
+				} else {
+					new_chat["latest_text"] = "Attachment: 1 file"
+				}
+			} else if chat["m.balloon_bundle_id"] as? String ?? "" == "com.apple.DigitalTouchBalloonProvider" {
+				new_chat["latest_text"] = "Digital Touch Message"
+			} else if chat["m.balloon_bundle_id"] as? String ?? "" == "com.apple.Handwriting.HandwritingProvider" {
+				new_chat["latest_text"] = "Handwritten Message"
+			}
+
+			let is_group = (chat["c.room_name"] as? String ?? "").count > 0
+
+			if let d_name = chat["c.display_name"] as? String, d_name.count > 0 {
+				new_chat["display_name"] = d_name
+			} else {
+				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: chat_id, is_group: is_group)
+			}
+
+			new_chat["relative_time"] = Const.getRelativeTime(ts: Double(chat["m.date"] as? String ?? "0") ?? 0.0)
+			new_chat["is_group"] = is_group
+			new_chat["chat_identifier"] = chat_id
+			new_chat["time_marker"] = Int(chat["m.date"] as? String ?? "0")
+
+			new_chat["members"] = getGroupRecipientsWithDb(contact_db: contact_db, db: db, ci: chat_id)
+				.map { ["chat_identifier": $0.0, "display_name": $0.1 ]}
+
+			ret.append(new_chat)
+		}
+
+		return ret
 	}
 
 	final func getDisplayName(chat_id: String, is_group: Bool? = nil) -> String {
@@ -203,7 +303,6 @@ final class ChatDelegate {
 
 	final func getDisplayNameWithDb(sms_db: OpaquePointer?, contact_db: OpaquePointer?, chat_id: String, is_group: Bool? = nil) -> String {
 		/// Gets the first + last name of a contact with the phone number or email of `chat_id`
-
 		Const.log("Getting display name for \(chat_id) with db")
 
 		/// Support for group chats
@@ -214,7 +313,7 @@ final class ChatDelegate {
 				if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
 					let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
 
-					return recipients.joined(separator: ", ")
+					return recipients.map { $0.1 }.joined(separator: ", ")
 				} else {
 					return check_name[0]["display_name"]!
 				}
@@ -286,19 +385,22 @@ final class ChatDelegate {
 		return full_name
 	}
 
-	final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [String] {
+	final func getGroupRecipientsWithDb(contact_db: OpaquePointer?, db: OpaquePointer?, ci: String) -> [(String, String)] {
+		// returns (chat_identifier, display_name)
 
 		Const.log("Getting group chat recipients for \(ci)")
 
 		let recipients = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "WHERE ROWID in (SELECT handle_id from chat_handle_join WHERE chat_id in (SELECT ROWID from chat where chat_identifier is ?))", args: [ci])
 
-		var ret_val = [String]()
+		var ret_val = [(String, String)]()
 
 		for i in recipients {
 
-			/// get name for person
-			let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: i["id"] ?? "", is_group: false)
-			ret_val.append((ds == "" ? i["id"] : ds) ?? "")
+			if let id = i["id"] {
+				/// get name for person
+				let ds = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: id, is_group: false)
+				ret_val.append((id, ds.count == 0 ? id : ds))
+			}
 		}
 
 		Const.log("Finished retrieving recipients for \(ci)")
@@ -332,7 +434,7 @@ final class ChatDelegate {
 
 		var messages: [[String:Any]] = selectFromSql(
 			db: db,
-			columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "h.id"],
+			columns: ["m.ROWID", "m.guid", "m.text", "m.subject", "m.is_from_me", "m.date", "m.date_read", "m.service", "m.cache_has_attachments", "m.balloon_bundle_id", "m.payload_data", "m.associated_message_guid", "m.associated_message_type", "m.item_type", "m.group_action_type", "m.other_handle", "h.id"],
 			table: "message m",
 			condition: "left join handle h on h.ROWID = m.handle_id where m.ROWID in (select message_id from chat_message_join where chat_id in (select ROWID from chat where chat_identifier is \(fixed_num)\(from_string))) order by m.date desc",
 			args: num.split(separator: ",").map({String($0)}),
@@ -358,7 +460,6 @@ final class ChatDelegate {
 		Const.log("Getting \(String(num_to_load)) chats")
 
 		var pinned_chats: [String]? = nil
-		var return_array = [[String:Any]]()
 		let dp_group = DispatchGroup()
 
 		if offset == 0 {
@@ -381,7 +482,7 @@ final class ChatDelegate {
 		/// Create connections
 		var db = createConnection()
 		var contacts_db = createConnection(connection_string: Const.contacts_address)
-		if db == nil || contacts_db == nil { return return_array }
+		if db == nil || contacts_db == nil { return [[String:Any]]() }
 
 		var addresses = [[String:String]]()
 		var chat_identifiers = [String:[String]]()
@@ -431,78 +532,40 @@ final class ChatDelegate {
 			}
 		}
 
+		var ret = parseChats(chats, db: db, contact_db: contacts_db)
+
 		dp_group.wait()
 
-		for i in chats {
-			Const.log("Beginning to iterate through chats for \(i["c.chat_identifier"] as! String)")
+		for idx in 0..<ret.count {
+			guard let chat_id = ret[idx]["chat_identifier"] as? String else {
+				continue
+			}
 
-			var new_chat = [String:Any]()
+			if let pins = pinned_chats {
+				ret[idx]["pinned"] = pins.contains(chat_id)
+				pinned_chats!.removeAll(where: { $0 == chat_id })
+			} else {
+				ret[idx]["pinned"] = false
+			}
 
 			if settings.combine_contacts {
-				if checked.contains(i["c.chat_identifier"] as! String) { continue }
+				if checked.contains(chat_id) { continue }
 
-				let these_addresses: [String] = chat_identifiers[i["c.chat_identifier"] as! String] ?? [String]()
-				new_chat["addresses"] = these_addresses.joined(separator: ",")
+				let these_addresses: [String] = chat_identifiers[chat_id] ?? [String]()
+				ret[idx]["addresses"] = these_addresses.joined(separator: ",")
 				for j in these_addresses {
 					checked.append(j)
 				}
 			} else {
-				new_chat["addresses"] = i["c.chat_identifier"] as? String
+				ret[idx]["addresses"] = chat_id
 			}
-
-			/// Check for if it has unread. It has to fit all these specific things.
-			new_chat["has_unread"] = i["m.is_from_me"] as! String == "0" && i["m.date_read"] as! String == "0" && i["m.text"] != nil && i["m.is_read"] as! String == "0" && i["m.item_type"] as! String == "0"
-
-			/// Content of the most recent text. If a text has attachments, `i["m.text"]` will look like `\u{ef}`. this checks for that.
-			new_chat["latest_text"] = String((i["m.text"] as! String).replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil))
-
-			if (new_chat["latest_text"] as! String).count == 0 && i["m.cache_has_attachments"] as! String != "0" {
-				let att = getAttachmentFromMessage(mid: i["m.ROWID"] as! String)
-
-				/// Make it say like `Attachment: Image` if there's no text
-				if att.count != 0 && att[0].count == 2 && att[0]["mime_type"]?.count ?? 0 > 0 {
-					new_chat["latest_text"] = "Attachment: \(att[0]["mime_type"]?.split(separator: "/").first ?? "1 File")"
-				} else {
-					new_chat["latest_text"] = "Attachment: 1 File"
-				}
-			} else if i["m.balloon_bundle_id"] as! String == "com.apple.DigitalTouchBalloonProvder" {
-				new_chat["latest_text"] = "Digital Touch Message"
-			} else if i["m.balloon_bundle_id"] as! String == "com.apple.Handwriting.HandwritingProvider" {
-				new_chat["latest_text"] = "Handwritten Message"
-			}
-
-			/// Get name for chat
-			if (i["c.display_name"] as! String).count == 0 {
-				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: i["c.chat_identifier"] as! String, is_group: (i["c.room_name"] as! String).count > 0)
-			} else {
-				new_chat["display_name"] = i["c.display_name"]
-			}
-
-			if let pins = pinned_chats {
-				new_chat["pinned"] = pins.contains(i["c.chat_identifier"] as! String)
-				pinned_chats!.removeAll(where: { $0 == i["c.chat_identifier"] as! String })
-			} else {
-				new_chat["pinned"] = false
-			}
-
-			new_chat["relative_time"] = Const.getRelativeTime(ts: Double(i["m.date"] as! String) ?? 0.0)
-
-			new_chat["is_group"] = (i["c.room_name"] as! String) != ""
-			new_chat["chat_identifier"] = i["c.chat_identifier"]
-			new_chat["time_marker"] = Int(i["m.date"] as! String)
-
-			return_array.append(new_chat)
 		}
 
 		/// Just in case your pinned chats aren't in your most recent texts
 		if offset == 0, let pins = pinned_chats {
 			for chat in pins {
-				var new_chat = [String:Any]()
-				new_chat["pinned"] = true
-				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contacts_db, chat_id: chat)
-				new_chat["chat_identifier"] = chat
-
-				return_array.append(new_chat)
+				let details = getChatDetails(chat)
+				ret.append(details)
 			}
 		}
 
@@ -512,7 +575,51 @@ final class ChatDelegate {
 
 		Const.log("destroyed db")
 
-		return return_array
+		return ret
+	}
+
+	final func getChatDetails(_ chat_id: String) -> [String:Any] {
+		var db = createConnection()
+		var contacts_db = createConnection(connection_string: Const.contacts_address)
+		if db == nil || contacts_db == nil { return [String:Any]() }
+
+		var pinned_chats = [String]()
+		let dp_group = DispatchGroup()
+
+		if Const.getOSVersion() >= 14.0 {
+			DispatchQueue.global().async {
+				dp_group.enter()
+				let center = MRYIPCCenter(named: "com.ianwelker.smserver")
+				pinned_chats = center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String] ?? []
+				dp_group.leave()
+			}
+		}
+
+		let chats: [[String:Any]] = selectFromSql(
+			db: db,
+			columns: chat_columns,
+			table: "chat_message_join j",
+			condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where c.chat_identifier is ?",
+			args: [chat_id],
+			num_items: 1
+		)
+
+		let arr = parseChats(chats, db: db, contact_db: contacts_db)
+
+		guard chats.count > 0, let chat_id = chats[0]["c.chat_identifier"] as? String, arr.count > 0 else {
+			return [String:Any]()
+		}
+
+		var ret = arr[0]
+
+		dp_group.wait()
+
+		ret["pinned"] = pinned_chats.contains(chat_id)
+
+		closeDatabase(&db)
+		closeDatabase(&contacts_db)
+
+		return ret
 	}
 
 	final func returnImageData(chat_id: String) -> Data {
@@ -1138,5 +1245,29 @@ final class ChatDelegate {
 		closeDatabase(&db)
 
 		return ret
+	}
+
+	final func chatIdOfHandleROWID(_ rowid: Int, db: OpaquePointer?) -> String {
+		let chat_id_arr = selectFromSql(db: db, columns: ["id"], table: "handle", condition: "where ROWID is ?", args: [rowid])
+		guard chat_id_arr.count > 0, let chat_id = chat_id_arr[0]["id"] else {
+			return ""
+		}
+		return chat_id
+	}
+
+	/// don't know yet how to detect who added the new person to the conversation, so we're just not doing anything with that
+	final func getJoinedChatDescription(_ joined_rowid: String, _ sender_rowid: String) -> String {
+		Const.log("Getting joinedChatDescription with ROWID \(joined_rowid)")
+
+		var db = createConnection()
+		if db == nil { return "" }
+
+		let chat_id = chatIdOfHandleROWID(Int(joined_rowid) ?? 0, db: db)
+		let display_name = getDisplayName(chat_id: chat_id, is_group: false)
+
+		Const.log("Closing database")
+		closeDatabase(&db)
+
+		return "\(display_name) was added to the conversation"
 	}
 }

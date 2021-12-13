@@ -3,18 +3,21 @@ PODS:
   - Criollo (1.0.3):
     - CocoaAsyncSocket (~> 7.6.5)
   - HTTPParserC (2.9.2)
+  - Starscream (4.0.4)
   - Telegraph (0.28):
     - CocoaAsyncSocket (~> 7.5)
     - HTTPParserC (~> 2.7)
 
 DEPENDENCIES:
   - Criollo (from `./Criollo.podspec`)
+  - Starscream (~> 4.0.0)
   - Telegraph
 
 SPEC REPOS:
   trunk:
     - CocoaAsyncSocket
     - HTTPParserC
+    - Starscream
     - Telegraph
 
 EXTERNAL SOURCES:
@@ -31,8 +34,9 @@ SPEC CHECKSUMS:
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   Criollo: 1ab3c1d84407426e875330e6c47f62367de497ee
   HTTPParserC: 1ed389f80bb57a5b967d87d5358b8a94418394ee
+  Starscream: 5178aed56b316f13fa3bc55694e583d35dd414d9
   Telegraph: 6820cf262064f2c15a393fb56401834141d0310e
 
-PODFILE CHECKSUM: 88f1a7d48b919080e93d3b7bb140b19786865688
+PODFILE CHECKSUM: c11020ddcab5cf0f5680e5d2ac472df0f99c4842
 
 COCOAPODS: 1.10.1

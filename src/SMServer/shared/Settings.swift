@@ -8,9 +8,9 @@ class Settings {
 	/// This passphrase is found in a hidden file that doesn't exist in the git repo. This is so that nobody can extract the private key from the pfx file
 	var cert_pass: String = PKCS12Identity.pass
 
-	var default_num_chats: Int = UserDefaults.standard.object(forKey: "num_chats") as? Int ?? 40
-	var default_num_messages: Int = UserDefaults.standard.object(forKey: "num_messages") as? Int ?? 100
-	var default_num_photos: Int = UserDefaults.standard.object(forKey: "num_photos") as? Int ?? 40
+	var default_num_chats: UInt = UserDefaults.standard.object(forKey: "num_chats") as? UInt ?? 40
+	var default_num_messages: UInt = UserDefaults.standard.object(forKey: "num_messages") as? UInt ?? 100
+	var default_num_photos: UInt = UserDefaults.standard.object(forKey: "num_photos") as? UInt ?? 40
 
 	var debug: Bool = UserDefaults.standard.object(forKey: "debug") as? Bool ?? false
 	var require_authentication: Bool = UserDefaults.standard.object(forKey: "require_auth") as? Bool ?? true
@@ -22,6 +22,7 @@ class Settings {
 	var authenticated_addresses: [String] = UserDefaults.standard.object(forKey: "authenticated_addresses") as? [String] ?? [String]()
 	var displayed_messages: [String] = [String]()
 	var read_messages: [String] = [String]()
+	var remote_id: String? = nil
 
 	var mark_when_read: Bool = UserDefaults.standard.object(forKey: "mark_when_read") as? Bool ?? true
 	var override_no_wifi: Bool = UserDefaults.standard.object(forKey: "override_no_wifi") as? Bool ?? false
@@ -30,7 +31,12 @@ class Settings {
 	var combine_contacts: Bool = UserDefaults.standard.object(forKey: "combine_contacts") as? Bool ?? false
 	var start_on_load: Bool = UserDefaults.standard.object(forKey: "start_on_load") as? Bool ?? false
 	var reload_on_network_change: Bool = UserDefaults.standard.object(forKey: "reload_on_network_change") as? Bool ?? true
+
 	var run_web_interface: Bool = UserDefaults.standard.object(forKey: "run_web_interface") as? Bool ?? true
+	var run_remote: Bool = UserDefaults.standard.object(forKey: "run_remote") as? Bool ?? false
+	var remote_addr: String = UserDefaults.standard.object(forKey: "remote_addr") as? String ?? "192.168.1.209:8741"
+	var remote_secure: Bool = UserDefaults.standard.object(forKey: "remote_secure") as? Bool ?? true
+	var remote_bypass_cert: Bool = UserDefaults.standard.object(forKey: "remote_bypass_cert") as? Bool ?? true
 
 	var show_help: Bool = false
 	var cli_background: Bool = false
@@ -123,15 +129,17 @@ class Settings {
 						let num = Int(val)
 						if let num = num {
 							if opt == Const.cmd_def_chats {
-								settings.default_num_chats = num
+								settings.default_num_chats = UInt(num)
 							} else if opt == Const.cmd_def_messages {
-								settings.default_num_messages = num
+								settings.default_num_messages = UInt(num)
 							} else {
-								settings.default_num_photos = num
+								settings.default_num_photos = UInt(num)
 							}
 						} else {
 							print("Could not convert value \(val) to int. Socket port will remain unaffected.")
 						}
+					case Const.cmd_rem_addr, Const.cmd_rem_addr_short:
+						settings.remote_addr = val
 					default:
 						print("Wow. You managed to input an option that both is and isn't in the options that require a value. Very impressive.")
 				}
@@ -168,6 +176,12 @@ class Settings {
 								settings.cli_background = true
 							case Const.cmd_show_help_short.suffix(1):
 								settings.show_help = true
+							case Const.cmd_rem_run_short.suffix(1):
+								settings.run_remote = true
+							case Const.cmd_rem_sec_short.suffix(1):
+								settings.remote_secure = true
+							case Const.cmd_rem_bypass_short.suffix(1):
+								settings.remote_bypass_cert = true
 							default:
 								print("Option -\(c) not recognized. Ignoring...")
 						}
@@ -192,6 +206,12 @@ class Settings {
 							settings.cli_background = opt != Const.cmd_no_background
 						case Const.cmd_show_help, Const.cmd_show_help_short:
 							settings.show_help = true
+						case Const.cmd_rem_run, Const.cmd_rem_run_short, Const.cmd_rem_no_run:
+							settings.run_remote = opt != Const.cmd_rem_no_run
+						case Const.cmd_rem_sec, Const.cmd_rem_sec_short, Const.cmd_rem_no_sec:
+							settings.remote_secure = opt != Const.cmd_rem_no_sec
+						case Const.cmd_rem_bypass, Const.cmd_rem_bypass_short, Const.cmd_rem_no_bypass:
+							settings.remote_bypass_cert = opt != Const.cmd_rem_no_bypass
 						default:
 							print("Option -\(opt) not recognized. Ignoring...")
 					}

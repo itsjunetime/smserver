@@ -11,26 +11,60 @@ struct ContentView: View {
 	@State var view_settings: Bool = false
 	@State var server_running: Bool = false
 	@State var show_picker: Bool = false
-	@State var show_oseven_update: Bool = false
 	@State var ip_address: String = ""
 	@State var show_failed_start: Bool = false
+	@State var failed_start_msg: String = ""
+	@State var actively_loading: Bool = false
+	@State var socket_state: SocketState = .Disconnected(false)
+
+	@State var lower_msg: String = ""
+	@State var main_msg: String = Const.getWiFiAddress() != nil || Settings.shared().override_no_wifi ? "Click the start button to run the server!" : "Please connect to wifi to operate the server."
 
 	func loadServer() {
 		/// This starts the server at port $port_num
 		Const.log("Attempting to load server and socket...")
 
-		self.server_running = server.startServers()
+		// so that the main view can refresh and show a loading indicator
+		setLoading {
+			let running = server.startServers()
 
-		Const.log(self.server_running ? "Successfully started server and socket" : "Failed to start server and socket", warning: !self.server_running)
+			Const.log(running.0 ? "Successfully started server and socket" : "Failed to start server and socket: \(running.1)", warning: !running.0)
 
-		if !self.server_running {
-			self.show_failed_start = true
+			server_running = running.0
+			if !server_running {
+				failed_start_msg = running.1
+				show_failed_start = true
+			} else {
+				main_msg = visitMsg()
+			}
+		}
+	}
+
+	func visitMsg() -> String {
+		if server_running {
+			return "Visit http\(settings.is_secure ? "s" : "")://\(ip_address):\(settings.server_port) in your browser to view your messages!"
+		}
+
+		if Const.getWiFiAddress() != nil || settings.override_no_wifi {
+			return "Click the start button to run the server!"
+		}
+
+		return "Please connect to wifi to operate the server"
+	}
+
+	func stopServers() {
+		if self.server_running {
+			setLoading {
+				self.server.stopServers()
+				self.server_running = false
+
+				main_msg = visitMsg()
+			}
 		}
 	}
 
 	func enteredBackground() {
 		/// Just waits a minute and then kills the app if you disabled backgrounding. A not graceful way of doing what the system does automatically
-		//if !background || !self.server.isListening {
 		if !settings.background || !self.server.isRunning() {
 			Const.log("sceneDidEnterBackground, starting kill timer")
 			DispatchQueue.main.asyncAfter(deadline: .now() + 60, execute: {
@@ -52,11 +86,6 @@ struct ContentView: View {
 			})
 		}
 
-		if !(UserDefaults.standard.value(forKey: "shown_oseven_update_msg") as? Bool ?? false) {
-			UserDefaults.standard.setValue(true, forKey: "shown_oseven_update_msg")
-			self.show_oseven_update = true
-		}
-
 		if settings.start_on_load && (Const.getWiFiAddress() != nil || settings.override_no_wifi)  {
 			loadServer()
 		}
@@ -67,6 +96,8 @@ struct ContentView: View {
 		})
 
 		self.ip_address = Const.getWiFiAddress() ?? "\(self.getHostname()).local"
+
+		NotificationCenter.default.addObserver(forName: Notification.Name(Const.ss_changed_notification), object: nil, queue: nil, using: socketStateChanged(notification:))
 	}
 
 	func reloadVars() {
@@ -80,7 +111,51 @@ struct ContentView: View {
 		let new_str = String.init(cString: hnp!)
 
 		free(hnp)
-		return new_str /// this may not work at all. Let's see
+		return new_str
+	}
+
+	func socketStateChanged(notification: Notification) {
+		guard let state = notification.object as? SocketState else {
+			return
+		}
+
+		socket_state = state
+
+		switch state {
+			case .Disconnected(let retry):
+				lower_msg = "Socket disconnected"
+				if retry {
+					setLoading {
+						server.starscream.setSocketState(new_state: .Reconnecting)
+						if server.starscream.registerAndConnect() {
+							server.starscream.setSocketState(new_state: .Connected)
+						} else {
+							server.starscream.setSocketState(new_state: .FailedConnect)
+						}
+					}
+				}
+			case .Connecting:
+				lower_msg = "Socket connecting..."
+				self.actively_loading = true
+			case .Connected:
+				if let id = settings.remote_id {
+					lower_msg = "Your remote id is \(id)"
+				} else {
+					lower_msg = "Unable to get remote id; restart to try again"
+				}
+			case .Reconnecting:
+				lower_msg = "Socket reconnecting..."
+			case .FailedConnect:
+				lower_msg = "Socket failed to connect"
+		}
+	}
+
+	func setLoading(_ block: @escaping () -> Void) {
+		self.actively_loading = true
+		DispatchQueue.global().async {
+			block()
+			self.actively_loading = false
+		}
 	}
 
 	var bottom_bar: some View { /// just to break up the code
@@ -88,9 +163,7 @@ struct ContentView: View {
 			HStack {
 				HStack {
 					HStack {
-						Button(action: {
-							self.reloadVars()
-						}) {
+						Button(action: self.reloadVars) {
 							Image(systemName: "goforward")
 								.font(.system(size: self.font_size))
 								.foregroundColor(Color.purple)
@@ -98,10 +171,7 @@ struct ContentView: View {
 
 						Spacer().frame(width: 24)
 
-						Button(action: {
-							if self.server_running { self.server.stopServers() }
-							self.server_running = false
-						}) {
+						Button(action: stopServers) {
 							Image(systemName: "stop.fill")
 								.font(.system(size: self.font_size))
 								.foregroundColor(self.server_running ? Color.red : Color.gray)
@@ -109,15 +179,19 @@ struct ContentView: View {
 
 						Spacer().frame(width: 30)
 
-						Button(action: {
-							if !self.server_running && (Const.getWiFiAddress() != nil || self.settings.override_no_wifi) {
-								self.loadServer()
+						if self.actively_loading {
+							ActivityIndicator(isAnimating: $actively_loading, style: .medium)
+						} else {
+							Button(action: {
+								if !self.server_running && (Const.getWiFiAddress() != nil || self.settings.override_no_wifi) {
+									self.loadServer()
+								}
+								UserDefaults.standard.setValue(true, forKey: "has_run")
+							}) {
+								Image(systemName: "play.fill")
+									.font(.system(size: self.font_size))
+									.foregroundColor(self.server_running ? Color.gray : Color.green)
 							}
-							UserDefaults.standard.setValue(true, forKey: "has_run")
-						}) {
-							Image(systemName: "play.fill")
-								.font(.system(size: self.font_size))
-								.foregroundColor(self.server_running ? Color.gray : Color.green)
 						}
 
 					}.padding(10)
@@ -125,9 +199,7 @@ struct ContentView: View {
 					Spacer()
 
 					HStack {
-						Button(action: {
-							self.view_settings.toggle()
-						}) {
+						Button(action: { self.view_settings.toggle() }) {
 							Image(systemName: "gear")
 								.font(.system(size: self.font_size))
 						}.sheet(isPresented: $view_settings) {
@@ -177,15 +249,13 @@ struct ContentView: View {
 			}.padding()
 			.padding(.top, 14)
 
-			if Const.getWiFiAddress() != nil || settings.override_no_wifi {
-				Text(verbatim: "Visit http\(settings.is_secure ? "s" : "")://\(ip_address):\(settings.server_port) in your browser to view your messages!")
-					.font(Font.custom("smallTitle", size: 22))
-					.padding()
-			} else {
-				Text("Please connect to wifi to operate the server.")
-					.font(Font.custom("smallTitle", size: 22))
-					.padding()
-			}
+			Text(verbatim: self.main_msg)
+				.font(Font.custom("smallTitle", size: 22))
+				.padding()
+
+			Text(lower_msg)
+				.font(Font.custom("smallerTitle", size: 20))
+				.padding()
 
 			Spacer().frame(height: 20)
 
@@ -299,11 +369,8 @@ struct ContentView: View {
 		}
 		.background(Color(UIColor.secondarySystemBackground))
 		.edgesIgnoringSafeArea(.all)
-		.alert(isPresented: $show_oseven_update, content: {
-			Alert(title: Text("0.7.0 Update"), message: Text("SMServer was recently updated to version 0.7.0. In this update, many parts of the API were rewritten to be easier to use and more robust.\n\nIf you are using the API of this app in any way outside of the built-in web interface, I would recommend that you check the API documentation (link in Settings) and verify that what you've made is still compatible"), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_oseven_update = false }))
-		})
 		.alert(isPresented: $show_failed_start, content: {
-			Alert(title: Text("Failed to start"), message: Text("SMServer failed to start the web service. You may already have SMServer running in the background as a daemon. Please close the app and try again."), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_failed_start = false }))
+			Alert(title: Text("Failed to start"), message: Text(self.failed_start_msg), dismissButton: Alert.Button.default(Text("OK"), action: { self.show_failed_start = false }))
 		})
 	}
 }
@@ -328,5 +395,18 @@ class DocPicker: UIDocumentPickerViewController, UIDocumentPickerDelegate {
 
 	func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
 		onPick(urls.first ?? URL(fileURLWithPath: ""))
+	}
+}
+
+struct ActivityIndicator: UIViewRepresentable {
+	@Binding var isAnimating: Bool
+	let style: UIActivityIndicatorView.Style
+
+	func makeUIView(context: UIViewRepresentableContext<ActivityIndicator>) -> UIActivityIndicatorView {
+		return UIActivityIndicatorView(style: style)
+	}
+
+	func updateUIView(_ uiView: UIActivityIndicatorView, context: UIViewRepresentableContext<ActivityIndicator>) {
+		isAnimating ? uiView.startAnimating() : uiView.stopAnimating()
 	}
 }

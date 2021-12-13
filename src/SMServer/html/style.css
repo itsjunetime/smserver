@@ -81,7 +81,7 @@ p, h2, a, button {
 	font-size: calc(var(--messages-title-height) * 0.5);
 	margin: auto 10px;
 }
-.title-content {
+.titleContent {
 	display: grid;
 	margin: auto;
 	width: max-content;
@@ -101,7 +101,7 @@ p, h2, a, button {
 }
 @supports (backdrop-filter: blur(50px)) or (-webkit-backdrop-filter: blur(50px)) {
 	.messages .title, .textbox,
-	.compose, #cameraroll {
+	.compose, #cameraRoll {
 		backdrop-filter: blur(50px);
 		-webkit-backdrop-filter: blur(50px);
 		background-color: transparent !important;
@@ -123,7 +123,7 @@ p, h2, a, button {
 	grid-row: 1;
 	border-radius: 100%;
 }
-#text-content {
+#textContent {
 	grid-row: 1/3;
 	grid-column: 1;
 	overflow-x: hidden;
@@ -131,7 +131,7 @@ p, h2, a, button {
 	display: flex;
 	flex-direction: column;
 }
-#text-content::after {
+#textContent::after {
 	content: '';
 	padding: 5px;
 }
@@ -152,7 +152,7 @@ p, h2, a, button {
 	grid-template-columns: 1fr;
 	grid-template-rows: 60px 36px 1fr;
 }
-.chats-title {
+.chatsTitle {
 	grid-column: 1;
 	grid-row: 1;
 	padding: 10px 0px 0px 10px;
@@ -178,11 +178,11 @@ i#chargingSymbol {
 #wifi {
 	color: dodgerblue;
 }
-.chats-title h1 {
+.chatsTitle h1 {
 	margin: auto 0;
 	font-weight: 300;
 }
-.chats-search {
+.chatsSearch {
 	padding: 5px 10px;
 	border-top: 1px solid var(--chats-border);
 	border-bottom: 1px solid var(--chats-border);
@@ -190,15 +190,15 @@ i#chargingSymbol {
 	grid-template-columns: 1fr max-content max-content;
 	grid-gap: 10px;
 }
-.chats-list {
+.chatsList {
 	grid-row: 3;
 	grid-column: 1;
 	overflow: auto;
 	overflow-x: hidden;
 	max-width: var(--chats-width);
 }
-.chats button.unpinned,
-#morechatsbutton {
+.chats button.listed,
+#moreChatsButton {
 	border: none;
 	border-top: 1px solid var(--chats-border);
 	background-color: var(--main-background);
@@ -210,7 +210,7 @@ i#chargingSymbol {
 	position: relative;
 	padding: 6px;
 }
-.chats button.unpinned img {
+.chats button.listed img {
 	max-height: calc(var(--chats-button-height) * 0.74);
 	max-width: calc(var(--chats-button-height) * 0.74);
 	border-radius: 100%;
@@ -232,10 +232,10 @@ i#chargingSymbol {
 	max-width: calc(var(--chats-width) * 0.25);
 	position: relative;
 }
-.chats button.pinned .chat-top {
+.chats button.pinned .chatTop {
 	display: grid;
 }
-.chats button.pinned img, .pinned .chat-image {
+.chats button.pinned img, .pinned .chatImage {
 	height: calc(var(--chats-width) * 0.20);
 	width: calc(var(--chats-width) * 0.20);
 	max-height: calc(var(--chats-button-height) * 1.4);
@@ -245,11 +245,11 @@ i#chargingSymbol {
 	grid-column: 1;
 	margin: 0 auto 10px auto;
 }
-.chats button.pinned .chat-top > span {
+.chats button.pinned .chatTop > span {
 	grid-row: 1/3;
 	grid-column: 1;
 }
-.chats button.pinned .chat-text {
+.chats button.pinned .chatText {
 	background-color: #7776;
 	color: white;
 	padding: 4px;
@@ -262,27 +262,33 @@ i#chargingSymbol {
 	grid-column: 1;
 	height: max-content;
 }
-.chats button.pinned.unread .chat-name:before,
-.unread .chat-nonpic:before {
+.chats button.pinned.unread .chatName:before,
+.unread .chatNonpic:before {
 	content: '';
 	background-color: #369cff;
 	position: absolute;
 	border-radius: 100%;
 }
-.chats button.pinned.unread .chat-name:before {
+.chats button.pinned.unread .chatName:before {
 	width: calc(7px + 0.3vw);
 	height: calc(7px + 0.3vw);
 	left: calc(1vw - 19px);
 	bottom: calc(14px - 3.5%);
 }
-.pinned .chat-name {
+.pinned .chatName {
 	font-size: calc(8px + 0.5vw);
 	margin: auto;
 	padding: 0;
 	max-width: 100%;
 	width: max-content;
 }
-.chat-image {
+.profileImage > .chatImage {
+	font-size: 14px;
+	max-width: 32px;
+	max-height: 32px;
+	z-index: 2;
+}
+.chatImage {
 	font-size: 24px;
 	background: linear-gradient(45deg, grey, #cacacab5);
 	border-radius: 100%;
@@ -290,27 +296,27 @@ i#chargingSymbol {
 	height: calc(var(--chats-button-height) * 0.74);
 	display: grid;
 }
-.chat-image-letters {
+.chatImageLetters {
 	margin: auto;
 	color: white;
 }
-.chat-nonpic {
+.chatNonpic {
 	padding: 8px 0 0 14px;
 	width: calc(var(--chats-width) - (var(--chats-button-height) * 1.1)); /* This doesn't make any sense but it seems to work */
 	height: 100%;
 }
-.chat-toprow {
+.chatToprow {
 	display: flex;
 	margin-bottom: 4px;
 }
-.chat-name {
+.chatName {
 	font-size: 16px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	margin-right: auto;
 	white-space: nowrap;
 }
-.chat-text {
+.chatText {
 	color: #ddd;
 	font-size: 12px;
 	overflow: hidden;
@@ -319,35 +325,35 @@ i#chargingSymbol {
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
 }
-.chat-date {
+.chatDate {
 	padding-right: 6px;
 	min-width: max-content;
 	margin: auto 0 auto 6px;
 }
-#morechatsbutton {
+#moreChatsButton {
 	font-size: 20px;
 	display: block;
 }
-#morechatsbutton, #morechatsbutton * {
+#moreChatsButton, #moreChatsButton * {
 	color: dodgerblue;
 }
-.unread .chat-nonpic:before {
+.unread .chatNonpic:before {
 	height: 15px;
 	width: 15px;
 	top: 9px;
 	left: 44px;
 	box-shadow: 0 0 5px #0007;
 }
-.text-content p img {
+.textContent p img {
 	max-width: 100%;
 	border-radius: 10px;
 	padding-bottom: 5px;
 }
-.text-content p.noPadding img {
+.textContent p.noPadding img {
 	padding: 0;
 }
-.text.noPadding.fullAttachment, .text-area.noPadding.fullAttachment {
-	background-color: transparent;
+.text.noPadding.fullAttachment {
+	background-color: transparent !important;
 }
 .fullAttachment:before, .fullAttachment:after {
 	display: none;
@@ -369,8 +375,25 @@ i#chargingSymbol {
 .selected div {
 	color: rgb(115, 170, 226);
 }
+.message {
+	display: grid;
+	grid-template-rows: 1fr;
+	grid-template-columns: 1fr;
+	grid-template-areas: 'messages';
+}
+.message.withSender {
+	grid-template-rows: 26px 1fr;
+	grid-template-areas: 'nothing sender' 'image messages' !important;
+}
+.message.withReceipt {
+	grid-template-rows: 1fr 20px;
+	grid-template-areas: 'messages' 'receipt' !important;
+}
+.message.withImage {
+	grid-template-columns: 40px 1fr;
+	grid-template-areas: 'image messages';
+}
 .text {
-	font-family: var(--main-font);
 	max-width: 40vw;
 	margin: 2px 0;
 	font-size: 18px;
@@ -378,7 +401,7 @@ i#chargingSymbol {
 	line-height: 21px; /* Specific but that's what it is */
 	text-size-adjust: none !important;
 }
-.text span {
+.text div {
 	word-break: break-word;
 	white-space: pre-wrap;
 }
@@ -391,52 +414,52 @@ i#chargingSymbol {
 .text .subject {
 	font-weight: 600;
 }
-.is_from_them a, .is_from_them a p, .is_from_them a span {
+.fromThem a, .fromThem a p, .fromThem a span {
 	color: dodgerblue;
 }
-.is_from_me a, .is_from_me a p, .is_from_me a span {
+.fromMe a, .fromMe a p, .fromMe a span {
 	color: lightblue;
 }
 .sender {
 	font-size: 14px;
 	margin: 10px 0 0 5px;;
 	color: #bbb;
+	grid-area: sender;
 }
-.is_from_me {
+.text {
+	border-radius: 20px;
+}
+.fromMe .text {
 	position: relative;
-	border-radius: 20px 20px 15px 20px;
-	align-self: flex-end;
 }
-.is_from_me:before {
+.fromMe .text:before {
 	right: -11px;
 	border-bottom-left-radius: 16px 14px;
 	transform: translate(0, -2px);
 	border-bottom-right-radius: 12px;
 }
-.is_from_me:after {
+.fromMe .text:after {
 	right: -42px;
 	border-bottom-left-radius: 8px;
 }
-.iMessage.is_from_me:before {
+.iMessage.fromMe .text:before {
 	border-right: 19px solid var(--my-imessage-background);
 }
-.SMS.is_from_me:before {
+.SMS.fromMe .text:before {
 	border-right: 19px solid var(--my-sms-background);
 }
-.is_from_them {
-	border-radius: 20px 20px 20px 15px;
-	align-self: flex-start;
+.fromThem .text {
 	background-color: var(--their-text-background);
 	position: relative;
 }
-.is_from_them:before {
+.fromThem .text:before {
 	left: -11px;
 	border-left: 20px solid var(--their-text-background);
 	border-bottom-right-radius: 16px 14px;
 	transform: translate(0, -2px);
 	border-bottom-left-radius: 8px;
 }
-.is_from_them:after {
+.fromThem .text:after {
 	left: 18px;
 	border-bottom-right-radius: 8px;
 }
@@ -445,19 +468,19 @@ i#chargingSymbol {
 	background: var(--main-background);
 	transform: translate(-30px, -2px);
 }
-[class*="from_them"] + [class*="from_me"],
-[class*="from_me"] + [class*="from_them"] {
+[class*="fromThem"] + [class*="fromMe"],
+[class*="fromMe"] + [class*="fromThem"] {
 	margin-top: 10px;
 }
-.is_from_me.iMessage {
+.fromMe.iMessage .text {
 	background-color: var(--my-imessage-background);
 }
-.is_from_me.SMS {
+.fromMe.SMS .text {
 	background-color: var(--my-sms-background);
 }
-.text video, .text-area video,
-.text img, .text-area img,
-.text audio, .text-area audio {
+.text video, .textArea video,
+.text img, .textArea img,
+.text audio, .textArea audio {
 	max-width: 100%;
 	border-radius: 10px;
 }
@@ -465,59 +488,58 @@ i#chargingSymbol {
 .allEmoji:before, .allEmoji:after {
 	display: none;
 }
-.notLast {
-	border-radius: 20px;
-}
 .text.allEmoji {
 	background-color: transparent;
 	font-size: 50px;
 	padding: 0;
 }
-.tapback_dialog {
+.tapbackDialog {
 	padding: 9px 8px;
-	border-radius: 20px;
 }
-.tapback_dialog:after {
+.tapbackDialog:after {
 	content: none;
 }
-.tapback_dialog:before {
+.tapbackDialog:before {
 	width: 12px;
 	height: 12px;
 	top: 34px;
 	border-radius: 100%;
 	border: 0 solid black !important;
 }
-.is_from_them.tapback_dialog:before {
+.fromThem.tapbackDialog:before {
 	left: -4px;
 	background-color: var(--their-text-background);
 }
-.is_from_me.tapback_dialog:before {
+.fromMe.tapbackDialog:before {
 	right: -4px;
 	background-color: var(--my-imessage-background);
 }
-.SMS.is_from_me.tapback_dialog:before {
+.SMS .fromMe.tapbackDialog:before {
 	background-color: var(--my-sms-background);
 }
-.tapback_choice {
+.tapbackChoice {
 	margin: 0 8px;
 	border-radius: 100%;
 }
 i.fa-thumbs-down {
 	transform: scale(-1, 1);
 }
-.tapback_chosen * {
+.tapbackChosen * {
 	color: dodgerblue;
 }
-.trash_text * {
+.trashText * {
 	color: crimson;
 }
 .spacer {
 	min-height: 10px;
 }
-.time-display {
+.timeDisplay, .itemDescription {
 	text-align: center;
 }
-#moretextsbutton {
+.itemDescription p {
+	color: #c5c5c5;
+}
+#moreTextsButton {
 	border: 1px solid black;
 	border-radius: 8px;
 	background-color: cornflowerblue;
@@ -529,11 +551,11 @@ i.fa-thumbs-down {
 	font-size: 20px;
 	min-height: max-content;
 }
-#moretextsbutton:hover {
+#moreTextsButton:hover {
 	box-shadow: none;
 	transition: linear 0.2s;
 }
-#sendbutton {
+#sendButton {
 	grid-column: 4;
 	grid-row: 1;
 	width: var(--send-button-size);
@@ -548,7 +570,7 @@ i.fa-thumbs-down {
 	margin-top: auto;
 	margin-bottom: auto;
 }
-#sendbox, .subjectSubject {
+#sendBox, .subjectSubject {
 	outline: none;
 	resize: none;
 	border: none;
@@ -559,13 +581,13 @@ i.fa-thumbs-down {
 	margin: 0;
 	max-height: 30vh !important;
 }
-#sendbox.input {
+#sendBox.input {
 	grid-column: 3/5;
 	grid-row: 1;
 	border-radius: calc(var(--send-box-size) / 2);
 	margin: auto 0;
 }
-#sendbox.subjectInput {
+#sendBox.subjectInput {
 	border-radius: 0 0 calc(var(--send-box-size) / 2) calc(var(--send-box-size) / 2);
 }
 .subjectSubject {
@@ -578,13 +600,13 @@ i.fa-thumbs-down {
 	grid-column: 3/5;
 	grid-row: 1;
 }
-#attachmentbutton {
+#attachmentButton {
 	display: none;
 }
-#unhiddenbutton {
+#unhiddenButton {
 	grid-column: 2;
 }
-.popup, #camerarollpopup {
+.popup, #cameraRollPopup {
 	display: none;
 	position: fixed;
 	width: 100vw;
@@ -613,21 +635,21 @@ i.fa-thumbs-down {
 	grid-template-columns: 14% 1fr 14%;
 	grid-row: 1;
 }
-#composeHideButton, #camerarollHideButton {
+#composeHideButton, #cameraRollHideButton {
 	grid-column: 1;
 	background-color: rgba(50, 50, 50, 1);
 }
-#composeTitleBoxTitle, #camerarollTitleBoxTitle {
+#composeTitleBoxTitle, #cameraRollTitleBoxTitle {
 	grid-column: 2;
 	text-align: center;
 	margin: auto 0;
 }
-#composeSendButton, #camerarollSelectButton {
+#composeSendButton, #cameraRollSelectButton {
 	grid-column: 3;
 	background-color: rgba(80, 110, 220, 1)
 }
 #composeHideButton, #composeSendButton,
-#camerarollHideButton, #camerarollSelectButton {
+#cameraRollHideButton, #cameraRollSelectButton {
 	border: none;
 	border-radius: 5px;
 	transition: all linear 0.1s;
@@ -635,7 +657,7 @@ i.fa-thumbs-down {
 	margin: 0px 20px;
 }
 #composeHideButton:hover, #composeSendButton:hover,
-#camerarollHideButton:hover, #camerarollSelectButton:hover {
+#cameraRollHideButton:hover, #cameraRollSelectButton:hover {
 	box-shadow: none;
 	transition: all linear 0.1s;
 }
@@ -685,12 +707,12 @@ i.fa-thumbs-down {
 	background-color: rgba(20, 20, 20, 0.7);
 	font-size: 16px
 }
-#composeshowbutton, #notificationbutton {
+#composeShowButton, #notificationButton {
 	background-color: var(--light-button-background);
 	border: none;
 	border-radius: 5px;
 }
-#composeshowbutton {
+#composeShowButton {
 	padding: 0px 8px;
 }
 #searchBox {
@@ -700,14 +722,14 @@ i.fa-thumbs-down {
 	border-radius: 3px;
 	padding-left: 6px;
 }
-#notificationbutton {
+#notificationButton {
 	width: max-content;
 	padding: 0px 8px;
 }
-#camerarollbutton {
+#cameraRollButton {
 	grid-column: 1;
 }
-#camerarollbutton, #unhiddenbutton {
+#cameraRollButton, #unhiddenButton {
 	grid-row: 1;
 	background-color: var(--selected-background);
 	border-radius: 5px;
@@ -717,7 +739,7 @@ i.fa-thumbs-down {
 	border: none;
 	margin: auto 0 !important;
 }
-#cameraroll {
+#cameraRoll {
 	background-color: var(--main-background);
 	max-height: 80vh;
 	max-width: var(--camera-roll-width);
@@ -728,7 +750,7 @@ i.fa-thumbs-down {
 	grid-template-rows: 40px 1fr;
 	grid-template-columns: 1fr;
 }
-#camerarollTitle {
+#cameraRollTitle {
 	background-color: rgba(100, 100, 100, 0.2);
 	border-radius: 8px 8px 0px 0px;
 	padding: 5px;
@@ -736,7 +758,7 @@ i.fa-thumbs-down {
 	grid-template-columns: 14% 1fr 14%;
 	grid-row: 1;
 }
-#camerarollContent {
+#cameraRollContent {
 	overflow: auto;
 	max-width: 100%;
 }
@@ -751,16 +773,16 @@ i.fa-thumbs-down {
 	height: calc(var(--camera-roll-width) * 0.2 - 10px);
 	border-radius: 4px;
 }
-.photo.selected-photo img {
+.photo.selectedPhoto img {
 	filter: opacity(0.5);
 	box-shadow: 0 0 6px aliceblue;
 }
-#morephotosbutton {
+#morePhotosButton {
 	background-color: transparent;
 	border: none;
 	font-size: 28px;
 }
-.favorite-heart {
+.favoriteHeart {
 	position: relative;
 	opacity: 0.8;
 	margin-left: -40px;
@@ -769,10 +791,12 @@ i.fa-thumbs-down {
 }
 .readReceipt {
 	font-size: 14px;
-	align-self: flex-end;
 	margin-top: 3px;
+	display: flex;
+	flex-direction: row-reverse;
+	grid-area: receipt;
 }
-.readReceipt, .readReceipt strong {
+.readReceipt span, .readReceipt strong {
 	color: #a6a6a6;
 }
 .tapback {
@@ -783,23 +807,35 @@ i.fa-thumbs-down {
 	z-index: 2;
 	border-radius: 20px;
 }
-.from_them .tapback {
+.fromThem .tapback {
 	left: -12px;
 	background-color: rgb(70, 140, 240);
 }
-.from_me .tapback {
+.fromMe .tapback {
 	right: -6px;
 	background-color: rgb(71, 71, 80);
 }
-.text-area {
+.mainMessages {
+	grid-area: messages;
+}
+.profileImage {
+	grid-area: image;
 	display: flex;
-	flex-shrink: 0;
+	flex-direction: column-reverse;
 }
-.text-area.from_me {
-	align-self: flex-end;
+.profileImage img {
+	border-radius: 100%;
+	max-width: 32px;
+	z-index: 2;
 }
-.text-area.from_them {
-	align-self: flex-start;
+.textArea {
+	display: flex;
+}
+.fromMe .textArea {
+	justify-content: flex-end;
+}
+.fromThem .textArea {
+	flex-direction: row;
 }
 .noPadding {
 	padding: 0 !important;

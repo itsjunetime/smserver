@@ -41,10 +41,17 @@ class SocketDelegate : ServerWebSocketDelegate {
 	}
 
 	func sendTyping(_ chat: String, typing: Bool = true) {
+		let json: [String:Any] = [
+			"chat": chat,
+			"active": typing
+		]
+
+		let msg = SocketMessage(nil, command: .Typing, data: json, incoming: false)
+		let json_str = Const.encodeToJson(object: msg.json())
+
 		if let sock = server {
-			let send_str = "\(typing ? "typing" : "idle"):\(chat)"
 			for i in sock.webSockets {
-				i.send(text: send_str)
+				i.send(text: json_str)
 			}
 		}
 	}
@@ -57,34 +64,46 @@ class SocketDelegate : ServerWebSocketDelegate {
 		let percent = Const.getBatteryLevel()
 		let charging_state = Const.getBatteryState()
 
-		var state_string = "charging"
-		if charging_state == .unplugged || charging_state == .unknown {
-			state_string = "unplugged"
-		}
+		let json: [String: Any] = [
+			"charging": charging_state == .charging || charging_state == .full,
+			"percentage": percent
+		]
+
+		let msg = SocketMessage(nil, command: .BatteryStatus, data: json, incoming: false, last: true)
+
+		let json_str = Const.encodeToJson(object: msg.json(), title: nil)
 
 		if let sock = server {
 			for i in sock.webSockets {
-				i.send(text: "battery:\(String(percent))")
-				i.send(text: "battery:\(state_string)")
+				i.send(text: json_str)
 			}
 		}
 	}
 
-	func sendNewText(info: String) {
+	func sendNewText(info: [String:Any]) {
+		let msg = SocketMessage(nil, command: .NewMessage, data: info, incoming: false)
+		let json = Const.encodeToJson(object: msg.json())
+
 		/// If we received a new text
 		if let sock = server {
 			for i in sock.webSockets {
-				i.send(text: "text:" + info)
+				i.send(text: json)
 			}
 		}
 	}
 
 	func sendTextRead(_ guid: String, date: String) {
+		let json = [
+			"guid": guid,
+			"date": date
+		]
+
+		let msg = SocketMessage(nil, command: .ReadMessage, data: json, incoming: false)
+		let json_str = Const.encodeToJson(object: msg.json())
+
 		if let sock = server {
-			if let json = try? JSONSerialization.data(withJSONObject: ["guid": guid, "date": date], options: []) {
-				for i in sock.webSockets {
-					i.send(text: "read:\(String(decoding: json, as: UTF8.self))")
-				}
+			for i in sock.webSockets {
+				i.send(text: json_str)
 			}
 		}
 	}
@@ -103,31 +122,7 @@ class SocketDelegate : ServerWebSocketDelegate {
 
 		Const.log("\(ip) was allowed to connect")
 
-		#if os(iOS)
-		UIDevice.current.isBatteryMonitoringEnabled = true
-		#endif
-
-		let battery_level = Const.getBatteryLevel()
-		let charging_state = Const.getBatteryState()
-		var state_string = "charging"
-		if charging_state == .unplugged || charging_state == .unknown {
-			state_string = "unplugged"
-		}
-
-		webSocket.send(text: "battery:\(String(battery_level))")
-		webSocket.send(text: "battery:\(state_string)")
-
-		#if os(iOS)
-		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
-		NotificationCenter.default.addObserver(self, selector: #selector(self.sendNewBatteryFromNotification(notification:)), name: UIDevice.batteryStateDidChangeNotification, object: nil)
-		#elseif os(macOS)
-		DispatchQueue.main.async {
-			while true { /// yes. This is terrible.
-				sleep(10)
-				self.sendNewBattery()
-			}
-		}
-		#endif
+		self.sendNewBattery()
 	}
 
 	func server(_ server: Server, webSocketDidDisconnect webSocket: WebSocket, error: Error?) {

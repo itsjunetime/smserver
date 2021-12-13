@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3C002B4D25A06E6A004C4E3D /* Pods_SMServer_Mac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0007B80E5E922ECFAA2FC353 /* Pods_SMServer_Mac.framework */; platformFilter = maccatalyst; };
-		3C002B4E25A06E6A004C4E3D /* Pods_SMServer_Mac.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0007B80E5E922ECFAA2FC353 /* Pods_SMServer_Mac.framework */; platformFilter = maccatalyst; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3C002B4E25A06E6A004C4E3D /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; platformFilter = maccatalyst; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3C002B6325A06FA3004C4E3D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA5865E259FF1E90063963B /* SettingsView.swift */; };
 		3C002B6525A06FA3004C4E3D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58660259FF1E90063963B /* AppDelegate.swift */; };
 		3C002B6625A06FA3004C4E3D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58661259FF1E90063963B /* ContentView.swift */; };
@@ -33,8 +32,19 @@
 		3C79640525A128EC006AFD7C /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C79640425A128EC006AFD7C /* main.swift */; };
 		3C79641125A13AF4006AFD7C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C79641025A13AF4006AFD7C /* Settings.swift */; };
 		3C79641225A13AF4006AFD7C /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C79641025A13AF4006AFD7C /* Settings.swift */; };
-		3C88306D25F2D1BD00FACDEB /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
-		3C88307825F2D25700FACDEB /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3C7E581926599CF50077D807 /* StarscreamDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E581826599CF50077D807 /* StarscreamDelegate.swift */; };
+		3C7E581A26599CF50077D807 /* StarscreamDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E581826599CF50077D807 /* StarscreamDelegate.swift */; };
+		3C7E581B26599CF50077D807 /* StarscreamDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E581826599CF50077D807 /* StarscreamDelegate.swift */; };
+		3C7E581D2659A2F40077D807 /* RequestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E581C2659A2F40077D807 /* RequestManager.swift */; };
+		3C7E581E2659A2F40077D807 /* RequestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E581C2659A2F40077D807 /* RequestManager.swift */; };
+		3C7E581F2659A2F40077D807 /* RequestManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E581C2659A2F40077D807 /* RequestManager.swift */; };
+		3C7E58212659D0E30077D807 /* SendMessageRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E58202659D0E30077D807 /* SendMessageRequest.swift */; };
+		3C7E58222659D0E30077D807 /* SendMessageRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E58202659D0E30077D807 /* SendMessageRequest.swift */; };
+		3C7E58232659D0E30077D807 /* SendMessageRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E58202659D0E30077D807 /* SendMessageRequest.swift */; };
+		3C7E5830265AE38F0077D807 /* SocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E582F265AE38F0077D807 /* SocketMessage.swift */; };
+		3C7E5831265AE38F0077D807 /* SocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E582F265AE38F0077D807 /* SocketMessage.swift */; };
+		3C7E5832265AE38F0077D807 /* SocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7E582F265AE38F0077D807 /* SocketMessage.swift */; };
+		3C88307825F2D25700FACDEB /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3CA58671259FF1EA0063963B /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58664259FF1E90063963B /* Constants.swift */; };
 		3CA58672259FF1EA0063963B /* ChatDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58665259FF1E90063963B /* ChatDelegate.swift */; };
 		3CA58673259FF1EA0063963B /* IdentityPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58666259FF1E90063963B /* IdentityPass.swift */; };
@@ -54,7 +64,6 @@
 		3CFFB09D2655D56A002F1AC5 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58664259FF1E90063963B /* Constants.swift */; };
 		3CFFB09E2655D56A002F1AC5 /* IdentityPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CA58666259FF1E90063963B /* IdentityPass.swift */; };
 		3CFFB0A02655D56A002F1AC5 /* libmryipc.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; settings = {ATTRIBUTES = (Required, ); }; };
-		3CFFB0A12655D56A002F1AC5 /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */; };
 		3CFFB0A42655D56A002F1AC5 /* html in Resources */ = {isa = PBXBuildFile; fileRef = 3C562A37245FB4A000A4474B /* html */; };
 		3CFFB0A52655D56A002F1AC5 /* identity.pfx in Resources */ = {isa = PBXBuildFile; fileRef = 3C69EB3024E77F7800F48291 /* identity.pfx */; };
 		3CFFB0A62655D56A002F1AC5 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E91245BCFE100EF24FE /* LaunchScreen.storyboard */; };
@@ -62,9 +71,11 @@
 		3CFFB0A82655D56A002F1AC5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E8F245BCFE100EF24FE /* Preview Assets.xcassets */; };
 		3CFFB0A92655D56A002F1AC5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C760E8C245BCFE100EF24FE /* Assets.xcassets */; };
 		3CFFB0AB2655D56A002F1AC5 /* libmryipc.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3C6A5FB424B3EBBF00102AE2 /* libmryipc.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		3CFFB0AC2655D56A002F1AC5 /* Pods_SMServer.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3CFFB0AC2655D56A002F1AC5 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3CFFB0B42655D6DF002F1AC5 /* entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFFB0B32655D6DF002F1AC5 /* entry.swift */; };
 		3CFFB0B52655D726002F1AC5 /* entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFFB0B32655D6DF002F1AC5 /* entry.swift */; };
+		DFE40D5D1A3D6986CD0310B4 /* Pods_SMServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 062E840EF142E82C5AB3724D /* Pods_SMServer.framework */; };
+		F6DB06A5972BF0DE8E756D4F /* Pods_SMServer_Mac.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52EF3E550602F2640CA40255 /* Pods_SMServer_Mac.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -74,7 +85,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				3C002B4E25A06E6A004C4E3D /* Pods_SMServer_Mac.framework in Embed Frameworks */,
+				3C002B4E25A06E6A004C4E3D /* (null) in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -86,7 +97,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				3C5F2BDE25F6CB3D00BAEB60 /* libmryipc.dylib in Embed Frameworks */,
-				3C88307825F2D25700FACDEB /* Pods_SMServer.framework in Embed Frameworks */,
+				3C88307825F2D25700FACDEB /* (null) in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,7 +109,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				3CFFB0AB2655D56A002F1AC5 /* libmryipc.dylib in Embed Frameworks */,
-				3CFFB0AC2655D56A002F1AC5 /* Pods_SMServer.framework in Embed Frameworks */,
+				3CFFB0AC2655D56A002F1AC5 /* (null) in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -106,7 +117,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0007B80E5E922ECFAA2FC353 /* Pods_SMServer_Mac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer_Mac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		062E840EF142E82C5AB3724D /* Pods_SMServer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		238BFD5D95C68A29E0941ADF /* Pods-SMServer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer.debug.xcconfig"; path = "Target Support Files/Pods-SMServer/Pods-SMServer.debug.xcconfig"; sourceTree = "<group>"; };
 		3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		3C128FFB259FEE4F0072CFD3 /* SMServer_Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer_Mac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C17D59B25A3A80F00D27CFE /* IPCTextWatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IPCTextWatcher.m; sourceTree = "<group>"; };
@@ -129,6 +141,10 @@
 		3C79640325A1288D006AFD7C /* Sender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sender.h; sourceTree = "<group>"; };
 		3C79640425A128EC006AFD7C /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3C79641025A13AF4006AFD7C /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		3C7E581826599CF50077D807 /* StarscreamDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarscreamDelegate.swift; sourceTree = "<group>"; };
+		3C7E581C2659A2F40077D807 /* RequestManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestManager.swift; sourceTree = "<group>"; };
+		3C7E58202659D0E30077D807 /* SendMessageRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageRequest.swift; sourceTree = "<group>"; };
+		3C7E582F265AE38F0077D807 /* SocketMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketMessage.swift; sourceTree = "<group>"; };
 		3C88306225F2D06C00FACDEB /* SMServerIPC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SMServerIPC.h; sourceTree = "<group>"; };
 		3CA5865E259FF1E90063963B /* SettingsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3CA5865F259FF1E90063963B /* MRYIPCCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MRYIPCCenter.h; sourceTree = "<group>"; };
@@ -146,12 +162,10 @@
 		3CFFB0B12655D56A002F1AC5 /* SMServer12.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SMServer12.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3CFFB0B22655D56A002F1AC5 /* SMServer copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "SMServer copy-Info.plist"; path = "/Users/ian/Documents/Coding/Personal/smserver_stuff/SMServer/src/SMServer copy-Info.plist"; sourceTree = "<absolute>"; };
 		3CFFB0B32655D6DF002F1AC5 /* entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = entry.swift; sourceTree = "<group>"; };
-		6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer.release.xcconfig"; path = "Target Support Files/Pods-SMServer/Pods-SMServer.release.xcconfig"; sourceTree = "<group>"; };
-		695E11A8D6758027462A7F3A /* Pods-SMServer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer.debug.xcconfig"; path = "Target Support Files/Pods-SMServer/Pods-SMServer.debug.xcconfig"; sourceTree = "<group>"; };
-		8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9BC69885CFAB9A48EC757B84 /* Pods-SMServer_Mac.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer_Mac.debug.xcconfig"; path = "Target Support Files/Pods-SMServer_Mac/Pods-SMServer_Mac.debug.xcconfig"; sourceTree = "<group>"; };
-		AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D79C5EBFD0D8FB94CF28FECF /* Pods-SMServer_Mac.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer_Mac.release.xcconfig"; path = "Target Support Files/Pods-SMServer_Mac/Pods-SMServer_Mac.release.xcconfig"; sourceTree = "<group>"; };
+		52EF3E550602F2640CA40255 /* Pods_SMServer_Mac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SMServer_Mac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F9754267617CC4F8AA8E3AB /* Pods-SMServer_Mac.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer_Mac.release.xcconfig"; path = "Target Support Files/Pods-SMServer_Mac/Pods-SMServer_Mac.release.xcconfig"; sourceTree = "<group>"; };
+		D3422ACC031F9A0702FB3EFC /* Pods-SMServer_Mac.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer_Mac.debug.xcconfig"; path = "Target Support Files/Pods-SMServer_Mac/Pods-SMServer_Mac.debug.xcconfig"; sourceTree = "<group>"; };
+		D579FE2DE191A2FB3A2852F9 /* Pods-SMServer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SMServer.release.xcconfig"; path = "Target Support Files/Pods-SMServer/Pods-SMServer.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -159,7 +173,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C002B4D25A06E6A004C4E3D /* Pods_SMServer_Mac.framework in Frameworks */,
+				F6DB06A5972BF0DE8E756D4F /* Pods_SMServer_Mac.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -168,7 +182,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3C5F2BDD25F6CB3D00BAEB60 /* libmryipc.dylib in Frameworks */,
-				3C88306D25F2D1BD00FACDEB /* Pods_SMServer.framework in Frameworks */,
+				DFE40D5D1A3D6986CD0310B4 /* Pods_SMServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -177,7 +191,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				3CFFB0A02655D56A002F1AC5 /* libmryipc.dylib in Frameworks */,
-				3CFFB0A12655D56A002F1AC5 /* Pods_SMServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -190,8 +203,8 @@
 				3C7963FC25A12416006AFD7C /* Cocoa.framework */,
 				3C11174F24CCF3AC0065894F /* ExternalAccessory.framework */,
 				3CB981AA24BA8E9C00724AA4 /* libmryipc.dylib */,
-				0007B80E5E922ECFAA2FC353 /* Pods_SMServer_Mac.framework */,
-				8A41F2E4B7466BB1FED4AB51 /* Pods_SMServer.framework */,
+				062E840EF142E82C5AB3724D /* Pods_SMServer.framework */,
+				52EF3E550602F2640CA40255 /* Pods_SMServer_Mac.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -270,6 +283,10 @@
 				3CA58666259FF1E90063963B /* IdentityPass.swift */,
 				3CA58667259FF1E90063963B /* SMServer-Bridging-Header.h */,
 				3CA58669259FF1E90063963B /* ServerDelegate.swift */,
+				3C7E581826599CF50077D807 /* StarscreamDelegate.swift */,
+				3C7E581C2659A2F40077D807 /* RequestManager.swift */,
+				3C7E58202659D0E30077D807 /* SendMessageRequest.swift */,
+				3C7E582F265AE38F0077D807 /* SocketMessage.swift */,
 				3CA5866A259FF1E90063963B /* SocketDelegate.swift */,
 				3C17D59F25A3AEAA00D27CFE /* PrivateHeaders.h */,
 				3C3B303B25F2BE3100EE8B68 /* Image.swift */,
@@ -292,7 +309,6 @@
 		3CB981B224BAAB3B00724AA4 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				AE4FA90AF707F557B3432C60 /* Pods_SMServer.framework */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -300,10 +316,10 @@
 		9AD8FBCC73D9F16CE0A7770A /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				695E11A8D6758027462A7F3A /* Pods-SMServer.debug.xcconfig */,
-				6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */,
-				9BC69885CFAB9A48EC757B84 /* Pods-SMServer_Mac.debug.xcconfig */,
-				D79C5EBFD0D8FB94CF28FECF /* Pods-SMServer_Mac.release.xcconfig */,
+				238BFD5D95C68A29E0941ADF /* Pods-SMServer.debug.xcconfig */,
+				D579FE2DE191A2FB3A2852F9 /* Pods-SMServer.release.xcconfig */,
+				D3422ACC031F9A0702FB3EFC /* Pods-SMServer_Mac.debug.xcconfig */,
+				8F9754267617CC4F8AA8E3AB /* Pods-SMServer_Mac.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -332,12 +348,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3C128FF8259FEE4F0072CFD3 /* Build configuration list for PBXNativeTarget "SMServer_Mac" */;
 			buildPhases = (
-				3C128FDD259FEE4F0072CFD3 /* [CP] Check Pods Manifest.lock */,
+				239ED685DDDA7AEA7F29254A /* [CP] Check Pods Manifest.lock */,
 				3C128FDE259FEE4F0072CFD3 /* Sources */,
 				3C128FE9259FEE4F0072CFD3 /* Frameworks */,
 				3C128FED259FEE4F0072CFD3 /* Resources */,
 				3C128FF4259FEE4F0072CFD3 /* Embed Frameworks */,
-				3C128FF7259FEE4F0072CFD3 /* [CP] Embed Pods Frameworks */,
+				BF647E2838942057B1AF1286 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -352,13 +368,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3C760EAD245BCFE100EF24FE /* Build configuration list for PBXNativeTarget "SMServer" */;
 			buildPhases = (
-				84D18E796829DE655E73B8C2 /* [CP] Check Pods Manifest.lock */,
+				12B965AE52CC325E54F072EC /* [CP] Check Pods Manifest.lock */,
 				3CE8742325F94165009B347C /* Headers */,
 				3C760E7F245BCFE000EF24FE /* Sources */,
 				3C760E80245BCFE000EF24FE /* Frameworks */,
 				3C760E81245BCFE000EF24FE /* Resources */,
 				3C6713FA24722635002EBBDF /* Embed Frameworks */,
-				21530F141832418E3A4B84B4 /* [CP] Embed Pods Frameworks */,
+				E1DA164648631FECAA2EB3B9 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -373,13 +389,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3CFFB0AE2655D56A002F1AC5 /* Build configuration list for PBXNativeTarget "SMServer12" */;
 			buildPhases = (
-				3CFFB0902655D56A002F1AC5 /* [CP] Check Pods Manifest.lock */,
 				3CFFB0912655D56A002F1AC5 /* Headers */,
 				3CFFB0922655D56A002F1AC5 /* Sources */,
 				3CFFB09F2655D56A002F1AC5 /* Frameworks */,
 				3CFFB0A32655D56A002F1AC5 /* Resources */,
 				3CFFB0AA2655D56A002F1AC5 /* Embed Frameworks */,
-				3CFFB0AD2655D56A002F1AC5 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -398,7 +412,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1130;
-				LastUpgradeCheck = 1230;
+				LastUpgradeCheck = 1300;
 				ORGANIZATIONNAME = "Ian Welker";
 				TargetAttributes = {
 					3C760E82245BCFE000EF24FE = {
@@ -469,24 +483,29 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		21530F141832418E3A4B84B4 /* [CP] Embed Pods Frameworks */ = {
+		12B965AE52CC325E54F072EC /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SMServer/Pods-SMServer-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SMServer/Pods-SMServer-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-SMServer-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SMServer/Pods-SMServer-frameworks.sh\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		3C128FDD259FEE4F0072CFD3 /* [CP] Check Pods Manifest.lock */ = {
+		239ED685DDDA7AEA7F29254A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -508,7 +527,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		3C128FF7259FEE4F0072CFD3 /* [CP] Embed Pods Frameworks */ = {
+		BF647E2838942057B1AF1286 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -525,29 +544,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SMServer_Mac/Pods-SMServer_Mac-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		3CFFB0902655D56A002F1AC5 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SMServer-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		3CFFB0AD2655D56A002F1AC5 /* [CP] Embed Pods Frameworks */ = {
+		E1DA164648631FECAA2EB3B9 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -564,28 +561,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SMServer/Pods-SMServer-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		84D18E796829DE655E73B8C2 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SMServer-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -596,9 +571,13 @@
 				3CA5867B259FF2110063963B /* Constants.swift in Sources */,
 				3C3B303D25F2BE3100EE8B68 /* Image.swift in Sources */,
 				3C79640525A128EC006AFD7C /* main.swift in Sources */,
+				3C7E581A26599CF50077D807 /* StarscreamDelegate.swift in Sources */,
 				3C79641225A13AF4006AFD7C /* Settings.swift in Sources */,
 				3CA5867C259FF2110063963B /* ChatDelegate.swift in Sources */,
 				3CA5867D259FF2110063963B /* IdentityPass.swift in Sources */,
+				3C7E58222659D0E30077D807 /* SendMessageRequest.swift in Sources */,
+				3C7E5831265AE38F0077D807 /* SocketMessage.swift in Sources */,
+				3C7E581E2659A2F40077D807 /* RequestManager.swift in Sources */,
 				3CA5867E259FF2110063963B /* ServerDelegate.swift in Sources */,
 				3C79640225A12705006AFD7C /* Sender.m in Sources */,
 				3CA5867F259FF2110063963B /* SocketDelegate.swift in Sources */,
@@ -609,15 +588,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3C7E581D2659A2F40077D807 /* RequestManager.swift in Sources */,
 				3C524F2625B13A72009CA5DC /* Sender.m in Sources */,
 				3CFFB0B42655D6DF002F1AC5 /* entry.swift in Sources */,
 				3C3B303C25F2BE3100EE8B68 /* Image.swift in Sources */,
 				3C002B6325A06FA3004C4E3D /* SettingsView.swift in Sources */,
 				3C002B6525A06FA3004C4E3D /* AppDelegate.swift in Sources */,
 				3C002B6625A06FA3004C4E3D /* ContentView.swift in Sources */,
+				3C7E5830265AE38F0077D807 /* SocketMessage.swift in Sources */,
 				3C002B6725A06FA3004C4E3D /* SceneDelegate.swift in Sources */,
 				3C79641125A13AF4006AFD7C /* Settings.swift in Sources */,
 				3CA58672259FF1EA0063963B /* ChatDelegate.swift in Sources */,
+				3C7E581926599CF50077D807 /* StarscreamDelegate.swift in Sources */,
+				3C7E58212659D0E30077D807 /* SendMessageRequest.swift in Sources */,
 				3CA58674259FF1EA0063963B /* ServerDelegate.swift in Sources */,
 				3CA58675259FF1EA0063963B /* SocketDelegate.swift in Sources */,
 				3CA58671259FF1EA0063963B /* Constants.swift in Sources */,
@@ -632,9 +615,13 @@
 				3CFFB0B52655D726002F1AC5 /* entry.swift in Sources */,
 				3CFFB0932655D56A002F1AC5 /* Sender.m in Sources */,
 				3CFFB0942655D56A002F1AC5 /* Image.swift in Sources */,
+				3C7E581B26599CF50077D807 /* StarscreamDelegate.swift in Sources */,
 				3CFFB0992655D56A002F1AC5 /* Settings.swift in Sources */,
 				3CFFB09A2655D56A002F1AC5 /* ChatDelegate.swift in Sources */,
 				3CFFB09B2655D56A002F1AC5 /* ServerDelegate.swift in Sources */,
+				3C7E58232659D0E30077D807 /* SendMessageRequest.swift in Sources */,
+				3C7E5832265AE38F0077D807 /* SocketMessage.swift in Sources */,
+				3C7E581F2659A2F40077D807 /* RequestManager.swift in Sources */,
 				3CFFB09C2655D56A002F1AC5 /* SocketDelegate.swift in Sources */,
 				3CFFB09D2655D56A002F1AC5 /* Constants.swift in Sources */,
 				3CFFB09E2655D56A002F1AC5 /* IdentityPass.swift in Sources */,
@@ -657,7 +644,7 @@
 /* Begin XCBuildConfiguration section */
 		3C128FF9259FEE4F0072CFD3 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9BC69885CFAB9A48EC757B84 /* Pods-SMServer_Mac.debug.xcconfig */;
+			baseConfigurationReference = D3422ACC031F9A0702FB3EFC /* Pods-SMServer_Mac.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_OPTIMIZATION = "";
@@ -731,7 +718,7 @@
 		};
 		3C128FFA259FEE4F0072CFD3 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D79C5EBFD0D8FB94CF28FECF /* Pods-SMServer_Mac.release.xcconfig */;
+			baseConfigurationReference = 8F9754267617CC4F8AA8E3AB /* Pods-SMServer_Mac.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_OPTIMIZATION = time;
@@ -922,7 +909,7 @@
 		};
 		3C760EAE245BCFE100EF24FE /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 695E11A8D6758027462A7F3A /* Pods-SMServer.debug.xcconfig */;
+			baseConfigurationReference = 238BFD5D95C68A29E0941ADF /* Pods-SMServer.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -996,7 +983,7 @@
 		};
 		3C760EAF245BCFE100EF24FE /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */;
+			baseConfigurationReference = D579FE2DE191A2FB3A2852F9 /* Pods-SMServer.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -1067,7 +1054,6 @@
 		};
 		3CFFB0AF2655D56A002F1AC5 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 695E11A8D6758027462A7F3A /* Pods-SMServer.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -1103,7 +1089,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph/Telegraph.framework/Headers\"",
 				);
 				INFOPLIST_FILE = SMServer/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1142,7 +1128,6 @@
 		};
 		3CFFB0B02655D56A002F1AC5 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6702A9494D37C194359FF204 /* Pods-SMServer.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -1176,7 +1161,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/Telegraph/Telegraph.framework/Headers\"",
 				);
 				INFOPLIST_FILE = SMServer/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

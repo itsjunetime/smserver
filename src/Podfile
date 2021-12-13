@@ -13,6 +13,8 @@ target 'SMServer' do
   # https://raw.githubusercontent.com/iandwelker/Criollo/master/Criollo.podspec
   pod 'Criollo', :podspec => './Criollo.podspec'
 
+  pod 'Starscream', '~> 4.0.0'
+
 end
 
 target 'SMServer_Mac' do
