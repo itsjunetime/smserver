@@ -17,12 +17,7 @@
 
 	<key>ProgramArguments</key>
 	<array>
-		<!--
-		I know that `-r` is not a real argument,
-		but you need at least one argument argument before `-b`
-		for it to work, for some reason
-		-->
-		<string>-r</string>
+		<string>/Applications/SMServer.app/SMServer</string>
 		<string>-b</string>
 	</array>
 
