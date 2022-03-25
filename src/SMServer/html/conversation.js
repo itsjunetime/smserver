@@ -23,7 +23,13 @@ class Conversation extends Display {
 		this.display_name = json.display_name
 		this.time_marker = json.time_marker
 		this.relative_time = json.relative_time
-		this.addresses = json.addresses
+
+		// Sometimes json.addresses is nil, apparently
+		if (json.addresses)
+			this.addresses = json.addresses;
+		else
+			this.addresses = json.chat_identifier;
+
 		this.is_group = json.is_group
 		this.members = json.members.map(h => new Handle(h))
 
@@ -154,7 +160,7 @@ class Conversation extends Display {
 
 		let chats_list = document.getElementsByClassName('chatsList')[0]
 
-		let firstButton = chats_list.getElementsByTagName('button')[0]
+		let firstButton = document.querySelectorAll('.chatsList > button')[0]
 		let node = this.node()
 
 		node.remove()

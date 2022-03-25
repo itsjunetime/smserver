@@ -171,8 +171,13 @@
 						tap.html()
 
 						let msg = msgs.find(m => tap.associated_message_guid.includes(m.guid))
-						if (msg)
-							msg.tapbacks.push(tap)
+						if (msg) {
+							if (tap.associated_message_type < 3000) {
+								msg.tapbacks.push(tap)
+							} else {
+								msg.tapbacks = msg.tapbacks.filter(x => !(x.from_me && x.associated_message_type == (tap.associated_message_type - 1000)))
+							}
+						}
 
 						to_reverse.push(idx)
 					}
@@ -193,7 +198,7 @@
 				document.getElementsByClassName("messages")[0].getElementsByClassName("title")[0].innerHTML = document.getElementById("messagesTitleText").outerHTML;
 				document.getElementById("hiddenChatBox").setAttribute("value", "");
 
-				convos.filter(c => c.selected).forEach(c => s.setSelected(false))
+				convos.filter(c => c.selected).forEach(c => c.setSelected(false))
 
 				current_chat_id = "";
 			}
@@ -292,7 +297,7 @@
 				var hiddenchatbox = document.getElementById("hiddenChatBox");
 				hiddenchatbox.setAttribute("value", chat_id);
 
-				let convo = convos.find(c => c.addresses.includes(chat_id))
+				let convo = convos.find(c => c.addresses && c.addresses.includes(chat_id))
 				if (convo)
 					convo.setSelected(true);
 
@@ -499,7 +504,7 @@
 
 			async function processNewText(text) {
 				let message = new Message(text)
-				let convo = convos.find(c => c.addresses.includes(message.chat_id))
+				let convo = convos.find(c => c.addresses && c.addresses.includes(message.chat_id))
 				let text_content = message.text
 
 				if (!message.from_me) {
@@ -550,7 +555,7 @@
 			}
 
 			async function setChatAsTop(chat, new_text = undefined) {
-				let convo = convos.find(c => c.addresses.includes(chat))
+				let convo = convos.find(c => c.addresses && c.addresses.includes(chat))
 
 				if (convo) {
 					if (new_text)
@@ -651,7 +656,7 @@
 				if (debug) console.log(`setting ${data.chat} as ${active ? "typing" : "idle"}`);
 
 				if (chat != current_chat_id) {
-					convos.find(c => c.addresses.include(chat)).setTyping(active)
+					convos.find(c => c.addresses && c.addresses.include(chat)).setTyping(active)
 					return
 				}
 
@@ -715,7 +720,7 @@
 					msg.showTapbackDialog(guid)
 			}
 
-			async function sendTapback(guid, tapback, chat = current_chat_id, remove = false) {
+			async function sendTapbackMain(guid, tapback, chat = current_chat_id, remove = false) {
 				if (debug) console.log(`sending tapback ${tapback} for guid ${guid} in chat ${chat}, remove: ${remove}`);
 				let res = await sendTapback(tapback, guid, remove)
 				if (res[0] !== 200)
@@ -724,7 +729,7 @@
 				document.getElementById(`${guid}Tapback`).outerHTML = "";
 			}
 
-			async function deleteText(guid) {
+			async function deleteTextMain(guid) {
 				if (debug) console.log(`attempting to delete text ${guid}`);
 				if (!confirm("Are you sure you want to delete the selected text?"))
 					return;
@@ -734,7 +739,7 @@
 				if (res[0] != 200) {
 					alert("Couldn't delete text :(");
 				} else {
-					let idx = msgs.findIndex(m => m.guid == guid)
+					let idx = msgs.findIndex(m => guid.includes(m.guid))
 					if (idx != -1) {
 						msgs[idx].node().outerHTML = ''
 						msgs.splice(idx, 1)
@@ -879,7 +884,7 @@
 
 			window.addEventListener("focus", function(event) {
 				if (current_chat_id.length === 0) return;
-				let convo = convos.find(c => c.addresses.includes(current_chat_id))
+				let convo = convos.find(c => c.addresses && c.addresses.includes(current_chat_id))
 				if (!convo || !convo.unread) return;
 
 				convo.setUnread(false)
@@ -943,9 +948,9 @@
 					<button type="button" onclick="document.getElementById('attachmentButton').click();" id="unhiddenButton"><i class="fas fa-paperclip"></i></button>
 					<input type="file" name="attachments" id="attachmentButton" multiple onchange="document.getElementById('unhiddenButton').innerHTML = document.getElementById('attachmentButton').files.length;"></input>
 					<input type="text" name="photos" id="hiddenPhotoButton" style="display: none;">
-					<textarea id="sendBox" class="input" name="text" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendForm" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); sendForm();}"></textarea>
+					<textarea id="sendBox" class="input" name="text" oninput="if (event.keyCode !== 13) inputKeyDown();" form="sendForm" onkeydown="if (event.keyCode === 13 && ! event.shiftKey){event.preventDefault(); window.sendForm();}"></textarea>
 					<input type="text" name="chat" id="hiddenChatBox" form="sendForm" style="display: none">
-					<button type="button" id="sendButton" onclick="sendForm();">↑</button>
+					<button type="button" id="sendButton" onclick="window.sendForm();">↑</button>
 				</form>
 			</div>
 			<div class="popup" id="popup">

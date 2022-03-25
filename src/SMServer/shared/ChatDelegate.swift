@@ -535,6 +535,14 @@ final class ChatDelegate {
 
 		dp_group.wait()
 
+		/// Just in case your pinned chats aren't in your most recent texts
+		if offset == 0, let pins = pinned_chats {
+			for chat in pins {
+				let details = getChatDetails(chat)
+				ret.append(details)
+			}
+		}
+
 		for idx in 0..<ret.count {
 			guard let chat_id = ret[idx]["chat_identifier"] as? String else {
 				continue
@@ -557,14 +565,6 @@ final class ChatDelegate {
 				}
 			} else {
 				ret[idx]["addresses"] = chat_id
-			}
-		}
-
-		/// Just in case your pinned chats aren't in your most recent texts
-		if offset == 0, let pins = pinned_chats {
-			for chat in pins {
-				let details = getChatDetails(chat)
-				ret.append(details)
 			}
 		}
 

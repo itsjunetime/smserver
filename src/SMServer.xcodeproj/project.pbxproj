@@ -956,7 +956,7 @@
 					"$(PROJECT_DIR)/SMServer",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
-				MARKETING_VERSION = 0.7.4;
+				MARKETING_VERSION = 0.9.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1028,7 +1028,7 @@
 					"$(PROJECT_DIR)/SMServer",
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
-				MARKETING_VERSION = 0.7.4;
+				MARKETING_VERSION = 0.9.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"z\"",
@@ -1101,7 +1101,7 @@
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
 				LLVM_LTO = YES;
-				MARKETING_VERSION = 0.7.4;
+				MARKETING_VERSION = 0.9.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -1173,7 +1173,7 @@
 				);
 				LINKER_DISPLAYS_MANGLED_NAMES = NO;
 				LLVM_LTO = YES;
-				MARKETING_VERSION = 0.7.4;
+				MARKETING_VERSION = 0.9.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-l\"z\"",

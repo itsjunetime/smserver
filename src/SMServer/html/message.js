@@ -204,7 +204,7 @@ class Message extends Display {
 				}
 			} else if (this.associated_message_type > 2999 && this.associated_message_type < 3006) {
 				for (let i = 0; i < elder.children.length; i++) {
-					if (Number(elder.children[i].getAttribute('tapbackType')) + 1000 == this.associated_message_type) {
+					if (Number(elder.children[i].getAttribute('tapbackType')) + 3000 == this.associated_message_type) {
 						elder.children[i].outerHTML = ''
 						break
 					}
@@ -345,13 +345,13 @@ class Message extends Display {
 		fa_icons.forEach((icon, idx) => {
 			let choice = this.newSpan(`tapbackChoice ${idx == sel ? 'tapbackChosen' : ''}`)
 			choice.innerHTML = icon
-			choice.setAttribute('onclick', `sendTapback("${guid}", ${idx}, "${current_chat_id}", ${idx == sel})`)
+			choice.setAttribute('onclick', `sendTapbackMain("${guid}", ${idx}, "${current_chat_id}", ${idx == sel})`)
 			dialog.appendChild(choice)
 		})
 
 		let trash = this.newSpan('tapbackChoice trashText')
 		trash.innerHTML = '<i class="fas fa-trash-alt"></i>'
-		trash.setAttribute('onclick', `deleteText("${guid}")`)
+		trash.setAttribute('onclick', `deleteTextMain("${guid}")`)
 		dialog.appendChild(trash)
 
 		text.parentNode.parentNode.insertBefore(this.textAreaWithChild(dialog), text.parentNode)
