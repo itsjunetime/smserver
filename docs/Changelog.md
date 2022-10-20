@@ -10,6 +10,7 @@
  - Added typing indicators in left hand panel of web interface
  - Added API support for retrieving members of each group conversation ([#130](https://github.com/iandwelker/smserver/issues/130))
  - Added API support for retrieving details about specific conversation, as opposed to just most recent conversations
+ - Fixed many crashes within libsmserver
 
 0.7.4 &rightarrow; 0.8.0
  - Built libsmserver into the `.deb` package so that it is no longer necessary as a dependency

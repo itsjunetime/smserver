@@ -19,7 +19,9 @@ class StarscreamDelegate : NSObject, WebSocketDelegate {
 		settings.remote_id = id
 		let url_encoded = settings.password.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? settings.password
 
-		let conn_str = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/connect?id=\(id)&key=\(url_encoded)&sock_type=host")!
+		guard let conn_str = URL(string: "http\(settings.remote_secure ? "s" : "")://\(settings.remote_addr)/connect?id=\(id)&key=\(url_encoded)&sock_type=host") else {
+			return false
+		}
 		var req = URLRequest(url: conn_str)
 		req.timeoutInterval = 5
 

@@ -409,15 +409,10 @@ class Const : NSObject {
 			if Double(info[kIOPSCurrentCapacityKey] as? Int ?? 0) / Double(info[kIOPSMaxCapacityKey] as? Int ?? 100) > 97 {
 				return .full
 			} else {
-				let charging: Bool? = info[kIOPSIsChargingKey] as? Bool
-
-				if charging == nil {
-					return .unknown
-				} else if charging! == true {
-					return .charging
-				} else {
-					return .unplugged
-				}
+				return info[kIOPSIsChargingKey]
+					.flatMap { $0 as? Bool }
+					.map { $0 ? .charging : .unplugged }
+					?? .unknown
 			}
 
 		#elseif os(iOS)

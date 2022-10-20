@@ -93,17 +93,17 @@ final class ChatDelegate {
 
 		/// Prepare the database for querying `sqlString`
 		if sqlite3_prepare_v2(db, sqlString, -1, &statement, nil) != SQLITE_OK {
-			let errmsg = String(cString: sqlite3_errmsg(db)!)
-			Const.log("WARNING: error preparing select: \(errmsg)", warning: true)
+			if let errmsg = sqlite3_errmsg(db) {
+				Const.log("WARNING: error preparing select: \(errmsg)", warning: true)
+			}
 			return main_return
 		}
 
-		for i in 0..<args.count {
-			let arg = args[i]
-			if arg is Int {
-				sqlite3_bind_int(statement, Int32(i + 1), Int32(arg as! Int))
-			} else if arg is String {
-				sqlite3_bind_text(statement, Int32(i + 1), NSString(string: arg as! String).utf8String, -1, nil)
+		for (idx, arg) in args.enumerated() {
+			if let arg = arg as? Int {
+				sqlite3_bind_int(statement, Int32(idx + 1), Int32(arg))
+			} else if let arg = arg as? String {
+				sqlite3_bind_text(statement, Int32(idx + 1), NSString(string: arg).utf8String, -1, nil)
 			}
 		}
 
@@ -128,8 +128,7 @@ final class ChatDelegate {
 		}
 
 		/// Finalize; has to be done after getting info.
-		if sqlite3_finalize(statement) != SQLITE_OK {
-			let errmsg = String(cString: sqlite3_errmsg(db)!)
+		if sqlite3_finalize(statement) != SQLITE_OK, let errmsg = sqlite3_errmsg(db) {
 			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
 		}
 
@@ -150,18 +149,18 @@ final class ChatDelegate {
 			texts[i]["text"] = (texts[i]["text"] as? String ?? "").replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil)
 
 			/// Get details about attachments if there are any attachments associated with this message
-			if texts[i]["cache_has_attachments"] as! String == "1", let rowid = texts[i]["ROWID"] as? String {
+			if texts[i]["cache_has_attachments"] as? String == "1", let rowid = texts[i]["ROWID"] as? String {
 				texts[i]["attachments"] = getAttachmentFromMessage(mid: rowid)
 			}
 
 			/// Get the sender's name for this text if it is a group chat and it's not from me
-			if is_group && texts[i]["is_from_me"] as? String ?? "0" == "0" && (texts[i]["id"] as? String)?.count != 0 {
-				if let name = names[texts[i]["id"] as? String ?? ""] {
+			if is_group, texts[i]["is_from_me"] as? String == "0", let id = texts[i]["id"] as? String, !id.isEmpty {
+				if let name = names[id] {
 					texts[i]["sender"] = name
 				} else {
-					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: (texts[i]["id"] as? String) ?? "", is_group: is_group)
+					let name = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: id, is_group: is_group)
 					texts[i]["sender"] = name
-					names[texts[i]["id"] as! String] = name
+					names[id] = name
 				}
 			}
 
@@ -173,7 +172,10 @@ final class ChatDelegate {
 
 			/// This checks if it has anything in the `payload_data` field, which would imply that it is a special message (e.g. rich link, gamepigeon message, etc).
 			/// However, it doesn't enter the `if` if the message is a handwritten message or a digital touch message, since I don't know how to parse those yet.
-			if (texts[i]["payload_data"] as? String)?.count ?? 0 > 0 && !bad_bundles.contains(texts[i]["balloon_bundle_id"] as! String), let rowid = texts[i]["ROWID"] as? String {
+			if (texts[i]["payload_data"] as? String)?.isEmpty ?? false,
+			   let balloon_id = texts[i]["balloon_bundle_id"] as? String,
+			   !bad_bundles.contains(balloon_id),
+			   let rowid = texts[i]["ROWID"] as? String {
 				let link_info = getLinkInfo(rowid, db: db)
 
 				texts[i]["link_title"] = link_info["title"]
@@ -241,9 +243,10 @@ final class ChatDelegate {
 		                             chat["m.is_read"] as? String ?? "" == "0" &&
 		                             chat["m.item_type"] as? String ?? "" == "0"
 
-			new_chat["latest_text"] = String((chat["m.text"] as? String ?? "").replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil))
+			let latest_text = String((chat["m.text"] as? String ?? "").replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil))
+			new_chat["latest_text"] = latest_text
 
-			if (new_chat["latest_text"] as! String).count == 0 && chat["m.cache_has_attachments"] as? String ?? "" != "0" {
+			if latest_text.isEmpty && chat["m.cache_has_attachments"] as? String != "0" {
 				let att = getAttachmentFromMessage(mid: chat["m.ROWID"] as? String ?? "")
 
 				if att.count != 0 && att[0].count == 2 && att[0]["mime_type"]?.count ?? 0 > 0 {
@@ -310,13 +313,12 @@ final class ChatDelegate {
 			let check_name = selectFromSql(db: sms_db, columns: ["room_name", "display_name"], table: "chat", condition: "where chat_identifier is ?", args: [chat_id], num_items: 1)
 
 			if check_name.count > 0 && check_name[0]["room_name"]?.count ?? 0 > 0 {
-				if check_name.count == 0 || check_name[0]["display_name"]?.count == 0 {
-					let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
-
-					return recipients.map { $0.1 }.joined(separator: ", ")
-				} else {
-					return check_name[0]["display_name"]!
+				if let display_name = check_name.first?["display_name"], !display_name.isEmpty {
+					return display_name
 				}
+
+				let recipients = getGroupRecipientsWithDb(contact_db: contact_db, db: sms_db, ci: chat_id)
+				return recipients.map(\.1).joined(separator: ", ")
 			}
 		}
 
@@ -550,7 +552,7 @@ final class ChatDelegate {
 
 			if let pins = pinned_chats {
 				ret[idx]["pinned"] = pins.contains(chat_id)
-				pinned_chats!.removeAll(where: { $0 == chat_id })
+				pinned_chats?.removeAll(where: { $0 == chat_id })
 			} else {
 				ret[idx]["pinned"] = false
 			}
@@ -728,9 +730,9 @@ final class ChatDelegate {
 		Const.log("opened statement")
 
 		if sqlite3_prepare_v2(image_db, sqlString, -1, &statement, nil) != SQLITE_OK {
-			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-			Const.log("WARNING: error preparing select: \(errmsg)", warning: true)
-
+			if let errmsg = sqlite3_errmsg(image_db) {
+				Const.log("WARNING: error preparing select: \(errmsg)", warning: true)
+			}
 			return Data()
 		}
 
@@ -748,8 +750,9 @@ final class ChatDelegate {
 		}
 
 		if sqlite3_finalize(statement) != SQLITE_OK {
-			let errmsg = String(cString: sqlite3_errmsg(image_db)!)
-			Const.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
+			if let errmsg = sqlite3_errmsg(image_db) {
+				Const.log("WARNING: error finalizing prepared statement: \(errmsg)", warning: true)
+			}
 		}
 
 		statement = nil
@@ -842,7 +845,9 @@ final class ChatDelegate {
 		var texts: [[String:Any]] = selectFromSql(db: db, columns: ["c.chat_identifier", "c.display_name", "m.ROWID", "m.text", "m.service", "m.date", "m.cache_has_attachments"], table: "message m", condition: "inner join chat_message_join j on j.message_id = m.ROWID inner join chat c on j.chat_id = c.ROWID WHERE text like ? order by m.date desc", args: ["%\(upperTerm)%"], split_ids: true)
 
 		/// If case sensitive, remove those who don't exactly match. sqlite select is hardcoded case insensitive
-		if case_sensitive { texts.removeAll(where: { !(($0["text"] as! String).contains(term)) })}
+		if case_sensitive {
+			texts.removeAll { !(($0["text"] as? String)?.contains(term) ?? false) }
+		}
 
 		parseTexts(&texts, db: db, contact_db: contact_db)
 
@@ -850,7 +855,7 @@ final class ChatDelegate {
 			for i in texts {
 
 				/// get sender for this text
-				let chat = i["chat_identifier"] as! String
+				guard let chat = i["chat_identifier"] as? String else { continue }
 
 				/// Add this text onto the list of texts from this person that match term if grouping by person and not time
 				if return_texts[chat] == nil {
@@ -1009,9 +1014,7 @@ final class ChatDelegate {
 		}
 
 		/// Always under object `$objects`
-		let objects = plistData["$objects"] as! NSMutableArray
-
-		guard objects.count > 5 else {
+		guard let objects = plistData["$objects"] as? NSMutableArray, objects.count > 5 else {
 			return ret_dict
 		}
 

@@ -744,19 +744,21 @@ class ServerDelegate {
 
 			let info = chat_delegate.getAttachmentDataFromPath(path: req.query["path"] ?? "")
 
-			if info[0] as? Data == nil || (info[0] as! Data).isEmpty {
-				res.setStatusCode(404, description: "No attachment was found for this path")
-			} else {
-				res.setValue(info[1] as! String, forHTTPHeaderField: "Content-Type")
+			if let attData = info[0] as? Data, !attData.isEmpty {
+				if let type = info[1] as? String {
+					res.setValue(type, forHTTPHeaderField: "Content-Type")
+				}
 				res.setValue("inline; filename=\(req.query["path"]?.split(separator: "/").last ?? "")", forHTTPHeaderField: "Content-Disposition")
 
 				if req.range != nil {
 					res.setStatusCode(206, description: "Partial Content")
-					res.setValue("bytes 0-\((info[0] as? Data ?? Data()).count - 1)/\((info[0] as? Data ?? Data()).count)", forHTTPHeaderField: "Content-Range")
+					res.setValue("bytes 0-\(attData.count - 1)/\(attData.count)", forHTTPHeaderField: "Content-Range")
 				}
+			} else {
+				res.setStatusCode(404, description: "No attachment was found for this path")
 			}
 
-			res.send(info[0] as? Data ?? Data.init(capacity: 0))
+			res.send(info[0] as? Data ?? Data())
 		} else if f == "photo" {
 			/// This gets an image from the camera roll. The value for this key must be the path at which the image resides,
 			/// minus the prefix of `/var/mobile/Media/`
