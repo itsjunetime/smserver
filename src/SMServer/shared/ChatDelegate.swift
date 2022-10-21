@@ -1278,7 +1278,9 @@ final class ChatDelegate {
 		// Swift is lying to you here. This method can throw, but it's written in obj-c
 		// so it doesn't show that in the method signature, so Swift thinks it can't.
 		do {
-			return try center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String] ?? [String]()
+			// We have to call this twice since the first one never retrieves them, for some reason.
+			let _ = try center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil)
+			return try center?.callExternalMethod(#selector(SMServerIPC.getPinnedChats), withArguments: nil) as? [String]
 		} catch {
 			Const.log("Failed to get pinned chats: \(error)", warning: true)
 			return nil
