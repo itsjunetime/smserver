@@ -7,7 +7,7 @@ import Photos
 import Contacts
 #endif
 
-let chat_columns = ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"]
+let chat_columns = ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "m.share_direction", "c.chat_identifier", "c.display_name", "c.room_name"]
 
 final class ChatDelegate {
 	let settings = Settings.shared()
@@ -246,6 +246,15 @@ final class ChatDelegate {
 			let latest_text = String((chat["m.text"] as? String ?? "").replacingOccurrences(of: "\u{fffc}", with: "", options: NSString.CompareOptions.literal, range: nil))
 			new_chat["latest_text"] = latest_text
 
+
+			let is_group = (chat["c.room_name"] as? String ?? "").count > 0
+
+			if let d_name = chat["c.display_name"] as? String, d_name.count > 0 {
+				new_chat["display_name"] = d_name
+			} else {
+				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: chat_id, is_group: is_group)
+			}
+
 			if latest_text.isEmpty && chat["m.cache_has_attachments"] as? String != "0" {
 				let att = getAttachmentFromMessage(mid: chat["m.ROWID"] as? String ?? "")
 
@@ -254,18 +263,14 @@ final class ChatDelegate {
 				} else {
 					new_chat["latest_text"] = "Attachment: 1 file"
 				}
-			} else if chat["m.balloon_bundle_id"] as? String ?? "" == "com.apple.DigitalTouchBalloonProvider" {
+			} else if chat["m.balloon_bundle_id"] as? String == "com.apple.DigitalTouchBalloonProvider" {
 				new_chat["latest_text"] = "Digital Touch Message"
-			} else if chat["m.balloon_bundle_id"] as? String ?? "" == "com.apple.Handwriting.HandwritingProvider" {
+			} else if chat["m.balloon_bundle_id"] as? String == "com.apple.Handwriting.HandwritingProvider" {
 				new_chat["latest_text"] = "Handwritten Message"
-			}
-
-			let is_group = (chat["c.room_name"] as? String ?? "").count > 0
-
-			if let d_name = chat["c.display_name"] as? String, d_name.count > 0 {
-				new_chat["display_name"] = d_name
-			} else {
-				new_chat["display_name"] = getDisplayNameWithDb(sms_db: db, contact_db: contact_db, chat_id: chat_id, is_group: is_group)
+			} else if chat["m.item_type"] as? String == "4" {
+				new_chat["latest_text"] = chat["m.share_direction"] as? String == "1" ?
+					"\(new_chat["display_name"] as? String ?? "They") started sharing location with you" :
+					"You started sharing location with \(new_chat["display_name"] as? String ?? "them")"
 			}
 
 			new_chat["relative_time"] = Const.getRelativeTime(ts: Double(chat["m.date"] as? String ?? "0") ?? 0.0)
@@ -491,7 +496,8 @@ final class ChatDelegate {
 
 		let chats: [[String:Any]] = selectFromSql(
 			db: db,
-			columns: ["m.ROWID", "m.is_read", "m.is_from_me", "m.text", "m.item_type", "m.date_read", "m.date", "m.cache_has_attachments", "m.balloon_bundle_id", "c.chat_identifier", "c.display_name", "c.room_name"], table: "chat_message_join j",
+			columns: chat_columns,
+			table: "chat_message_join j",
 			condition: "inner join message m on j.message_id = m.ROWID inner join chat c on c.ROWID = j.chat_id where j.message_date in (select  max(j.message_date) from chat_message_join j inner join chat c on c.ROWID = j.chat_id group by c.chat_identifier) order by j.message_date desc",
 			num_items: num_to_load,
 			offset: offset
