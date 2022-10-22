@@ -7,6 +7,8 @@
 
 **SMServer is an iPhone app, written in SwiftUI, which allows for one to send and receive text messages (and iMessages) from their Web browser**
 
+> **NOTE:** SMServer is not currently under any active development. For the forseeable future, I will not be working on any improvements, new features, or bug fixes. If anyone would like to contribute (either by taking over development or submitting PRs), I will still be happy to help you along, and am happy to answer questions about this project (submitted through an issue, an email, etc), but won't be writing any code myself.
+
 ## Features
 - Viewing all texts & iMessages from another device
 - Sending texts, iMessages, attachments, camera roll pictures, and tapbacks remotely
@@ -28,7 +30,6 @@
 
 ### Caveats
 - One must run this on a jailbroken iPhone. It will crash on a non-jailbroken phone.
-- Technically, the webclient conflicts with the LastPass browser extension, but I have not seen any issues because of it. It simply throws errors in the console of your browser, which can be easily ignored and appear not to hurt anything.
 
 ### Dependencies
 - [libMRYIPC](https://github.com/Muirey03/MRYIPC), which should be available on a default repo.
@@ -40,8 +41,8 @@ The source code may be updated past the latest released version, so don't be sur
 
 ## To run
 1. Open the SMServer app, and click the green 'play' button in the bottom left.
-3. Open your browser to the ip/port combo specified at the top of the view
-4. Authenticate with the default password ('toor'), or your own custom password if you already set one
+3. Open your browser to the ip/port combination specified at the top of the view
+4. Authenticate with the default password (`toor`), or your own custom password if you already set one
 5. Enjoy!
 6. (Optional) Customize the defaults under the settings section of the app to better fit your needs
 
@@ -67,10 +68,7 @@ Also, if the app did not crash on startup, but rather crashed after it was alrea
  - Email me the file at contact@ianwelker.com. This file may have sensitive information, such as contact phone numbers, so it wouldn't be smart to upload it to a public site. Feel free to filter out (with something like regex or by hand) the sensitive information.
 
 ## Companion App
-There is a [terminal-based app](http://github.com/iandwelker/smcurser) (written in ***rust***) which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, and authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question.
+There is a [terminal-based app](http://github.com/iandwelker/smcurser) which I would highly recommend one use in conjunction with this app. It is significantly faster than the web interface, much easier to navigate, more easily customizable, is the only client to support pure-websocket/remote connections, and authenticates for you. You can get it at the link above; it has all the information necessary to get it up and running. As always, just ask or open an issue if you have a question.
 
 ## Donations
-Feel free to donate below to support development of this project :) \
-[![Paypal Donations](https://img.shields.io/static/v1?label=Donations&message=Paypal&color=blue)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=K3A6WVKT54PH4&item_name=Tweak%2FApplication+Development&currency_code=USD)
-
-If you have money to spare, I would also suggest that you donate to causes such as [Save the Children](https://support.savethechildren.org/site/Donation2?df_id=2521&2521.donation=form1), who are helping with the humanitarian crisis in Yemen, or [Diasporans against SARS](https://www.gofundme.com/f/4ppyfs-diasporans-against-sars?utm_source=twitter&utm_medium=social&utm_campaign=m_pd+share-sheet), who are fighting injustice in Nigeria. These are very worth causes whom I would highly recommend helping out.
+If you have any money to spare, I would recommend donating to the [National Network of Abortion Funds](https://abortionfunds.org/) (if you're in the US), trans rights organizations such as [Mermaids UK](https://mermaidsuk.org.uk/), or getting involved with a local climate justice organization, such as [Fridays For Future](https://fridaysforfuture.org/), [The Sunrise Movement](https://www.sunrisemovement.org/), or [The Democratic Socialists of America](https://www.dsausa.org/). If you are opposed to supporting these causes, support Conservatives/Tories/AfD/etc, or believe in other scams such as trickle-down economics or blockchain/cryptocurrencies, please don't touch my project and distance yourself from it as much as possible.
